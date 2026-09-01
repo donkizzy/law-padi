@@ -16,8 +16,12 @@ import { Route as ResetPasswordRouteImport } from './routes/reset-password'
 import { Route as SignupRouteImport } from './routes/signup'
 import { Route as LayoutIndexRouteImport } from './routes/_layout/index'
 import { Route as LayoutAdminRouteImport } from './routes/_layout/admin'
-import { Route as LayoutItemsRouteImport } from './routes/_layout/items'
+import { Route as LayoutAmendmentsRouteImport } from './routes/_layout/amendments'
+import { Route as LayoutConstitutionRouteImport } from './routes/_layout/constitution'
+import { Route as LayoutSavedRouteImport } from './routes/_layout/saved'
 import { Route as LayoutSettingsRouteImport } from './routes/_layout/settings'
+import { Route as LayoutConstitutionIndexRouteImport } from './routes/_layout/constitution.index'
+import { Route as LayoutConstitutionSectionIdRouteImport } from './routes/_layout/constitution.$sectionId'
 
 const LayoutRoute = LayoutRouteImport.update({
   id: '/_layout',
@@ -53,9 +57,19 @@ const LayoutAdminRoute = LayoutAdminRouteImport.update({
   path: '/admin',
   getParentRoute: () => LayoutRoute,
 } as any)
-const LayoutItemsRoute = LayoutItemsRouteImport.update({
-  id: '/items',
-  path: '/items',
+const LayoutAmendmentsRoute = LayoutAmendmentsRouteImport.update({
+  id: '/amendments',
+  path: '/amendments',
+  getParentRoute: () => LayoutRoute,
+} as any)
+const LayoutConstitutionRoute = LayoutConstitutionRouteImport.update({
+  id: '/constitution',
+  path: '/constitution',
+  getParentRoute: () => LayoutRoute,
+} as any)
+const LayoutSavedRoute = LayoutSavedRouteImport.update({
+  id: '/saved',
+  path: '/saved',
   getParentRoute: () => LayoutRoute,
 } as any)
 const LayoutSettingsRoute = LayoutSettingsRouteImport.update({
@@ -63,6 +77,17 @@ const LayoutSettingsRoute = LayoutSettingsRouteImport.update({
   path: '/settings',
   getParentRoute: () => LayoutRoute,
 } as any)
+const LayoutConstitutionIndexRoute = LayoutConstitutionIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => LayoutConstitutionRoute,
+} as any)
+const LayoutConstitutionSectionIdRoute =
+  LayoutConstitutionSectionIdRouteImport.update({
+    id: '/$sectionId',
+    path: '/$sectionId',
+    getParentRoute: () => LayoutConstitutionRoute,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof LayoutIndexRoute
@@ -71,8 +96,12 @@ export interface FileRoutesByFullPath {
   '/reset-password': typeof ResetPasswordRoute
   '/signup': typeof SignupRoute
   '/admin': typeof LayoutAdminRoute
-  '/items': typeof LayoutItemsRoute
+  '/amendments': typeof LayoutAmendmentsRoute
+  '/constitution': typeof LayoutConstitutionRouteWithChildren
+  '/saved': typeof LayoutSavedRoute
   '/settings': typeof LayoutSettingsRoute
+  '/constitution/$sectionId': typeof LayoutConstitutionSectionIdRoute
+  '/constitution/': typeof LayoutConstitutionIndexRoute
 }
 export interface FileRoutesByTo {
   '/login': typeof LoginRoute
@@ -80,9 +109,12 @@ export interface FileRoutesByTo {
   '/reset-password': typeof ResetPasswordRoute
   '/signup': typeof SignupRoute
   '/admin': typeof LayoutAdminRoute
-  '/items': typeof LayoutItemsRoute
+  '/amendments': typeof LayoutAmendmentsRoute
+  '/saved': typeof LayoutSavedRoute
   '/settings': typeof LayoutSettingsRoute
   '/': typeof LayoutIndexRoute
+  '/constitution/$sectionId': typeof LayoutConstitutionSectionIdRoute
+  '/constitution': typeof LayoutConstitutionIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -92,9 +124,13 @@ export interface FileRoutesById {
   '/reset-password': typeof ResetPasswordRoute
   '/signup': typeof SignupRoute
   '/_layout/admin': typeof LayoutAdminRoute
-  '/_layout/items': typeof LayoutItemsRoute
+  '/_layout/amendments': typeof LayoutAmendmentsRoute
+  '/_layout/constitution': typeof LayoutConstitutionRouteWithChildren
+  '/_layout/saved': typeof LayoutSavedRoute
   '/_layout/settings': typeof LayoutSettingsRoute
   '/_layout/': typeof LayoutIndexRoute
+  '/_layout/constitution/$sectionId': typeof LayoutConstitutionSectionIdRoute
+  '/_layout/constitution/': typeof LayoutConstitutionIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -105,8 +141,12 @@ export interface FileRouteTypes {
     | '/reset-password'
     | '/signup'
     | '/admin'
-    | '/items'
+    | '/amendments'
+    | '/constitution'
+    | '/saved'
     | '/settings'
+    | '/constitution/$sectionId'
+    | '/constitution/'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/login'
@@ -114,9 +154,12 @@ export interface FileRouteTypes {
     | '/reset-password'
     | '/signup'
     | '/admin'
-    | '/items'
+    | '/amendments'
+    | '/saved'
     | '/settings'
     | '/'
+    | '/constitution/$sectionId'
+    | '/constitution'
   id:
     | '__root__'
     | '/_layout'
@@ -125,9 +168,13 @@ export interface FileRouteTypes {
     | '/reset-password'
     | '/signup'
     | '/_layout/admin'
-    | '/_layout/items'
+    | '/_layout/amendments'
+    | '/_layout/constitution'
+    | '/_layout/saved'
     | '/_layout/settings'
     | '/_layout/'
+    | '/_layout/constitution/$sectionId'
+    | '/_layout/constitution/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -189,11 +236,25 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof LayoutAdminRouteImport
       parentRoute: typeof LayoutRoute
     }
-    '/_layout/items': {
-      id: '/_layout/items'
-      path: '/items'
-      fullPath: '/items'
-      preLoaderRoute: typeof LayoutItemsRouteImport
+    '/_layout/amendments': {
+      id: '/_layout/amendments'
+      path: '/amendments'
+      fullPath: '/amendments'
+      preLoaderRoute: typeof LayoutAmendmentsRouteImport
+      parentRoute: typeof LayoutRoute
+    }
+    '/_layout/constitution': {
+      id: '/_layout/constitution'
+      path: '/constitution'
+      fullPath: '/constitution'
+      preLoaderRoute: typeof LayoutConstitutionRouteImport
+      parentRoute: typeof LayoutRoute
+    }
+    '/_layout/saved': {
+      id: '/_layout/saved'
+      path: '/saved'
+      fullPath: '/saved'
+      preLoaderRoute: typeof LayoutSavedRouteImport
       parentRoute: typeof LayoutRoute
     }
     '/_layout/settings': {
@@ -203,19 +264,50 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof LayoutSettingsRouteImport
       parentRoute: typeof LayoutRoute
     }
+    '/_layout/constitution/': {
+      id: '/_layout/constitution/'
+      path: '/'
+      fullPath: '/constitution/'
+      preLoaderRoute: typeof LayoutConstitutionIndexRouteImport
+      parentRoute: typeof LayoutConstitutionRoute
+    }
+    '/_layout/constitution/$sectionId': {
+      id: '/_layout/constitution/$sectionId'
+      path: '/$sectionId'
+      fullPath: '/constitution/$sectionId'
+      preLoaderRoute: typeof LayoutConstitutionSectionIdRouteImport
+      parentRoute: typeof LayoutConstitutionRoute
+    }
   }
 }
 
+interface LayoutConstitutionRouteChildren {
+  LayoutConstitutionSectionIdRoute: typeof LayoutConstitutionSectionIdRoute
+  LayoutConstitutionIndexRoute: typeof LayoutConstitutionIndexRoute
+}
+
+const LayoutConstitutionRouteChildren: LayoutConstitutionRouteChildren = {
+  LayoutConstitutionSectionIdRoute: LayoutConstitutionSectionIdRoute,
+  LayoutConstitutionIndexRoute: LayoutConstitutionIndexRoute,
+}
+
+const LayoutConstitutionRouteWithChildren =
+  LayoutConstitutionRoute._addFileChildren(LayoutConstitutionRouteChildren)
+
 interface LayoutRouteChildren {
   LayoutAdminRoute: typeof LayoutAdminRoute
-  LayoutItemsRoute: typeof LayoutItemsRoute
+  LayoutAmendmentsRoute: typeof LayoutAmendmentsRoute
+  LayoutConstitutionRoute: typeof LayoutConstitutionRouteWithChildren
+  LayoutSavedRoute: typeof LayoutSavedRoute
   LayoutSettingsRoute: typeof LayoutSettingsRoute
   LayoutIndexRoute: typeof LayoutIndexRoute
 }
 
 const LayoutRouteChildren: LayoutRouteChildren = {
   LayoutAdminRoute: LayoutAdminRoute,
-  LayoutItemsRoute: LayoutItemsRoute,
+  LayoutAmendmentsRoute: LayoutAmendmentsRoute,
+  LayoutConstitutionRoute: LayoutConstitutionRouteWithChildren,
+  LayoutSavedRoute: LayoutSavedRoute,
   LayoutSettingsRoute: LayoutSettingsRoute,
   LayoutIndexRoute: LayoutIndexRoute,
 }

@@ -1,39 +1,81 @@
-import { createFileRoute, Outlet, redirect } from "@tanstack/react-router"
+import {
+  createFileRoute,
+  Outlet,
+  Link as RouterLink,
+} from "@tanstack/react-router"
+import { FiMessageSquare, FiSearch, FiSettings } from "react-icons/fi"
 
-import { Footer } from "@/components/Common/Footer"
+import { Appearance } from "@/components/Common/Appearance"
+import { Logo } from "@/components/Common/Logo"
+import { SquircleButton } from "@/components/LawPadi/primitives"
 import AppSidebar from "@/components/Sidebar/AppSidebar"
 import {
   SidebarInset,
   SidebarProvider,
   SidebarTrigger,
 } from "@/components/ui/sidebar"
-import { isLoggedIn } from "@/hooks/useAuth"
 
 export const Route = createFileRoute("/_layout")({
   component: Layout,
-  beforeLoad: async () => {
-    if (!isLoggedIn()) {
-      throw redirect({
-        to: "/login",
-      })
-    }
-  },
 })
 
 function Layout() {
   return (
     <SidebarProvider>
       <AppSidebar />
-      <SidebarInset>
-        <header className="sticky top-0 z-10 flex h-16 shrink-0 items-center gap-2 border-b bg-background px-4">
+      <SidebarInset className="min-h-svh bg-background">
+        <header className="sticky top-0 z-30 flex h-16 shrink-0 items-center gap-3 border-b border-border/80 bg-background/85 px-4 backdrop-blur-xl sm:px-6">
           <SidebarTrigger className="-ml-1 text-muted-foreground" />
-        </header>
-        <main className="flex-1 p-6 md:p-8">
-          <div className="mx-auto max-w-7xl">
-            <Outlet />
+          <div className="md:hidden">
+            <Logo variant="full" />
           </div>
+          <div className="hidden min-w-0 items-center gap-2 text-xs font-semibold text-muted-foreground sm:flex">
+            <span>Ask the Constitution</span>
+            <span aria-hidden className="sq-xs size-1.5 bg-primary" />
+            <span>Sources always visible</span>
+          </div>
+
+          <div className="ml-auto flex items-center gap-1.5">
+            <SquircleButton
+              asChild
+              className="hidden sm:inline-flex"
+              size="sm"
+              variant="ghost"
+            >
+              <RouterLink to="/">
+                <FiMessageSquare className="size-4" aria-hidden />
+                New
+              </RouterLink>
+            </SquircleButton>
+            <SquircleButton
+              asChild
+              className="hidden px-3 md:inline-flex"
+              size="sm"
+              variant="ghost"
+            >
+              <RouterLink to="/constitution">
+                <FiSearch className="size-4" aria-hidden />
+                Search
+              </RouterLink>
+            </SquircleButton>
+            <Appearance />
+            <SquircleButton
+              asChild
+              aria-label="Open settings"
+              className="size-10 px-0"
+              size="sm"
+              variant="ghost"
+            >
+              <RouterLink to="/settings">
+                <FiSettings className="size-4" aria-hidden />
+                <span className="sr-only">Settings</span>
+              </RouterLink>
+            </SquircleButton>
+          </div>
+        </header>
+        <main className="min-h-0 flex-1 overflow-hidden">
+          <Outlet />
         </main>
-        <Footer />
       </SidebarInset>
     </SidebarProvider>
   )

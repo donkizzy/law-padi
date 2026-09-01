@@ -1,5 +1,5 @@
 import { Link as RouterLink, useRouterState } from "@tanstack/react-router"
-import type { LucideIcon } from "lucide-react"
+import type { IconType } from "react-icons"
 
 import {
   SidebarGroup,
@@ -11,9 +11,10 @@ import {
 } from "@/components/ui/sidebar"
 
 export type Item = {
-  icon: LucideIcon
+  icon: IconType
   title: string
   path: string
+  count?: string
 }
 
 interface MainProps {
@@ -36,7 +37,9 @@ export function Main({ items }: MainProps) {
       <SidebarGroupContent>
         <SidebarMenu>
           {items.map((item) => {
-            const isActive = currentPath === item.path
+            const isActive =
+              currentPath === item.path ||
+              (item.path !== "/" && currentPath.startsWith(item.path))
 
             return (
               <SidebarMenuItem key={item.title}>
@@ -48,6 +51,11 @@ export function Main({ items }: MainProps) {
                   <RouterLink to={item.path} onClick={handleMenuClick}>
                     <item.icon />
                     <span>{item.title}</span>
+                    {item.count ? (
+                      <span className="ml-auto text-xs text-muted-foreground">
+                        {item.count}
+                      </span>
+                    ) : null}
                   </RouterLink>
                 </SidebarMenuButton>
               </SidebarMenuItem>

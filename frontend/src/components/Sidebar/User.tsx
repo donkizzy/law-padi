@@ -1,5 +1,5 @@
 import { Link as RouterLink } from "@tanstack/react-router"
-import { ChevronsUpDown, LogOut, Settings } from "lucide-react"
+import { FiChevronDown, FiLogOut, FiSettings } from "react-icons/fi"
 
 import { Avatar, AvatarFallback } from "@/components/ui/avatar"
 import {
@@ -66,7 +66,7 @@ export function User({ user }: { user: any }) {
               data-testid="user-menu"
             >
               <UserInfo fullName={user?.full_name} email={user?.email} />
-              <ChevronsUpDown className="ml-auto size-4 text-muted-foreground" />
+              <FiChevronDown className="ml-auto size-4 text-muted-foreground" />
             </SidebarMenuButton>
           </DropdownMenuTrigger>
           <DropdownMenuContent
@@ -81,12 +81,12 @@ export function User({ user }: { user: any }) {
             <DropdownMenuSeparator />
             <RouterLink to="/settings" onClick={handleMenuClick}>
               <DropdownMenuItem>
-                <Settings />
+                <FiSettings />
                 User Settings
               </DropdownMenuItem>
             </RouterLink>
             <DropdownMenuItem onClick={handleLogout}>
-              <LogOut />
+              <FiLogOut />
               Log Out
             </DropdownMenuItem>
           </DropdownMenuContent>
