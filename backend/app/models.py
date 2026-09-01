@@ -88,3 +88,21 @@ class TokenPayload(SQLModel):
 class NewPassword(SQLModel):
     token: str
     new_password: str = Field(min_length=8, max_length=128)
+
+
+from app.legal.models import (  # noqa: E402,F401
+    Amendment,
+    AmendmentOperation,
+    ConstitutionalBill,
+    Conversation,
+    ConversationMessage,
+    CorpusRelease,
+    LegalConcept,
+    LegalConceptAlias,
+    LegalInstrument,
+    LegislativeEvent,
+    MessageEvidence,
+    Provision,
+    ProvisionVersion,
+    SourceDocument,
+)
