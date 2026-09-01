@@ -1,5 +1,5 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query"
-import { Trash2 } from "lucide-react"
+import { FiTrash2 } from "react-icons/fi"
 import { useState } from "react"
 import { useForm } from "react-hook-form"
 
@@ -58,7 +58,7 @@ const DeleteUser = ({ id, onSuccess }: DeleteUserProps) => {
         onSelect={(e) => e.preventDefault()}
         onClick={() => setIsOpen(true)}
       >
-        <Trash2 />
+        <FiTrash2 />
         Delete User
       </DropdownMenuItem>
       <DialogContent className="sm:max-w-md">
@@ -66,7 +66,7 @@ const DeleteUser = ({ id, onSuccess }: DeleteUserProps) => {
           <DialogHeader>
             <DialogTitle>Delete User</DialogTitle>
             <DialogDescription>
-              All items associated with this user will also be{" "}
+              This user and their account data will be{" "}
               <strong>permanently deleted.</strong> Are you sure? You will not
               be able to undo this action.
             </DialogDescription>

@@ -1,6 +1,6 @@
 import { zodResolver } from "@hookform/resolvers/zod"
 import { useMutation, useQueryClient } from "@tanstack/react-query"
-import { Plus } from "lucide-react"
+import { FiPlus } from "react-icons/fi"
 import { useState } from "react"
 import { useForm } from "react-hook-form"
 import { z } from "zod"
@@ -92,7 +92,7 @@ const AddUser = () => {
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
       <DialogTrigger asChild>
         <Button className="my-4">
-          <Plus className="mr-2" />
+          <FiPlus className="mr-2" />
           Add User
         </Button>
       </DialogTrigger>

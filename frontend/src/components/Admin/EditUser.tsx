@@ -1,6 +1,6 @@
 import { zodResolver } from "@hookform/resolvers/zod"
 import { useMutation, useQueryClient } from "@tanstack/react-query"
-import { Pencil } from "lucide-react"
+import { FiEdit2 } from "react-icons/fi"
 import { useState } from "react"
 import { useForm } from "react-hook-form"
 import { z } from "zod"
@@ -102,7 +102,7 @@ const EditUser = ({ user, onSuccess }: EditUserProps) => {
         onSelect={(e) => e.preventDefault()}
         onClick={() => setIsOpen(true)}
       >
-        <Pencil />
+        <FiEdit2 />
         Edit User
       </DropdownMenuItem>
       <DialogContent className="sm:max-w-md">

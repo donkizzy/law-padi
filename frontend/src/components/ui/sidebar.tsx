@@ -1,6 +1,6 @@
 import { Slot } from "@radix-ui/react-slot"
 import { cva, type VariantProps } from "class-variance-authority"
-import { PanelLeftIcon } from "lucide-react"
+import { FiSidebar as PanelLeftIcon } from "react-icons/fi"
 import * as React from "react"
 
 import { Button } from "@/components/ui/button"
@@ -268,8 +268,10 @@ function SidebarTrigger({
   onClick,
   ...props
 }: React.ComponentProps<typeof Button>) {
-  const { toggleSidebar, open } = useSidebar()
-  const sidebarCopy = open ? "Collapse Sidebar" : "Open Sidebar"
+  const { toggleSidebar, open, openMobile, isMobile } = useSidebar()
+  const sidebarCopy = (isMobile ? openMobile : open)
+    ? "Collapse Sidebar"
+    : "Open Sidebar"
 
   return (
     <Button

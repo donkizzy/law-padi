@@ -1,12 +1,12 @@
 "use client"
 
 import {
-  CircleCheckIcon,
-  InfoIcon,
-  Loader2Icon,
-  OctagonXIcon,
-  TriangleAlertIcon,
-} from "lucide-react"
+  FiAlertOctagon as OctagonXIcon,
+  FiAlertTriangle as TriangleAlertIcon,
+  FiCheckCircle as CircleCheckIcon,
+  FiInfo as InfoIcon,
+  FiLoader as Loader2Icon,
+} from "react-icons/fi"
 import { useTheme } from "@/components/theme-provider"
 import { Toaster as Sonner, type ToasterProps } from "sonner"
 

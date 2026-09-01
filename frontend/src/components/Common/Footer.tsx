@@ -1,15 +1,14 @@
-import { FaGithub, FaLinkedinIn } from "react-icons/fa"
-import { FaXTwitter } from "react-icons/fa6"
+import { LiaGithub, LiaLinkedinIn, LiaTwitter } from "react-icons/lia"
 
 const socialLinks = [
   {
-    icon: FaGithub,
+    icon: LiaGithub,
     href: "https://github.com/fastapi/fastapi",
     label: "GitHub",
   },
-  { icon: FaXTwitter, href: "https://x.com/fastapi", label: "X" },
+  { icon: LiaTwitter, href: "https://x.com/fastapi", label: "X" },
   {
-    icon: FaLinkedinIn,
+    icon: LiaLinkedinIn,
     href: "https://linkedin.com/company/fastapi",
     label: "LinkedIn",
   },
