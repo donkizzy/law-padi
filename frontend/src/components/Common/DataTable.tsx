@@ -6,11 +6,11 @@ import {
   useReactTable,
 } from "@tanstack/react-table"
 import {
-  ChevronLeft,
-  ChevronRight,
-  ChevronsLeft,
-  ChevronsRight,
-} from "lucide-react"
+  FiChevronLeft,
+  FiChevronRight,
+  FiChevronsLeft,
+  FiChevronsRight,
+} from "react-icons/fi"
 
 import { Button } from "@/components/ui/button"
 import {
@@ -153,7 +153,7 @@ export function DataTable<TData, TValue>({
                 disabled={!table.getCanPreviousPage()}
               >
                 <span className="sr-only">Go to first page</span>
-                <ChevronsLeft className="h-4 w-4" />
+                <FiChevronsLeft className="h-4 w-4" />
               </Button>
               <Button
                 variant="outline"
@@ -163,7 +163,7 @@ export function DataTable<TData, TValue>({
                 disabled={!table.getCanPreviousPage()}
               >
                 <span className="sr-only">Go to previous page</span>
-                <ChevronLeft className="h-4 w-4" />
+                <FiChevronLeft className="h-4 w-4" />
               </Button>
               <Button
                 variant="outline"
@@ -173,7 +173,7 @@ export function DataTable<TData, TValue>({
                 disabled={!table.getCanNextPage()}
               >
                 <span className="sr-only">Go to next page</span>
-                <ChevronRight className="h-4 w-4" />
+                <FiChevronRight className="h-4 w-4" />
               </Button>
               <Button
                 variant="outline"
@@ -183,7 +183,7 @@ export function DataTable<TData, TValue>({
                 disabled={!table.getCanNextPage()}
               >
                 <span className="sr-only">Go to last page</span>
-                <ChevronsRight className="h-4 w-4" />
+                <FiChevronsRight className="h-4 w-4" />
               </Button>
             </div>
           </div>

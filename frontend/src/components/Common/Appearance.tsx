@@ -1,4 +1,5 @@
-import { Monitor, Moon, Sun } from "lucide-react"
+import type { IconType } from "react-icons"
+import { FiMonitor, FiMoon, FiSun } from "react-icons/fi"
 
 import { type Theme, useTheme } from "@/components/theme-provider"
 import { Button } from "@/components/ui/button"
@@ -14,12 +15,10 @@ import {
   useSidebar,
 } from "@/components/ui/sidebar"
 
-type LucideIcon = React.FC<React.SVGProps<SVGSVGElement>>
-
-const ICON_MAP: Record<Theme, LucideIcon> = {
-  system: Monitor,
-  light: Sun,
-  dark: Moon,
+const ICON_MAP: Record<Theme, IconType> = {
+  system: FiMonitor,
+  light: FiSun,
+  dark: FiMoon,
 }
 
 export const SidebarAppearance = () => {
@@ -46,18 +45,18 @@ export const SidebarAppearance = () => {
             data-testid="light-mode"
             onClick={() => setTheme("light")}
           >
-            <Sun className="mr-2 h-4 w-4" />
+            <FiSun className="mr-2 h-4 w-4" />
             Light
           </DropdownMenuItem>
           <DropdownMenuItem
             data-testid="dark-mode"
             onClick={() => setTheme("dark")}
           >
-            <Moon className="mr-2 h-4 w-4" />
+            <FiMoon className="mr-2 h-4 w-4" />
             Dark
           </DropdownMenuItem>
           <DropdownMenuItem onClick={() => setTheme("system")}>
-            <Monitor className="mr-2 h-4 w-4" />
+            <FiMonitor className="mr-2 h-4 w-4" />
             System
           </DropdownMenuItem>
         </DropdownMenuContent>
@@ -74,8 +73,8 @@ export const Appearance = () => {
       <DropdownMenu modal={false}>
         <DropdownMenuTrigger asChild>
           <Button data-testid="theme-button" variant="outline" size="icon">
-            <Sun className="h-[1.2rem] w-[1.2rem] rotate-0 scale-100 transition-all dark:-rotate-90 dark:scale-0" />
-            <Moon className="absolute h-[1.2rem] w-[1.2rem] rotate-90 scale-0 transition-all dark:rotate-0 dark:scale-100" />
+            <FiSun className="h-[1.2rem] w-[1.2rem] rotate-0 scale-100 transition-all dark:-rotate-90 dark:scale-0" />
+            <FiMoon className="absolute h-[1.2rem] w-[1.2rem] rotate-90 scale-0 transition-all dark:rotate-0 dark:scale-100" />
             <span className="sr-only">Toggle theme</span>
           </Button>
         </DropdownMenuTrigger>
@@ -84,18 +83,18 @@ export const Appearance = () => {
             data-testid="light-mode"
             onClick={() => setTheme("light")}
           >
-            <Sun className="mr-2 h-4 w-4" />
+            <FiSun className="mr-2 h-4 w-4" />
             Light
           </DropdownMenuItem>
           <DropdownMenuItem
             data-testid="dark-mode"
             onClick={() => setTheme("dark")}
           >
-            <Moon className="mr-2 h-4 w-4" />
+            <FiMoon className="mr-2 h-4 w-4" />
             Dark
           </DropdownMenuItem>
           <DropdownMenuItem onClick={() => setTheme("system")}>
-            <Monitor className="mr-2 h-4 w-4" />
+            <FiMonitor className="mr-2 h-4 w-4" />
             System
           </DropdownMenuItem>
         </DropdownMenuContent>

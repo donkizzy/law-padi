@@ -1,4 +1,4 @@
-import { EllipsisVertical } from "lucide-react"
+import { FiMoreVertical } from "react-icons/fi"
 import { useState } from "react"
 
 import type { UserPublic } from "@/client"
@@ -28,7 +28,7 @@ export const UserActionsMenu = ({ user }: UserActionsMenuProps) => {
     <DropdownMenu open={open} onOpenChange={setOpen}>
       <DropdownMenuTrigger asChild>
         <Button variant="ghost" size="icon">
-          <EllipsisVertical />
+          <FiMoreVertical />
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end">
