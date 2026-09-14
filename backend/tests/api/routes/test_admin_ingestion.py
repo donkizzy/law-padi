@@ -12,7 +12,7 @@ from sqlmodel import Session, col, delete, func, select
 from app import crud
 from app.core.config import settings
 from app.ingestion import LocalBlobStore, MultipartUpload, MultipartUploadPartUrl
-from app.ingestion.workflow import create_run_steps
+from app.ingestion.workflow import append_run_event, create_run_steps
 from app.legal.enums import (
     AdminRole,
     AuditSeverity,
@@ -407,6 +407,49 @@ def test_pdf_upload_session_completion_creates_immutable_source_and_run(
     assert replay_response.status_code == 200
     assert "upload_completed" in replay_response.text
     assert "id: 1" in replay_response.text
+
+
+def test_ingestion_run_events_replays_only_after_last_event_id(
+    client: TestClient,
+    superuser_token_headers: dict[str, str],
+    db: Session,
+) -> None:
+    _source, run = _source_and_run(db)
+    profiling_step = db.exec(
+        select(IngestionStep).where(
+            IngestionStep.run_id == run.id,
+            IngestionStep.stage == IngestionStage.PROFILING,
+        )
+    ).one()
+    first_event = append_run_event(
+        db,
+        run,
+        event_type="stage_started",
+        message="Profiling started",
+        step=profiling_step,
+    )
+    second_event = append_run_event(
+        db,
+        run,
+        event_type="stage_succeeded",
+        message="Profiling completed",
+        stage=IngestionStage.PROFILING,
+    )
+
+    response = client.get(
+        f"{settings.API_V1_STR}/admin/ingestion-runs/{run.id}/events",
+        headers={
+            **superuser_token_headers,
+            "Last-Event-ID": str(first_event.sequence),
+        },
+    )
+
+    assert response.status_code == 200
+    assert f"id: {second_event.sequence}" in response.text
+    assert "stage_succeeded" in response.text
+    assert "Profiling completed" in response.text
+    assert f"id: {first_event.sequence}" not in response.text
+    assert "Profiling started" not in response.text
 
 
 def test_r2_pdf_upload_session_uses_presigned_quarantine_put_and_completion(

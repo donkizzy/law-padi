@@ -60,9 +60,7 @@ def test_r2_presigned_put_url_binds_content_type_and_sha256_metadata() -> None:
     assert query["X-Amz-Algorithm"] == ["AWS4-HMAC-SHA256"]
     assert query["X-Amz-Expires"] == ["900"]
     assert "AKIA_TEST/20260911/auto/s3/aws4_request" in query["X-Amz-Credential"][0]
-    assert query["X-Amz-SignedHeaders"] == [
-        "content-type;host;x-amz-meta-sha256"
-    ]
+    assert query["X-Amz-SignedHeaders"] == ["content-type;host;x-amz-meta-sha256"]
     assert len(query["X-Amz-Signature"][0]) == 64
     assert "SECRET_TEST" not in upload_url
 
@@ -149,7 +147,7 @@ def test_r2_put_artifact_verifies_existing_object_without_sha_metadata() -> None
         )
 
 
-def _store(transport: "_R2MemoryTransport") -> R2BlobStore:
+def _store(transport: _R2MemoryTransport) -> R2BlobStore:
     return R2BlobStore(
         endpoint_url="https://r2.example.test",
         bucket_name="law-padi-ingestion",
@@ -213,9 +211,7 @@ class _R2MemoryTransport:
         self.multipart_uploads[upload_id][part_number] = request.content
         return httpx.Response(200, headers={"etag": f'"etag-{part_number}"'})
 
-    def _complete_multipart(
-        self, key: str, params: dict[str, str]
-    ) -> httpx.Response:
+    def _complete_multipart(self, key: str, params: dict[str, str]) -> httpx.Response:
         upload_id = params["uploadId"]
         parts = self.multipart_uploads[upload_id]
         content = b"".join(parts[part_number] for part_number in sorted(parts))
