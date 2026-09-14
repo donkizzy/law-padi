@@ -3,6 +3,7 @@ from typing import Literal, Self
 
 from pydantic import (
     EmailStr,
+    Field,
     HttpUrl,
     PostgresDsn,
     computed_field,
@@ -29,6 +30,31 @@ class Settings(BaseSettings):
     PROJECT_NAME: str
     SENTRY_DSN: HttpUrl | None = None
     DATABASE_URL: PostgresDsn
+    INGESTION_STORAGE_BACKEND: Literal["local", "r2"] = "local"
+    INGESTION_STORAGE_DIR: str = "storage/source-documents"
+    INGESTION_STAGE_CONCURRENCY_LIMITS: dict[str, int] = Field(default_factory=dict)
+    MALWARE_SCANNER_BACKEND: Literal["static_pdf", "clamav"] = "static_pdf"
+    CLAMAV_HOST: str = "127.0.0.1"
+    CLAMAV_PORT: int = 3310
+    CLAMAV_TIMEOUT_SECONDS: float = 15.0
+    R2_ENDPOINT_URL: str | None = None
+    R2_BUCKET_NAME: str | None = None
+    R2_ACCESS_KEY_ID: str | None = None
+    R2_SECRET_ACCESS_KEY: str | None = None
+    OPENAI_API_KEY: str | None = None
+    HUGGINGFACE_TEI_ENDPOINT_URL: str | None = None
+    HUGGINGFACE_API_TOKEN: str | None = None
+    QDRANT_URL: str | None = None
+    QDRANT_API_KEY: str | None = None
+    MANAGED_OCR_PROVIDER: Literal[
+        "disabled", "google_document_ai", "azure_document_intelligence"
+    ] = "disabled"
+    GOOGLE_DOCUMENT_AI_PROCESSOR_NAME: str | None = None
+    GOOGLE_DOCUMENT_AI_ACCESS_TOKEN: str | None = None
+    AZURE_DOCUMENT_INTELLIGENCE_ENDPOINT: str | None = None
+    AZURE_DOCUMENT_INTELLIGENCE_KEY: str | None = None
+    AZURE_DOCUMENT_INTELLIGENCE_MODEL_ID: str = "prebuilt-layout"
+    AZURE_DOCUMENT_INTELLIGENCE_API_VERSION: str = "2024-11-30"
 
     @field_validator("DATABASE_URL", mode="before")
     @classmethod
