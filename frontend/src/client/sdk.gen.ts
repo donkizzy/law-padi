@@ -2,7 +2,7 @@
 
 import { type Client, type Options as Options2, type TDataShape, urlSearchParamsBodySerializer } from './client';
 import { client } from './client.gen';
-import type { loginLoginAccessTokenData, loginLoginAccessTokenErrors, loginLoginAccessTokenResponses, loginRecoverPasswordData, loginRecoverPasswordErrors, loginRecoverPasswordHtmlContentData, loginRecoverPasswordHtmlContentErrors, loginRecoverPasswordHtmlContentResponses, loginRecoverPasswordResponses, loginResetPasswordData, loginResetPasswordErrors, loginResetPasswordResponses, loginTestTokenData, loginTestTokenResponses, privateCreateUserData, privateCreateUserErrors, privateCreateUserResponses, usersCreateUserData, usersCreateUserErrors, usersCreateUserResponses, usersDeleteUserData, usersDeleteUserErrors, usersDeleteUserMeData, usersDeleteUserMeResponses, usersDeleteUserResponses, usersReadUserByIdData, usersReadUserByIdErrors, usersReadUserByIdResponses, usersReadUserMeData, usersReadUserMeResponses, usersReadUsersData, usersReadUsersErrors, usersReadUsersResponses, usersRegisterUserData, usersRegisterUserErrors, usersRegisterUserResponses, usersUpdatePasswordMeData, usersUpdatePasswordMeErrors, usersUpdatePasswordMeResponses, usersUpdateUserData, usersUpdateUserErrors, usersUpdateUserMeData, usersUpdateUserMeErrors, usersUpdateUserMeResponses, usersUpdateUserResponses, utilsHealthCheckData, utilsHealthCheckResponses, utilsTestEmailData, utilsTestEmailErrors, utilsTestEmailResponses } from './types.gen';
+import type { adminCancelRunData, adminCancelRunErrors, adminCancelRunResponses, adminCompleteUploadData, adminCompleteUploadErrors, adminCompleteUploadResponses, adminCreateMultipartUploadPartsData, adminCreateMultipartUploadPartsErrors, adminCreateMultipartUploadPartsResponses, adminCreateSourceUploadData, adminCreateSourceUploadErrors, adminCreateSourceUploadResponses, adminDecideReviewItemData, adminDecideReviewItemErrors, adminDecideReviewItemResponses, adminPatchPageSelectionData, adminPatchPageSelectionErrors, adminPatchPageSelectionResponses, adminPatchReviewItemData, adminPatchReviewItemErrors, adminPatchReviewItemResponses, adminPublishReleaseData, adminPublishReleaseErrors, adminPublishReleaseResponses, adminPutSourceUploadObjectData, adminPutSourceUploadObjectErrors, adminPutSourceUploadObjectResponses, adminReadAdminMetricsData, adminReadAdminMetricsResponses, adminReadCorpusReleasesData, adminReadCorpusReleasesErrors, adminReadCorpusReleasesResponses, adminReadEmbeddingBenchmarkData, adminReadEmbeddingBenchmarkErrors, adminReadEmbeddingBenchmarkResponses, adminReadIngestionRunData, adminReadIngestionRunErrors, adminReadIngestionRunPagesData, adminReadIngestionRunPagesErrors, adminReadIngestionRunPagesResponses, adminReadIngestionRunResponses, adminReadIngestionRunsData, adminReadIngestionRunsErrors, adminReadIngestionRunsResponses, adminReadProductionProvisionVersionsData, adminReadProductionProvisionVersionsResponses, adminReadReleaseManifestData, adminReadReleaseManifestErrors, adminReadReleaseManifestResponses, adminReadReleasePublicationEvidenceData, adminReadReleasePublicationEvidenceErrors, adminReadReleasePublicationEvidenceResponses, adminReadReviewItemData, adminReadReviewItemErrors, adminReadReviewItemResponses, adminReadReviewItemsData, adminReadReviewItemsErrors, adminReadReviewItemsResponses, adminResumeRunData, adminResumeRunErrors, adminResumeRunResponses, adminRetryRunData, adminRetryRunErrors, adminRetryRunResponses, adminStreamIngestionRunEventsData, adminStreamIngestionRunEventsErrors, adminStreamIngestionRunEventsResponses, adminValidateReleaseData, adminValidateReleaseErrors, adminValidateReleaseResponses, adminVerifyDocumentSourceData, adminVerifyDocumentSourceErrors, adminVerifyDocumentSourceResponses, loginLoginAccessTokenData, loginLoginAccessTokenErrors, loginLoginAccessTokenResponses, loginRecoverPasswordData, loginRecoverPasswordErrors, loginRecoverPasswordHtmlContentData, loginRecoverPasswordHtmlContentErrors, loginRecoverPasswordHtmlContentResponses, loginRecoverPasswordResponses, loginResetPasswordData, loginResetPasswordErrors, loginResetPasswordResponses, loginTestTokenData, loginTestTokenResponses, privateCreateUserData, privateCreateUserErrors, privateCreateUserResponses, usersCreateUserData, usersCreateUserErrors, usersCreateUserResponses, usersDeleteUserData, usersDeleteUserErrors, usersDeleteUserMeData, usersDeleteUserMeResponses, usersDeleteUserResponses, usersReadUserByIdData, usersReadUserByIdErrors, usersReadUserByIdResponses, usersReadUserMeData, usersReadUserMeResponses, usersReadUsersData, usersReadUsersErrors, usersReadUsersResponses, usersRegisterUserData, usersRegisterUserErrors, usersRegisterUserResponses, usersUpdatePasswordMeData, usersUpdatePasswordMeErrors, usersUpdatePasswordMeResponses, usersUpdateUserData, usersUpdateUserErrors, usersUpdateUserMeData, usersUpdateUserMeErrors, usersUpdateUserMeResponses, usersUpdateUserResponses, utilsHealthCheckData, utilsHealthCheckResponses, utilsTestEmailData, utilsTestEmailErrors, utilsTestEmailResponses } from './types.gen';
 
 export type Options<TData extends TDataShape = TDataShape, ThrowOnError extends boolean = boolean, TResponse = unknown> = Options2<TData, ThrowOnError, TResponse> & {
     /**
@@ -36,7 +36,7 @@ export class LoginService {
             }
         });
     }
-    
+
     /**
      * Test Token
      *
@@ -50,7 +50,7 @@ export class LoginService {
             ...options
         });
     }
-    
+
     /**
      * Recover Password
      *
@@ -63,7 +63,7 @@ export class LoginService {
             ...options
         });
     }
-    
+
     /**
      * Reset Password
      *
@@ -80,7 +80,7 @@ export class LoginService {
             }
         });
     }
-    
+
     /**
      * Recover Password Html Content
      *
@@ -110,7 +110,7 @@ export class UsersService {
             ...options
         });
     }
-    
+
     /**
      * Create User
      *
@@ -128,7 +128,7 @@ export class UsersService {
             }
         });
     }
-    
+
     /**
      * Delete User Me
      *
@@ -142,7 +142,7 @@ export class UsersService {
             ...options
         });
     }
-    
+
     /**
      * Read User Me
      *
@@ -156,7 +156,7 @@ export class UsersService {
             ...options
         });
     }
-    
+
     /**
      * Update User Me
      *
@@ -174,7 +174,7 @@ export class UsersService {
             }
         });
     }
-    
+
     /**
      * Update Password Me
      *
@@ -192,7 +192,7 @@ export class UsersService {
             }
         });
     }
-    
+
     /**
      * Register User
      *
@@ -209,7 +209,7 @@ export class UsersService {
             }
         });
     }
-    
+
     /**
      * Delete User
      *
@@ -223,7 +223,7 @@ export class UsersService {
             ...options
         });
     }
-    
+
     /**
      * Read User By Id
      *
@@ -237,7 +237,7 @@ export class UsersService {
             ...options
         });
     }
-    
+
     /**
      * Update User
      *
@@ -271,7 +271,7 @@ export class UtilsService {
             ...options
         });
     }
-    
+
     /**
      * Health Check
      */
@@ -279,6 +279,355 @@ export class UtilsService {
         return (options?.client ?? client).get<utilsHealthCheckResponses, unknown, ThrowOnError>({
             responseType: 'json',
             url: '/api/v1/utils/health-check/',
+            ...options
+        });
+    }
+}
+
+export class AdminService {
+    /**
+     * Read Admin Metrics
+     */
+    public static readAdminMetrics<ThrowOnError extends boolean = true>(options?: Options<adminReadAdminMetricsData, ThrowOnError>) {
+        return (options?.client ?? client).get<adminReadAdminMetricsResponses, unknown, ThrowOnError>({
+            responseType: 'json',
+            security: [{ scheme: 'bearer', type: 'http' }],
+            url: '/api/v1/admin/metrics',
+            ...options
+        });
+    }
+
+    /**
+     * Create Source Upload
+     */
+    public static createSourceUpload<ThrowOnError extends boolean = true>(options: Options<adminCreateSourceUploadData, ThrowOnError>) {
+        return (options.client ?? client).post<adminCreateSourceUploadResponses, adminCreateSourceUploadErrors, ThrowOnError>({
+            responseType: 'json',
+            security: [{ scheme: 'bearer', type: 'http' }],
+            url: '/api/v1/admin/source-uploads',
+            ...options,
+            headers: {
+                'Content-Type': 'application/json',
+                ...options.headers
+            }
+        });
+    }
+
+    /**
+     * Put Source Upload Object
+     */
+    public static putSourceUploadObject<ThrowOnError extends boolean = true>(options: Options<adminPutSourceUploadObjectData, ThrowOnError>) {
+        return (options.client ?? client).put<adminPutSourceUploadObjectResponses, adminPutSourceUploadObjectErrors, ThrowOnError>({
+            security: [{ scheme: 'bearer', type: 'http' }],
+            url: '/api/v1/admin/source-uploads/{upload_id}/object',
+            ...options
+        });
+    }
+
+    /**
+     * Create Multipart Upload Parts
+     */
+    public static createMultipartUploadParts<ThrowOnError extends boolean = true>(options: Options<adminCreateMultipartUploadPartsData, ThrowOnError>) {
+        return (options.client ?? client).post<adminCreateMultipartUploadPartsResponses, adminCreateMultipartUploadPartsErrors, ThrowOnError>({
+            responseType: 'json',
+            security: [{ scheme: 'bearer', type: 'http' }],
+            url: '/api/v1/admin/source-uploads/{upload_id}/multipart-parts',
+            ...options,
+            headers: {
+                'Content-Type': 'application/json',
+                ...options.headers
+            }
+        });
+    }
+
+    /**
+     * Complete Upload
+     */
+    public static completeUpload<ThrowOnError extends boolean = true>(options: Options<adminCompleteUploadData, ThrowOnError>) {
+        return (options.client ?? client).post<adminCompleteUploadResponses, adminCompleteUploadErrors, ThrowOnError>({
+            responseType: 'json',
+            security: [{ scheme: 'bearer', type: 'http' }],
+            url: '/api/v1/admin/source-uploads/{upload_id}/complete',
+            ...options,
+            headers: {
+                'Content-Type': 'application/json',
+                ...options.headers
+            }
+        });
+    }
+
+    /**
+     * Verify Document Source
+     */
+    public static verifyDocumentSource<ThrowOnError extends boolean = true>(options: Options<adminVerifyDocumentSourceData, ThrowOnError>) {
+        return (options.client ?? client).post<adminVerifyDocumentSourceResponses, adminVerifyDocumentSourceErrors, ThrowOnError>({
+            responseType: 'json',
+            security: [{ scheme: 'bearer', type: 'http' }],
+            url: '/api/v1/admin/source-documents/{source_document_id}/verify',
+            ...options,
+            headers: {
+                'Content-Type': 'application/json',
+                ...options.headers
+            }
+        });
+    }
+
+    /**
+     * Read Ingestion Runs
+     */
+    public static readIngestionRuns<ThrowOnError extends boolean = true>(options?: Options<adminReadIngestionRunsData, ThrowOnError>) {
+        return (options?.client ?? client).get<adminReadIngestionRunsResponses, adminReadIngestionRunsErrors, ThrowOnError>({
+            responseType: 'json',
+            security: [{ scheme: 'bearer', type: 'http' }],
+            url: '/api/v1/admin/ingestion-runs',
+            ...options
+        });
+    }
+
+    /**
+     * Read Ingestion Run
+     */
+    public static readIngestionRun<ThrowOnError extends boolean = true>(options: Options<adminReadIngestionRunData, ThrowOnError>) {
+        return (options.client ?? client).get<adminReadIngestionRunResponses, adminReadIngestionRunErrors, ThrowOnError>({
+            responseType: 'json',
+            security: [{ scheme: 'bearer', type: 'http' }],
+            url: '/api/v1/admin/ingestion-runs/{run_id}',
+            ...options
+        });
+    }
+
+    /**
+     * Stream Ingestion Run Events
+     */
+    public static streamIngestionRunEvents<ThrowOnError extends boolean = true>(options: Options<adminStreamIngestionRunEventsData, ThrowOnError, unknown>) {
+        return (options.client ?? client).sse.get<adminStreamIngestionRunEventsResponses, adminStreamIngestionRunEventsErrors, ThrowOnError>({
+            responseType: 'text',
+            security: [{ scheme: 'bearer', type: 'http' }],
+            url: '/api/v1/admin/ingestion-runs/{run_id}/events',
+            ...options
+        });
+    }
+
+    /**
+     * Read Ingestion Run Pages
+     */
+    public static readIngestionRunPages<ThrowOnError extends boolean = true>(options: Options<adminReadIngestionRunPagesData, ThrowOnError>) {
+        return (options.client ?? client).get<adminReadIngestionRunPagesResponses, adminReadIngestionRunPagesErrors, ThrowOnError>({
+            responseType: 'json',
+            security: [{ scheme: 'bearer', type: 'http' }],
+            url: '/api/v1/admin/ingestion-runs/{run_id}/pages',
+            ...options
+        });
+    }
+
+    /**
+     * Patch Page Selection
+     */
+    public static patchPageSelection<ThrowOnError extends boolean = true>(options: Options<adminPatchPageSelectionData, ThrowOnError>) {
+        return (options.client ?? client).patch<adminPatchPageSelectionResponses, adminPatchPageSelectionErrors, ThrowOnError>({
+            responseType: 'json',
+            security: [{ scheme: 'bearer', type: 'http' }],
+            url: '/api/v1/admin/ingestion-runs/{run_id}/page-selection',
+            ...options,
+            headers: {
+                'Content-Type': 'application/json',
+                ...options.headers
+            }
+        });
+    }
+
+    /**
+     * Retry Run
+     */
+    public static retryRun<ThrowOnError extends boolean = true>(options: Options<adminRetryRunData, ThrowOnError>) {
+        return (options.client ?? client).post<adminRetryRunResponses, adminRetryRunErrors, ThrowOnError>({
+            responseType: 'json',
+            security: [{ scheme: 'bearer', type: 'http' }],
+            url: '/api/v1/admin/ingestion-runs/{run_id}/retry',
+            ...options,
+            headers: {
+                'Content-Type': 'application/json',
+                ...options.headers
+            }
+        });
+    }
+
+    /**
+     * Cancel Run
+     */
+    public static cancelRun<ThrowOnError extends boolean = true>(options: Options<adminCancelRunData, ThrowOnError>) {
+        return (options.client ?? client).post<adminCancelRunResponses, adminCancelRunErrors, ThrowOnError>({
+            responseType: 'json',
+            security: [{ scheme: 'bearer', type: 'http' }],
+            url: '/api/v1/admin/ingestion-runs/{run_id}/cancel',
+            ...options,
+            headers: {
+                'Content-Type': 'application/json',
+                ...options.headers
+            }
+        });
+    }
+
+    /**
+     * Resume Run
+     */
+    public static resumeRun<ThrowOnError extends boolean = true>(options: Options<adminResumeRunData, ThrowOnError>) {
+        return (options.client ?? client).post<adminResumeRunResponses, adminResumeRunErrors, ThrowOnError>({
+            responseType: 'json',
+            security: [{ scheme: 'bearer', type: 'http' }],
+            url: '/api/v1/admin/ingestion-runs/{run_id}/resume',
+            ...options,
+            headers: {
+                'Content-Type': 'application/json',
+                ...options.headers
+            }
+        });
+    }
+
+    /**
+     * Read Review Items
+     */
+    public static readReviewItems<ThrowOnError extends boolean = true>(options?: Options<adminReadReviewItemsData, ThrowOnError>) {
+        return (options?.client ?? client).get<adminReadReviewItemsResponses, adminReadReviewItemsErrors, ThrowOnError>({
+            responseType: 'json',
+            security: [{ scheme: 'bearer', type: 'http' }],
+            url: '/api/v1/admin/review-items',
+            ...options
+        });
+    }
+
+    /**
+     * Read Review Item
+     */
+    public static readReviewItem<ThrowOnError extends boolean = true>(options: Options<adminReadReviewItemData, ThrowOnError>) {
+        return (options.client ?? client).get<adminReadReviewItemResponses, adminReadReviewItemErrors, ThrowOnError>({
+            responseType: 'json',
+            security: [{ scheme: 'bearer', type: 'http' }],
+            url: '/api/v1/admin/review-items/{candidate_id}',
+            ...options
+        });
+    }
+
+    /**
+     * Patch Review Item
+     */
+    public static patchReviewItem<ThrowOnError extends boolean = true>(options: Options<adminPatchReviewItemData, ThrowOnError>) {
+        return (options.client ?? client).patch<adminPatchReviewItemResponses, adminPatchReviewItemErrors, ThrowOnError>({
+            responseType: 'json',
+            security: [{ scheme: 'bearer', type: 'http' }],
+            url: '/api/v1/admin/review-items/{candidate_id}',
+            ...options,
+            headers: {
+                'Content-Type': 'application/json',
+                ...options.headers
+            }
+        });
+    }
+
+    /**
+     * Decide Review Item
+     */
+    public static decideReviewItem<ThrowOnError extends boolean = true>(options: Options<adminDecideReviewItemData, ThrowOnError>) {
+        return (options.client ?? client).post<adminDecideReviewItemResponses, adminDecideReviewItemErrors, ThrowOnError>({
+            responseType: 'json',
+            security: [{ scheme: 'bearer', type: 'http' }],
+            url: '/api/v1/admin/review-items/{candidate_id}/decision',
+            ...options,
+            headers: {
+                'Content-Type': 'application/json',
+                ...options.headers
+            }
+        });
+    }
+
+    /**
+     * Read Embedding Benchmark
+     */
+    public static readEmbeddingBenchmark<ThrowOnError extends boolean = true>(options: Options<adminReadEmbeddingBenchmarkData, ThrowOnError>) {
+        return (options.client ?? client).get<adminReadEmbeddingBenchmarkResponses, adminReadEmbeddingBenchmarkErrors, ThrowOnError>({
+            responseType: 'json',
+            security: [{ scheme: 'bearer', type: 'http' }],
+            url: '/api/v1/admin/embedding-benchmarks/{release_id}',
+            ...options
+        });
+    }
+
+    /**
+     * Read Corpus Releases
+     */
+    public static readCorpusReleases<ThrowOnError extends boolean = true>(options?: Options<adminReadCorpusReleasesData, ThrowOnError>) {
+        return (options?.client ?? client).get<adminReadCorpusReleasesResponses, adminReadCorpusReleasesErrors, ThrowOnError>({
+            responseType: 'json',
+            security: [{ scheme: 'bearer', type: 'http' }],
+            url: '/api/v1/admin/corpus-releases',
+            ...options
+        });
+    }
+
+    /**
+     * Validate Release
+     */
+    public static validateRelease<ThrowOnError extends boolean = true>(options: Options<adminValidateReleaseData, ThrowOnError>) {
+        return (options.client ?? client).post<adminValidateReleaseResponses, adminValidateReleaseErrors, ThrowOnError>({
+            responseType: 'json',
+            security: [{ scheme: 'bearer', type: 'http' }],
+            url: '/api/v1/admin/corpus-releases/{release_id}/validate',
+            ...options,
+            headers: {
+                'Content-Type': 'application/json',
+                ...options.headers
+            }
+        });
+    }
+
+    /**
+     * Read Release Manifest
+     */
+    public static readReleaseManifest<ThrowOnError extends boolean = true>(options: Options<adminReadReleaseManifestData, ThrowOnError>) {
+        return (options.client ?? client).get<adminReadReleaseManifestResponses, adminReadReleaseManifestErrors, ThrowOnError>({
+            responseType: 'json',
+            security: [{ scheme: 'bearer', type: 'http' }],
+            url: '/api/v1/admin/corpus-releases/{release_id}/manifest',
+            ...options
+        });
+    }
+
+    /**
+     * Read Release Publication Evidence
+     */
+    public static readReleasePublicationEvidence<ThrowOnError extends boolean = true>(options: Options<adminReadReleasePublicationEvidenceData, ThrowOnError>) {
+        return (options.client ?? client).get<adminReadReleasePublicationEvidenceResponses, adminReadReleasePublicationEvidenceErrors, ThrowOnError>({
+            responseType: 'json',
+            security: [{ scheme: 'bearer', type: 'http' }],
+            url: '/api/v1/admin/corpus-releases/{release_id}/publication-evidence',
+            ...options
+        });
+    }
+
+    /**
+     * Publish Release
+     */
+    public static publishRelease<ThrowOnError extends boolean = true>(options: Options<adminPublishReleaseData, ThrowOnError>) {
+        return (options.client ?? client).post<adminPublishReleaseResponses, adminPublishReleaseErrors, ThrowOnError>({
+            responseType: 'json',
+            security: [{ scheme: 'bearer', type: 'http' }],
+            url: '/api/v1/admin/corpus-releases/{release_id}/publish',
+            ...options,
+            headers: {
+                'Content-Type': 'application/json',
+                ...options.headers
+            }
+        });
+    }
+
+    /**
+     * Read Production Provision Versions
+     */
+    public static readProductionProvisionVersions<ThrowOnError extends boolean = true>(options?: Options<adminReadProductionProvisionVersionsData, ThrowOnError>) {
+        return (options?.client ?? client).get<adminReadProductionProvisionVersionsResponses, unknown, ThrowOnError>({
+            responseType: 'json',
+            security: [{ scheme: 'bearer', type: 'http' }],
+            url: '/api/v1/admin/corpus-releases/production/provision-versions',
             ...options
         });
     }

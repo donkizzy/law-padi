@@ -57,7 +57,7 @@ export function AppSidebar() {
       <SidebarContent className="gap-5 px-2">
         <Main items={items} />
         <div className="px-2 group-data-[collapsible=icon]:hidden">
-          <div className="mb-2 px-2 text-[0.7rem] font-bold uppercase text-sidebar-foreground/50">
+          <div className="mb-2 px-2 text-[0.7rem] text-sidebar-foreground/50">
             Recent conversations
           </div>
           <div className="grid gap-1">

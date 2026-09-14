@@ -1,8 +1,8 @@
 import { zodResolver } from "@hookform/resolvers/zod"
 import { useMutation, useQueryClient } from "@tanstack/react-query"
-import { FiPlus } from "react-icons/fi"
 import { useState } from "react"
 import { useForm } from "react-hook-form"
+import { FiPlus } from "react-icons/fi"
 import { z } from "zod"
 
 import { type UserCreate, UsersService } from "@/client"
