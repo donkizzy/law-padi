@@ -6,6 +6,7 @@ from pydantic import field_validator, model_validator
 from sqlmodel import Field, SQLModel
 
 from app.legal.enums import (
+    AuditSeverity,
     CorpusReleaseStatus,
     EmbeddingProviderKind,
     EmbeddingRunStatus,
@@ -47,6 +48,29 @@ class AdminMetrics(SQLModel):
     auto_approval_rate: float
     embedding_progress: float
     current_production_release: str | None = None
+
+
+class AdminOperationalAlertPublic(SQLModel):
+    id: str
+    alert_type: str
+    severity: AuditSeverity
+    title: str
+    message: str
+    detected_at: datetime
+    run_id: uuid.UUID | None = None
+    step_id: uuid.UUID | None = None
+    task_id: uuid.UUID | None = None
+    candidate_id: uuid.UUID | None = None
+    issue_id: uuid.UUID | None = None
+    release_id: uuid.UUID | None = None
+    embedding_run_id: uuid.UUID | None = None
+    promotion_attempt_id: uuid.UUID | None = None
+    evidence: dict[str, Any] | None = None
+
+
+class AdminOperationalAlertsPublic(SQLModel):
+    data: list[AdminOperationalAlertPublic]
+    count: int
 
 
 class SourceUploadCreate(SQLModel):

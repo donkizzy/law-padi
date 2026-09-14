@@ -23,6 +23,27 @@ test("Admin legal workspace is accessible and shows evidence operations", async 
   await expect(
     page.getByRole("button", { name: "Upload source" }),
   ).toBeVisible()
+  for (const metric of [
+    "Active runs",
+    "Blocked runs",
+    "Failed runs",
+    "Queue depth",
+    "Worker heartbeat",
+    "Pages processed",
+    "OCR fallback",
+    "Review issues",
+    "Auto-approved",
+    "Embedding",
+    "Production",
+  ]) {
+    await expect(page.getByText(metric, { exact: true })).toBeVisible()
+  }
+  await expect(
+    page.getByRole("heading", { name: "Operational alerts" }),
+  ).toBeVisible()
+  await expect(page.getByText("Terminal ingestion failure")).toBeVisible()
+  await expect(page.getByText("HF TEI endpoint returned 502.")).toBeVisible()
+  await expect(page.getByText("Qdrant alias switch failed.")).toBeVisible()
 
   for (const tab of [
     "Ingestion runs",
@@ -416,17 +437,22 @@ async function mockAdminApi(
     if (method === "GET" && path.endsWith("/metrics")) {
       return json(route, {
         active_runs: 1,
-        blocked_runs: 0,
-        failed_runs: 0,
+        blocked_runs: 1,
+        failed_runs: 1,
         queue_depth: 2,
         worker_heartbeat: new Date().toISOString(),
         pages_processed: 2,
-        ocr_fallback_rate: 0,
+        ocr_fallback_rate: 0.5,
         review_issues: 1,
         auto_approval_rate: 0.25,
         embedding_progress: 0.5,
         current_production_release: "2026.09.test",
       })
+    }
+
+    if (method === "GET" && path.endsWith("/alerts")) {
+      const alerts = operationalAlerts()
+      return json(route, { data: alerts, count: alerts.length })
     }
 
     if (method === "GET" && path.endsWith("/ingestion-runs")) {
@@ -1112,6 +1138,97 @@ function releasePublicationEvidence() {
       override_reasons: ["Two-person override recorded in browser test."],
     },
   }
+}
+
+function operationalAlerts() {
+  const detectedAt = new Date().toISOString()
+  return [
+    {
+      id: `run-failed:${failedRunId}`,
+      alert_type: "terminal_failure",
+      severity: "high",
+      title: "Terminal ingestion failure",
+      message: "Native extraction worker failed.",
+      detected_at: detectedAt,
+      run_id: failedRunId,
+      step_id: null,
+      task_id: null,
+      candidate_id: null,
+      issue_id: null,
+      release_id: null,
+      embedding_run_id: null,
+      promotion_attempt_id: null,
+      evidence: { stage: "native_extraction" },
+    },
+    {
+      id: "stalled-lease:dddddddd-dddd-4ddd-8ddd-dddddddddddd",
+      alert_type: "stalled_lease",
+      severity: "warning",
+      title: "Stalled worker lease",
+      message: "native_extraction lease expired for worker-browser-test.",
+      detected_at: detectedAt,
+      run_id: runId,
+      step_id: "bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb",
+      task_id: "dddddddd-dddd-4ddd-8ddd-dddddddddddd",
+      candidate_id: null,
+      issue_id: null,
+      release_id: null,
+      embedding_run_id: null,
+      promotion_attempt_id: null,
+      evidence: { task_type: "native_extraction" },
+    },
+    {
+      id: "blocking-review-issue:12121212-1212-4121-8121-121212121212",
+      alert_type: "unresolved_blocking_issue",
+      severity: "high",
+      title: "Unresolved blocking review issue",
+      message: "Candidate requires source-span verification.",
+      detected_at: detectedAt,
+      run_id: runId,
+      step_id: null,
+      task_id: null,
+      candidate_id: candidateId,
+      issue_id: "12121212-1212-4121-8121-121212121212",
+      release_id: null,
+      embedding_run_id: null,
+      promotion_attempt_id: null,
+      evidence: { issue_type: "source_span_coverage" },
+    },
+    {
+      id: "embedding-provider-outage:93939393-9393-4393-9393-939393939393",
+      alert_type: "embedding_provider_outage",
+      severity: "high",
+      title: "Embedding provider outage",
+      message: "HF TEI endpoint returned 502.",
+      detected_at: detectedAt,
+      run_id: null,
+      step_id: null,
+      task_id: null,
+      candidate_id: null,
+      issue_id: null,
+      release_id: releaseId,
+      embedding_run_id: "93939393-9393-4393-9393-939393939393",
+      promotion_attempt_id: null,
+      evidence: { benchmark_dataset_version: "browser-gold-v1" },
+    },
+    {
+      id: "publication-failed:94949494-9494-4494-9494-949494949494",
+      alert_type: "publication_failure",
+      severity: "high",
+      title: "Publication failure",
+      message: "Qdrant alias switch failed.",
+      detected_at: detectedAt,
+      run_id: null,
+      step_id: null,
+      task_id: null,
+      candidate_id: null,
+      issue_id: null,
+      release_id: releaseId,
+      embedding_run_id: null,
+      promotion_attempt_id: "94949494-9494-4494-9494-949494949494",
+      evidence: { phase: "qdrant_alias" },
+    },
+  ]
 }
 
 function sourceUpload(
