@@ -1,0 +1,25 @@
+[project]
+name = "law-padi-ingestion-worker"
+version = "0.1.0"
+description = "Independent Python 3.12 worker runtime for Law Padi legal document ingestion."
+requires-python = ">=3.12,<3.13"
+dependencies = [
+    "alembic<2.0.0,>=1.12.1",
+    "email-validator<3.0.0.0,>=2.1.0.post1",
+    "fastapi[standard]>=0.141.1,<1.0.0",
+    "httpx<1.0.0,>=0.25.1",
+    "jinja2<4.0.0,>=3.1.4",
+    "psycopg[binary]>=3.3.4,<4.0.0",
+    "pydantic>2.0",
+    "pydantic-settings<3.0.0,>=2.2.1",
+    "pypdf>=6.16.2,<7.0.0",
+    "sqlmodel>=0.0.39,<1.0.0",
+]
+
+[project.scripts]
+law-padi-ingestion-worker = "ingestion_worker.cli:main"
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
