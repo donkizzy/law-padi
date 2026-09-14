@@ -17,6 +17,7 @@ from app.ingestion.service import (
     latest_revision_text,
     publish_corpus_release,
     put_local_upload_object,
+    read_admin_operational_alerts,
     read_corpus_release_manifest,
     read_corpus_release_publication_evidence,
     release_entry_count,
@@ -63,6 +64,7 @@ from app.legal.models import (
 )
 from app.legal.schemas import (
     AdminMetrics,
+    AdminOperationalAlertsPublic,
     CandidateRevisionPublic,
     CorpusReleaseActorSeparationPublic,
     CorpusReleaseManifestPublic,
@@ -196,6 +198,16 @@ def read_admin_metrics(session: SessionDep, current_user: CurrentUser) -> AdminM
         if production_release
         else None,
     )
+
+
+@router.get("/alerts")
+def read_admin_alerts(
+    session: SessionDep,
+    current_user: CurrentUser,
+) -> AdminOperationalAlertsPublic:
+    _require_any_admin(session, current_user)
+    alerts = read_admin_operational_alerts(session)
+    return AdminOperationalAlertsPublic(data=alerts, count=len(alerts))
 
 
 @router.post("/source-uploads")

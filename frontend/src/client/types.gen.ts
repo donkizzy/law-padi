@@ -55,6 +55,90 @@ export type AdminMetrics = {
 };
 
 /**
+ * AdminOperationalAlertPublic
+ */
+export type AdminOperationalAlertPublic = {
+    /**
+     * Id
+     */
+    id: string;
+    /**
+     * Alert Type
+     */
+    alert_type: string;
+    severity: AuditSeverity;
+    /**
+     * Title
+     */
+    title: string;
+    /**
+     * Message
+     */
+    message: string;
+    /**
+     * Detected At
+     */
+    detected_at: string;
+    /**
+     * Run Id
+     */
+    run_id?: string | null;
+    /**
+     * Step Id
+     */
+    step_id?: string | null;
+    /**
+     * Task Id
+     */
+    task_id?: string | null;
+    /**
+     * Candidate Id
+     */
+    candidate_id?: string | null;
+    /**
+     * Issue Id
+     */
+    issue_id?: string | null;
+    /**
+     * Release Id
+     */
+    release_id?: string | null;
+    /**
+     * Embedding Run Id
+     */
+    embedding_run_id?: string | null;
+    /**
+     * Promotion Attempt Id
+     */
+    promotion_attempt_id?: string | null;
+    /**
+     * Evidence
+     */
+    evidence?: {
+        [key: string]: unknown;
+    } | null;
+};
+
+/**
+ * AdminOperationalAlertsPublic
+ */
+export type AdminOperationalAlertsPublic = {
+    /**
+     * Data
+     */
+    data: Array<AdminOperationalAlertPublic>;
+    /**
+     * Count
+     */
+    count: number;
+};
+
+/**
+ * AuditSeverity
+ */
+export type AuditSeverity = 'info' | 'warning' | 'high';
+
+/**
  * Body_login-login_access_token
  */
 export type Body_login_login_access_token = {
@@ -2545,6 +2629,22 @@ export type adminReadAdminMetricsResponses = {
 };
 
 export type adminReadAdminMetricsResponse = adminReadAdminMetricsResponses[keyof adminReadAdminMetricsResponses];
+
+export type adminReadAdminAlertsData = {
+    body?: never;
+    path?: never;
+    query?: never;
+    url: '/api/v1/admin/alerts';
+};
+
+export type adminReadAdminAlertsResponses = {
+    /**
+     * Successful Response
+     */
+    200: AdminOperationalAlertsPublic;
+};
+
+export type adminReadAdminAlertsResponse = adminReadAdminAlertsResponses[keyof adminReadAdminAlertsResponses];
 
 export type adminCreateSourceUploadData = {
     body: SourceUploadCreate;

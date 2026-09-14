@@ -1,7 +1,7 @@
 import hashlib
 import json
 import uuid
-from datetime import UTC, date, datetime
+from datetime import UTC, date, datetime, timedelta
 from io import BytesIO
 
 import pytest
@@ -129,6 +129,120 @@ def test_admin_metrics_counts_auto_approved_candidates(
 
     assert response.status_code == 200
     assert response.json()["auto_approval_rate"] == 0.5
+
+
+def test_admin_alerts_surface_dashboard_only_operational_failures(
+    client: TestClient,
+    superuser_token_headers: dict[str, str],
+    db: Session,
+) -> None:
+    admin = crud.get_user_by_email(session=db, email=settings.FIRST_SUPERUSER)
+    assert admin
+    now = datetime.now(UTC)
+    source, failed_run = _source_and_run(db, created_by=admin.id)
+    failed_run.status = IngestionRunStatus.FAILED
+    failed_run.current_stage = IngestionStage.NATIVE_EXTRACTION
+    failed_run.error_details = {"message": "Native extraction worker failed."}
+    failed_run.completed_at = now
+    failed_run.updated_at = now
+    native_step = db.exec(
+        select(IngestionStep).where(
+            IngestionStep.run_id == failed_run.id,
+            IngestionStep.stage == IngestionStage.NATIVE_EXTRACTION,
+        )
+    ).one()
+    stale_task = IngestionTask(
+        run_id=failed_run.id,
+        step_id=native_step.id,
+        task_type=IngestionStage.NATIVE_EXTRACTION.value,
+        status=IngestionTaskStatus.LEASED,
+        lease_owner="worker-alert-test",
+        leased_until=now - timedelta(minutes=5),
+        heartbeat_at=now - timedelta(minutes=10),
+        idempotency_key=f"{failed_run.id}:stalled-alert",
+    )
+    candidate = ExtractionCandidate(
+        run_id=failed_run.id,
+        source_document_id=source.id,
+        kind=ProvisionKind.SECTION,
+        number="37",
+        canonical_path=f"constitution.1999.section37.alert.{uuid.uuid4().hex}",
+        sort_key="037",
+        status=ExtractionCandidateStatus.NEEDS_REVIEW,
+        blocking_issue_count=1,
+    )
+    db.add_all([failed_run, stale_task, candidate])
+    db.commit()
+    db.refresh(stale_task)
+    db.refresh(candidate)
+    blocking_issue = ReviewIssue(
+        candidate_id=candidate.id,
+        issue_type="source_span_coverage",
+        severity=ReviewIssueSeverity.BLOCKING,
+        status=ReviewIssueStatus.OPEN,
+        blocking=True,
+        message="Candidate requires source-span verification.",
+        evidence={"page": 2},
+    )
+    release, vector_index = _release_bundle(db, uploader=admin)
+    failed_profile = EmbeddingProfile(
+        name=f"bge-m3-alert-{uuid.uuid4().hex}",
+        provider=EmbeddingProviderKind.HUGGINGFACE_TEI,
+        model_name="BAAI/bge-m3",
+        model_revision="pinned",
+        vector_dimensions=1024,
+        configuration={"endpoint": "private-tei"},
+    )
+    db.add(failed_profile)
+    db.commit()
+    db.refresh(failed_profile)
+    failed_embedding = EmbeddingRun(
+        release_id=release.id,
+        profile_id=failed_profile.id,
+        status=EmbeddingRunStatus.FAILED,
+        benchmark_dataset_version="alert-benchmark-v1",
+        error_details={"message": "HF TEI endpoint returned 502."},
+        completed_at=now,
+    )
+    failed_promotion = ReleasePromotionAttempt(
+        release_id=release.id,
+        vector_index_id=vector_index.id,
+        requested_by=admin.id,
+        status=ReleasePromotionStatus.FAILED,
+        target_collection_name=vector_index.collection_name,
+        error_details={"message": "Qdrant alias switch failed."},
+        completed_at=now,
+    )
+    db.add_all([blocking_issue, failed_embedding, failed_promotion])
+    db.commit()
+    db.refresh(blocking_issue)
+    db.refresh(failed_embedding)
+    db.refresh(failed_promotion)
+
+    response = client.get(
+        f"{settings.API_V1_STR}/admin/alerts",
+        headers=superuser_token_headers,
+    )
+
+    assert response.status_code == 200
+    alerts = response.json()["data"]
+    indexed_alerts = {alert["id"]: alert for alert in alerts}
+    terminal_alert = indexed_alerts[f"run-failed:{failed_run.id}"]
+    stalled_alert = indexed_alerts[f"stalled-lease:{stale_task.id}"]
+    issue_alert = indexed_alerts[f"blocking-review-issue:{blocking_issue.id}"]
+    embedding_alert = indexed_alerts[f"embedding-provider-outage:{failed_embedding.id}"]
+    publication_alert = indexed_alerts[f"publication-failed:{failed_promotion.id}"]
+
+    assert terminal_alert["alert_type"] == "terminal_failure"
+    assert terminal_alert["message"] == "Native extraction worker failed."
+    assert stalled_alert["alert_type"] == "stalled_lease"
+    assert stalled_alert["task_id"] == str(stale_task.id)
+    assert issue_alert["alert_type"] == "unresolved_blocking_issue"
+    assert issue_alert["candidate_id"] == str(candidate.id)
+    assert embedding_alert["alert_type"] == "embedding_provider_outage"
+    assert embedding_alert["release_id"] == str(release.id)
+    assert publication_alert["alert_type"] == "publication_failure"
+    assert publication_alert["promotion_attempt_id"] == str(failed_promotion.id)
 
 
 def test_scoped_admin_role_can_review_but_cannot_upload(

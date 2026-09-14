@@ -3,6 +3,7 @@ import type { FormEvent, ReactElement, ReactNode } from "react"
 import { cloneElement, isValidElement, useEffect, useState } from "react"
 import type { IconType } from "react-icons"
 import {
+  FiAlertTriangle,
   FiCheckCircle,
   FiClock,
   FiFileText,
@@ -22,6 +23,7 @@ import {
 } from "react-icons/lia"
 
 import {
+  type AdminOperationalAlertPublic,
   AdminService,
   type CompletedMultipartPart,
   type CorpusReleaseManifestPublic,
@@ -141,6 +143,12 @@ export function AdminWorkspace() {
   const metricsQuery = useQuery({
     queryKey: ["admin", "metrics"],
     queryFn: async () => (await AdminService.readAdminMetrics()).data,
+    refetchInterval: 5000,
+  })
+
+  const alertsQuery = useQuery({
+    queryKey: ["admin", "alerts"],
+    queryFn: async () => (await AdminService.readAdminAlerts()).data,
     refetchInterval: 5000,
   })
 
@@ -379,6 +387,7 @@ export function AdminWorkspace() {
   const runs = runsQuery.data?.data ?? []
   const reviews = reviewsQuery.data?.data ?? []
   const releases = releasesQuery.data?.data ?? []
+  const alerts = alertsQuery.data?.data ?? []
   const selectedRun =
     selectedRunQuery.data ?? runs.find((run) => run.id === selectedRunId)
   const selectedReview =
@@ -442,14 +451,44 @@ export function AdminWorkspace() {
             value={formatMetric(metrics?.active_runs)}
           />
           <MetricCard
+            icon={FiPauseCircle}
+            label="Blocked runs"
+            value={formatMetric(metrics?.blocked_runs)}
+          />
+          <MetricCard
+            icon={FiXCircle}
+            label="Failed runs"
+            value={formatMetric(metrics?.failed_runs)}
+          />
+          <MetricCard
             icon={LiaShieldAltSolid}
             label="Queue depth"
             value={formatMetric(metrics?.queue_depth)}
           />
           <MetricCard
+            icon={FiClock}
+            label="Worker heartbeat"
+            value={formatDateTime(metrics?.worker_heartbeat)}
+          />
+          <MetricCard
+            icon={FiFileText}
+            label="Pages processed"
+            value={formatMetric(metrics?.pages_processed)}
+          />
+          <MetricCard
+            icon={FiRefreshCcw}
+            label="OCR fallback"
+            value={formatPercent(metrics?.ocr_fallback_rate)}
+          />
+          <MetricCard
             icon={LiaClipboardCheckSolid}
             label="Review issues"
             value={formatMetric(metrics?.review_issues)}
+          />
+          <MetricCard
+            icon={FiCheckCircle}
+            label="Auto-approved"
+            value={formatPercent(metrics?.auto_approval_rate)}
           />
           <MetricCard
             icon={LiaFlaskSolid}
@@ -462,6 +501,8 @@ export function AdminWorkspace() {
             value={metrics?.current_production_release ?? "None"}
           />
         </div>
+
+        <OperationalAlerts alerts={alerts} isLoading={alertsQuery.isLoading} />
 
         <div className="mb-6 overflow-x-auto">
           <SegmentedControl
@@ -2144,6 +2185,64 @@ function MetricCard({
   )
 }
 
+function OperationalAlerts({
+  alerts,
+  isLoading,
+}: {
+  alerts: AdminOperationalAlertPublic[]
+  isLoading: boolean
+}) {
+  return (
+    <div className="mb-6">
+      <Panel title="Operational alerts" count={alerts.length}>
+        <ListState
+          isEmpty={!alerts.length}
+          isLoading={isLoading}
+          text="No dashboard alerts."
+        />
+        {alerts.length ? (
+          <div className="grid gap-2">
+            {alerts.slice(0, 6).map((alert) => (
+              <article
+                className={cn(
+                  "sq-md border p-4",
+                  alertToneClass(alert.severity),
+                )}
+                key={alert.id}
+              >
+                <div className="flex flex-wrap items-start justify-between gap-3">
+                  <div className="min-w-0">
+                    <p className="flex items-center gap-2 text-sm font-bold">
+                      <FiAlertTriangle
+                        className="size-4 shrink-0"
+                        aria-hidden
+                      />
+                      <span>{alert.title}</span>
+                    </p>
+                    <p className="mt-2 break-words text-sm opacity-85">
+                      {alert.message}
+                    </p>
+                  </div>
+                  <span className="sq-xs bg-background/70 px-2 py-1 text-xs font-bold">
+                    {labelize(alert.alert_type)}
+                  </span>
+                </div>
+                <div className="mt-3 flex flex-wrap gap-2 text-xs opacity-75">
+                  <span>{labelize(alert.severity)}</span>
+                  <span>{formatDateTime(alert.detected_at)}</span>
+                  {alert.run_id ? (
+                    <span>Run {shortId(alert.run_id)}</span>
+                  ) : null}
+                </div>
+              </article>
+            ))}
+          </div>
+        ) : null}
+      </Panel>
+    </div>
+  )
+}
+
 function Panel({
   title,
   count,
@@ -2734,6 +2833,28 @@ function formatCurrency(value?: number | null): string {
 function formatPercent(value?: number | null): string {
   if (typeof value !== "number") return "0%"
   return `${Math.round(value * 100)}%`
+}
+
+function formatDateTime(value?: string | null): string {
+  if (!value) return "None"
+  const date = new Date(value)
+  if (Number.isNaN(date.getTime())) return "Unknown"
+  return new Intl.DateTimeFormat("en", {
+    day: "2-digit",
+    hour: "2-digit",
+    minute: "2-digit",
+    month: "short",
+  }).format(date)
+}
+
+function alertToneClass(severity?: string | null): string {
+  if (severity === "high") {
+    return "border-[color:var(--legal-red)]/30 bg-[color:var(--legal-red-soft)] text-[color:var(--legal-red)]"
+  }
+  if (severity === "warning") {
+    return "border-[color:var(--legal-amber)]/30 bg-[color:var(--legal-amber-soft)] text-[color:var(--legal-amber)]"
+  }
+  return "border-border bg-background text-foreground"
 }
 
 function reportNumber(
