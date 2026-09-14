@@ -38,6 +38,98 @@ class VerificationStatus(StrEnum):
     REJECTED = "rejected"
 
 
+class SourceUploadStatus(StrEnum):
+    CREATED = "created"
+    UPLOADING = "uploading"
+    COMPLETED = "completed"
+    DUPLICATE = "duplicate"
+    FAILED = "failed"
+    CANCELLED = "cancelled"
+
+
+class IngestionRunStatus(StrEnum):
+    QUEUED = "queued"
+    RUNNING = "running"
+    WAITING_FOR_INPUT = "waiting_for_input"
+    WAITING_FOR_REVIEW = "waiting_for_review"
+    READY_TO_EMBED = "ready_to_embed"
+    INDEXING = "indexing"
+    READY_TO_PUBLISH = "ready_to_publish"
+    PUBLISHING = "publishing"
+    PUBLISHED = "published"
+    FAILED = "failed"
+    CANCELLED = "cancelled"
+
+
+class IngestionStage(StrEnum):
+    UPLOADING = "uploading"
+    VERIFYING_UPLOAD = "verifying_upload"
+    MALWARE_SCAN = "malware_scan"
+    PROFILING = "profiling"
+    AWAITING_PAGE_CONFIRMATION = "awaiting_page_confirmation"
+    RENDERING = "rendering"
+    NATIVE_EXTRACTION = "native_extraction"
+    LOCAL_OCR = "local_ocr"
+    MANAGED_OCR = "managed_ocr"
+    NORMALIZING = "normalizing"
+    PARSING_STRUCTURE = "parsing_structure"
+    VALIDATING_DOCUMENT = "validating_document"
+    REVIEW = "review"
+    MATERIALIZING = "materializing"
+    BUILDING_RETRIEVAL_DOCUMENTS = "building_retrieval_documents"
+    EMBEDDING = "embedding"
+    INDEXING = "indexing"
+    VALIDATING_INDEX = "validating_index"
+    PUBLISHING = "publishing"
+
+
+class IngestionStepStatus(StrEnum):
+    PENDING = "pending"
+    LEASED = "leased"
+    RUNNING = "running"
+    BLOCKED = "blocked"
+    SUCCEEDED = "succeeded"
+    FAILED = "failed"
+    SKIPPED = "skipped"
+    CANCELLED = "cancelled"
+
+
+class IngestionTaskStatus(StrEnum):
+    PENDING = "pending"
+    LEASED = "leased"
+    RUNNING = "running"
+    SUCCEEDED = "succeeded"
+    FAILED = "failed"
+    CANCELLED = "cancelled"
+
+
+class PageRole(StrEnum):
+    FRONT_MATTER = "front_matter"
+    TABLE_OF_CONTENTS = "table_of_contents"
+    LEGAL_BODY = "legal_body"
+    SCHEDULE = "schedule"
+    BACK_MATTER = "back_matter"
+
+
+class PageInclusionStatus(StrEnum):
+    SUGGESTED_INCLUDE = "suggested_include"
+    SUGGESTED_EXCLUDE = "suggested_exclude"
+    INCLUDED = "included"
+    EXCLUDED = "excluded"
+
+
+class IngestionArtifactType(StrEnum):
+    ORIGINAL_SOURCE = "original_source"
+    PAGE_THUMBNAIL = "page_thumbnail"
+    RAW_EXTRACTION = "raw_extraction"
+    NORMALIZED_PAGES = "normalized_pages"
+    OCR_OUTPUT = "ocr_output"
+    VALIDATION_REPORT = "validation_report"
+    RETRIEVAL_DOCUMENTS = "retrieval_documents"
+    EMBEDDINGS = "embeddings"
+    RELEASE_MANIFEST = "release_manifest"
+
+
 class ProvisionKind(StrEnum):
     CHAPTER = "chapter"
     PART = "part"
@@ -80,6 +172,47 @@ class ReviewStatus(StrEnum):
     NEEDS_CORRECTION = "needs_correction"
     APPROVED = "approved"
     REJECTED = "rejected"
+
+
+class ExtractionCandidateStatus(StrEnum):
+    PROVISIONAL = "provisional"
+    AUTO_APPROVED = "auto_approved"
+    NEEDS_REVIEW = "needs_review"
+    NEEDS_CORRECTION = "needs_correction"
+    APPROVED = "approved"
+    REJECTED = "rejected"
+    MATERIALIZED = "materialized"
+
+
+class ReviewIssueSeverity(StrEnum):
+    LOW = "low"
+    MEDIUM = "medium"
+    HIGH = "high"
+    BLOCKING = "blocking"
+
+
+class ReviewIssueStatus(StrEnum):
+    OPEN = "open"
+    RESOLVED = "resolved"
+    WAIVED = "waived"
+
+
+class ReviewDecisionType(StrEnum):
+    APPROVE = "approve"
+    REJECT = "reject"
+    REQUEST_CORRECTION = "request_correction"
+
+
+class AdminRole(StrEnum):
+    INGESTION_UPLOADER = "ingestion_uploader"
+    LEGAL_REVIEWER = "legal_reviewer"
+    CORPUS_PUBLISHER = "corpus_publisher"
+
+
+class AuditSeverity(StrEnum):
+    INFO = "info"
+    WARNING = "warning"
+    HIGH = "high"
 
 
 class BillStatus(StrEnum):
@@ -137,9 +270,51 @@ class EvidenceRole(StrEnum):
     BACKGROUND = "background"
 
 
+class EvaluationDatasetKind(StrEnum):
+    LEGAL_GRADE_EXTRACTION = "legal_grade_extraction"
+    RETRIEVAL_BENCHMARK = "retrieval_benchmark"
+    OCR_BENCHMARK = "ocr_benchmark"
+
+
+class EvaluationItemKind(StrEnum):
+    GOLD_PROVISION = "gold_provision"
+    RETRIEVAL_QUERY = "retrieval_query"
+    OCR_PAGE = "ocr_page"
+
+
 class CorpusReleaseStatus(StrEnum):
     BUILDING = "building"
     VALIDATING = "validating"
     APPROVED = "approved"
     PRODUCTION = "production"
     RETIRED = "retired"
+
+
+class EmbeddingProviderKind(StrEnum):
+    OPENAI = "openai"
+    HUGGINGFACE_TEI = "huggingface_tei"
+
+
+class EmbeddingRunStatus(StrEnum):
+    PENDING = "pending"
+    RUNNING = "running"
+    BENCHMARKING = "benchmarking"
+    SUCCEEDED = "succeeded"
+    FAILED = "failed"
+
+
+class VectorIndexStatus(StrEnum):
+    BUILDING = "building"
+    VALIDATING = "validating"
+    READY = "ready"
+    PROMOTED = "promoted"
+    FAILED = "failed"
+    ROLLED_BACK = "rolled_back"
+
+
+class ReleasePromotionStatus(StrEnum):
+    PENDING = "pending"
+    PUBLISHING = "publishing"
+    SUCCEEDED = "succeeded"
+    FAILED = "failed"
+    ROLLED_BACK = "rolled_back"
