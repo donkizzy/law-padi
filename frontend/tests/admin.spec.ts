@@ -196,16 +196,21 @@ test("Admin uploads large R2 sources through multipart part URLs", async ({
 test("Admin reconnects streamed run events and keeps five-second polling as fallback", async ({
   page,
 }) => {
-  const requests = await mockAdminApi(page, { eventStream: "fail-once" })
+  await installDroppingRunEventStream(page)
+  const requests = await mockAdminApi(page)
 
   await page.goto("/admin")
 
-  await expect
-    .poll(() => requests.eventStream, { timeout: 5000 })
-    .toBeGreaterThanOrEqual(2)
+  await expect(
+    page.getByText("Initial streamed event before reconnect."),
+  ).toBeVisible()
   await expect(
     page.getByText("SSE stream resumed after reconnect."),
   ).toBeVisible()
+  await expect
+    .poll(() => runEventStreamLastEventIds(page), { timeout: 5000 })
+    .toContain("1")
+  expect(await runEventStreamLastEventIds(page)).toEqual([null, "1"])
   await expect(page.getByLabel("Run event stream status")).toContainText(
     /Live events streaming|Polling every 5 seconds/,
   )
@@ -359,6 +364,89 @@ test("Admin can confirm pages, correct review text, control runs, inspect benchm
   await page.getByRole("button", { name: "Publish" }).click()
   await expect(page.getByText("Corpus release updated.").last()).toBeVisible()
 })
+
+async function installDroppingRunEventStream(page: Page) {
+  await page.addInitScript(
+    ({ runId }) => {
+      const originalFetch = window.fetch.bind(window)
+      const lastEventIds: Array<string | null> = []
+      let requestCount = 0
+      ;(
+        window as unknown as {
+          __lawPadiSseLastEventIds?: Array<string | null>
+        }
+      ).__lawPadiSseLastEventIds = lastEventIds
+
+      const eventBody = (sequence: number, message: string) => {
+        const payload = {
+          id: `abababab-abab-4aba-8bab-abababababab-${sequence}`,
+          run_id: runId,
+          step_id: null,
+          sequence,
+          event_type: "stream_reconnected",
+          stage: "profiling",
+          message,
+          payload: { request_number: sequence },
+          created_at: new Date().toISOString(),
+        }
+        return `id: ${sequence}\nevent: stream_reconnected\ndata: ${JSON.stringify(payload)}\n\n`
+      }
+
+      window.fetch = async (input, init) => {
+        const request =
+          input instanceof Request ? input : new Request(input, init)
+        const url = new URL(request.url, window.location.origin)
+        if (
+          !url.pathname.endsWith(`/api/v1/admin/ingestion-runs/${runId}/events`)
+        ) {
+          return originalFetch(input, init)
+        }
+
+        requestCount += 1
+        lastEventIds.push(request.headers.get("Last-Event-ID"))
+        const headers = {
+          "Cache-Control": "no-cache",
+          "Content-Type": "text/event-stream",
+        }
+
+        if (requestCount === 1) {
+          const encoder = new TextEncoder()
+          const stream = new ReadableStream({
+            start(controller) {
+              controller.enqueue(
+                encoder.encode(
+                  eventBody(1, "Initial streamed event before reconnect."),
+                ),
+              )
+              setTimeout(
+                () => controller.error(new Error("Dropped SSE connection")),
+                0,
+              )
+            },
+          })
+          return new Response(stream, { headers, status: 200 })
+        }
+
+        return new Response(
+          eventBody(2, "SSE stream resumed after reconnect."),
+          { headers, status: 200 },
+        )
+      }
+    },
+    { runId },
+  )
+}
+
+async function runEventStreamLastEventIds(page: Page) {
+  return page.evaluate(
+    () =>
+      (
+        window as unknown as {
+          __lawPadiSseLastEventIds?: Array<string | null>
+        }
+      ).__lawPadiSseLastEventIds ?? [],
+  )
+}
 
 type AdminMockOptions = {
   eventStream?: "ok" | "fail" | "fail-once"
