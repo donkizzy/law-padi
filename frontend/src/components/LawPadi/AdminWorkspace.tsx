@@ -119,6 +119,11 @@ type ReleaseManifestEntryPreview = {
   pageRange?: string
 }
 
+type PageBoundaryDraft = Pick<
+  SourcePagePublic,
+  "inclusion_reason" | "inclusion_status"
+>
+
 const adminTabs: { label: string; value: AdminTab }[] = [
   { label: "Ingestion runs", value: "runs" },
   { label: "Page boundaries", value: "pages" },
@@ -130,6 +135,15 @@ const adminTabs: { label: string; value: AdminTab }[] = [
 const inputClass =
   "sq-sm min-h-10 border border-input bg-background px-3 text-sm outline-none transition focus:border-primary focus:ring-2 focus:ring-ring/20"
 const multipartChunkBytes = 100 * 1024 * 1024
+const pageInclusionOptions: {
+  label: string
+  value: PageInclusionStatus
+}[] = [
+  { label: "Include", value: "included" },
+  { label: "Exclude", value: "excluded" },
+  { label: "Suggested include", value: "suggested_include" },
+  { label: "Suggested exclude", value: "suggested_exclude" },
+]
 
 export function AdminWorkspace() {
   const queryClient = useQueryClient()
@@ -882,11 +896,19 @@ function PageBoundaryWorkspace({
   isMutating: boolean
   onConfirm: (pages: SourcePagePublic[]) => void
 }) {
+  const [pageDrafts, setPageDrafts] = useState<
+    Record<string, PageBoundaryDraft>
+  >({})
   const [selectedPageNumber, setSelectedPageNumber] = useState<number | null>(
     null,
   )
+  const draftedPages = pages.map((page) => ({
+    ...page,
+    ...pageDrafts[page.id],
+  }))
   const selectedPage =
-    pages.find((page) => page.page_number === selectedPageNumber) ?? pages[0]
+    draftedPages.find((page) => page.page_number === selectedPageNumber) ??
+    draftedPages[0]
 
   useEffect(() => {
     if (!pages.length) {
@@ -898,13 +920,28 @@ function PageBoundaryWorkspace({
     }
   }, [pages, selectedPageNumber])
 
+  const updateSelectedPage = (draft: Partial<PageBoundaryDraft>) => {
+    if (!selectedPage) return
+    setPageDrafts((current) => ({
+      ...current,
+      [selectedPage.id]: {
+        ...{
+          inclusion_reason: selectedPage.inclusion_reason,
+          inclusion_status: selectedPage.inclusion_status,
+        },
+        ...current[selectedPage.id],
+        ...draft,
+      },
+    }))
+  }
+
   return (
     <Panel
       action={
         <SquircleButton
           disabled={!pages.length || isMutating}
           loading={isMutating}
-          onClick={() => onConfirm(pages)}
+          onClick={() => onConfirm(draftedPages)}
           type="button"
         >
           <FiCheckCircle className="size-4" aria-hidden />
@@ -923,7 +960,7 @@ function PageBoundaryWorkspace({
         </p>
       ) : null}
       <div className="grid gap-2">
-        {pages.map((page) => (
+        {draftedPages.map((page) => (
           <button
             aria-label={`p.${page.page_number} ${labelize(page.role)} ${labelize(
               page.inclusion_status,
@@ -954,8 +991,50 @@ function PageBoundaryWorkspace({
           </button>
         ))}
       </div>
-      {selectedPage ? <ProvisionalPagePreview page={selectedPage} /> : null}
+      {selectedPage ? (
+        <>
+          <ProvisionalPagePreview page={selectedPage} />
+          <PageBoundaryDecision
+            onChange={updateSelectedPage}
+            page={selectedPage}
+          />
+        </>
+      ) : null}
     </Panel>
+  )
+}
+
+function PageBoundaryDecision({
+  page,
+  onChange,
+}: {
+  page: SourcePagePublic
+  onChange: (draft: Partial<PageBoundaryDraft>) => void
+}) {
+  return (
+    <section
+      aria-label={`Boundary decision page ${page.page_number}`}
+      className="sq-md mt-4 grid gap-3 border border-border bg-background p-4"
+    >
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <p className="text-sm font-bold">Boundary decision</p>
+        <StatusPill status={page.inclusion_status} />
+      </div>
+      <SegmentedControl
+        ariaLabel={`Page ${page.page_number} inclusion status`}
+        onChange={(value) => onChange({ inclusion_status: value })}
+        options={pageInclusionOptions}
+        value={page.inclusion_status}
+      />
+      <FieldLabel label="Page inclusion reason">
+        <Input
+          value={page.inclusion_reason ?? ""}
+          onChange={(event) =>
+            onChange({ inclusion_reason: event.target.value || null })
+          }
+        />
+      </FieldLabel>
+    </section>
   )
 }
 

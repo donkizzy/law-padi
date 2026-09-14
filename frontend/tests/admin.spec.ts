@@ -287,8 +287,20 @@ test("Admin can confirm pages, correct review text, control runs, inspect benchm
   await page.getByRole("tab", { name: "Page boundaries" }).click()
   await expect(page.getByText("p.1")).toBeVisible()
   await expect(page.getByText("p.2")).toBeVisible()
+  await page.getByRole("button", { name: /p\.2 Legal Body/ }).click()
+  await page.getByRole("tab", { exact: true, name: "Exclude" }).click()
+  await page
+    .getByLabel("Page inclusion reason")
+    .fill("Duplicate schedule page removed.")
   await page.getByRole("button", { name: "Confirm suggested pages" }).click()
   await expect(page.getByText("Page boundaries saved.")).toBeVisible()
+  expect(requests.pageSelectionBody?.pages).toContainEqual(
+    expect.objectContaining({
+      inclusion_reason: "Duplicate schedule page removed.",
+      inclusion_status: "excluded",
+      page_number: 2,
+    }),
+  )
 
   await page.getByRole("tab", { name: "Review queue" }).click()
   await expect(
@@ -361,6 +373,9 @@ type AdminMockRequests = {
   eventStream: number
   multipartRequests: number
   pages: number
+  pageSelectionBody?: {
+    pages?: unknown[]
+  }
   publicationEvidence: number
   r2Authorizations: number
   r2Puts: number
@@ -607,6 +622,9 @@ async function mockAdminApi(
       /\/ingestion-runs\/([^/]+)\/page-selection$/,
     )
     if (method === "PATCH" && pageSelectionMatch) {
+      requests.pageSelectionBody = request.postDataJSON() as {
+        pages?: unknown[]
+      }
       const pages = sourcePages(pageSelectionMatch[1])
       return json(route, {
         data: pages.map((pageItem) => ({
