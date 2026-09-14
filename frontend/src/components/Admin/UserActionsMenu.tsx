@@ -1,5 +1,5 @@
-import { FiMoreVertical } from "react-icons/fi"
 import { useState } from "react"
+import { FiMoreVertical } from "react-icons/fi"
 
 import type { UserPublic } from "@/client"
 import { Button } from "@/components/ui/button"

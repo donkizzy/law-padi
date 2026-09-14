@@ -1,13 +1,13 @@
 import type { IconType } from "react-icons"
-import { FiAlertTriangle, FiCheckCircle } from "react-icons/fi"
 import {
-  LiaArchiveSolid,
-  LiaBalanceScaleSolid,
-  LiaBookOpenSolid,
-  LiaCircleNotchSolid,
-  LiaFileContractSolid,
-  LiaHistorySolid,
-} from "react-icons/lia"
+  FiAlertTriangle,
+  FiBookmark,
+  FiBookOpen,
+  FiCheckCircle,
+  FiClock,
+  FiMessageSquare,
+} from "react-icons/fi"
+import { LiaArchiveSolid, LiaCircleNotchSolid } from "react-icons/lia"
 
 export type LegalStatus = "current" | "proposed" | "historical" | "warning"
 
@@ -635,20 +635,20 @@ export const sidebarSections = [
   {
     label: "Explore",
     items: [
-      { icon: LiaBalanceScaleSolid, title: "Ask a question", path: "/" },
+      { icon: FiMessageSquare, title: "Ask a question", path: "/" },
       {
-        icon: LiaBookOpenSolid,
+        icon: FiBookOpen,
         title: "Browse Constitution",
         path: "/constitution",
       },
       {
-        icon: LiaHistorySolid,
+        icon: FiClock,
         title: "Amendments",
         path: "/amendments",
         count: "4",
       },
       {
-        icon: LiaFileContractSolid,
+        icon: FiBookmark,
         title: "Saved provisions",
         path: "/saved",
       },

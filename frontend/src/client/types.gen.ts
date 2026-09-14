@@ -5,6 +5,56 @@ export type ClientOptions = {
 };
 
 /**
+ * AdminMetrics
+ */
+export type AdminMetrics = {
+    /**
+     * Active Runs
+     */
+    active_runs: number;
+    /**
+     * Blocked Runs
+     */
+    blocked_runs: number;
+    /**
+     * Failed Runs
+     */
+    failed_runs: number;
+    /**
+     * Queue Depth
+     */
+    queue_depth: number;
+    /**
+     * Worker Heartbeat
+     */
+    worker_heartbeat?: string | null;
+    /**
+     * Pages Processed
+     */
+    pages_processed: number;
+    /**
+     * Ocr Fallback Rate
+     */
+    ocr_fallback_rate: number;
+    /**
+     * Review Issues
+     */
+    review_issues: number;
+    /**
+     * Auto Approval Rate
+     */
+    auto_approval_rate: number;
+    /**
+     * Embedding Progress
+     */
+    embedding_progress: number;
+    /**
+     * Current Production Release
+     */
+    current_production_release?: string | null;
+};
+
+/**
  * Body_login-login_access_token
  */
 export type Body_login_login_access_token = {
@@ -35,6 +85,450 @@ export type Body_login_login_access_token = {
 };
 
 /**
+ * CandidateRevisionPublic
+ */
+export type CandidateRevisionPublic = {
+    /**
+     * Id
+     */
+    id: string;
+    /**
+     * Candidate Id
+     */
+    candidate_id: string;
+    /**
+     * Revision Number
+     */
+    revision_number: number;
+    /**
+     * Previous Text
+     */
+    previous_text?: string | null;
+    /**
+     * Revised Text
+     */
+    revised_text?: string | null;
+    /**
+     * Diff
+     */
+    diff?: string | null;
+    /**
+     * Reason
+     */
+    reason: string;
+    /**
+     * Revised By
+     */
+    revised_by?: string | null;
+    /**
+     * Created At
+     */
+    created_at: string;
+};
+
+/**
+ * CompletedMultipartPart
+ */
+export type CompletedMultipartPart = {
+    /**
+     * Part Number
+     */
+    part_number: number;
+    /**
+     * Etag
+     */
+    etag: string;
+};
+
+/**
+ * CorpusReleaseActorSeparationPublic
+ */
+export type CorpusReleaseActorSeparationPublic = {
+    /**
+     * Current Actor Id
+     */
+    current_actor_id: string;
+    /**
+     * Source Uploader Ids
+     */
+    source_uploader_ids: Array<string>;
+    /**
+     * Current Actor Is Source Uploader
+     */
+    current_actor_is_source_uploader: boolean;
+    /**
+     * Approved By
+     */
+    approved_by?: string | null;
+    /**
+     * Approved By Differs From Uploaders
+     */
+    approved_by_differs_from_uploaders?: boolean | null;
+    /**
+     * Superuser Override Recorded
+     */
+    superuser_override_recorded: boolean;
+    /**
+     * Override Reasons
+     */
+    override_reasons?: Array<string>;
+};
+
+/**
+ * CorpusReleaseManifestPublic
+ */
+export type CorpusReleaseManifestPublic = {
+    /**
+     * Release Id
+     */
+    release_id: string;
+    /**
+     * Release Version
+     */
+    release_version: string;
+    /**
+     * Source Manifest Hash
+     */
+    source_manifest_hash?: string | null;
+    artifact?: IngestionArtifactPublic | null;
+    /**
+     * Manifest
+     */
+    manifest: {
+        [key: string]: unknown;
+    };
+};
+
+/**
+ * CorpusReleasePromotionAttemptPublic
+ */
+export type CorpusReleasePromotionAttemptPublic = {
+    /**
+     * Id
+     */
+    id: string;
+    /**
+     * Release Id
+     */
+    release_id: string;
+    /**
+     * Vector Index Id
+     */
+    vector_index_id?: string | null;
+    /**
+     * Requested By
+     */
+    requested_by?: string | null;
+    status: ReleasePromotionStatus;
+    /**
+     * Previous Release Id
+     */
+    previous_release_id?: string | null;
+    /**
+     * Previous Collection Name
+     */
+    previous_collection_name?: string | null;
+    /**
+     * Target Collection Name
+     */
+    target_collection_name?: string | null;
+    /**
+     * Rollback Completed
+     */
+    rollback_completed: boolean;
+    /**
+     * Error Details
+     */
+    error_details?: {
+        [key: string]: unknown;
+    } | null;
+    /**
+     * Started At
+     */
+    started_at?: string | null;
+    /**
+     * Completed At
+     */
+    completed_at?: string | null;
+    /**
+     * Created At
+     */
+    created_at: string;
+};
+
+/**
+ * CorpusReleasePublic
+ */
+export type CorpusReleasePublic = {
+    /**
+     * Id
+     */
+    id: string;
+    /**
+     * Version
+     */
+    version: string;
+    status: CorpusReleaseStatus;
+    /**
+     * Source Manifest Hash
+     */
+    source_manifest_hash?: string | null;
+    /**
+     * Embedding Model
+     */
+    embedding_model?: string | null;
+    /**
+     * Embedding Model Version
+     */
+    embedding_model_version?: string | null;
+    /**
+     * Parser Version
+     */
+    parser_version?: string | null;
+    /**
+     * Validation Report
+     */
+    validation_report?: {
+        [key: string]: unknown;
+    } | null;
+    /**
+     * Approved By
+     */
+    approved_by?: string | null;
+    /**
+     * Approved At
+     */
+    approved_at?: string | null;
+    /**
+     * Lock Version
+     */
+    lock_version: number;
+    /**
+     * Created At
+     */
+    created_at: string;
+    /**
+     * Evidence Count
+     */
+    evidence_count: number;
+};
+
+/**
+ * CorpusReleasePublicationEvidencePublic
+ */
+export type CorpusReleasePublicationEvidencePublic = {
+    /**
+     * Release Id
+     */
+    release_id: string;
+    /**
+     * Release Version
+     */
+    release_version: string;
+    /**
+     * Vector Indexes
+     */
+    vector_indexes: Array<CorpusReleaseVectorIndexPublic>;
+    /**
+     * Promotion Attempts
+     */
+    promotion_attempts: Array<CorpusReleasePromotionAttemptPublic>;
+    actor_separation: CorpusReleaseActorSeparationPublic;
+};
+
+/**
+ * CorpusReleasePublishRequest
+ */
+export type CorpusReleasePublishRequest = {
+    /**
+     * Idempotency Key
+     */
+    idempotency_key: string;
+    /**
+     * Expected Version
+     */
+    expected_version: number;
+    /**
+     * Superuser Override Reason
+     */
+    superuser_override_reason?: string | null;
+};
+
+/**
+ * CorpusReleasePublishResponse
+ */
+export type CorpusReleasePublishResponse = {
+    release: CorpusReleasePublic;
+    promotion_status: ReleasePromotionStatus;
+    vector_index_status?: VectorIndexStatus | null;
+};
+
+/**
+ * CorpusReleaseStatus
+ */
+export type CorpusReleaseStatus = 'building' | 'validating' | 'approved' | 'production' | 'retired';
+
+/**
+ * CorpusReleaseValidationRequest
+ */
+export type CorpusReleaseValidationRequest = {
+    /**
+     * Idempotency Key
+     */
+    idempotency_key: string;
+    /**
+     * Expected Version
+     */
+    expected_version: number;
+};
+
+/**
+ * CorpusReleaseVectorIndexPublic
+ */
+export type CorpusReleaseVectorIndexPublic = {
+    /**
+     * Id
+     */
+    id: string;
+    /**
+     * Release Id
+     */
+    release_id: string;
+    /**
+     * Embedding Run Id
+     */
+    embedding_run_id: string;
+    /**
+     * Profile Id
+     */
+    profile_id: string;
+    /**
+     * Collection Name
+     */
+    collection_name: string;
+    /**
+     * Alias Name
+     */
+    alias_name: string;
+    status: VectorIndexStatus;
+    /**
+     * Point Count
+     */
+    point_count: number;
+    /**
+     * Vector Dimensions
+     */
+    vector_dimensions: number;
+    /**
+     * Payload Schema Hash
+     */
+    payload_schema_hash?: string | null;
+    /**
+     * Checksum
+     */
+    checksum?: string | null;
+    /**
+     * Validation Report
+     */
+    validation_report?: {
+        [key: string]: unknown;
+    } | null;
+    /**
+     * Created At
+     */
+    created_at: string;
+    /**
+     * Updated At
+     */
+    updated_at: string;
+};
+
+/**
+ * CorpusReleasesPublic
+ */
+export type CorpusReleasesPublic = {
+    /**
+     * Data
+     */
+    data: Array<CorpusReleasePublic>;
+    /**
+     * Count
+     */
+    count: number;
+};
+
+/**
+ * EmbeddingBenchmarkPublic
+ */
+export type EmbeddingBenchmarkPublic = {
+    /**
+     * Release Id
+     */
+    release_id: string;
+    /**
+     * Results
+     */
+    results: Array<EmbeddingBenchmarkResult>;
+};
+
+/**
+ * EmbeddingBenchmarkResult
+ */
+export type EmbeddingBenchmarkResult = {
+    /**
+     * Profile Id
+     */
+    profile_id: string;
+    provider: EmbeddingProviderKind;
+    /**
+     * Model Name
+     */
+    model_name: string;
+    status: EmbeddingRunStatus;
+    /**
+     * Recall At 10
+     */
+    recall_at_10?: number | null;
+    /**
+     * Ndcg At 10
+     */
+    ndcg_at_10?: number | null;
+    /**
+     * Cost Usd
+     */
+    cost_usd?: number | null;
+    /**
+     * P95 Latency Ms
+     */
+    p95_latency_ms?: number | null;
+    /**
+     * Selected For Release
+     */
+    selected_for_release: boolean;
+    /**
+     * Metrics
+     */
+    metrics?: {
+        [key: string]: unknown;
+    } | null;
+};
+
+/**
+ * EmbeddingProviderKind
+ */
+export type EmbeddingProviderKind = 'openai' | 'huggingface_tei';
+
+/**
+ * EmbeddingRunStatus
+ */
+export type EmbeddingRunStatus = 'pending' | 'running' | 'benchmarking' | 'succeeded' | 'failed';
+
+/**
+ * ExtractionCandidateStatus
+ */
+export type ExtractionCandidateStatus = 'provisional' | 'auto_approved' | 'needs_review' | 'needs_correction' | 'approved' | 'rejected' | 'materialized';
+
+/**
  * HTTPValidationError
  */
 export type HTTPValidationError = {
@@ -45,6 +539,461 @@ export type HTTPValidationError = {
 };
 
 /**
+ * IngestionArtifactPublic
+ */
+export type IngestionArtifactPublic = {
+    /**
+     * Id
+     */
+    id: string;
+    /**
+     * Run Id
+     */
+    run_id: string;
+    /**
+     * Source Page Id
+     */
+    source_page_id?: string | null;
+    artifact_type: IngestionArtifactType;
+    /**
+     * Storage Key
+     */
+    storage_key: string;
+    /**
+     * Sha256
+     */
+    sha256?: string | null;
+    /**
+     * Mime Type
+     */
+    mime_type?: string | null;
+    /**
+     * Retention Policy
+     */
+    retention_policy: string;
+    /**
+     * Artifact Metadata
+     */
+    artifact_metadata?: {
+        [key: string]: unknown;
+    } | null;
+    /**
+     * Created At
+     */
+    created_at: string;
+};
+
+/**
+ * IngestionArtifactType
+ */
+export type IngestionArtifactType = 'original_source' | 'page_thumbnail' | 'raw_extraction' | 'normalized_pages' | 'ocr_output' | 'validation_report' | 'retrieval_documents' | 'embeddings' | 'release_manifest';
+
+/**
+ * IngestionEventPublic
+ */
+export type IngestionEventPublic = {
+    /**
+     * Id
+     */
+    id: string;
+    /**
+     * Run Id
+     */
+    run_id: string;
+    /**
+     * Step Id
+     */
+    step_id?: string | null;
+    /**
+     * Sequence
+     */
+    sequence: number;
+    /**
+     * Event Type
+     */
+    event_type: string;
+    stage?: IngestionStage | null;
+    /**
+     * Message
+     */
+    message: string;
+    /**
+     * Payload
+     */
+    payload?: {
+        [key: string]: unknown;
+    } | null;
+    /**
+     * Created At
+     */
+    created_at: string;
+};
+
+/**
+ * IngestionRunControlRequest
+ */
+export type IngestionRunControlRequest = {
+    /**
+     * Idempotency Key
+     */
+    idempotency_key: string;
+    /**
+     * Expected Version
+     */
+    expected_version: number;
+    /**
+     * Reason
+     */
+    reason?: string | null;
+};
+
+/**
+ * IngestionRunDetail
+ */
+export type IngestionRunDetail = {
+    /**
+     * Id
+     */
+    id: string;
+    /**
+     * Source Upload Id
+     */
+    source_upload_id?: string | null;
+    /**
+     * Source Document Id
+     */
+    source_document_id?: string | null;
+    /**
+     * Created By
+     */
+    created_by?: string | null;
+    status: IngestionRunStatus;
+    current_stage: IngestionStage;
+    /**
+     * Pipeline Version
+     */
+    pipeline_version: string;
+    /**
+     * Pipeline Config
+     */
+    pipeline_config: {
+        [key: string]: unknown;
+    };
+    /**
+     * Expected Page Count
+     */
+    expected_page_count?: number | null;
+    /**
+     * Total Units
+     */
+    total_units: number;
+    /**
+     * Completed Units
+     */
+    completed_units: number;
+    /**
+     * Failed Units
+     */
+    failed_units: number;
+    /**
+     * Lock Version
+     */
+    lock_version: number;
+    /**
+     * Error Details
+     */
+    error_details?: {
+        [key: string]: unknown;
+    } | null;
+    /**
+     * Created At
+     */
+    created_at: string;
+    /**
+     * Updated At
+     */
+    updated_at: string;
+    /**
+     * Completed At
+     */
+    completed_at?: string | null;
+    /**
+     * Steps
+     */
+    steps: Array<IngestionStepPublic>;
+    /**
+     * Events
+     */
+    events: Array<IngestionEventPublic>;
+    /**
+     * Tasks
+     */
+    tasks: Array<IngestionTaskPublic>;
+};
+
+/**
+ * IngestionRunPublic
+ */
+export type IngestionRunPublic = {
+    /**
+     * Id
+     */
+    id: string;
+    /**
+     * Source Upload Id
+     */
+    source_upload_id?: string | null;
+    /**
+     * Source Document Id
+     */
+    source_document_id?: string | null;
+    /**
+     * Created By
+     */
+    created_by?: string | null;
+    status: IngestionRunStatus;
+    current_stage: IngestionStage;
+    /**
+     * Pipeline Version
+     */
+    pipeline_version: string;
+    /**
+     * Pipeline Config
+     */
+    pipeline_config: {
+        [key: string]: unknown;
+    };
+    /**
+     * Expected Page Count
+     */
+    expected_page_count?: number | null;
+    /**
+     * Total Units
+     */
+    total_units: number;
+    /**
+     * Completed Units
+     */
+    completed_units: number;
+    /**
+     * Failed Units
+     */
+    failed_units: number;
+    /**
+     * Lock Version
+     */
+    lock_version: number;
+    /**
+     * Error Details
+     */
+    error_details?: {
+        [key: string]: unknown;
+    } | null;
+    /**
+     * Created At
+     */
+    created_at: string;
+    /**
+     * Updated At
+     */
+    updated_at: string;
+    /**
+     * Completed At
+     */
+    completed_at?: string | null;
+};
+
+/**
+ * IngestionRunStatus
+ */
+export type IngestionRunStatus = 'queued' | 'running' | 'waiting_for_input' | 'waiting_for_review' | 'ready_to_embed' | 'indexing' | 'ready_to_publish' | 'publishing' | 'published' | 'failed' | 'cancelled';
+
+/**
+ * IngestionRunsPublic
+ */
+export type IngestionRunsPublic = {
+    /**
+     * Data
+     */
+    data: Array<IngestionRunPublic>;
+    /**
+     * Count
+     */
+    count: number;
+};
+
+/**
+ * IngestionStage
+ */
+export type IngestionStage = 'uploading' | 'verifying_upload' | 'malware_scan' | 'profiling' | 'awaiting_page_confirmation' | 'rendering' | 'native_extraction' | 'local_ocr' | 'managed_ocr' | 'normalizing' | 'parsing_structure' | 'validating_document' | 'review' | 'materializing' | 'building_retrieval_documents' | 'embedding' | 'indexing' | 'validating_index' | 'publishing';
+
+/**
+ * IngestionStepPublic
+ */
+export type IngestionStepPublic = {
+    /**
+     * Id
+     */
+    id: string;
+    /**
+     * Run Id
+     */
+    run_id: string;
+    /**
+     * Dependency Step Id
+     */
+    dependency_step_id?: string | null;
+    stage: IngestionStage;
+    status: IngestionStepStatus;
+    /**
+     * Attempt Count
+     */
+    attempt_count: number;
+    /**
+     * Lease Owner
+     */
+    lease_owner?: string | null;
+    /**
+     * Leased Until
+     */
+    leased_until?: string | null;
+    /**
+     * Heartbeat At
+     */
+    heartbeat_at?: string | null;
+    /**
+     * Total Units
+     */
+    total_units: number;
+    /**
+     * Completed Units
+     */
+    completed_units: number;
+    /**
+     * Failed Units
+     */
+    failed_units: number;
+    /**
+     * Lock Version
+     */
+    lock_version: number;
+    /**
+     * Started At
+     */
+    started_at?: string | null;
+    /**
+     * Completed At
+     */
+    completed_at?: string | null;
+    /**
+     * Metrics
+     */
+    metrics?: {
+        [key: string]: unknown;
+    } | null;
+    /**
+     * Error Details
+     */
+    error_details?: {
+        [key: string]: unknown;
+    } | null;
+    /**
+     * Created At
+     */
+    created_at: string;
+    /**
+     * Updated At
+     */
+    updated_at: string;
+};
+
+/**
+ * IngestionStepStatus
+ */
+export type IngestionStepStatus = 'pending' | 'leased' | 'running' | 'blocked' | 'succeeded' | 'failed' | 'skipped' | 'cancelled';
+
+/**
+ * IngestionTaskPublic
+ */
+export type IngestionTaskPublic = {
+    /**
+     * Id
+     */
+    id: string;
+    /**
+     * Run Id
+     */
+    run_id: string;
+    /**
+     * Step Id
+     */
+    step_id?: string | null;
+    /**
+     * Task Type
+     */
+    task_type: string;
+    status: IngestionTaskStatus;
+    /**
+     * Priority
+     */
+    priority: number;
+    /**
+     * Attempt Count
+     */
+    attempt_count: number;
+    /**
+     * Max Attempts
+     */
+    max_attempts: number;
+    /**
+     * Lease Owner
+     */
+    lease_owner?: string | null;
+    /**
+     * Leased Until
+     */
+    leased_until?: string | null;
+    /**
+     * Heartbeat At
+     */
+    heartbeat_at?: string | null;
+    /**
+     * Lock Version
+     */
+    lock_version: number;
+    /**
+     * Payload
+     */
+    payload: {
+        [key: string]: unknown;
+    };
+    /**
+     * Error Details
+     */
+    error_details?: {
+        [key: string]: unknown;
+    } | null;
+    /**
+     * Created At
+     */
+    created_at: string;
+    /**
+     * Updated At
+     */
+    updated_at: string;
+};
+
+/**
+ * IngestionTaskStatus
+ */
+export type IngestionTaskStatus = 'pending' | 'leased' | 'running' | 'succeeded' | 'failed' | 'cancelled';
+
+/**
+ * InstrumentStatus
+ */
+export type InstrumentStatus = 'draft' | 'proposed' | 'enacted' | 'repealed' | 'superseded';
+
+/**
  * Message
  */
 export type Message = {
@@ -52,6 +1001,56 @@ export type Message = {
      * Message
      */
     message: string;
+};
+
+/**
+ * MultipartPartPublic
+ */
+export type MultipartPartPublic = {
+    /**
+     * Part Number
+     */
+    part_number: number;
+    /**
+     * Upload Url
+     */
+    upload_url: string;
+};
+
+/**
+ * MultipartPartsPublic
+ */
+export type MultipartPartsPublic = {
+    /**
+     * Upload Id
+     */
+    upload_id: string;
+    /**
+     * Multipart Upload Id
+     */
+    multipart_upload_id: string;
+    /**
+     * Parts
+     */
+    parts: Array<MultipartPartPublic>;
+};
+
+/**
+ * MultipartPartsRequest
+ */
+export type MultipartPartsRequest = {
+    /**
+     * Idempotency Key
+     */
+    idempotency_key: string;
+    /**
+     * Expected Version
+     */
+    expected_version: number;
+    /**
+     * Part Count
+     */
+    part_count: number;
 };
 
 /**
@@ -66,6 +1065,49 @@ export type NewPassword = {
      * New Password
      */
     new_password: string;
+};
+
+/**
+ * PageInclusionStatus
+ */
+export type PageInclusionStatus = 'suggested_include' | 'suggested_exclude' | 'included' | 'excluded';
+
+/**
+ * PageRole
+ */
+export type PageRole = 'front_matter' | 'table_of_contents' | 'legal_body' | 'schedule' | 'back_matter';
+
+/**
+ * PageSelectionItem
+ */
+export type PageSelectionItem = {
+    /**
+     * Page Number
+     */
+    page_number: number;
+    inclusion_status: PageInclusionStatus;
+    /**
+     * Inclusion Reason
+     */
+    inclusion_reason?: string | null;
+    /**
+     * Expected Version
+     */
+    expected_version: number;
+};
+
+/**
+ * PageSelectionUpdate
+ */
+export type PageSelectionUpdate = {
+    /**
+     * Idempotency Key
+     */
+    idempotency_key: string;
+    /**
+     * Pages
+     */
+    pages: Array<PageSelectionItem>;
 };
 
 /**
@@ -89,6 +1131,780 @@ export type PrivateUserCreate = {
      */
     is_verified?: boolean;
 };
+
+/**
+ * ProvisionKind
+ */
+export type ProvisionKind = 'chapter' | 'part' | 'section' | 'subsection' | 'paragraph' | 'schedule' | 'schedule_item';
+
+/**
+ * PublicProvisionVersion
+ */
+export type PublicProvisionVersion = {
+    /**
+     * Id
+     */
+    id: string;
+    /**
+     * Provision Id
+     */
+    provision_id: string;
+    /**
+     * Text
+     */
+    text: string;
+    /**
+     * Canonical Path
+     */
+    canonical_path: string;
+    /**
+     * Release Version
+     */
+    release_version: string;
+    status: CorpusReleaseStatus;
+};
+
+/**
+ * PublicProvisionVersions
+ */
+export type PublicProvisionVersions = {
+    /**
+     * Data
+     */
+    data: Array<PublicProvisionVersion>;
+    /**
+     * Count
+     */
+    count: number;
+};
+
+/**
+ * ReleasePromotionStatus
+ */
+export type ReleasePromotionStatus = 'pending' | 'publishing' | 'succeeded' | 'failed' | 'rolled_back';
+
+/**
+ * ReviewDecisionCreate
+ */
+export type ReviewDecisionCreate = {
+    /**
+     * Idempotency Key
+     */
+    idempotency_key: string;
+    /**
+     * Expected Version
+     */
+    expected_version: number;
+    decision: ReviewDecisionType;
+    /**
+     * Reason
+     */
+    reason: string;
+    /**
+     * Superuser Override Reason
+     */
+    superuser_override_reason?: string | null;
+};
+
+/**
+ * ReviewDecisionPublic
+ */
+export type ReviewDecisionPublic = {
+    /**
+     * Id
+     */
+    id: string;
+    /**
+     * Candidate Id
+     */
+    candidate_id: string;
+    decision: ReviewDecisionType;
+    /**
+     * Decided By
+     */
+    decided_by?: string | null;
+    /**
+     * Reason
+     */
+    reason: string;
+    /**
+     * Created At
+     */
+    created_at: string;
+};
+
+/**
+ * ReviewDecisionType
+ */
+export type ReviewDecisionType = 'approve' | 'reject' | 'request_correction';
+
+/**
+ * ReviewIssuePublic
+ */
+export type ReviewIssuePublic = {
+    /**
+     * Id
+     */
+    id: string;
+    /**
+     * Candidate Id
+     */
+    candidate_id: string;
+    /**
+     * Issue Type
+     */
+    issue_type: string;
+    severity: ReviewIssueSeverity;
+    status: ReviewIssueStatus;
+    /**
+     * Blocking
+     */
+    blocking: boolean;
+    /**
+     * Message
+     */
+    message: string;
+    /**
+     * Evidence
+     */
+    evidence?: {
+        [key: string]: unknown;
+    } | null;
+    /**
+     * Resolved By
+     */
+    resolved_by?: string | null;
+    /**
+     * Resolved At
+     */
+    resolved_at?: string | null;
+    /**
+     * Created At
+     */
+    created_at: string;
+};
+
+/**
+ * ReviewIssueSeverity
+ */
+export type ReviewIssueSeverity = 'low' | 'medium' | 'high' | 'blocking';
+
+/**
+ * ReviewIssueStatus
+ */
+export type ReviewIssueStatus = 'open' | 'resolved' | 'waived';
+
+/**
+ * ReviewItemPublic
+ */
+export type ReviewItemPublic = {
+    /**
+     * Id
+     */
+    id: string;
+    /**
+     * Run Id
+     */
+    run_id: string;
+    /**
+     * Source Document Id
+     */
+    source_document_id: string;
+    source_document?: SourceDocumentPublic | null;
+    /**
+     * Parent Candidate Id
+     */
+    parent_candidate_id?: string | null;
+    /**
+     * Materialized Provision Id
+     */
+    materialized_provision_id?: string | null;
+    /**
+     * Materialized Version Id
+     */
+    materialized_version_id?: string | null;
+    kind: ProvisionKind;
+    /**
+     * Number
+     */
+    number?: string | null;
+    /**
+     * Heading
+     */
+    heading?: string | null;
+    /**
+     * Canonical Path
+     */
+    canonical_path: string;
+    /**
+     * Sort Key
+     */
+    sort_key: string;
+    /**
+     * Raw Text
+     */
+    raw_text?: string | null;
+    /**
+     * Latest Revision Text
+     */
+    latest_revision_text?: string | null;
+    /**
+     * Normalized Text
+     */
+    normalized_text?: string | null;
+    /**
+     * Source Page Start
+     */
+    source_page_start?: number | null;
+    /**
+     * Source Page End
+     */
+    source_page_end?: number | null;
+    /**
+     * Source Spans
+     */
+    source_spans?: Array<{
+        [key: string]: unknown;
+    }> | null;
+    /**
+     * Ancestor Headings
+     */
+    ancestor_headings?: Array<string> | null;
+    /**
+     * Parser Version
+     */
+    parser_version?: string | null;
+    /**
+     * Extractor Version
+     */
+    extractor_version?: string | null;
+    /**
+     * Parser Confidence
+     */
+    parser_confidence?: number | null;
+    /**
+     * Extractor Confidence
+     */
+    extractor_confidence?: number | null;
+    status: ExtractionCandidateStatus;
+    /**
+     * Blocking Issue Count
+     */
+    blocking_issue_count: number;
+    /**
+     * Revision Number
+     */
+    revision_number: number;
+    /**
+     * Lock Version
+     */
+    lock_version: number;
+    /**
+     * Issues
+     */
+    issues?: Array<ReviewIssuePublic>;
+    /**
+     * Revisions
+     */
+    revisions?: Array<CandidateRevisionPublic>;
+    /**
+     * Decisions
+     */
+    decisions?: Array<ReviewDecisionPublic>;
+    /**
+     * Created At
+     */
+    created_at: string;
+    /**
+     * Updated At
+     */
+    updated_at: string;
+};
+
+/**
+ * ReviewItemUpdate
+ */
+export type ReviewItemUpdate = {
+    /**
+     * Idempotency Key
+     */
+    idempotency_key: string;
+    /**
+     * Expected Version
+     */
+    expected_version: number;
+    /**
+     * Revised Text
+     */
+    revised_text: string;
+    /**
+     * Reason
+     */
+    reason: string;
+};
+
+/**
+ * ReviewItemsPublic
+ */
+export type ReviewItemsPublic = {
+    /**
+     * Data
+     */
+    data: Array<ReviewItemPublic>;
+    /**
+     * Count
+     */
+    count: number;
+};
+
+/**
+ * SourceDocumentPublic
+ */
+export type SourceDocumentPublic = {
+    /**
+     * Id
+     */
+    id: string;
+    /**
+     * Legal Instrument Id
+     */
+    legal_instrument_id: string;
+    /**
+     * Authority
+     */
+    authority: string;
+    /**
+     * Title
+     */
+    title: string;
+    /**
+     * Source Url
+     */
+    source_url: string;
+    /**
+     * Mime Type
+     */
+    mime_type: string;
+    /**
+     * Sha256
+     */
+    sha256: string;
+    /**
+     * Storage Backend
+     */
+    storage_backend: string;
+    /**
+     * Storage Bucket
+     */
+    storage_bucket?: string | null;
+    /**
+     * Storage Key
+     */
+    storage_key: string;
+    /**
+     * Original Filename
+     */
+    original_filename: string;
+    /**
+     * File Size
+     */
+    file_size: number;
+    /**
+     * Page Count
+     */
+    page_count?: number | null;
+    /**
+     * Published At
+     */
+    published_at: string;
+    /**
+     * Retrieved At
+     */
+    retrieved_at: string;
+    source_tier: SourceTier;
+    /**
+     * Is Legal Revision
+     */
+    is_legal_revision: boolean;
+    /**
+     * Legal Revision Effective At
+     */
+    legal_revision_effective_at?: string | null;
+    /**
+     * Parser Version
+     */
+    parser_version?: string | null;
+    verification_status: VerificationStatus;
+    /**
+     * Created By
+     */
+    created_by?: string | null;
+    /**
+     * Verified By
+     */
+    verified_by?: string | null;
+    /**
+     * Verified At
+     */
+    verified_at?: string | null;
+    /**
+     * Lock Version
+     */
+    lock_version: number;
+    /**
+     * Created At
+     */
+    created_at: string;
+};
+
+/**
+ * SourceDocumentVerificationRequest
+ */
+export type SourceDocumentVerificationRequest = {
+    /**
+     * Idempotency Key
+     */
+    idempotency_key: string;
+    /**
+     * Expected Version
+     */
+    expected_version: number;
+    /**
+     * Reason
+     */
+    reason: string;
+};
+
+/**
+ * SourcePagePublic
+ */
+export type SourcePagePublic = {
+    /**
+     * Id
+     */
+    id: string;
+    /**
+     * Run Id
+     */
+    run_id: string;
+    /**
+     * Source Document Id
+     */
+    source_document_id?: string | null;
+    /**
+     * Page Number
+     */
+    page_number: number;
+    role: PageRole;
+    inclusion_status: PageInclusionStatus;
+    /**
+     * Inclusion Reason
+     */
+    inclusion_reason?: string | null;
+    /**
+     * Thumbnail Key
+     */
+    thumbnail_key?: string | null;
+    /**
+     * Text Density
+     */
+    text_density?: number | null;
+    /**
+     * Orientation
+     */
+    orientation?: string | null;
+    /**
+     * Column Count
+     */
+    column_count?: number | null;
+    /**
+     * Image Coverage
+     */
+    image_coverage?: number | null;
+    /**
+     * Width
+     */
+    width?: number | null;
+    /**
+     * Height
+     */
+    height?: number | null;
+    /**
+     * Quality Signals
+     */
+    quality_signals?: {
+        [key: string]: unknown;
+    } | null;
+    /**
+     * Lock Version
+     */
+    lock_version: number;
+    /**
+     * Created At
+     */
+    created_at: string;
+};
+
+/**
+ * SourcePagesPublic
+ */
+export type SourcePagesPublic = {
+    /**
+     * Data
+     */
+    data: Array<SourcePagePublic>;
+    /**
+     * Count
+     */
+    count: number;
+};
+
+/**
+ * SourceTier
+ */
+export type SourceTier = 'official' | 'trusted_secondary' | 'community' | 'unknown';
+
+/**
+ * SourceUploadComplete
+ */
+export type SourceUploadComplete = {
+    /**
+     * Idempotency Key
+     */
+    idempotency_key: string;
+    /**
+     * Expected Version
+     */
+    expected_version: number;
+    /**
+     * Actual Sha256
+     */
+    actual_sha256?: string | null;
+    /**
+     * Completed Parts
+     */
+    completed_parts?: Array<CompletedMultipartPart> | null;
+};
+
+/**
+ * SourceUploadCompleteResponse
+ */
+export type SourceUploadCompleteResponse = {
+    upload: SourceUploadPublic;
+    source_document?: SourceDocumentPublic | null;
+    run?: IngestionRunPublic | null;
+    /**
+     * Duplicate
+     */
+    duplicate?: boolean;
+};
+
+/**
+ * SourceUploadCreate
+ */
+export type SourceUploadCreate = {
+    /**
+     * Idempotency Key
+     */
+    idempotency_key: string;
+    /**
+     * Expected Size
+     */
+    expected_size: number;
+    /**
+     * Expected Sha256
+     */
+    expected_sha256?: string | null;
+    /**
+     * Original Filename
+     */
+    original_filename: string;
+    /**
+     * Mime Type
+     */
+    mime_type: string;
+    /**
+     * Instrument Slug
+     */
+    instrument_slug: string;
+    /**
+     * Instrument Title
+     */
+    instrument_title: string;
+    /**
+     * Instrument Short Title
+     */
+    instrument_short_title?: string | null;
+    /**
+     * Instrument Year
+     */
+    instrument_year: number;
+    instrument_status: InstrumentStatus;
+    /**
+     * Enacted At
+     */
+    enacted_at?: string | null;
+    /**
+     * Effective At
+     */
+    effective_at?: string | null;
+    /**
+     * Ceased At
+     */
+    ceased_at?: string | null;
+    /**
+     * Is Legal Revision
+     */
+    is_legal_revision?: boolean;
+    /**
+     * Legal Revision Effective At
+     */
+    legal_revision_effective_at?: string | null;
+    /**
+     * Source Title
+     */
+    source_title: string;
+    /**
+     * Authority
+     */
+    authority: string;
+    /**
+     * Source Url
+     */
+    source_url: string;
+    source_tier: SourceTier;
+    /**
+     * Published At
+     */
+    published_at: string;
+    /**
+     * Retrieved At
+     */
+    retrieved_at: string;
+};
+
+/**
+ * SourceUploadPublic
+ */
+export type SourceUploadPublic = {
+    /**
+     * Id
+     */
+    id: string;
+    /**
+     * Idempotency Key
+     */
+    idempotency_key: string;
+    /**
+     * Source Document Id
+     */
+    source_document_id?: string | null;
+    /**
+     * Instrument Slug
+     */
+    instrument_slug: string;
+    /**
+     * Instrument Title
+     */
+    instrument_title: string;
+    /**
+     * Source Title
+     */
+    source_title: string;
+    /**
+     * Authority
+     */
+    authority: string;
+    /**
+     * Source Url
+     */
+    source_url: string;
+    source_tier: SourceTier;
+    /**
+     * Is Legal Revision
+     */
+    is_legal_revision: boolean;
+    /**
+     * Legal Revision Effective At
+     */
+    legal_revision_effective_at?: string | null;
+    /**
+     * Original Filename
+     */
+    original_filename: string;
+    /**
+     * Mime Type
+     */
+    mime_type: string;
+    /**
+     * Expected Size
+     */
+    expected_size: number;
+    /**
+     * Expected Sha256
+     */
+    expected_sha256?: string | null;
+    /**
+     * Actual Sha256
+     */
+    actual_sha256?: string | null;
+    /**
+     * Upload Backend
+     */
+    upload_backend: string;
+    /**
+     * Quarantine Key
+     */
+    quarantine_key: string;
+    /**
+     * Canonical Key
+     */
+    canonical_key?: string | null;
+    /**
+     * Upload Url
+     */
+    upload_url: string;
+    /**
+     * Upload Headers
+     */
+    upload_headers: {
+        [key: string]: string;
+    };
+    /**
+     * Multipart Required
+     */
+    multipart_required: boolean;
+    status: SourceUploadStatus;
+    /**
+     * Error Message
+     */
+    error_message?: string | null;
+    /**
+     * Lock Version
+     */
+    lock_version: number;
+    /**
+     * Expires At
+     */
+    expires_at?: string | null;
+    /**
+     * Completed At
+     */
+    completed_at?: string | null;
+    /**
+     * Created At
+     */
+    created_at: string;
+    /**
+     * Updated At
+     */
+    updated_at: string;
+};
+
+/**
+ * SourceUploadStatus
+ */
+export type SourceUploadStatus = 'created' | 'uploading' | 'completed' | 'duplicate' | 'failed' | 'cancelled';
 
 /**
  * Token
@@ -273,6 +2089,16 @@ export type ValidationError = {
         [key: string]: unknown;
     };
 };
+
+/**
+ * VectorIndexStatus
+ */
+export type VectorIndexStatus = 'building' | 'validating' | 'ready' | 'promoted' | 'failed' | 'rolled_back';
+
+/**
+ * VerificationStatus
+ */
+export type VerificationStatus = 'unverified' | 'needs_review' | 'verified' | 'rejected';
 
 export type loginLoginAccessTokenData = {
     body: Body_login_login_access_token;
@@ -703,6 +2529,771 @@ export type utilsHealthCheckResponses = {
 };
 
 export type utilsHealthCheckResponse = utilsHealthCheckResponses[keyof utilsHealthCheckResponses];
+
+export type adminReadAdminMetricsData = {
+    body?: never;
+    path?: never;
+    query?: never;
+    url: '/api/v1/admin/metrics';
+};
+
+export type adminReadAdminMetricsResponses = {
+    /**
+     * Successful Response
+     */
+    200: AdminMetrics;
+};
+
+export type adminReadAdminMetricsResponse = adminReadAdminMetricsResponses[keyof adminReadAdminMetricsResponses];
+
+export type adminCreateSourceUploadData = {
+    body: SourceUploadCreate;
+    path?: never;
+    query?: never;
+    url: '/api/v1/admin/source-uploads';
+};
+
+export type adminCreateSourceUploadErrors = {
+    /**
+     * Validation Error
+     */
+    422: HTTPValidationError;
+};
+
+export type adminCreateSourceUploadError = adminCreateSourceUploadErrors[keyof adminCreateSourceUploadErrors];
+
+export type adminCreateSourceUploadResponses = {
+    /**
+     * Successful Response
+     */
+    200: SourceUploadPublic;
+};
+
+export type adminCreateSourceUploadResponse = adminCreateSourceUploadResponses[keyof adminCreateSourceUploadResponses];
+
+export type adminPutSourceUploadObjectData = {
+    body?: never;
+    path: {
+        /**
+         * Upload Id
+         */
+        upload_id: string;
+    };
+    query?: never;
+    url: '/api/v1/admin/source-uploads/{upload_id}/object';
+};
+
+export type adminPutSourceUploadObjectErrors = {
+    /**
+     * Validation Error
+     */
+    422: HTTPValidationError;
+};
+
+export type adminPutSourceUploadObjectError = adminPutSourceUploadObjectErrors[keyof adminPutSourceUploadObjectErrors];
+
+export type adminPutSourceUploadObjectResponses = {
+    /**
+     * Successful Response
+     */
+    204: void;
+};
+
+export type adminPutSourceUploadObjectResponse = adminPutSourceUploadObjectResponses[keyof adminPutSourceUploadObjectResponses];
+
+export type adminCreateMultipartUploadPartsData = {
+    body: MultipartPartsRequest;
+    path: {
+        /**
+         * Upload Id
+         */
+        upload_id: string;
+    };
+    query?: never;
+    url: '/api/v1/admin/source-uploads/{upload_id}/multipart-parts';
+};
+
+export type adminCreateMultipartUploadPartsErrors = {
+    /**
+     * Validation Error
+     */
+    422: HTTPValidationError;
+};
+
+export type adminCreateMultipartUploadPartsError = adminCreateMultipartUploadPartsErrors[keyof adminCreateMultipartUploadPartsErrors];
+
+export type adminCreateMultipartUploadPartsResponses = {
+    /**
+     * Successful Response
+     */
+    200: MultipartPartsPublic;
+};
+
+export type adminCreateMultipartUploadPartsResponse = adminCreateMultipartUploadPartsResponses[keyof adminCreateMultipartUploadPartsResponses];
+
+export type adminCompleteUploadData = {
+    body: SourceUploadComplete;
+    path: {
+        /**
+         * Upload Id
+         */
+        upload_id: string;
+    };
+    query?: never;
+    url: '/api/v1/admin/source-uploads/{upload_id}/complete';
+};
+
+export type adminCompleteUploadErrors = {
+    /**
+     * Validation Error
+     */
+    422: HTTPValidationError;
+};
+
+export type adminCompleteUploadError = adminCompleteUploadErrors[keyof adminCompleteUploadErrors];
+
+export type adminCompleteUploadResponses = {
+    /**
+     * Successful Response
+     */
+    200: SourceUploadCompleteResponse;
+};
+
+export type adminCompleteUploadResponse = adminCompleteUploadResponses[keyof adminCompleteUploadResponses];
+
+export type adminVerifyDocumentSourceData = {
+    body: SourceDocumentVerificationRequest;
+    path: {
+        /**
+         * Source Document Id
+         */
+        source_document_id: string;
+    };
+    query?: never;
+    url: '/api/v1/admin/source-documents/{source_document_id}/verify';
+};
+
+export type adminVerifyDocumentSourceErrors = {
+    /**
+     * Validation Error
+     */
+    422: HTTPValidationError;
+};
+
+export type adminVerifyDocumentSourceError = adminVerifyDocumentSourceErrors[keyof adminVerifyDocumentSourceErrors];
+
+export type adminVerifyDocumentSourceResponses = {
+    /**
+     * Successful Response
+     */
+    200: SourceDocumentPublic;
+};
+
+export type adminVerifyDocumentSourceResponse = adminVerifyDocumentSourceResponses[keyof adminVerifyDocumentSourceResponses];
+
+export type adminReadIngestionRunsData = {
+    body?: never;
+    path?: never;
+    query?: {
+        /**
+         * Status
+         */
+        status?: IngestionRunStatus | null;
+        /**
+         * Stage
+         */
+        stage?: IngestionStage | null;
+        /**
+         * Skip
+         */
+        skip?: number;
+        /**
+         * Limit
+         */
+        limit?: number;
+    };
+    url: '/api/v1/admin/ingestion-runs';
+};
+
+export type adminReadIngestionRunsErrors = {
+    /**
+     * Validation Error
+     */
+    422: HTTPValidationError;
+};
+
+export type adminReadIngestionRunsError = adminReadIngestionRunsErrors[keyof adminReadIngestionRunsErrors];
+
+export type adminReadIngestionRunsResponses = {
+    /**
+     * Successful Response
+     */
+    200: IngestionRunsPublic;
+};
+
+export type adminReadIngestionRunsResponse = adminReadIngestionRunsResponses[keyof adminReadIngestionRunsResponses];
+
+export type adminReadIngestionRunData = {
+    body?: never;
+    path: {
+        /**
+         * Run Id
+         */
+        run_id: string;
+    };
+    query?: never;
+    url: '/api/v1/admin/ingestion-runs/{run_id}';
+};
+
+export type adminReadIngestionRunErrors = {
+    /**
+     * Validation Error
+     */
+    422: HTTPValidationError;
+};
+
+export type adminReadIngestionRunError = adminReadIngestionRunErrors[keyof adminReadIngestionRunErrors];
+
+export type adminReadIngestionRunResponses = {
+    /**
+     * Successful Response
+     */
+    200: IngestionRunDetail;
+};
+
+export type adminReadIngestionRunResponse = adminReadIngestionRunResponses[keyof adminReadIngestionRunResponses];
+
+export type adminStreamIngestionRunEventsData = {
+    body?: never;
+    headers?: {
+        /**
+         * Last-Event-Id
+         */
+        'Last-Event-ID'?: string | null;
+    };
+    path: {
+        /**
+         * Run Id
+         */
+        run_id: string;
+    };
+    query?: never;
+    url: '/api/v1/admin/ingestion-runs/{run_id}/events';
+};
+
+export type adminStreamIngestionRunEventsErrors = {
+    /**
+     * Validation Error
+     */
+    422: HTTPValidationError;
+};
+
+export type adminStreamIngestionRunEventsError = adminStreamIngestionRunEventsErrors[keyof adminStreamIngestionRunEventsErrors];
+
+export type adminStreamIngestionRunEventsResponses = {
+    /**
+     * Successful Response
+     */
+    200: unknown;
+};
+
+export type adminReadIngestionRunPagesData = {
+    body?: never;
+    path: {
+        /**
+         * Run Id
+         */
+        run_id: string;
+    };
+    query?: never;
+    url: '/api/v1/admin/ingestion-runs/{run_id}/pages';
+};
+
+export type adminReadIngestionRunPagesErrors = {
+    /**
+     * Validation Error
+     */
+    422: HTTPValidationError;
+};
+
+export type adminReadIngestionRunPagesError = adminReadIngestionRunPagesErrors[keyof adminReadIngestionRunPagesErrors];
+
+export type adminReadIngestionRunPagesResponses = {
+    /**
+     * Successful Response
+     */
+    200: SourcePagesPublic;
+};
+
+export type adminReadIngestionRunPagesResponse = adminReadIngestionRunPagesResponses[keyof adminReadIngestionRunPagesResponses];
+
+export type adminPatchPageSelectionData = {
+    body: PageSelectionUpdate;
+    path: {
+        /**
+         * Run Id
+         */
+        run_id: string;
+    };
+    query?: never;
+    url: '/api/v1/admin/ingestion-runs/{run_id}/page-selection';
+};
+
+export type adminPatchPageSelectionErrors = {
+    /**
+     * Validation Error
+     */
+    422: HTTPValidationError;
+};
+
+export type adminPatchPageSelectionError = adminPatchPageSelectionErrors[keyof adminPatchPageSelectionErrors];
+
+export type adminPatchPageSelectionResponses = {
+    /**
+     * Successful Response
+     */
+    200: SourcePagesPublic;
+};
+
+export type adminPatchPageSelectionResponse = adminPatchPageSelectionResponses[keyof adminPatchPageSelectionResponses];
+
+export type adminRetryRunData = {
+    body: IngestionRunControlRequest;
+    path: {
+        /**
+         * Run Id
+         */
+        run_id: string;
+    };
+    query?: never;
+    url: '/api/v1/admin/ingestion-runs/{run_id}/retry';
+};
+
+export type adminRetryRunErrors = {
+    /**
+     * Validation Error
+     */
+    422: HTTPValidationError;
+};
+
+export type adminRetryRunError = adminRetryRunErrors[keyof adminRetryRunErrors];
+
+export type adminRetryRunResponses = {
+    /**
+     * Successful Response
+     */
+    200: IngestionRunPublic;
+};
+
+export type adminRetryRunResponse = adminRetryRunResponses[keyof adminRetryRunResponses];
+
+export type adminCancelRunData = {
+    body: IngestionRunControlRequest;
+    path: {
+        /**
+         * Run Id
+         */
+        run_id: string;
+    };
+    query?: never;
+    url: '/api/v1/admin/ingestion-runs/{run_id}/cancel';
+};
+
+export type adminCancelRunErrors = {
+    /**
+     * Validation Error
+     */
+    422: HTTPValidationError;
+};
+
+export type adminCancelRunError = adminCancelRunErrors[keyof adminCancelRunErrors];
+
+export type adminCancelRunResponses = {
+    /**
+     * Successful Response
+     */
+    200: IngestionRunPublic;
+};
+
+export type adminCancelRunResponse = adminCancelRunResponses[keyof adminCancelRunResponses];
+
+export type adminResumeRunData = {
+    body: IngestionRunControlRequest;
+    path: {
+        /**
+         * Run Id
+         */
+        run_id: string;
+    };
+    query?: never;
+    url: '/api/v1/admin/ingestion-runs/{run_id}/resume';
+};
+
+export type adminResumeRunErrors = {
+    /**
+     * Validation Error
+     */
+    422: HTTPValidationError;
+};
+
+export type adminResumeRunError = adminResumeRunErrors[keyof adminResumeRunErrors];
+
+export type adminResumeRunResponses = {
+    /**
+     * Successful Response
+     */
+    200: IngestionRunPublic;
+};
+
+export type adminResumeRunResponse = adminResumeRunResponses[keyof adminResumeRunResponses];
+
+export type adminReadReviewItemsData = {
+    body?: never;
+    path?: never;
+    query?: {
+        /**
+         * Run Id
+         */
+        run_id?: string | null;
+        /**
+         * Issue
+         */
+        issue?: string | null;
+        /**
+         * Confidence Lte
+         */
+        confidence_lte?: number | null;
+        /**
+         * Page
+         */
+        page?: number | null;
+        /**
+         * Path
+         */
+        path?: string | null;
+        /**
+         * Status
+         */
+        status?: ExtractionCandidateStatus | null;
+        /**
+         * Skip
+         */
+        skip?: number;
+        /**
+         * Limit
+         */
+        limit?: number;
+    };
+    url: '/api/v1/admin/review-items';
+};
+
+export type adminReadReviewItemsErrors = {
+    /**
+     * Validation Error
+     */
+    422: HTTPValidationError;
+};
+
+export type adminReadReviewItemsError = adminReadReviewItemsErrors[keyof adminReadReviewItemsErrors];
+
+export type adminReadReviewItemsResponses = {
+    /**
+     * Successful Response
+     */
+    200: ReviewItemsPublic;
+};
+
+export type adminReadReviewItemsResponse = adminReadReviewItemsResponses[keyof adminReadReviewItemsResponses];
+
+export type adminReadReviewItemData = {
+    body?: never;
+    path: {
+        /**
+         * Candidate Id
+         */
+        candidate_id: string;
+    };
+    query?: never;
+    url: '/api/v1/admin/review-items/{candidate_id}';
+};
+
+export type adminReadReviewItemErrors = {
+    /**
+     * Validation Error
+     */
+    422: HTTPValidationError;
+};
+
+export type adminReadReviewItemError = adminReadReviewItemErrors[keyof adminReadReviewItemErrors];
+
+export type adminReadReviewItemResponses = {
+    /**
+     * Successful Response
+     */
+    200: ReviewItemPublic;
+};
+
+export type adminReadReviewItemResponse = adminReadReviewItemResponses[keyof adminReadReviewItemResponses];
+
+export type adminPatchReviewItemData = {
+    body: ReviewItemUpdate;
+    path: {
+        /**
+         * Candidate Id
+         */
+        candidate_id: string;
+    };
+    query?: never;
+    url: '/api/v1/admin/review-items/{candidate_id}';
+};
+
+export type adminPatchReviewItemErrors = {
+    /**
+     * Validation Error
+     */
+    422: HTTPValidationError;
+};
+
+export type adminPatchReviewItemError = adminPatchReviewItemErrors[keyof adminPatchReviewItemErrors];
+
+export type adminPatchReviewItemResponses = {
+    /**
+     * Successful Response
+     */
+    200: ReviewItemPublic;
+};
+
+export type adminPatchReviewItemResponse = adminPatchReviewItemResponses[keyof adminPatchReviewItemResponses];
+
+export type adminDecideReviewItemData = {
+    body: ReviewDecisionCreate;
+    path: {
+        /**
+         * Candidate Id
+         */
+        candidate_id: string;
+    };
+    query?: never;
+    url: '/api/v1/admin/review-items/{candidate_id}/decision';
+};
+
+export type adminDecideReviewItemErrors = {
+    /**
+     * Validation Error
+     */
+    422: HTTPValidationError;
+};
+
+export type adminDecideReviewItemError = adminDecideReviewItemErrors[keyof adminDecideReviewItemErrors];
+
+export type adminDecideReviewItemResponses = {
+    /**
+     * Successful Response
+     */
+    200: ReviewItemPublic;
+};
+
+export type adminDecideReviewItemResponse = adminDecideReviewItemResponses[keyof adminDecideReviewItemResponses];
+
+export type adminReadEmbeddingBenchmarkData = {
+    body?: never;
+    path: {
+        /**
+         * Release Id
+         */
+        release_id: string;
+    };
+    query?: never;
+    url: '/api/v1/admin/embedding-benchmarks/{release_id}';
+};
+
+export type adminReadEmbeddingBenchmarkErrors = {
+    /**
+     * Validation Error
+     */
+    422: HTTPValidationError;
+};
+
+export type adminReadEmbeddingBenchmarkError = adminReadEmbeddingBenchmarkErrors[keyof adminReadEmbeddingBenchmarkErrors];
+
+export type adminReadEmbeddingBenchmarkResponses = {
+    /**
+     * Successful Response
+     */
+    200: EmbeddingBenchmarkPublic;
+};
+
+export type adminReadEmbeddingBenchmarkResponse = adminReadEmbeddingBenchmarkResponses[keyof adminReadEmbeddingBenchmarkResponses];
+
+export type adminReadCorpusReleasesData = {
+    body?: never;
+    path?: never;
+    query?: {
+        /**
+         * Skip
+         */
+        skip?: number;
+        /**
+         * Limit
+         */
+        limit?: number;
+    };
+    url: '/api/v1/admin/corpus-releases';
+};
+
+export type adminReadCorpusReleasesErrors = {
+    /**
+     * Validation Error
+     */
+    422: HTTPValidationError;
+};
+
+export type adminReadCorpusReleasesError = adminReadCorpusReleasesErrors[keyof adminReadCorpusReleasesErrors];
+
+export type adminReadCorpusReleasesResponses = {
+    /**
+     * Successful Response
+     */
+    200: CorpusReleasesPublic;
+};
+
+export type adminReadCorpusReleasesResponse = adminReadCorpusReleasesResponses[keyof adminReadCorpusReleasesResponses];
+
+export type adminValidateReleaseData = {
+    body: CorpusReleaseValidationRequest;
+    path: {
+        /**
+         * Release Id
+         */
+        release_id: string;
+    };
+    query?: never;
+    url: '/api/v1/admin/corpus-releases/{release_id}/validate';
+};
+
+export type adminValidateReleaseErrors = {
+    /**
+     * Validation Error
+     */
+    422: HTTPValidationError;
+};
+
+export type adminValidateReleaseError = adminValidateReleaseErrors[keyof adminValidateReleaseErrors];
+
+export type adminValidateReleaseResponses = {
+    /**
+     * Successful Response
+     */
+    200: CorpusReleasePublic;
+};
+
+export type adminValidateReleaseResponse = adminValidateReleaseResponses[keyof adminValidateReleaseResponses];
+
+export type adminReadReleaseManifestData = {
+    body?: never;
+    path: {
+        /**
+         * Release Id
+         */
+        release_id: string;
+    };
+    query?: never;
+    url: '/api/v1/admin/corpus-releases/{release_id}/manifest';
+};
+
+export type adminReadReleaseManifestErrors = {
+    /**
+     * Validation Error
+     */
+    422: HTTPValidationError;
+};
+
+export type adminReadReleaseManifestError = adminReadReleaseManifestErrors[keyof adminReadReleaseManifestErrors];
+
+export type adminReadReleaseManifestResponses = {
+    /**
+     * Successful Response
+     */
+    200: CorpusReleaseManifestPublic;
+};
+
+export type adminReadReleaseManifestResponse = adminReadReleaseManifestResponses[keyof adminReadReleaseManifestResponses];
+
+export type adminReadReleasePublicationEvidenceData = {
+    body?: never;
+    path: {
+        /**
+         * Release Id
+         */
+        release_id: string;
+    };
+    query?: never;
+    url: '/api/v1/admin/corpus-releases/{release_id}/publication-evidence';
+};
+
+export type adminReadReleasePublicationEvidenceErrors = {
+    /**
+     * Validation Error
+     */
+    422: HTTPValidationError;
+};
+
+export type adminReadReleasePublicationEvidenceError = adminReadReleasePublicationEvidenceErrors[keyof adminReadReleasePublicationEvidenceErrors];
+
+export type adminReadReleasePublicationEvidenceResponses = {
+    /**
+     * Successful Response
+     */
+    200: CorpusReleasePublicationEvidencePublic;
+};
+
+export type adminReadReleasePublicationEvidenceResponse = adminReadReleasePublicationEvidenceResponses[keyof adminReadReleasePublicationEvidenceResponses];
+
+export type adminPublishReleaseData = {
+    body: CorpusReleasePublishRequest;
+    path: {
+        /**
+         * Release Id
+         */
+        release_id: string;
+    };
+    query?: never;
+    url: '/api/v1/admin/corpus-releases/{release_id}/publish';
+};
+
+export type adminPublishReleaseErrors = {
+    /**
+     * Validation Error
+     */
+    422: HTTPValidationError;
+};
+
+export type adminPublishReleaseError = adminPublishReleaseErrors[keyof adminPublishReleaseErrors];
+
+export type adminPublishReleaseResponses = {
+    /**
+     * Successful Response
+     */
+    200: CorpusReleasePublishResponse;
+};
+
+export type adminPublishReleaseResponse = adminPublishReleaseResponses[keyof adminPublishReleaseResponses];
+
+export type adminReadProductionProvisionVersionsData = {
+    body?: never;
+    path?: never;
+    query?: never;
+    url: '/api/v1/admin/corpus-releases/production/provision-versions';
+};
+
+export type adminReadProductionProvisionVersionsResponses = {
+    /**
+     * Successful Response
+     */
+    200: PublicProvisionVersions;
+};
+
+export type adminReadProductionProvisionVersionsResponse = adminReadProductionProvisionVersionsResponses[keyof adminReadProductionProvisionVersionsResponses];
 
 export type privateCreateUserData = {
     body: PrivateUserCreate;
