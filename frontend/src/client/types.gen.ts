@@ -5,6 +5,48 @@ export type ClientOptions = {
 };
 
 /**
+ * ActiveRetrievalTargetPublic
+ */
+export type ActiveRetrievalTargetPublic = {
+    /**
+     * Index Kind
+     */
+    index_kind: string;
+    /**
+     * Release Id
+     */
+    release_id: string;
+    /**
+     * Embedding Run Id
+     */
+    embedding_run_id: string;
+    /**
+     * Retrieval Index Build Id
+     */
+    retrieval_index_build_id: string;
+    /**
+     * Profile Id
+     */
+    profile_id: string;
+    /**
+     * Lock Version
+     */
+    lock_version: number;
+    /**
+     * Activated By
+     */
+    activated_by?: string | null;
+    /**
+     * Activated At
+     */
+    activated_at: string;
+    /**
+     * Updated At
+     */
+    updated_at: string;
+};
+
+/**
  * AdminMetrics
  */
 export type AdminMetrics = {
@@ -134,6 +176,66 @@ export type AdminOperationalAlertsPublic = {
 };
 
 /**
+ * AdminRole
+ */
+export type AdminRole = 'ingestion_uploader' | 'legal_reviewer' | 'corpus_publisher';
+
+/**
+ * AuditEventPublic
+ */
+export type AuditEventPublic = {
+    /**
+     * Id
+     */
+    id: string;
+    /**
+     * Actor User Id
+     */
+    actor_user_id?: string | null;
+    /**
+     * Action
+     */
+    action: string;
+    /**
+     * Entity Type
+     */
+    entity_type?: string | null;
+    /**
+     * Entity Id
+     */
+    entity_id?: string | null;
+    severity: AuditSeverity;
+    /**
+     * Reason
+     */
+    reason?: string | null;
+    /**
+     * Payload
+     */
+    payload?: {
+        [key: string]: unknown;
+    } | null;
+    /**
+     * Created At
+     */
+    created_at: string;
+};
+
+/**
+ * AuditEventsPublic
+ */
+export type AuditEventsPublic = {
+    /**
+     * Data
+     */
+    data: Array<AuditEventPublic>;
+    /**
+     * Count
+     */
+    count: number;
+};
+
+/**
  * AuditSeverity
  */
 export type AuditSeverity = 'info' | 'warning' | 'high';
@@ -196,6 +298,24 @@ export type CandidateRevisionPublic = {
      * Diff
      */
     diff?: string | null;
+    /**
+     * Before Snapshot
+     */
+    before_snapshot?: {
+        [key: string]: unknown;
+    } | null;
+    /**
+     * After Snapshot
+     */
+    after_snapshot?: {
+        [key: string]: unknown;
+    } | null;
+    /**
+     * Changed Fields
+     */
+    changed_fields?: {
+        [key: string]: unknown;
+    } | null;
     /**
      * Reason
      */
@@ -299,6 +419,14 @@ export type CorpusReleasePromotionAttemptPublic = {
      * Vector Index Id
      */
     vector_index_id?: string | null;
+    /**
+     * Retrieval Index Build Id
+     */
+    retrieval_index_build_id?: string | null;
+    /**
+     * Index Kind
+     */
+    index_kind?: string | null;
     /**
      * Requested By
      */
@@ -414,9 +542,17 @@ export type CorpusReleasePublicationEvidencePublic = {
      */
     vector_indexes: Array<CorpusReleaseVectorIndexPublic>;
     /**
+     * Retrieval Index Builds
+     */
+    retrieval_index_builds: Array<CorpusReleaseRetrievalIndexBuildPublic>;
+    /**
      * Promotion Attempts
      */
     promotion_attempts: Array<CorpusReleasePromotionAttemptPublic>;
+    /**
+     * Active Targets
+     */
+    active_targets: Array<ActiveRetrievalTargetPublic>;
     actor_separation: CorpusReleaseActorSeparationPublic;
 };
 
@@ -445,6 +581,87 @@ export type CorpusReleasePublishResponse = {
     release: CorpusReleasePublic;
     promotion_status: ReleasePromotionStatus;
     vector_index_status?: VectorIndexStatus | null;
+};
+
+/**
+ * CorpusReleaseRetrievalIndexBuildPublic
+ */
+export type CorpusReleaseRetrievalIndexBuildPublic = {
+    /**
+     * Id
+     */
+    id: string;
+    /**
+     * Release Id
+     */
+    release_id: string;
+    /**
+     * Embedding Run Id
+     */
+    embedding_run_id: string;
+    /**
+     * Profile Id
+     */
+    profile_id: string;
+    /**
+     * Backend
+     */
+    backend: string;
+    /**
+     * Index Kind
+     */
+    index_kind: string;
+    /**
+     * Relation Name
+     */
+    relation_name: string;
+    /**
+     * Physical Index Name
+     */
+    physical_index_name?: string | null;
+    status: VectorIndexStatus;
+    /**
+     * Expected Segment Count
+     */
+    expected_segment_count: number;
+    /**
+     * Stored Segment Count
+     */
+    stored_segment_count: number;
+    /**
+     * Stored Embedding Count
+     */
+    stored_embedding_count: number;
+    /**
+     * Vector Dimensions
+     */
+    vector_dimensions: number;
+    /**
+     * Profile Hash
+     */
+    profile_hash?: string | null;
+    /**
+     * Payload Schema Hash
+     */
+    payload_schema_hash?: string | null;
+    /**
+     * Checksum
+     */
+    checksum?: string | null;
+    /**
+     * Validation Report
+     */
+    validation_report?: {
+        [key: string]: unknown;
+    } | null;
+    /**
+     * Created At
+     */
+    created_at: string;
+    /**
+     * Updated At
+     */
+    updated_at: string;
 };
 
 /**
@@ -595,6 +812,100 @@ export type EmbeddingBenchmarkResult = {
     metrics?: {
         [key: string]: unknown;
     } | null;
+};
+
+/**
+ * EmbeddingProfileCreate
+ */
+export type EmbeddingProfileCreate = {
+    /**
+     * Name
+     */
+    name: string;
+    provider: EmbeddingProviderKind;
+    /**
+     * Model Name
+     */
+    model_name: string;
+    /**
+     * Model Revision
+     */
+    model_revision: string;
+    /**
+     * Vector Dimensions
+     */
+    vector_dimensions?: number;
+    /**
+     * Configuration
+     */
+    configuration?: {
+        [key: string]: unknown;
+    };
+    /**
+     * Is Active
+     */
+    is_active?: boolean;
+};
+
+/**
+ * EmbeddingProfilePublic
+ */
+export type EmbeddingProfilePublic = {
+    /**
+     * Id
+     */
+    id: string;
+    /**
+     * Name
+     */
+    name: string;
+    provider: EmbeddingProviderKind;
+    /**
+     * Model Name
+     */
+    model_name: string;
+    /**
+     * Model Revision
+     */
+    model_revision: string | null;
+    /**
+     * Vector Dimensions
+     */
+    vector_dimensions: number;
+    /**
+     * Configuration
+     */
+    configuration: {
+        [key: string]: unknown;
+    };
+    /**
+     * Is Active
+     */
+    is_active: boolean;
+    /**
+     * Created At
+     */
+    created_at: string;
+};
+
+/**
+ * EmbeddingProfileUpdate
+ */
+export type EmbeddingProfileUpdate = {
+    /**
+     * Model Revision
+     */
+    model_revision?: string | null;
+    /**
+     * Configuration
+     */
+    configuration?: {
+        [key: string]: unknown;
+    } | null;
+    /**
+     * Is Active
+     */
+    is_active?: boolean | null;
 };
 
 /**
@@ -1078,6 +1389,96 @@ export type IngestionTaskStatus = 'pending' | 'leased' | 'running' | 'succeeded'
 export type InstrumentStatus = 'draft' | 'proposed' | 'enacted' | 'repealed' | 'superseded';
 
 /**
+ * LegalSearchRequest
+ */
+export type LegalSearchRequest = {
+    /**
+     * Query
+     */
+    query: string;
+    /**
+     * Top K
+     */
+    top_k?: number;
+    /**
+     * Index Kind
+     */
+    index_kind?: 'enacted' | 'proposals';
+};
+
+/**
+ * LegalSearchResponse
+ */
+export type LegalSearchResponse = {
+    /**
+     * Data
+     */
+    data: Array<LegalSearchResult>;
+    /**
+     * Count
+     */
+    count: number;
+};
+
+/**
+ * LegalSearchResult
+ */
+export type LegalSearchResult = {
+    /**
+     * Canonical Path
+     */
+    canonical_path: string;
+    /**
+     * Citation
+     */
+    citation: string;
+    /**
+     * Heading
+     */
+    heading?: string | null;
+    /**
+     * Ancestor Headings
+     */
+    ancestor_headings: Array<string>;
+    /**
+     * Authoritative Text
+     */
+    authoritative_text: string;
+    /**
+     * Source Document Id
+     */
+    source_document_id: string;
+    /**
+     * Source Page Start
+     */
+    source_page_start?: number | null;
+    /**
+     * Source Page End
+     */
+    source_page_end?: number | null;
+    /**
+     * Legal Status
+     */
+    legal_status: string;
+    /**
+     * Release Version
+     */
+    release_version: string;
+    /**
+     * Dense Rank
+     */
+    dense_rank?: number | null;
+    /**
+     * Lexical Rank
+     */
+    lexical_rank?: number | null;
+    /**
+     * Hybrid Score
+     */
+    hybrid_score: number;
+};
+
+/**
  * Message
  */
 export type Message = {
@@ -1138,6 +1539,24 @@ export type MultipartPartsRequest = {
 };
 
 /**
+ * MyAdminRolesPublic
+ */
+export type MyAdminRolesPublic = {
+    /**
+     * User Id
+     */
+    user_id: string;
+    /**
+     * Is Superuser
+     */
+    is_superuser: boolean;
+    /**
+     * Roles
+     */
+    roles: Array<AdminRole>;
+};
+
+/**
  * NewPassword
  */
 export type NewPassword = {
@@ -1149,6 +1568,122 @@ export type NewPassword = {
      * New Password
      */
     new_password: string;
+};
+
+/**
+ * OcrBenchmarkEvaluateRequest
+ */
+export type OcrBenchmarkEvaluateRequest = {
+    /**
+     * Idempotency Key
+     */
+    idempotency_key: string;
+    /**
+     * Expected Version
+     */
+    expected_version: number;
+    /**
+     * Dataset Version
+     */
+    dataset_version: string;
+    /**
+     * Samples
+     */
+    samples: Array<OcrBenchmarkSampleInput>;
+};
+
+/**
+ * OcrBenchmarkProviderResult
+ */
+export type OcrBenchmarkProviderResult = {
+    /**
+     * Provider
+     */
+    provider: string;
+    /**
+     * Page Count
+     */
+    page_count: number;
+    /**
+     * Failure Count
+     */
+    failure_count: number;
+    /**
+     * Mean Character Accuracy
+     */
+    mean_character_accuracy: number;
+    /**
+     * Mean Confidence
+     */
+    mean_confidence?: number | null;
+    /**
+     * Total Cost Usd
+     */
+    total_cost_usd?: number | null;
+    /**
+     * Mean Timing Ms
+     */
+    mean_timing_ms?: number | null;
+};
+
+/**
+ * OcrBenchmarkPublic
+ */
+export type OcrBenchmarkPublic = {
+    /**
+     * Dataset Version
+     */
+    dataset_version: string;
+    /**
+     * Sample Count
+     */
+    sample_count: number;
+    /**
+     * Winner
+     */
+    winner?: string | null;
+    /**
+     * Providers
+     */
+    providers: Array<OcrBenchmarkProviderResult>;
+    /**
+     * Active Dataset Items
+     */
+    active_dataset_items: number;
+};
+
+/**
+ * OcrBenchmarkSampleInput
+ */
+export type OcrBenchmarkSampleInput = {
+    /**
+     * Item Key
+     */
+    item_key: string;
+    /**
+     * Provider
+     */
+    provider: string;
+    /**
+     * Text
+     */
+    text?: string | null;
+    /**
+     * Confidence
+     */
+    confidence?: number | null;
+    /**
+     * Cost Usd
+     */
+    cost_usd?: number | null;
+    /**
+     * Timing Ms
+     */
+    timing_ms?: number | null;
+    /**
+     * Failure
+     */
+    failure?: string | null;
 };
 
 /**
@@ -1188,6 +1723,10 @@ export type PageSelectionUpdate = {
      * Idempotency Key
      */
     idempotency_key: string;
+    /**
+     * Expected Run Version
+     */
+    expected_run_version: number;
     /**
      * Pages
      */
@@ -1363,6 +1902,16 @@ export type ReviewIssuePublic = {
      */
     resolved_at?: string | null;
     /**
+     * Resolution Reason
+     */
+    resolution_reason?: string | null;
+    /**
+     * Resolution Evidence
+     */
+    resolution_evidence?: {
+        [key: string]: unknown;
+    } | null;
+    /**
      * Created At
      */
     created_at: string;
@@ -1377,6 +1926,34 @@ export type ReviewIssueSeverity = 'low' | 'medium' | 'high' | 'blocking';
  * ReviewIssueStatus
  */
 export type ReviewIssueStatus = 'open' | 'resolved' | 'waived';
+
+/**
+ * ReviewIssueUpdate
+ */
+export type ReviewIssueUpdate = {
+    /**
+     * Idempotency Key
+     */
+    idempotency_key: string;
+    /**
+     * Expected Version
+     */
+    expected_version: number;
+    /**
+     * Reason
+     */
+    reason: string;
+    /**
+     * Evidence
+     */
+    evidence?: {
+        [key: string]: unknown;
+    } | null;
+    /**
+     * Superuser Override Reason
+     */
+    superuser_override_reason?: string | null;
+};
 
 /**
  * ReviewItemPublic
@@ -1444,6 +2021,10 @@ export type ReviewItemPublic = {
      * Source Page End
      */
     source_page_end?: number | null;
+    /**
+     * Source Page Thumbnail Url
+     */
+    source_page_thumbnail_url?: string | null;
     /**
      * Source Spans
      */
@@ -1520,7 +2101,42 @@ export type ReviewItemUpdate = {
     /**
      * Revised Text
      */
-    revised_text: string;
+    revised_text?: string | null;
+    /**
+     * Heading
+     */
+    heading?: string | null;
+    kind?: ProvisionKind | null;
+    /**
+     * Number
+     */
+    number?: string | null;
+    /**
+     * Parent Candidate Id
+     */
+    parent_candidate_id?: string | null;
+    /**
+     * Canonical Path
+     */
+    canonical_path?: string | null;
+    /**
+     * Sort Key
+     */
+    sort_key?: string | null;
+    /**
+     * Source Page Start
+     */
+    source_page_start?: number | null;
+    /**
+     * Source Page End
+     */
+    source_page_end?: number | null;
+    /**
+     * Source Spans
+     */
+    source_spans?: Array<{
+        [key: string]: unknown;
+    }> | null;
     /**
      * Reason
      */
@@ -1689,6 +2305,10 @@ export type SourcePagePublic = {
      * Thumbnail Key
      */
     thumbnail_key?: string | null;
+    /**
+     * Thumbnail Url
+     */
+    thumbnail_url?: string | null;
     /**
      * Text Density
      */
@@ -1988,7 +2608,7 @@ export type SourceUploadPublic = {
 /**
  * SourceUploadStatus
  */
-export type SourceUploadStatus = 'created' | 'uploading' | 'completed' | 'duplicate' | 'failed' | 'cancelled';
+export type SourceUploadStatus = 'created' | 'uploading' | 'uploaded_pending_verification' | 'completed' | 'duplicate' | 'failed' | 'cancelled';
 
 /**
  * Token
@@ -2609,10 +3229,66 @@ export type utilsHealthCheckResponses = {
      *
      * Successful Response
      */
-    200: boolean;
+    200: {
+        [key: string]: string | boolean;
+    };
 };
 
 export type utilsHealthCheckResponse = utilsHealthCheckResponses[keyof utilsHealthCheckResponses];
+
+export type adminReadMyAdminRolesData = {
+    body?: never;
+    path?: never;
+    query?: never;
+    url: '/api/v1/admin/my-roles';
+};
+
+export type adminReadMyAdminRolesResponses = {
+    /**
+     * Successful Response
+     */
+    200: MyAdminRolesPublic;
+};
+
+export type adminReadMyAdminRolesResponse = adminReadMyAdminRolesResponses[keyof adminReadMyAdminRolesResponses];
+
+export type adminReadAuditEventsData = {
+    body?: never;
+    path?: never;
+    query?: {
+        /**
+         * Entity Id
+         */
+        entity_id?: string | null;
+        /**
+         * Entity Type
+         */
+        entity_type?: string | null;
+        /**
+         * Limit
+         */
+        limit?: number;
+    };
+    url: '/api/v1/admin/audit-events';
+};
+
+export type adminReadAuditEventsErrors = {
+    /**
+     * Validation Error
+     */
+    422: HTTPValidationError;
+};
+
+export type adminReadAuditEventsError = adminReadAuditEventsErrors[keyof adminReadAuditEventsErrors];
+
+export type adminReadAuditEventsResponses = {
+    /**
+     * Successful Response
+     */
+    200: AuditEventsPublic;
+};
+
+export type adminReadAuditEventsResponse = adminReadAuditEventsResponses[keyof adminReadAuditEventsResponses];
 
 export type adminReadAdminMetricsData = {
     body?: never;
@@ -2863,6 +3539,34 @@ export type adminReadIngestionRunResponses = {
 
 export type adminReadIngestionRunResponse = adminReadIngestionRunResponses[keyof adminReadIngestionRunResponses];
 
+export type adminReadIngestionArtifactContentData = {
+    body?: never;
+    path: {
+        /**
+         * Artifact Id
+         */
+        artifact_id: string;
+    };
+    query?: never;
+    url: '/api/v1/admin/ingestion-artifacts/{artifact_id}/content';
+};
+
+export type adminReadIngestionArtifactContentErrors = {
+    /**
+     * Validation Error
+     */
+    422: HTTPValidationError;
+};
+
+export type adminReadIngestionArtifactContentError = adminReadIngestionArtifactContentErrors[keyof adminReadIngestionArtifactContentErrors];
+
+export type adminReadIngestionArtifactContentResponses = {
+    /**
+     * Successful Response
+     */
+    200: unknown;
+};
+
 export type adminStreamIngestionRunEventsData = {
     body?: never;
     headers?: {
@@ -2877,7 +3581,12 @@ export type adminStreamIngestionRunEventsData = {
          */
         run_id: string;
     };
-    query?: never;
+    query?: {
+        /**
+         * Replay Only
+         */
+        replay_only?: boolean;
+    };
     url: '/api/v1/admin/ingestion-runs/{run_id}/events';
 };
 
@@ -3047,6 +3756,36 @@ export type adminResumeRunResponses = {
 
 export type adminResumeRunResponse = adminResumeRunResponses[keyof adminResumeRunResponses];
 
+export type adminStartEmbeddingRunData = {
+    body: IngestionRunControlRequest;
+    path: {
+        /**
+         * Run Id
+         */
+        run_id: string;
+    };
+    query?: never;
+    url: '/api/v1/admin/ingestion-runs/{run_id}/start-embedding';
+};
+
+export type adminStartEmbeddingRunErrors = {
+    /**
+     * Validation Error
+     */
+    422: HTTPValidationError;
+};
+
+export type adminStartEmbeddingRunError = adminStartEmbeddingRunErrors[keyof adminStartEmbeddingRunErrors];
+
+export type adminStartEmbeddingRunResponses = {
+    /**
+     * Successful Response
+     */
+    200: IngestionRunPublic;
+};
+
+export type adminStartEmbeddingRunResponse = adminStartEmbeddingRunResponses[keyof adminStartEmbeddingRunResponses];
+
 export type adminReadReviewItemsData = {
     body?: never;
     path?: never;
@@ -3195,6 +3934,36 @@ export type adminDecideReviewItemResponses = {
 
 export type adminDecideReviewItemResponse = adminDecideReviewItemResponses[keyof adminDecideReviewItemResponses];
 
+export type adminPatchReviewIssueData = {
+    body: ReviewIssueUpdate;
+    path: {
+        /**
+         * Issue Id
+         */
+        issue_id: string;
+    };
+    query?: never;
+    url: '/api/v1/admin/review-issues/{issue_id}';
+};
+
+export type adminPatchReviewIssueErrors = {
+    /**
+     * Validation Error
+     */
+    422: HTTPValidationError;
+};
+
+export type adminPatchReviewIssueError = adminPatchReviewIssueErrors[keyof adminPatchReviewIssueErrors];
+
+export type adminPatchReviewIssueResponses = {
+    /**
+     * Successful Response
+     */
+    200: ReviewIssuePublic;
+};
+
+export type adminPatchReviewIssueResponse = adminPatchReviewIssueResponses[keyof adminPatchReviewIssueResponses];
+
 export type adminReadEmbeddingBenchmarkData = {
     body?: never;
     path: {
@@ -3224,6 +3993,139 @@ export type adminReadEmbeddingBenchmarkResponses = {
 };
 
 export type adminReadEmbeddingBenchmarkResponse = adminReadEmbeddingBenchmarkResponses[keyof adminReadEmbeddingBenchmarkResponses];
+
+export type adminReadEmbeddingProfilesData = {
+    body?: never;
+    path?: never;
+    query?: never;
+    url: '/api/v1/admin/embedding-profiles';
+};
+
+export type adminReadEmbeddingProfilesResponses = {
+    /**
+     * Response Admin-Read Embedding Profiles
+     *
+     * Successful Response
+     */
+    200: Array<EmbeddingProfilePublic>;
+};
+
+export type adminReadEmbeddingProfilesResponse = adminReadEmbeddingProfilesResponses[keyof adminReadEmbeddingProfilesResponses];
+
+export type adminCreateEmbeddingProfileData = {
+    body: EmbeddingProfileCreate;
+    path?: never;
+    query?: never;
+    url: '/api/v1/admin/embedding-profiles';
+};
+
+export type adminCreateEmbeddingProfileErrors = {
+    /**
+     * Validation Error
+     */
+    422: HTTPValidationError;
+};
+
+export type adminCreateEmbeddingProfileError = adminCreateEmbeddingProfileErrors[keyof adminCreateEmbeddingProfileErrors];
+
+export type adminCreateEmbeddingProfileResponses = {
+    /**
+     * Successful Response
+     */
+    201: EmbeddingProfilePublic;
+};
+
+export type adminCreateEmbeddingProfileResponse = adminCreateEmbeddingProfileResponses[keyof adminCreateEmbeddingProfileResponses];
+
+export type adminUpdateEmbeddingProfileData = {
+    body: EmbeddingProfileUpdate;
+    path: {
+        /**
+         * Profile Id
+         */
+        profile_id: string;
+    };
+    query?: never;
+    url: '/api/v1/admin/embedding-profiles/{profile_id}';
+};
+
+export type adminUpdateEmbeddingProfileErrors = {
+    /**
+     * Validation Error
+     */
+    422: HTTPValidationError;
+};
+
+export type adminUpdateEmbeddingProfileError = adminUpdateEmbeddingProfileErrors[keyof adminUpdateEmbeddingProfileErrors];
+
+export type adminUpdateEmbeddingProfileResponses = {
+    /**
+     * Successful Response
+     */
+    200: EmbeddingProfilePublic;
+};
+
+export type adminUpdateEmbeddingProfileResponse = adminUpdateEmbeddingProfileResponses[keyof adminUpdateEmbeddingProfileResponses];
+
+export type adminReadOcrBenchmarkData = {
+    body?: never;
+    path: {
+        /**
+         * Dataset Version
+         */
+        dataset_version: string;
+    };
+    query?: never;
+    url: '/api/v1/admin/ocr-benchmarks/{dataset_version}';
+};
+
+export type adminReadOcrBenchmarkErrors = {
+    /**
+     * Validation Error
+     */
+    422: HTTPValidationError;
+};
+
+export type adminReadOcrBenchmarkError = adminReadOcrBenchmarkErrors[keyof adminReadOcrBenchmarkErrors];
+
+export type adminReadOcrBenchmarkResponses = {
+    /**
+     * Successful Response
+     */
+    200: OcrBenchmarkPublic;
+};
+
+export type adminReadOcrBenchmarkResponse = adminReadOcrBenchmarkResponses[keyof adminReadOcrBenchmarkResponses];
+
+export type adminEvaluateOcrBenchmarkRouteData = {
+    body: OcrBenchmarkEvaluateRequest;
+    path: {
+        /**
+         * Dataset Version
+         */
+        dataset_version: string;
+    };
+    query?: never;
+    url: '/api/v1/admin/ocr-benchmarks/{dataset_version}/evaluate';
+};
+
+export type adminEvaluateOcrBenchmarkRouteErrors = {
+    /**
+     * Validation Error
+     */
+    422: HTTPValidationError;
+};
+
+export type adminEvaluateOcrBenchmarkRouteError = adminEvaluateOcrBenchmarkRouteErrors[keyof adminEvaluateOcrBenchmarkRouteErrors];
+
+export type adminEvaluateOcrBenchmarkRouteResponses = {
+    /**
+     * Successful Response
+     */
+    200: OcrBenchmarkPublic;
+};
+
+export type adminEvaluateOcrBenchmarkRouteResponse = adminEvaluateOcrBenchmarkRouteResponses[keyof adminEvaluateOcrBenchmarkRouteResponses];
 
 export type adminReadCorpusReleasesData = {
     body?: never;
@@ -3394,6 +4296,100 @@ export type adminReadProductionProvisionVersionsResponses = {
 };
 
 export type adminReadProductionProvisionVersionsResponse = adminReadProductionProvisionVersionsResponses[keyof adminReadProductionProvisionVersionsResponses];
+
+export type legalSearchLegalData = {
+    body: LegalSearchRequest;
+    path?: never;
+    query?: never;
+    url: '/api/v1/legal/search';
+};
+
+export type legalSearchLegalErrors = {
+    /**
+     * Validation Error
+     */
+    422: HTTPValidationError;
+};
+
+export type legalSearchLegalError = legalSearchLegalErrors[keyof legalSearchLegalErrors];
+
+export type legalSearchLegalResponses = {
+    /**
+     * Successful Response
+     */
+    200: LegalSearchResponse;
+};
+
+export type legalSearchLegalResponse = legalSearchLegalResponses[keyof legalSearchLegalResponses];
+
+export type legalReadCurrentProvisionData = {
+    body?: never;
+    path: {
+        /**
+         * Canonical Path
+         */
+        canonical_path: string;
+    };
+    query?: {
+        /**
+         * Index Kind
+         */
+        index_kind?: string;
+    };
+    url: '/api/v1/legal/provisions/{canonical_path}';
+};
+
+export type legalReadCurrentProvisionErrors = {
+    /**
+     * Validation Error
+     */
+    422: HTTPValidationError;
+};
+
+export type legalReadCurrentProvisionError = legalReadCurrentProvisionErrors[keyof legalReadCurrentProvisionErrors];
+
+export type legalReadCurrentProvisionResponses = {
+    /**
+     * Successful Response
+     */
+    200: LegalSearchResponse;
+};
+
+export type legalReadCurrentProvisionResponse = legalReadCurrentProvisionResponses[keyof legalReadCurrentProvisionResponses];
+
+export type legalReadCurrentReleaseData = {
+    body?: never;
+    path?: never;
+    query?: {
+        /**
+         * Index Kind
+         */
+        index_kind?: string;
+    };
+    url: '/api/v1/legal/releases/current';
+};
+
+export type legalReadCurrentReleaseErrors = {
+    /**
+     * Validation Error
+     */
+    422: HTTPValidationError;
+};
+
+export type legalReadCurrentReleaseError = legalReadCurrentReleaseErrors[keyof legalReadCurrentReleaseErrors];
+
+export type legalReadCurrentReleaseResponses = {
+    /**
+     * Response Legal-Read Current Release
+     *
+     * Successful Response
+     */
+    200: {
+        [key: string]: unknown;
+    };
+};
+
+export type legalReadCurrentReleaseResponse = legalReadCurrentReleaseResponses[keyof legalReadCurrentReleaseResponses];
 
 export type privateCreateUserData = {
     body: PrivateUserCreate;

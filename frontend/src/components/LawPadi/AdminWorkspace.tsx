@@ -250,6 +250,30 @@ export function AdminWorkspace() {
     refetchInterval: 5000,
   })
 
+  const myRolesQuery = useQuery({
+    queryKey: ["admin", "my-roles"],
+    queryFn: async () => (await AdminService.readMyAdminRoles()).data,
+    refetchInterval: 30000,
+  })
+
+  const auditEventsQuery = useQuery({
+    queryKey: ["admin", "audit-events", selectedReleaseId],
+    queryFn: async () =>
+      (
+        await AdminService.readAuditEvents({
+          query: { entity_id: selectedReleaseId, limit: 50 },
+        })
+      ).data,
+    enabled: Boolean(selectedReleaseId),
+    refetchInterval: 10000,
+  })
+
+  const myRoles = myRolesQuery.data?.roles ?? []
+  const isSuperuser = Boolean(myRolesQuery.data?.is_superuser)
+  const canUpload = isSuperuser || myRoles.includes("ingestion_uploader")
+  const canReview = isSuperuser || myRoles.includes("legal_reviewer")
+  const canPublish = isSuperuser || myRoles.includes("corpus_publisher")
+
   const invalidateAdmin = () =>
     queryClient.invalidateQueries({ queryKey: ["admin"] })
 
@@ -447,7 +471,16 @@ export function AdminWorkspace() {
       <div className="mx-auto w-full max-w-7xl">
         <SectionHeading
           action={
-            <SquircleButton onClick={() => setUploadOpen(true)} type="button">
+            <SquircleButton
+              disabled={!canUpload}
+              onClick={() => setUploadOpen(true)}
+              title={
+                canUpload
+                  ? "Upload a Constitution PDF"
+                  : "Requires the ingestion_uploader role"
+              }
+              type="button"
+            >
               <FiUploadCloud className="size-4" aria-hidden />
               Upload source
             </SquircleButton>
@@ -551,7 +584,7 @@ export function AdminWorkspace() {
               if (!selectedRunId) return
               pageSelectionMutation.mutate({
                 runId: selectedRunId,
-                body: pageSelectionBody(pages),
+                body: pageSelectionBody(pages, selectedRun),
               })
             }}
             pages={pagesQuery.data?.data ?? []}
@@ -561,6 +594,7 @@ export function AdminWorkspace() {
 
         {tab === "review" ? (
           <ReviewWorkspace
+            canReview={canReview}
             isLoading={reviewsQuery.isLoading}
             isMutating={
               reviewUpdateMutation.isPending ||
@@ -585,7 +619,9 @@ export function AdminWorkspace() {
 
         {tab === "releases" ? (
           <ReleaseWorkspace
+            auditEvents={auditEventsQuery.data?.data ?? []}
             benchmark={benchmarkQuery.data}
+            canPublish={canPublish}
             evidence={publicationEvidenceQuery.data}
             isBenchmarkLoading={benchmarkQuery.isLoading}
             isEvidenceLoading={publicationEvidenceQuery.isLoading}
@@ -902,10 +938,35 @@ function PageBoundaryWorkspace({
   const [selectedPageNumber, setSelectedPageNumber] = useState<number | null>(
     null,
   )
+  const [rangeFrom, setRangeFrom] = useState("")
+  const [rangeTo, setRangeTo] = useState("")
+  const [rangeReason, setRangeReason] = useState("")
   const draftedPages = pages.map((page) => ({
     ...page,
     ...pageDrafts[page.id],
   }))
+
+  const applyRange = (status: PageInclusionStatus) => {
+    const from = Number.parseInt(rangeFrom, 10)
+    const to = Number.parseInt(rangeTo, 10)
+    if (!Number.isInteger(from) || !Number.isInteger(to) || from > to) return
+    setPageDrafts((current) => {
+      const next = { ...current }
+      for (const page of pages) {
+        if (page.page_number >= from && page.page_number <= to) {
+          next[page.id] = {
+            inclusion_status: status,
+            inclusion_reason:
+              rangeReason.trim() ||
+              (current[page.id]?.inclusion_reason ??
+                page.inclusion_reason ??
+                null),
+          }
+        }
+      }
+      return next
+    })
+  }
   const selectedPage =
     draftedPages.find((page) => page.page_number === selectedPageNumber) ??
     draftedPages[0]
@@ -959,38 +1020,90 @@ function PageBoundaryWorkspace({
           {labelize(selectedRun.current_stage)} · {shortId(selectedRun.id)}
         </p>
       ) : null}
-      <div className="grid gap-2">
-        {draftedPages.map((page) => (
-          <button
-            aria-label={`p.${page.page_number} ${labelize(page.role)} ${labelize(
-              page.inclusion_status,
-            )}`}
-            aria-pressed={selectedPage?.id === page.id}
-            className="sq-md grid gap-3 border border-border bg-background p-3 md:grid-cols-[88px_1fr_auto]"
-            key={page.id}
-            onClick={() => setSelectedPageNumber(page.page_number)}
+      <section
+        aria-label="Page range selection"
+        className="sq-md mb-4 grid gap-3 border border-border bg-card p-4"
+      >
+        <p className="text-sm font-bold">Apply a page range</p>
+        <div className="grid gap-2 sm:grid-cols-[1fr_1fr_2fr_auto_auto]">
+          <Input
+            aria-label="Range from page"
+            inputMode="numeric"
+            onChange={(event) => setRangeFrom(event.target.value)}
+            placeholder="From"
+            value={rangeFrom}
+          />
+          <Input
+            aria-label="Range to page"
+            inputMode="numeric"
+            onChange={(event) => setRangeTo(event.target.value)}
+            placeholder="To"
+            value={rangeTo}
+          />
+          <Input
+            aria-label="Range reason"
+            onChange={(event) => setRangeReason(event.target.value)}
+            placeholder="Reason (e.g. schedules must be included)"
+            value={rangeReason}
+          />
+          <SquircleButton
+            onClick={() => applyRange("included")}
+            size="sm"
             type="button"
           >
-            <div>
-              <p className="font-legal text-2xl">p.{page.page_number}</p>
-              <p className="text-xs text-muted-foreground">
-                {labelize(page.role)}
-              </p>
-            </div>
-            <div>
-              <StatusPill status={page.inclusion_status} />
-              <p className="mt-2 text-sm text-muted-foreground">
-                {page.inclusion_reason ?? "No decision reason recorded."}
-              </p>
-              <div className="mt-2 flex flex-wrap gap-2 text-xs text-muted-foreground">
-                <span>Density {formatPercent(page.text_density)}</span>
-                <span>Columns {formatMetric(page.column_count)}</span>
-                <span>{page.orientation ?? "orientation unknown"}</span>
+            Include range
+          </SquircleButton>
+          <SquircleButton
+            onClick={() => applyRange("excluded")}
+            size="sm"
+            type="button"
+            variant="outline"
+          >
+            Exclude range
+          </SquircleButton>
+        </div>
+      </section>
+      <ul
+        className="grid list-none gap-2 p-0 sm:grid-cols-2 lg:grid-cols-3"
+        aria-label="Page filmstrip"
+      >
+        {draftedPages.map((page) => (
+          <li key={page.id}>
+            <button
+              aria-label={`p.${page.page_number} ${labelize(page.role)} ${labelize(
+                page.inclusion_status,
+              )}`}
+              aria-pressed={selectedPage?.id === page.id}
+              className="sq-md grid gap-3 border border-border bg-background p-3 md:grid-cols-[88px_1fr_auto]"
+              key={page.id}
+              onClick={() => setSelectedPageNumber(page.page_number)}
+              type="button"
+            >
+              <div>
+                <PageThumbnail page={page} />
+                <p className="font-legal text-2xl">p.{page.page_number}</p>
+                <p className="text-xs text-muted-foreground">
+                  {labelize(page.role)}
+                </p>
+                <p className="mt-1 break-all text-[11px] text-muted-foreground">
+                  {page.thumbnail_key ?? "thumbnail pending"}
+                </p>
               </div>
-            </div>
-          </button>
+              <div>
+                <StatusPill status={page.inclusion_status} />
+                <p className="mt-2 text-sm text-muted-foreground">
+                  {page.inclusion_reason ?? "No decision reason recorded."}
+                </p>
+                <div className="mt-2 flex flex-wrap gap-2 text-xs text-muted-foreground">
+                  <span>Density {formatPercent(page.text_density)}</span>
+                  <span>Columns {formatMetric(page.column_count)}</span>
+                  <span>{page.orientation ?? "orientation unknown"}</span>
+                </div>
+              </div>
+            </button>
+          </li>
         ))}
-      </div>
+      </ul>
       {selectedPage ? (
         <>
           <ProvisionalPagePreview page={selectedPage} />
@@ -1044,6 +1157,7 @@ function ReviewWorkspace({
   selectedId,
   isLoading,
   isMutating,
+  canReview = true,
   onSelect,
   onSave,
   onDecide,
@@ -1054,6 +1168,7 @@ function ReviewWorkspace({
   selectedId?: string
   isLoading: boolean
   isMutating: boolean
+  canReview?: boolean
   onSelect: (id: string) => void
   onSave: (id: string, body: ReviewItemUpdate) => void
   onDecide: (id: string, body: ReviewDecisionCreate) => void
@@ -1162,10 +1277,22 @@ function ReviewWorkspace({
               />
             </div>
 
+            {!canReview ? (
+              <p
+                className="sq-md border border-amber-500/40 bg-amber-500/10 p-3 text-sm"
+                role="note"
+              >
+                Read-only: your account lacks the legal_reviewer role.
+              </p>
+            ) : null}
             <div className="grid gap-4 lg:grid-cols-2">
               <TextBlock title="Raw extraction">{selected.raw_text}</TextBlock>
               <TextBlock title="Current revision">{selectedText}</TextBlock>
             </div>
+            <RevisionDiff
+              before={selected.raw_text ?? ""}
+              after={selectedText}
+            />
 
             <SourceEvidencePreview
               candidate={selected}
@@ -1256,7 +1383,12 @@ function ReviewWorkspace({
             </FieldLabel>
             <div className="flex flex-wrap gap-2">
               <SquircleButton
-                disabled={isMutating || !reason.trim() || !revisedText.trim()}
+                disabled={
+                  isMutating ||
+                  !canReview ||
+                  !reason.trim() ||
+                  !revisedText.trim()
+                }
                 loading={isMutating}
                 onClick={() =>
                   onSave(selected.id, {
@@ -1281,7 +1413,7 @@ function ReviewWorkspace({
             </FieldLabel>
             <div className="flex flex-wrap gap-2">
               <SquircleButton
-                disabled={isMutating || !decisionReason.trim()}
+                disabled={isMutating || !canReview || !decisionReason.trim()}
                 onClick={() => submitDecision("approve")}
                 type="button"
               >
@@ -1289,7 +1421,7 @@ function ReviewWorkspace({
                 Approve
               </SquircleButton>
               <SquircleButton
-                disabled={isMutating || !decisionReason.trim()}
+                disabled={isMutating || !canReview || !decisionReason.trim()}
                 onClick={() => submitDecision("request_correction")}
                 type="button"
                 variant="outline"
@@ -1298,7 +1430,7 @@ function ReviewWorkspace({
                 Request correction
               </SquircleButton>
               <SquircleButton
-                disabled={isMutating || !decisionReason.trim()}
+                disabled={isMutating || !canReview || !decisionReason.trim()}
                 onClick={() => submitDecision("reject")}
                 type="button"
                 variant="danger"
@@ -1338,6 +1470,7 @@ function ProvisionalPagePreview({ page }: { page: SourcePagePublic }) {
         </div>
         <StatusPill status={page.inclusion_status} />
       </div>
+      <PageThumbnail page={page} large />
       <div className="grid gap-3 md:grid-cols-3">
         <SmallStat label="Density" value={formatPercent(page.text_density)} />
         <SmallStat
@@ -1364,6 +1497,67 @@ function ProvisionalPagePreview({ page }: { page: SourcePagePublic }) {
         </div>
       ) : null}
     </section>
+  )
+}
+
+function PageThumbnail({
+  page,
+  large = false,
+}: {
+  page: SourcePagePublic
+  large?: boolean
+}) {
+  const [objectUrl, setObjectUrl] = useState<string>()
+
+  useEffect(() => {
+    if (!page.thumbnail_url) {
+      setObjectUrl(undefined)
+      return
+    }
+    let cancelled = false
+    let loadedUrl: string | undefined
+    const token = localStorage.getItem("access_token")
+    fetch(page.thumbnail_url, {
+      headers: token ? { Authorization: `Bearer ${token}` } : undefined,
+    })
+      .then(async (response) => {
+        if (!response.ok) throw new Error("Unable to load thumbnail")
+        return response.blob()
+      })
+      .then((blob) => {
+        loadedUrl = URL.createObjectURL(blob)
+        if (!cancelled) setObjectUrl(loadedUrl)
+      })
+      .catch(() => {
+        if (!cancelled) setObjectUrl(undefined)
+      })
+    return () => {
+      cancelled = true
+      if (loadedUrl) URL.revokeObjectURL(loadedUrl)
+    }
+  }, [page.thumbnail_url])
+
+  if (!objectUrl) {
+    return (
+      <div
+        className={cn(
+          "grid place-items-center bg-muted text-xs text-muted-foreground",
+          large ? "mb-4 aspect-[8.5/11]" : "mb-2 aspect-[4/3]",
+        )}
+      >
+        Thumbnail pending
+      </div>
+    )
+  }
+  return (
+    <img
+      alt={`Page ${page.page_number} thumbnail`}
+      className={cn(
+        "w-full object-contain",
+        large ? "mb-4 max-h-[520px]" : "mb-2 aspect-[4/3]",
+      )}
+      src={objectUrl}
+    />
   )
 }
 
@@ -1397,6 +1591,13 @@ function SourceEvidencePreview({
 
       <div className="grid gap-4 lg:grid-cols-[minmax(220px,320px)_1fr]">
         <div className="relative aspect-[8.5/11] overflow-hidden border border-border bg-muted">
+          {candidate.source_page_thumbnail_url ? (
+            <ProtectedImage
+              alt={`Source page ${candidate.source_page_start ?? ""}`}
+              className="absolute inset-0 h-full w-full object-contain"
+              url={candidate.source_page_thumbnail_url}
+            />
+          ) : null}
           {spans.length ? (
             spans.map((span, index) => (
               <button
@@ -1452,11 +1653,57 @@ function SourceEvidencePreview({
   )
 }
 
+function ProtectedImage({
+  alt,
+  className,
+  url,
+}: {
+  alt: string
+  className?: string
+  url: string
+}) {
+  const [objectUrl, setObjectUrl] = useState<string>()
+
+  useEffect(() => {
+    let cancelled = false
+    let loadedUrl: string | undefined
+    const token = localStorage.getItem("access_token")
+    fetch(url, {
+      headers: token ? { Authorization: `Bearer ${token}` } : undefined,
+    })
+      .then(async (response) => {
+        if (!response.ok) throw new Error("Unable to load source page")
+        return response.blob()
+      })
+      .then((blob) => {
+        loadedUrl = URL.createObjectURL(blob)
+        if (!cancelled) setObjectUrl(loadedUrl)
+      })
+      .catch(() => {
+        if (!cancelled) setObjectUrl(undefined)
+      })
+    return () => {
+      cancelled = true
+      if (loadedUrl) URL.revokeObjectURL(loadedUrl)
+    }
+  }, [url])
+
+  return objectUrl ? (
+    <img alt={alt} className={className} src={objectUrl} />
+  ) : (
+    <div className="absolute inset-0 grid place-items-center text-xs text-muted-foreground">
+      Source page pending
+    </div>
+  )
+}
+
 function ReleaseWorkspace({
   releases,
   selected,
   selectedId,
+  auditEvents = [],
   benchmark,
+  canPublish = true,
   evidence,
   isBenchmarkLoading,
   isEvidenceLoading,
@@ -1470,7 +1717,14 @@ function ReleaseWorkspace({
   releases: CorpusReleasePublic[]
   selected?: CorpusReleasePublic
   selectedId?: string
+  auditEvents?: {
+    id: string
+    action: string
+    reason?: string | null
+    created_at: string
+  }[]
   benchmark?: EmbeddingBenchmarkPublic
+  canPublish?: boolean
   evidence?: CorpusReleasePublicationEvidencePublic
   isBenchmarkLoading: boolean
   isEvidenceLoading: boolean
@@ -1496,6 +1750,7 @@ function ReleaseWorkspace({
   const releaseManifest = releaseManifestSummary(manifest)
   const benchmarkResults = benchmark?.results ?? []
   const vectorIndexes = evidence?.vector_indexes ?? []
+  const retrievalIndexBuilds = evidence?.retrieval_index_builds ?? []
   const promotionAttempts = evidence?.promotion_attempts ?? []
   const actorEvidence = evidence?.actor_separation
 
@@ -1655,6 +1910,32 @@ function ReleaseWorkspace({
               ) : null}
             </div>
 
+            <div className="sq-md border border-border bg-background p-4">
+              <p className="text-sm font-bold">Active retrieval targets</p>
+              {evidence?.active_targets?.length ? (
+                <div className="mt-3 grid gap-2 sm:grid-cols-2">
+                  {evidence.active_targets.map((target) => (
+                    <div
+                      className="sq-sm border border-border/70 bg-card p-3"
+                      key={target.index_kind}
+                    >
+                      <p className="text-sm font-semibold">
+                        {target.index_kind}
+                      </p>
+                      <p className="mt-1 break-all text-xs text-muted-foreground">
+                        Release {target.release_id} · build{" "}
+                        {target.retrieval_index_build_id}
+                      </p>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <p className="mt-3 text-sm text-muted-foreground">
+                  No production target is active for this release.
+                </p>
+              )}
+            </div>
+
             <div className="grid gap-3 xl:grid-cols-2">
               <div className="sq-md border border-border bg-background p-4">
                 <p className="text-sm font-bold">
@@ -1702,53 +1983,98 @@ function ReleaseWorkspace({
               </div>
 
               <div className="sq-md border border-border bg-background p-4">
-                <p className="text-sm font-bold">Qdrant validation</p>
-                <ListState
-                  isEmpty={!vectorIndexes.length}
-                  isLoading={isEvidenceLoading}
-                  text="Vector index evidence pending."
-                />
-                <div className="mt-3 grid gap-2">
-                  {vectorIndexes.map((index) => (
-                    <div
-                      className="sq-sm border border-border/70 bg-card p-3"
-                      key={index.id}
-                    >
-                      <div className="flex flex-wrap items-start justify-between gap-3">
-                        <div>
-                          <p className="break-all text-sm font-semibold">
-                            {index.collection_name}
-                          </p>
-                          <p className="mt-1 text-xs text-muted-foreground">
-                            {vectorIndexValidationLabel(
-                              index.validation_report,
-                            )}
-                          </p>
+                <p className="text-sm font-bold">
+                  {retrievalIndexBuilds.length
+                    ? "pgvector validation"
+                    : "Qdrant validation"}
+                </p>
+                {retrievalIndexBuilds.length ? (
+                  <div className="mt-3 grid gap-2">
+                    {retrievalIndexBuilds.map((build) => (
+                      <div
+                        className="sq-sm border border-border/70 bg-card p-3"
+                        key={build.id}
+                      >
+                        <div className="flex flex-wrap items-start justify-between gap-3">
+                          <div>
+                            <p className="break-all text-sm font-semibold">
+                              {build.relation_name} · {build.index_kind}
+                            </p>
+                            <p className="mt-1 text-xs text-muted-foreground">
+                              {build.validation_report?.is_valid === true
+                                ? "Exact dense, lexical and join validation passed"
+                                : "Validation evidence pending"}
+                            </p>
+                          </div>
+                          <StatusPill status={build.status} />
                         </div>
-                        <StatusPill status={index.status} />
+                        <div className="mt-3 grid gap-2 sm:grid-cols-3">
+                          <SmallStat
+                            label="Segments"
+                            value={formatMetric(build.stored_segment_count)}
+                          />
+                          <SmallStat
+                            label="Embeddings"
+                            value={formatMetric(build.stored_embedding_count)}
+                          />
+                          <SmallStat
+                            label="Dimensions"
+                            value={formatMetric(build.vector_dimensions)}
+                          />
+                        </div>
                       </div>
-                      <div className="mt-3 grid gap-2 sm:grid-cols-3">
-                        <SmallStat
-                          label="Points"
-                          value={formatMetric(index.point_count)}
-                        />
-                        <SmallStat
-                          label="Dimensions"
-                          value={formatMetric(index.vector_dimensions)}
-                        />
-                        <SmallStat
-                          label="Remote count"
-                          value={formatMetric(
-                            reportNumber(
-                              index.validation_report,
-                              "remote_point_count",
-                            ),
-                          )}
-                        />
-                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <>
+                    <ListState
+                      isEmpty={!vectorIndexes.length}
+                      isLoading={isEvidenceLoading}
+                      text="Vector index evidence pending."
+                    />
+                    <div className="mt-3 grid gap-2">
+                      {vectorIndexes.map((index) => (
+                        <div
+                          className="sq-sm border border-border/70 bg-card p-3"
+                          key={index.id}
+                        >
+                          <div className="flex flex-wrap items-start justify-between gap-3">
+                            <div>
+                              <p className="break-all text-sm font-semibold">
+                                {index.collection_name}
+                              </p>
+                              <p className="mt-1 text-xs text-muted-foreground">
+                                {vectorIndexValidationLabel(
+                                  index.validation_report,
+                                )}
+                              </p>
+                            </div>
+                            <StatusPill status={index.status} />
+                          </div>
+                          <div className="mt-3 grid gap-2 sm:grid-cols-3">
+                            <SmallStat
+                              label="Points"
+                              value={formatMetric(index.point_count)}
+                            />
+                            <SmallStat
+                              label="Dimensions"
+                              value={formatMetric(index.vector_dimensions)}
+                            />
+                            <SmallStat
+                              label="Remote count"
+                              value={formatMetric(
+                                reportNumber(
+                                  index.validation_report,
+                                  "remote_point_count",
+                                ),
+                              )}
+                            />
+                          </div>
+                        </div>
+                      ))}
                     </div>
-                  ))}
-                </div>
+                  </>
+                )}
               </div>
             </div>
 
@@ -1834,9 +2160,35 @@ function ReleaseWorkspace({
               />
             </FieldLabel>
 
+            {!canPublish ? (
+              <p
+                className="sq-md border border-amber-500/40 bg-amber-500/10 p-3 text-sm"
+                role="note"
+              >
+                Read-only: your account lacks the corpus_publisher role.
+              </p>
+            ) : null}
+            <div className="sq-md border border-border bg-background p-4">
+              <p className="text-sm font-bold">Audit history</p>
+              <ListState isEmpty={!auditEvents.length} isLoading={false} />
+              <div className="mt-3 grid gap-2">
+                {auditEvents.slice(0, 10).map((event) => (
+                  <div
+                    className="sq-sm border border-border/70 bg-card p-3 text-xs"
+                    key={event.id}
+                  >
+                    <p className="font-semibold">{event.action}</p>
+                    <p className="mt-1 text-muted-foreground">
+                      {event.reason ?? "No reason recorded."} ·{" "}
+                      {formatDateTime(event.created_at)}
+                    </p>
+                  </div>
+                ))}
+              </div>
+            </div>
             <div className="flex flex-wrap gap-2">
               <SquircleButton
-                disabled={isMutating}
+                disabled={isMutating || !canPublish}
                 loading={isMutating}
                 onClick={() => onMutate(selected, "validate")}
                 type="button"
@@ -1846,7 +2198,7 @@ function ReleaseWorkspace({
                 Validate
               </SquircleButton>
               <SquircleButton
-                disabled={isMutating}
+                disabled={isMutating || !canPublish}
                 loading={isMutating}
                 onClick={() =>
                   onMutate(
@@ -1908,6 +2260,10 @@ function BenchmarkWorkspace({
         </div>
       </Panel>
       <Panel title="Embedding benchmarks">
+        <p className="mb-3 text-xs text-muted-foreground">
+          Winner needs Recall@10 ≥ 95%; ties break on nDCG@10, then cost and p95
+          latency. Both dense candidates share the sparse_legal baseline.
+        </p>
         <ListState
           isEmpty={!benchmark?.results.length}
           isLoading={isLoading}
@@ -1954,7 +2310,90 @@ function BenchmarkWorkspace({
           ))}
         </div>
       </Panel>
+      <OcrBenchmarkPanel />
     </div>
+  )
+}
+
+function OcrBenchmarkPanel() {
+  const [datasetVersion, setDatasetVersion] = useState("")
+  const infoQuery = useQuery({
+    queryKey: ["admin", "ocr-benchmarks", datasetVersion],
+    queryFn: async () =>
+      (
+        await AdminService.readOcrBenchmark({
+          path: { dataset_version: datasetVersion },
+        })
+      ).data,
+    enabled: Boolean(datasetVersion.trim()),
+    retry: false,
+  })
+  return (
+    <Panel title="OCR benchmarks">
+      <p className="mb-3 text-xs text-muted-foreground">
+        Compare Google Document AI vs Azure Document Intelligence on the same
+        versioned OCR_PAGE dataset. The winner is activated via
+        MANAGED_OCR_PROVIDER configuration.
+      </p>
+      <div className="grid gap-2 sm:grid-cols-[2fr_auto]">
+        <Input
+          aria-label="OCR benchmark dataset version"
+          onChange={(event) => setDatasetVersion(event.target.value)}
+          placeholder="e.g. ocr-gold-v1"
+          value={datasetVersion}
+        />
+        <SquircleButton
+          disabled={!datasetVersion.trim()}
+          onClick={() => infoQuery.refetch()}
+          type="button"
+          variant="outline"
+        >
+          <FiSearch className="size-4" aria-hidden />
+          Load dataset
+        </SquircleButton>
+      </div>
+      {infoQuery.data ? (
+        <p className="mt-3 text-sm text-muted-foreground">
+          {infoQuery.data.sample_count} pages ·{" "}
+          {infoQuery.data.active_dataset_items} active items
+          {infoQuery.data.winner ? ` · winner ${infoQuery.data.winner}` : ""}
+        </p>
+      ) : null}
+      {infoQuery.data?.providers?.length ? (
+        <div className="mt-3 grid gap-2">
+          {infoQuery.data.providers.map((result) => (
+            <div
+              className="sq-md border border-border bg-background p-4"
+              key={result.provider}
+            >
+              <p className="text-sm font-bold">{result.provider}</p>
+              <div className="mt-3 grid gap-3 md:grid-cols-4">
+                <SmallStat
+                  label="Char accuracy"
+                  value={formatPercent(result.mean_character_accuracy)}
+                />
+                <SmallStat
+                  label="Failures"
+                  value={formatMetric(result.failure_count)}
+                />
+                <SmallStat
+                  label="Cost"
+                  value={
+                    result.total_cost_usd != null
+                      ? `$${result.total_cost_usd}`
+                      : "Pending"
+                  }
+                />
+                <SmallStat
+                  label="Mean ms"
+                  value={formatMetric(result.mean_timing_ms)}
+                />
+              </div>
+            </div>
+          ))}
+        </div>
+      ) : null}
+    </Panel>
   )
 }
 
@@ -2434,6 +2873,46 @@ function TextBlock({
   )
 }
 
+function RevisionDiff({ before, after }: { before: string; after: string }) {
+  if (before === after) {
+    return (
+      <p className="text-xs text-muted-foreground">
+        No textual changes from the raw extraction.
+      </p>
+    )
+  }
+  const beforeLines = before.split("\n")
+  const afterLines = after.split("\n")
+  const removed = beforeLines.filter((line) => !afterLines.includes(line))
+  const added = afterLines.filter((line) => !beforeLines.includes(line))
+  return (
+    <section
+      aria-label="Revision diff"
+      className="sq-md grid gap-2 border border-border bg-background p-4"
+    >
+      <p className="text-xs font-bold uppercase text-muted-foreground">
+        Revision diff (line-based)
+      </p>
+      {removed.map((line, index) => (
+        <pre
+          className="whitespace-pre-wrap bg-red-500/10 px-2 py-1 font-sans text-sm text-red-700 dark:text-red-300"
+          key={`removed-${index}`}
+        >
+          − {line || "(blank line)"}
+        </pre>
+      ))}
+      {added.map((line, index) => (
+        <pre
+          className="whitespace-pre-wrap bg-emerald-500/10 px-2 py-1 font-sans text-sm text-emerald-700 dark:text-emerald-300"
+          key={`added-${index}`}
+        >
+          + {line || "(blank line)"}
+        </pre>
+      ))}
+    </section>
+  )
+}
+
 function FieldLabel({
   label,
   children,
@@ -2830,9 +3309,13 @@ async function mutateRelease(
   ).data.release.id
 }
 
-function pageSelectionBody(pages: SourcePagePublic[]): PageSelectionUpdate {
+function pageSelectionBody(
+  pages: SourcePagePublic[],
+  run?: IngestionRunPublic | IngestionRunDetail,
+): PageSelectionUpdate {
   return {
     idempotency_key: `pages-${crypto.randomUUID()}`,
+    expected_run_version: run?.lock_version ?? 1,
     pages: pages.map((page) => ({
       page_number: page.page_number,
       inclusion_status: nextInclusionStatus(page.inclusion_status),

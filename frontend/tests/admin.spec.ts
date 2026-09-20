@@ -452,6 +452,8 @@ type AdminMockOptions = {
   eventStream?: "ok" | "fail" | "fail-once"
   multipartRequired?: boolean
   uploadBackend?: "local" | "r2"
+  roles?: string[]
+  isSuperuser?: boolean
 }
 
 type AdminMockRequests = {
@@ -492,6 +494,7 @@ async function mockAdminApi(
     sourceVerifications: 0,
   }
   let sourceVerified = false
+  let revisionText: string | null = null
 
   await page.addInitScript(() => {
     localStorage.setItem("access_token", "playwright-admin-token")
@@ -727,14 +730,17 @@ async function mockAdminApi(
     }
 
     if (method === "GET" && path.endsWith("/review-items")) {
-      return json(route, { data: [reviewItem(sourceVerified)], count: 1 })
+      return json(route, {
+        data: [reviewItem(sourceVerified, revisionText)],
+        count: 1,
+      })
     }
 
     if (method === "PATCH" && path.endsWith(`/review-items/${candidateId}`)) {
+      revisionText =
+        "The privacy of citizens is hereby guaranteed and protected."
       return json(route, {
-        ...reviewItem(sourceVerified),
-        latest_revision_text:
-          "The privacy of citizens is hereby guaranteed and protected.",
+        ...reviewItem(sourceVerified, revisionText),
         revision_number: 2,
       })
     }
@@ -748,7 +754,7 @@ async function mockAdminApi(
         reason?: string
       }
       return json(route, {
-        ...reviewItem(sourceVerified),
+        ...reviewItem(sourceVerified, revisionText),
         status:
           body.decision === "approve"
             ? "approved"
@@ -825,6 +831,57 @@ async function mockAdminApi(
         release: { ...corpusRelease(), status: "production" },
         promotion_status: "succeeded",
         vector_index_status: "promoted",
+      })
+    }
+
+    if (method === "GET" && path.endsWith("/my-roles")) {
+      return json(route, {
+        user_id: "99999999-9999-4999-8999-999999999999",
+        is_superuser: options.isSuperuser ?? true,
+        roles: options.roles ?? [
+          "ingestion_uploader",
+          "legal_reviewer",
+          "corpus_publisher",
+        ],
+      })
+    }
+
+    if (method === "GET" && path.includes("/audit-events")) {
+      return json(route, {
+        data: [
+          {
+            id: "aaaaaaaa-aaaa-4aaa-aaaa-aaaaaaaaaaaa",
+            actor_user_id: "99999999-9999-4999-8999-999999999999",
+            action: "corpus_release.publish",
+            entity_type: "corpus_release",
+            entity_id: releaseId,
+            severity: "info",
+            reason: "Browser test audit entry.",
+            payload: {},
+            created_at: new Date().toISOString(),
+          },
+        ],
+        count: 1,
+      })
+    }
+
+    if (method === "GET" && path.includes("/ocr-benchmarks/")) {
+      return json(route, {
+        dataset_version: "ocr-gold-v1",
+        sample_count: 2,
+        winner: "google_document_ai",
+        providers: [
+          {
+            provider: "google_document_ai",
+            page_count: 2,
+            failure_count: 0,
+            mean_character_accuracy: 0.99,
+            mean_confidence: 0.95,
+            total_cost_usd: 0.04,
+            mean_timing_ms: 1200,
+          },
+        ],
+        active_dataset_items: 2,
       })
     }
 
@@ -1082,7 +1139,10 @@ function sourceDocument(
   }
 }
 
-function reviewItem(sourceVerified = false) {
+function reviewItem(
+  sourceVerified = false,
+  latestRevisionText: string | null = null,
+) {
   return {
     id: candidateId,
     run_id: runId,
@@ -1097,7 +1157,7 @@ function reviewItem(sourceVerified = false) {
     canonical_path: "constitution.1999.chapter4.section37",
     sort_key: "004.037",
     raw_text: "The privacy of citizens is hereby guaranteed.",
-    latest_revision_text: null,
+    latest_revision_text: latestRevisionText,
     normalized_text: "the privacy of citizens is hereby guaranteed.",
     source_page_start: 2,
     source_page_end: 2,
@@ -1201,8 +1261,8 @@ function releasePublicationEvidence() {
         release_id: releaseId,
         embedding_run_id: "93939393-9393-4393-9393-939393939393",
         profile_id: "88888888-8888-4888-8888-888888888888",
-        collection_name: "law_padi_test_vector",
-        alias_name: "law_padi_production",
+        collection_name: "ng_constitution_enacted_test_vector",
+        alias_name: "constitution_enacted",
         status: "ready",
         point_count: 1,
         vector_dimensions: 3072,
@@ -1418,3 +1478,73 @@ function onePagePdf() {
   body += `startxref\n${xrefOffset}\n%%EOF\n`
   return Buffer.from(body)
 }
+
+test("Admin uses range selection, revision diffs, audit history, and OCR benchmarks", async ({
+  page,
+}) => {
+  const requests = await mockAdminApi(page)
+
+  await page.goto("/admin")
+
+  await page.getByRole("tab", { name: "Page boundaries" }).click()
+  await expect(page.getByLabel("Page range selection")).toBeVisible()
+  await expect(page.getByLabel("Page filmstrip")).toBeVisible()
+  await page.getByLabel("Range from page").fill("1")
+  await page.getByLabel("Range to page").fill("2")
+  await page
+    .getByLabel("Range reason")
+    .fill("Schedules at the end must be included.")
+  await page.getByRole("button", { name: "Include range" }).click()
+  await page.getByRole("button", { name: "Confirm suggested pages" }).click()
+  await expect(page.getByText("Page boundaries saved.")).toBeVisible()
+  expect(requests.pageSelectionBody?.pages).toContainEqual(
+    expect.objectContaining({
+      page_number: 1,
+      inclusion_status: "included",
+      inclusion_reason: "Schedules at the end must be included.",
+    }),
+  )
+
+  await page.getByRole("tab", { name: "Review queue" }).click()
+  await expect(page.getByText("No textual changes")).toBeVisible()
+  await page
+    .getByLabel("Revised text")
+    .fill("The privacy of citizens is hereby guaranteed and protected.")
+  await page
+    .getByLabel("Revision reason")
+    .fill("Matched official source wording.")
+  await page.getByRole("button", { name: "Save revision" }).click()
+  await expect(page.getByText("Review revision saved.")).toBeVisible()
+  await expect(page.getByLabel("Revision diff")).toBeVisible()
+  await expect(page.getByText("+ The privacy of citizens is")).toBeVisible()
+
+  await page.getByRole("tab", { name: "Corpus releases" }).click()
+  await expect(page.getByText("Audit history")).toBeVisible()
+  await expect(page.getByText("corpus_release.publish")).toBeVisible()
+  await expect(page.getByText("Browser test audit entry.")).toBeVisible()
+
+  await page.getByRole("tab", { name: "Benchmarks" }).click()
+  await expect(page.getByText("OCR benchmarks")).toBeVisible()
+  await page.getByLabel("OCR benchmark dataset version").fill("ocr-gold-v1")
+  await page.getByRole("button", { name: "Load dataset" }).click()
+  await expect(page.getByText("google_document_ai").first()).toBeVisible()
+  await expect(page.getByText("2 pages").first()).toBeVisible()
+})
+
+test("Accounts without admin roles see read-only controls", async ({
+  page,
+}) => {
+  await mockAdminApi(page, { roles: [], isSuperuser: false })
+
+  await page.goto("/admin")
+
+  await expect(
+    page.getByRole("button", { name: "Upload source" }),
+  ).toBeDisabled()
+  await page.getByRole("tab", { name: "Review queue" }).click()
+  await expect(page.getByText("lacks the legal_reviewer role")).toBeVisible()
+  await expect(page.getByRole("button", { name: "Approve" })).toBeDisabled()
+  await page.getByRole("tab", { name: "Corpus releases" }).click()
+  await expect(page.getByText("lacks the corpus_publisher role")).toBeVisible()
+  await expect(page.getByRole("button", { name: "Publish" })).toBeDisabled()
+})
