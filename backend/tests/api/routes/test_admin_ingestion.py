@@ -1,17 +1,23 @@
 import hashlib
 import json
+import threading
 import uuid
+from concurrent.futures import ThreadPoolExecutor
 from datetime import UTC, date, datetime, timedelta
 from io import BytesIO
 
 import pytest
+from fastapi import HTTPException
 from fastapi.testclient import TestClient
 from pypdf import PdfWriter
 from sqlmodel import Session, col, delete, func, select
 
 from app import crud
 from app.core.config import settings
+from app.core.db import engine
 from app.ingestion import LocalBlobStore, MultipartUpload, MultipartUploadPartUrl
+from app.ingestion.service import update_page_selection
+from app.ingestion.worker import run_until_idle
 from app.ingestion.workflow import append_run_event, create_run_steps
 from app.legal.enums import (
     AdminRole,
@@ -69,6 +75,7 @@ from app.legal.models import (
     SourceUpload,
     VectorIndex,
 )
+from app.legal.schemas import PageSelectionUpdate
 from app.models import User
 from tests.utils.user import authentication_token_from_email
 from tests.utils.utils import random_email
@@ -275,7 +282,7 @@ def test_scoped_admin_role_can_review_but_cannot_upload(
     assert upload_response.status_code == 403
 
 
-def test_pdf_upload_session_completion_creates_immutable_source_and_run(
+def test_pdf_upload_session_completion_keeps_source_in_quarantine_until_worker_verification(
     client: TestClient,
     superuser_token_headers: dict[str, str],
     db: Session,
@@ -342,21 +349,20 @@ def test_pdf_upload_session_completion_creates_immutable_source_and_run(
     assert complete_response.status_code == 200
     payload = complete_response.json()
     assert payload["duplicate"] is False
-    assert payload["upload"]["status"] == SourceUploadStatus.COMPLETED
-    assert payload["source_document"]["sha256"] == _sha256(pdf)
-    assert payload["source_document"]["page_count"] == 1
+    assert (
+        payload["upload"]["status"] == SourceUploadStatus.UPLOADED_PENDING_VERIFICATION
+    )
+    assert payload["source_document"] is None
     assert payload["run"]["status"] == IngestionRunStatus.QUEUED
     assert payload["run"]["current_stage"] == IngestionStage.VERIFYING_UPLOAD
+    run_id = uuid.UUID(payload["run"]["id"])
     repeated_complete = client.post(
         f"{settings.API_V1_STR}/admin/source-uploads/{upload['id']}/complete",
         headers=superuser_token_headers,
         json=complete_body,
     )
     assert repeated_complete.status_code == 200
-    assert (
-        repeated_complete.json()["source_document"]["id"]
-        == payload["source_document"]["id"]
-    )
+    assert repeated_complete.json()["source_document"] is None
     assert repeated_complete.json()["run"]["id"] == payload["run"]["id"]
     assert (
         db.exec(
@@ -367,13 +373,12 @@ def test_pdf_upload_session_completion_creates_immutable_source_and_run(
         == 1
     )
 
-    source = db.get(SourceDocument, payload["source_document"]["id"])
-    assert source
-    assert source.storage_key
-    assert source.storage_key.startswith("sources/sha256/")
-    assert (tmp_path / source.storage_key).exists()
+    run = db.get(IngestionRun, run_id)
+    assert run
+    assert run.source_document_id is None
+    assert (tmp_path / upload["quarantine_key"]).exists()
+    assert not list(tmp_path.glob("sources/sha256/*/original.pdf"))
 
-    run_id = uuid.UUID(payload["run"]["id"])
     steps = db.exec(
         select(IngestionStep)
         .where(IngestionStep.run_id == run_id)
@@ -400,13 +405,15 @@ def test_pdf_upload_session_completion_creates_immutable_source_and_run(
     assert detail["events"][0]["event_type"] == "upload_completed"
     assert detail["tasks"][0]["task_type"] == IngestionStage.VERIFYING_UPLOAD
 
-    replay_response = client.get(
-        f"{settings.API_V1_STR}/admin/ingestion-runs/{run_id}/events",
+    with client.stream(
+        "GET",
+        f"{settings.API_V1_STR}/admin/ingestion-runs/{run_id}/events?replay_only=true",
         headers={**superuser_token_headers, "Last-Event-ID": "0"},
-    )
-    assert replay_response.status_code == 200
-    assert "upload_completed" in replay_response.text
-    assert "id: 1" in replay_response.text
+    ) as replay_response:
+        assert replay_response.status_code == 200
+        replay_text = next(replay_response.iter_text())
+        assert "upload_completed" in replay_text
+        assert "id: 1" in replay_text
 
 
 def test_ingestion_run_events_replays_only_after_last_event_id(
@@ -436,20 +443,21 @@ def test_ingestion_run_events_replays_only_after_last_event_id(
         stage=IngestionStage.PROFILING,
     )
 
-    response = client.get(
-        f"{settings.API_V1_STR}/admin/ingestion-runs/{run.id}/events",
+    with client.stream(
+        "GET",
+        f"{settings.API_V1_STR}/admin/ingestion-runs/{run.id}/events?replay_only=true",
         headers={
             **superuser_token_headers,
             "Last-Event-ID": str(first_event.sequence),
         },
-    )
-
-    assert response.status_code == 200
-    assert f"id: {second_event.sequence}" in response.text
-    assert "stage_succeeded" in response.text
-    assert "Profiling completed" in response.text
-    assert f"id: {first_event.sequence}" not in response.text
-    assert "Profiling started" not in response.text
+    ) as response:
+        assert response.status_code == 200
+        response_text = next(response.iter_text())
+        assert f"id: {second_event.sequence}" in response_text
+        assert "stage_succeeded" in response_text
+        assert "Profiling completed" in response_text
+        assert f"id: {first_event.sequence}" not in response_text
+        assert "Profiling started" not in response_text
 
 
 def test_r2_pdf_upload_session_uses_presigned_quarantine_put_and_completion(
@@ -506,9 +514,10 @@ def test_r2_pdf_upload_session_uses_presigned_quarantine_put_and_completion(
 
     assert complete_response.status_code == 200
     payload = complete_response.json()
-    assert payload["upload"]["status"] == SourceUploadStatus.COMPLETED
-    assert payload["source_document"]["storage_backend"] == "r2"
-    assert payload["source_document"]["storage_bucket"] == "law-padi-ingestion"
+    assert (
+        payload["upload"]["status"] == SourceUploadStatus.UPLOADED_PENDING_VERIFICATION
+    )
+    assert payload["source_document"] is None
 
 
 def test_r2_multipart_part_urls_are_issued_by_blob_store_for_large_uploads(
@@ -573,7 +582,7 @@ def test_r2_multipart_part_urls_are_issued_by_blob_store_for_large_uploads(
     assert len(store.multipart_calls) == 1
 
 
-def test_upload_completion_reuses_existing_source_for_duplicate_pdf(
+def test_worker_reuses_existing_source_for_duplicate_pdf(
     client: TestClient,
     superuser_token_headers: dict[str, str],
     db: Session,
@@ -583,6 +592,14 @@ def test_upload_completion_reuses_existing_source_for_duplicate_pdf(
     monkeypatch.setattr(settings, "INGESTION_STORAGE_DIR", str(tmp_path))
     pdf = _pdf_bytes()
     first = _complete_pdf_upload(client, superuser_token_headers, db, pdf)
+    first_run = db.get(IngestionRun, uuid.UUID(str(first["run"]["id"])))
+    assert first_run
+    db.expire_all()
+    run_until_idle(db, worker_id="upload-test", max_tasks=100)
+    first_upload = db.get(SourceUpload, uuid.UUID(str(first["upload"]["id"])))
+    assert first_upload
+    db.refresh(first_upload)
+    assert first_upload.source_document_id is not None
 
     upload_response = client.post(
         f"{settings.API_V1_STR}/admin/source-uploads",
@@ -612,10 +629,15 @@ def test_upload_completion_reuses_existing_source_for_duplicate_pdf(
 
     assert duplicate_response.status_code == 200
     payload = duplicate_response.json()
-    assert payload["duplicate"] is True
-    assert payload["run"] is None
-    assert payload["source_document"]["id"] == first["source_document"]["id"]
-    assert payload["upload"]["status"] == SourceUploadStatus.DUPLICATE
+    assert payload["duplicate"] is False
+    assert payload["run"] is not None
+    assert payload["source_document"] is None
+    second_run = db.get(IngestionRun, uuid.UUID(payload["run"]["id"]))
+    assert second_run
+    run_until_idle(db, worker_id="upload-test", max_tasks=100)
+    db.refresh(stored_upload)
+    assert stored_upload.status == SourceUploadStatus.DUPLICATE
+    assert stored_upload.source_document_id == first_upload.source_document_id
 
 
 def test_upload_session_rejects_non_pdf_sources(
@@ -632,7 +654,7 @@ def test_upload_session_rejects_non_pdf_sources(
     assert "Constitution PDF" in response.text
 
 
-def test_upload_completion_rejects_corrupt_pdf_and_marks_upload_failed(
+def test_worker_rejects_corrupt_pdf_and_keeps_it_out_of_canonical_storage(
     client: TestClient,
     superuser_token_headers: dict[str, str],
     db: Session,
@@ -669,9 +691,17 @@ def test_upload_completion_rejects_corrupt_pdf_and_marks_upload_failed(
         },
     )
 
-    assert complete_response.status_code == 400
+    assert complete_response.status_code == 200
+    db.refresh(stored_upload)
+    assert stored_upload.status == SourceUploadStatus.UPLOADED_PENDING_VERIFICATION
+    db.expire_all()
+    run_until_idle(db, worker_id="upload-test", max_tasks=100)
     db.refresh(stored_upload)
     assert stored_upload.status == SourceUploadStatus.FAILED
+    assert not db.exec(
+        select(SourceDocument).where(SourceDocument.sha256 == _sha256(content))
+    ).first()
+    assert (tmp_path / stored_upload.quarantine_key).exists()
 
 
 def test_page_selection_records_admin_confirmation(
@@ -698,12 +728,16 @@ def test_page_selection_records_admin_confirmation(
         ),
     ]
     db.add_all(pages)
+    run.status = IngestionRunStatus.WAITING_FOR_INPUT
+    run.current_stage = IngestionStage.AWAITING_PAGE_CONFIRMATION
+    db.add(run)
     db.commit()
     for page_item in pages:
         db.refresh(page_item)
 
     selection_body = {
         "idempotency_key": f"pages-{uuid.uuid4().hex}",
+        "expected_run_version": run.lock_version,
         "pages": [
             {
                 "page_number": 1,
@@ -732,14 +766,14 @@ def test_page_selection_records_admin_confirmation(
     ]
     db.refresh(run)
     assert run.status == IngestionRunStatus.RUNNING
-    assert run.current_stage == IngestionStage.RENDERING
-    rendering_task = db.exec(
+    assert run.current_stage == IngestionStage.NATIVE_EXTRACTION
+    native_task = db.exec(
         select(IngestionTask).where(
             IngestionTask.run_id == run.id,
-            IngestionTask.task_type == IngestionStage.RENDERING.value,
+            IngestionTask.task_type == IngestionStage.NATIVE_EXTRACTION.value,
         )
     ).one()
-    assert rendering_task.status == IngestionTaskStatus.PENDING
+    assert native_task.status == IngestionTaskStatus.PENDING
     repeated_response = client.patch(
         f"{settings.API_V1_STR}/admin/ingestion-runs/{run.id}/page-selection",
         headers=superuser_token_headers,
@@ -756,7 +790,7 @@ def test_page_selection_records_admin_confirmation(
             .select_from(IngestionTask)
             .where(
                 IngestionTask.run_id == run.id,
-                IngestionTask.task_type == IngestionStage.RENDERING.value,
+                IngestionTask.task_type == IngestionStage.NATIVE_EXTRACTION.value,
             )
         ).one()
         == 1
@@ -768,6 +802,81 @@ def test_page_selection_records_admin_confirmation(
     ).first()
     assert event
     assert event.event_type == "page_selection_confirmed"
+
+
+def test_concurrent_page_selection_has_one_winner_and_one_conflict(
+    db: Session,
+) -> None:
+    source, run = _source_and_run(db)
+    pages = [
+        SourcePage(
+            run_id=run.id,
+            source_document_id=source.id,
+            page_number=1,
+            role=PageRole.LEGAL_BODY,
+            inclusion_status=PageInclusionStatus.SUGGESTED_INCLUDE,
+        ),
+        SourcePage(
+            run_id=run.id,
+            source_document_id=source.id,
+            page_number=2,
+            role=PageRole.LEGAL_BODY,
+            inclusion_status=PageInclusionStatus.SUGGESTED_INCLUDE,
+        ),
+    ]
+    db.add_all(pages)
+    db.commit()
+    for page in pages:
+        db.refresh(page)
+    expected_run_version = run.lock_version
+    expected_page_versions = {page.page_number: page.lock_version for page in pages}
+    admin = crud.get_user_by_email(session=db, email=settings.FIRST_SUPERUSER)
+    assert admin
+    barrier = threading.Barrier(2)
+
+    def confirm_once(index: int) -> int:
+        with Session(engine) as concurrent_session:
+            current_user = concurrent_session.get(User, admin.id)
+            assert current_user
+            body = PageSelectionUpdate(
+                idempotency_key=f"concurrent-pages-{index}-{uuid.uuid4().hex}",
+                expected_run_version=expected_run_version,
+                pages=[
+                    {
+                        "page_number": page_number,
+                        "inclusion_status": PageInclusionStatus.INCLUDED,
+                        "inclusion_reason": "Concurrent confirmation test",
+                        "expected_version": expected_page_versions[page_number],
+                    }
+                    for page_number in sorted(expected_page_versions)
+                ],
+            )
+            barrier.wait()
+            try:
+                update_page_selection(concurrent_session, run.id, body, current_user)
+            except HTTPException as exc:
+                concurrent_session.rollback()
+                return exc.status_code
+            return 200
+
+    with ThreadPoolExecutor(max_workers=2) as executor:
+        statuses = list(executor.map(confirm_once, range(2)))
+
+    assert sorted(statuses) == [200, 409]
+    db.expire_all()
+    db.refresh(run)
+    assert run.current_stage == IngestionStage.NATIVE_EXTRACTION
+    assert (
+        db.exec(
+            select(func.count())
+            .select_from(IngestionTask)
+            .where(
+                IngestionTask.run_id == run.id,
+                IngestionTask.task_type == IngestionStage.NATIVE_EXTRACTION.value,
+            )
+        ).one()
+        == 1
+    )
 
 
 def test_run_control_mutations_are_idempotent(
@@ -1366,6 +1475,7 @@ def test_release_validation_and_publish_require_selected_ready_index_and_two_peo
     db: Session,
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
+    monkeypatch.setattr(settings, "RETRIEVAL_INDEX_BACKEND", "qdrant")
     alias_calls: list[dict[str, str | None]] = []
 
     class FakeQdrantAdapter:
@@ -1666,6 +1776,7 @@ def test_publish_release_fails_when_qdrant_alias_adapter_is_not_configured(
     db: Session,
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
+    monkeypatch.setattr(settings, "RETRIEVAL_INDEX_BACKEND", "qdrant")
     monkeypatch.setattr("app.ingestion.service.settings.QDRANT_URL", None)
     release, vector_index = _release_bundle(db, uploader=_superuser(db))
     validate_response = client.post(
@@ -1712,7 +1823,9 @@ def test_release_validation_rejects_ready_index_without_validation_evidence(
     client: TestClient,
     superuser_token_headers: dict[str, str],
     db: Session,
+    monkeypatch: pytest.MonkeyPatch,
 ) -> None:
+    monkeypatch.setattr(settings, "RETRIEVAL_INDEX_BACKEND", "qdrant")
     release, vector_index = _release_bundle(db, uploader=_superuser(db))
     vector_index.validation_report = {"is_valid": True}
     db.add(vector_index)
@@ -1741,7 +1854,9 @@ def test_release_validation_rejects_selected_embedding_below_recall_gate(
     client: TestClient,
     superuser_token_headers: dict[str, str],
     db: Session,
+    monkeypatch: pytest.MonkeyPatch,
 ) -> None:
+    monkeypatch.setattr(settings, "RETRIEVAL_INDEX_BACKEND", "qdrant")
     release, _vector_index = _release_bundle(db, uploader=_superuser(db))
     embedding_run = db.exec(
         select(EmbeddingRun).where(EmbeddingRun.release_id == release.id)
@@ -1772,7 +1887,9 @@ def test_release_validation_requires_active_retrieval_benchmark_dataset(
     client: TestClient,
     superuser_token_headers: dict[str, str],
     db: Session,
+    monkeypatch: pytest.MonkeyPatch,
 ) -> None:
+    monkeypatch.setattr(settings, "RETRIEVAL_INDEX_BACKEND", "qdrant")
     release, _vector_index = _release_bundle(db, uploader=_superuser(db))
     embedding_run = db.exec(
         select(EmbeddingRun).where(EmbeddingRun.release_id == release.id)
@@ -1812,6 +1929,7 @@ def test_publish_release_switches_qdrant_alias_when_adapter_is_configured(
     db: Session,
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
+    monkeypatch.setattr(settings, "RETRIEVAL_INDEX_BACKEND", "qdrant")
     alias_calls: list[dict[str, str | None]] = []
 
     class FakeQdrantAdapter:
@@ -1868,6 +1986,7 @@ def test_publish_release_rolls_back_qdrant_alias_when_database_step_fails(
     db: Session,
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
+    monkeypatch.setattr(settings, "RETRIEVAL_INDEX_BACKEND", "qdrant")
     _retire_existing_production_release(db)
     previous_release, previous_index = _release_bundle(db, uploader=_superuser(db))
     previous_release.status = CorpusReleaseStatus.PRODUCTION
@@ -2204,6 +2323,9 @@ def _release_bundle(
     db: Session, *, uploader: User
 ) -> tuple[CorpusRelease, VectorIndex]:
     source, run = _source_and_run(db, created_by=uploader.id)
+    source.verification_status = VerificationStatus.VERIFIED
+    db.add(source)
+    db.commit()
     instrument = db.get(LegalInstrument, source.legal_instrument_id)
     assert instrument
     provision = Provision(
@@ -2248,7 +2370,8 @@ def _release_bundle(
         name=f"openai-small-{uuid.uuid4().hex}",
         provider=EmbeddingProviderKind.OPENAI,
         model_name="text-embedding-3-small",
-        vector_dimensions=1536,
+        model_revision="pinned-test-revision",
+        vector_dimensions=1024,
         configuration={
             "chunking": "provision",
             "benchmark_dataset_version": benchmark_dataset_version,
@@ -2291,10 +2414,13 @@ def _release_bundle(
         release_id=release.id,
         embedding_run_id=embedding_run.id,
         profile_id=profile.id,
-        collection_name=f"law_padi_test_{uuid.uuid4().hex}",
+        collection_name=f"ng_constitution_enacted_test_{uuid.uuid4().hex}",
+        alias_name="constitution_enacted",
+        index_kind="enacted",
+        profile_hash=_sha256_text("profile-config-v1"),
         status=VectorIndexStatus.READY,
         point_count=1,
-        vector_dimensions=1536,
+        vector_dimensions=1024,
         payload_schema_hash=_sha256_text("payload-schema-v1"),
         checksum=_sha256_text("vector-checksum"),
         validation_report={
@@ -2302,6 +2428,7 @@ def _release_bundle(
             "duplicate_ids": [],
             "dimension_errors": [],
             "payload_errors": [],
+            "sparse_errors": [],
             "remote_point_count": 1,
             "smoke_queries": [
                 {
@@ -2318,3 +2445,288 @@ def _release_bundle(
     db.refresh(release)
     db.refresh(vector_index)
     return release, vector_index
+
+
+def test_my_roles_returns_superuser_with_all_roles(
+    client: TestClient, superuser_token_headers: dict[str, str]
+) -> None:
+    response = client.get(
+        f"{settings.API_V1_STR}/admin/my-roles", headers=superuser_token_headers
+    )
+    assert response.status_code == 200
+    body = response.json()
+    assert body["is_superuser"] is True
+    assert set(body["roles"]) == {
+        "ingestion_uploader",
+        "legal_reviewer",
+        "corpus_publisher",
+    }
+
+
+def test_audit_events_endpoint_returns_entries(
+    client: TestClient,
+    superuser_token_headers: dict[str, str],
+    db: Session,
+) -> None:
+    db.add(
+        AuditEvent(
+            actor_user_id=None,
+            action="test.probe",
+            entity_type="corpus_release",
+            entity_id=uuid.uuid4(),
+            severity=AuditSeverity.INFO,
+            reason="probe",
+        )
+    )
+    db.commit()
+    response = client.get(
+        f"{settings.API_V1_STR}/admin/audit-events", headers=superuser_token_headers
+    )
+    assert response.status_code == 200
+    assert response.json()["count"] >= 1
+
+
+def test_ocr_benchmark_evaluate_scores_providers(
+    client: TestClient,
+    superuser_token_headers: dict[str, str],
+    db: Session,
+) -> None:
+    dataset = EvaluationDataset(
+        version=f"ocr-bench-{uuid.uuid4().hex}",
+        name="OCR bench",
+        dataset_kind=EvaluationDatasetKind.OCR_BENCHMARK,
+        language="en",
+        jurisdiction="NG",
+        is_active=True,
+    )
+    db.add(dataset)
+    db.commit()
+    db.refresh(dataset)
+    db.add(
+        EvaluationItem(
+            dataset_id=dataset.id,
+            item_key="page-1",
+            item_kind=EvaluationItemKind.OCR_PAGE,
+            expected_text="Right to private and family life",
+        )
+    )
+    db.commit()
+    response = client.post(
+        f"{settings.API_V1_STR}/admin/ocr-benchmarks/{dataset.version}/evaluate",
+        headers=superuser_token_headers,
+        json={
+            "idempotency_key": f"ocr-{uuid.uuid4().hex}",
+            "expected_version": 1,
+            "dataset_version": dataset.version,
+            "samples": [
+                {
+                    "item_key": "page-1",
+                    "provider": "google_document_ai",
+                    "text": "Right to private and family life",
+                },
+                {
+                    "item_key": "page-1",
+                    "provider": "azure_document_intelligence",
+                    "text": "Right to private and family live",
+                },
+            ],
+        },
+    )
+    assert response.status_code == 200
+    body = response.json()
+    assert body["winner"] == "google_document_ai"
+    assert body["sample_count"] == 1
+
+
+def test_my_roles_returns_scoped_roles_for_non_superuser(
+    client: TestClient,
+    db: Session,
+) -> None:
+    email = random_email()
+    headers = authentication_token_from_email(client=client, email=email, db=db)
+    user = crud.get_user_by_email(session=db, email=email)
+    assert user
+    db.add(
+        AdminRoleAssignment(
+            user_id=user.id,
+            role=AdminRole.LEGAL_REVIEWER,
+            reason="route test",
+        )
+    )
+    db.commit()
+
+    response = client.get(f"{settings.API_V1_STR}/admin/my-roles", headers=headers)
+
+    assert response.status_code == 200
+    body = response.json()
+    assert body["is_superuser"] is False
+    assert body["roles"] == ["legal_reviewer"]
+
+
+def test_my_roles_returns_empty_roles_without_assignment(
+    client: TestClient,
+    db: Session,
+) -> None:
+    email = random_email()
+    headers = authentication_token_from_email(client=client, email=email, db=db)
+
+    response = client.get(f"{settings.API_V1_STR}/admin/my-roles", headers=headers)
+
+    assert response.status_code == 200
+    assert response.json()["roles"] == []
+
+
+def test_audit_events_filter_by_entity_and_reject_non_admin(
+    client: TestClient,
+    superuser_token_headers: dict[str, str],
+    normal_user_token_headers: dict[str, str],
+    db: Session,
+) -> None:
+    release_id = uuid.uuid4()
+    other_id = uuid.uuid4()
+    db.add_all(
+        [
+            AuditEvent(
+                actor_user_id=None,
+                action="corpus_release.publish",
+                entity_type="corpus_release",
+                entity_id=release_id,
+                severity=AuditSeverity.INFO,
+                reason="first",
+            ),
+            AuditEvent(
+                actor_user_id=None,
+                action="source_document.verified",
+                entity_type="source_document",
+                entity_id=other_id,
+                severity=AuditSeverity.INFO,
+                reason="second",
+            ),
+        ]
+    )
+    db.commit()
+
+    filtered = client.get(
+        f"{settings.API_V1_STR}/admin/audit-events",
+        headers=superuser_token_headers,
+        params={"entity_id": str(release_id)},
+    )
+    assert filtered.status_code == 200
+    body = filtered.json()
+    assert body["count"] == 1
+    assert body["data"][0]["entity_id"] == str(release_id)
+
+    forbidden = client.get(
+        f"{settings.API_V1_STR}/admin/audit-events",
+        headers=normal_user_token_headers,
+    )
+    assert forbidden.status_code == 403
+
+
+def test_ocr_benchmark_read_reports_dataset_counts(
+    client: TestClient,
+    superuser_token_headers: dict[str, str],
+    db: Session,
+) -> None:
+    version = f"ocr-read-{uuid.uuid4().hex}"
+    dataset = EvaluationDataset(
+        version=version,
+        name="OCR read bench",
+        dataset_kind=EvaluationDatasetKind.OCR_BENCHMARK,
+        language="en",
+        jurisdiction="NG",
+        is_active=True,
+    )
+    db.add(dataset)
+    db.commit()
+    db.refresh(dataset)
+    db.add(
+        EvaluationItem(
+            dataset_id=dataset.id,
+            item_key="page-1",
+            item_kind=EvaluationItemKind.OCR_PAGE,
+            expected_text="Section 37",
+        )
+    )
+    db.commit()
+
+    response = client.get(
+        f"{settings.API_V1_STR}/admin/ocr-benchmarks/{version}",
+        headers=superuser_token_headers,
+    )
+
+    assert response.status_code == 200
+    body = response.json()
+    assert body["sample_count"] == 1
+    assert body["active_dataset_items"] == 1
+    assert body["winner"] is None
+
+
+def test_ocr_benchmark_evaluate_rejects_bad_requests(
+    client: TestClient,
+    superuser_token_headers: dict[str, str],
+    db: Session,
+) -> None:
+    version = f"ocr-bad-{uuid.uuid4().hex}"
+    dataset = EvaluationDataset(
+        version=version,
+        name="OCR bad bench",
+        dataset_kind=EvaluationDatasetKind.OCR_BENCHMARK,
+        language="en",
+        jurisdiction="NG",
+        is_active=True,
+    )
+    db.add(dataset)
+    db.commit()
+    db.refresh(dataset)
+    db.add(
+        EvaluationItem(
+            dataset_id=dataset.id,
+            item_key="page-1",
+            item_kind=EvaluationItemKind.OCR_PAGE,
+            expected_text="Section 37",
+        )
+    )
+    db.commit()
+
+    mismatch = client.post(
+        f"{settings.API_V1_STR}/admin/ocr-benchmarks/{version}/evaluate",
+        headers=superuser_token_headers,
+        json={
+            "idempotency_key": f"ocr-{uuid.uuid4().hex}",
+            "expected_version": 1,
+            "dataset_version": "other-version",
+            "samples": [],
+        },
+    )
+    assert mismatch.status_code == 400
+
+    unknown_provider = client.post(
+        f"{settings.API_V1_STR}/admin/ocr-benchmarks/{version}/evaluate",
+        headers=superuser_token_headers,
+        json={
+            "idempotency_key": f"ocr-{uuid.uuid4().hex}",
+            "expected_version": 1,
+            "dataset_version": version,
+            "samples": [
+                {
+                    "item_key": "page-1",
+                    "provider": "mystery_ocr",
+                    "text": "Section 37",
+                }
+            ],
+        },
+    )
+    assert unknown_provider.status_code == 400
+
+    missing = client.post(
+        f"{settings.API_V1_STR}/admin/ocr-benchmarks/missing-{uuid.uuid4().hex}/evaluate",
+        headers=superuser_token_headers,
+        json={
+            "idempotency_key": f"ocr-{uuid.uuid4().hex}",
+            "expected_version": 1,
+            "dataset_version": "missing-version",
+            "samples": [],
+        },
+    )
+    assert missing.status_code in (400, 404)
