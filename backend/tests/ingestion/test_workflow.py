@@ -496,3 +496,26 @@ def _create_run(db: Session) -> IngestionRun:
     db.commit()
     db.refresh(run)
     return run
+
+
+def test_outbox_drain_marks_pending_events_published(db: Session) -> None:
+    from app.ingestion.workflow import append_run_event, drain_outbox_batch
+    from app.legal.models import IngestionRun, TransactionalOutbox
+
+    run = IngestionRun(source_document_id=None)
+    db.add(run)
+    db.commit()
+    db.refresh(run)
+    append_run_event(db, run=run, event_type="run_queued", message="queued")
+    db.commit()
+
+    pending = drain_outbox_batch(db)
+    assert len(pending) >= 1
+    db.rollback()
+
+    published = drain_outbox_batch(db, publisher=lambda _event: None)
+    assert len(published) >= 1
+    db.commit()
+    stored = db.get(TransactionalOutbox, pending[0].id)
+    assert stored
+    assert stored.published_at is not None

@@ -1,21 +1,26 @@
 import hashlib
 import json
 import re
+import shutil
+import tempfile
+import threading
 import uuid
 from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import date, datetime
-from typing import Any, cast
+from typing import Any, BinaryIO, cast
 
 from sqlmodel import Session, col, select
 
 from app.core.config import settings
 from app.ingestion.embedding import (
+    DEFAULT_EMBEDDING_BATCH_SIZE,
     DenseEmbeddingProvider,
     EmbeddingBenchmarkQuery,
     HuggingFaceTeiEmbeddingProvider,
     OpenAIEmbeddingProvider,
     SparseLegalEncoder,
+    batched_embed,
     evaluate_embedding_benchmark,
     select_best_embedding_run,
 )
@@ -33,12 +38,22 @@ from app.ingestion.ocr import (
     managed_ocr_provider_from_settings,
 )
 from app.ingestion.pdf import (
+    PdfInspectionError,
     inspect_pdf_bytes,
+    inspect_pdf_file,
     profile_pdf_pages,
+)
+from app.ingestion.pgvector_repository import (
+    PgVectorRetrievalError,
+    validate_index_build,
+    write_embeddings,
+    write_segments,
 )
 from app.ingestion.qdrant import (
     QdrantHttpIndexAdapter,
     QdrantPoint,
+    QdrantSparseVector,
+    alias_for_index_kind,
     collection_name_for_release,
     validate_qdrant_points,
 )
@@ -49,8 +64,14 @@ from app.ingestion.quality import (
     evaluate_legal_grade_quality,
 )
 from app.ingestion.rendering import render_page_thumbnail
-from app.ingestion.retrieval import build_retrieval_documents
-from app.ingestion.service import MAX_SOURCE_PAGES, get_blob_store, get_datetime_utc
+from app.ingestion.retrieval import RetrievalDocument, build_retrieval_documents
+from app.ingestion.service import (
+    MAX_SOURCE_PAGES,
+    finalize_verified_upload,
+    get_blob_store,
+    get_datetime_utc,
+)
+from app.ingestion.structure_validators import validate_document_graph
 from app.ingestion.validation import has_unbalanced_punctuation
 from app.ingestion.workflow import (
     append_run_event,
@@ -59,6 +80,7 @@ from app.ingestion.workflow import (
     fail_task,
     lease_next_task,
     mark_task_running,
+    renew_task_lease,
 )
 from app.legal.enums import (
     CorpusReleaseStatus,
@@ -76,8 +98,13 @@ from app.legal.enums import (
     PageInclusionStatus,
     ReviewIssueSeverity,
     ReviewIssueStatus,
+    SourceUploadStatus,
     VectorIndexStatus,
     VerificationStatus,
+)
+from app.legal.instrument_parser import (
+    parse_instrument_pages,
+    parsed_provisions_from_graph,
 )
 from app.legal.models import (
     CandidateRevision,
@@ -93,16 +120,17 @@ from app.legal.models import (
     LegalInstrument,
     Provision,
     ProvisionVersion,
+    RetrievalIndexBuild,
     ReviewIssue,
     SourceDocument,
     SourcePage,
+    SourceUpload,
     VectorIndex,
 )
 from app.legal.parser import (
     PARSER_VERSION,
     legal_text_sha256,
     normalize_legal_text,
-    parse_constitution_pages,
 )
 from app.legal.parser import (
     SourcePage as ParserSourcePage,
@@ -196,8 +224,34 @@ def run_leased_task(
         payload={"worker_id": worker_id, "task_id": str(task.id)},
     )
 
+    stop_heartbeat = threading.Event()
+    lease_lost = threading.Event()
+
+    def heartbeat() -> None:
+        interval = max(1.0, settings.INGESTION_WORKER_LEASE_SECONDS / 3)
+        while not stop_heartbeat.wait(interval):
+            try:
+                from app.core.db import engine
+
+                with Session(engine) as heartbeat_session:
+                    if not renew_task_lease(
+                        heartbeat_session,
+                        task_id=task.id,
+                        worker_id=worker_id,
+                        lease_seconds=settings.INGESTION_WORKER_LEASE_SECONDS,
+                    ):
+                        lease_lost.set()
+                        return
+            except Exception:
+                lease_lost.set()
+                return
+
+    heartbeat_thread = threading.Thread(target=heartbeat, daemon=True)
+    heartbeat_thread.start()
     try:
         outcome = _handler_for(stage)(session, run, task)
+        if lease_lost.is_set():
+            raise IngestionWorkerError("Task lease was lost during stage execution")
     except Exception as exc:
         return _handle_stage_failure(
             session,
@@ -207,10 +261,12 @@ def run_leased_task(
             stage=stage,
             exc=exc,
         )
+    finally:
+        stop_heartbeat.set()
+        heartbeat_thread.join(timeout=1)
 
-    completed_task = complete_task(session, task)
-    _mark_step_succeeded(session, step, metrics=outcome.metrics)
-    _advance_run_after_success(session, run, outcome=outcome)
+    completed_task = complete_task(session, task, commit=False)
+    _mark_step_succeeded(session, step, metrics=outcome.metrics, commit=False)
     append_run_event(
         session,
         run,
@@ -218,7 +274,10 @@ def run_leased_task(
         message=f"{stage.value} completed",
         step=step,
         payload=outcome.metrics,
+        commit=False,
     )
+    _advance_run_after_success(session, run, outcome=outcome, commit=False)
+    session.commit()
     session.refresh(run)
     return WorkerResult(
         task_id=completed_task.id,
@@ -232,32 +291,86 @@ def run_leased_task(
 def handle_verifying_upload(
     session: Session, run: IngestionRun, task: IngestionTask
 ) -> StageOutcome:
-    source = _get_source_for_run(session, run, task)
-    content = _read_source_bytes(source)
-    inspection = inspect_pdf_bytes(
-        content,
-        expected_sha256=source.sha256,
-        expected_size=source.file_size,
-        max_pages=MAX_SOURCE_PAGES,
-    )
-    if source.page_count is not None and source.page_count != inspection.page_count:
-        raise IngestionWorkerError("Source page count does not match the stored PDF")
-    source.page_count = inspection.page_count
-    source.file_size = inspection.size_bytes
-    source.verification_status = VerificationStatus.NEEDS_REVIEW
-    session.add(source)
+    if run.source_document_id or task.payload.get("source_document_id"):
+        source = _get_source_for_run(session, run, task)
+        inspection = inspect_pdf_bytes(
+            _read_source_bytes(source),
+            expected_sha256=source.sha256,
+            expected_size=source.file_size,
+            max_pages=MAX_SOURCE_PAGES,
+        )
+        source.page_count = inspection.page_count
+        source.verification_status = VerificationStatus.NEEDS_REVIEW
+        session.add(source)
+        _ensure_artifact(
+            session,
+            run_id=run.id,
+            artifact_type=IngestionArtifactType.ORIGINAL_SOURCE,
+            storage_key=_require_storage_key(source),
+            sha256=inspection.sha256,
+            mime_type=source.mime_type,
+            metadata={
+                "source_document_id": str(source.id),
+                "verification": "sha256_size_page_count",
+            },
+        )
+        session.commit()
+        return StageOutcome(
+            metrics={
+                "sha256": inspection.sha256,
+                "size_bytes": inspection.size_bytes,
+                "page_count": inspection.page_count,
+            },
+            next_stage=IngestionStage.MALWARE_SCAN,
+            next_task_payload={"source_document_id": str(source.id)},
+        )
+
+    upload = _get_upload_for_run(session, run, task)
+    store = get_blob_store()
+    try:
+        with tempfile.NamedTemporaryFile(mode="w+b") as temporary:
+            with store.open_read(upload.quarantine_key) as source_stream:
+                shutil.copyfileobj(source_stream, temporary, length=1024 * 1024)
+            temporary.flush()
+            inspection = inspect_pdf_file(
+                cast(BinaryIO, temporary),
+                expected_sha256=upload.expected_sha256,
+                expected_size=upload.expected_size,
+                max_pages=MAX_SOURCE_PAGES,
+            )
+    except (FileNotFoundError, OSError, PdfInspectionError) as exc:
+        raise IngestionWorkerError(str(exc)) from exc
+
+    claimed_sha256 = str(run.pipeline_config.get("claimed_sha256") or "")
+    if claimed_sha256 and claimed_sha256 != inspection.sha256:
+        raise IngestionWorkerError(
+            "Completion SHA-256 does not match the uploaded object"
+        )
+    upload.actual_sha256 = inspection.sha256
+    upload.lock_version += 1
+    upload.updated_at = get_datetime_utc()
+    session.add(upload)
+    session.flush()
     _ensure_artifact(
         session,
         run_id=run.id,
         artifact_type=IngestionArtifactType.ORIGINAL_SOURCE,
-        storage_key=_require_storage_key(source),
+        storage_key=upload.quarantine_key,
         sha256=inspection.sha256,
-        mime_type=source.mime_type,
+        mime_type=upload.mime_type,
         metadata={
-            "source_document_id": str(source.id),
+            "source_upload_id": str(upload.id),
             "verification": "sha256_size_page_count",
+            "quarantine": True,
         },
     )
+    run.expected_page_count = inspection.page_count
+    run.pipeline_config = {
+        **run.pipeline_config,
+        "source_sha256": inspection.sha256,
+        "page_count": inspection.page_count,
+    }
+    session.add(run)
     session.commit()
     return StageOutcome(
         metrics={
@@ -266,16 +379,45 @@ def handle_verifying_upload(
             "page_count": inspection.page_count,
         },
         next_stage=IngestionStage.MALWARE_SCAN,
-        next_task_payload={"source_document_id": str(source.id)},
+        next_task_payload={"source_upload_id": str(upload.id)},
     )
 
 
 def handle_malware_scan(
     session: Session, run: IngestionRun, task: IngestionTask
 ) -> StageOutcome:
-    source = _get_source_for_run(session, run, task)
-    scan_report = malware_scanner_from_settings(settings).scan(
-        _read_source_bytes(source)
+    if run.source_document_id or task.payload.get("source_document_id"):
+        source = _get_source_for_run(session, run, task)
+        try:
+            with get_blob_store().open_read(_require_storage_key(source)) as stream:
+                scan_report = malware_scanner_from_settings(settings).scan_stream(
+                    stream
+                )
+        except FileNotFoundError as exc:
+            raise IngestionWorkerError(
+                "Stored source document file was not found"
+            ) from exc
+        return StageOutcome(
+            metrics=scan_report.to_metrics(),
+            next_stage=IngestionStage.PROFILING,
+            next_task_payload={"source_document_id": str(source.id)},
+        )
+
+    upload = _get_upload_for_run(session, run, task)
+    try:
+        with get_blob_store().open_read(upload.quarantine_key) as stream:
+            scan_report = malware_scanner_from_settings(settings).scan_stream(stream)
+    except FileNotFoundError as exc:
+        raise IngestionWorkerError("Quarantined upload file was not found") from exc
+    if run.expected_page_count is None:
+        raise IngestionWorkerError("Upload verification did not record a page count")
+    source = finalize_verified_upload(
+        session,
+        run=run,
+        upload=upload,
+        sha256=upload.actual_sha256
+        or str(run.pipeline_config.get("source_sha256") or ""),
+        page_count=run.expected_page_count,
     )
     return StageOutcome(
         metrics=scan_report.to_metrics(),
@@ -304,9 +446,8 @@ def handle_profiling(
             "suggested_included_pages": included_pages,
             "requires_ocr_pages": requires_ocr,
         },
-        next_stage=IngestionStage.AWAITING_PAGE_CONFIRMATION,
-        next_status=IngestionRunStatus.WAITING_FOR_INPUT,
-        block_next_stage=True,
+        next_stage=IngestionStage.RENDERING,
+        next_task_payload={"source_document_id": str(source.id)},
     )
 
 
@@ -348,10 +489,22 @@ def handle_rendering(
         session.add(page)
         rendered_count += 1
     session.commit()
+    confirmed = all(
+        page.inclusion_status
+        in {PageInclusionStatus.INCLUDED, PageInclusionStatus.EXCLUDED}
+        for page in pages
+    )
+    if confirmed:
+        return StageOutcome(
+            metrics={"thumbnail_count": rendered_count},
+            next_stage=IngestionStage.NATIVE_EXTRACTION,
+            next_task_payload={"source_document_id": str(source.id)},
+        )
     return StageOutcome(
         metrics={"thumbnail_count": rendered_count},
-        next_stage=IngestionStage.NATIVE_EXTRACTION,
-        next_task_payload={"source_document_id": str(source.id)},
+        next_stage=IngestionStage.AWAITING_PAGE_CONFIRMATION,
+        next_status=IngestionRunStatus.WAITING_FOR_INPUT,
+        block_next_stage=True,
     )
 
 
@@ -726,7 +879,21 @@ def handle_parsing_structure(
         )
         for page in page_payloads
     ]
-    parsed_nodes = parse_constitution_pages(parser_pages, instrument.slug)
+    instrument_type = getattr(instrument, "instrument_type", "constitution")
+    instrument_type_value = str(getattr(instrument_type, "value", instrument_type))
+    graph = parse_instrument_pages(
+        instrument_type=instrument_type_value,
+        instrument_slug=instrument.slug,
+        pages=parser_pages,
+    )
+    parsed_nodes = parsed_provisions_from_graph(graph)
+    page_roles = [
+        {"page_number": page.page_number, "role": _enum_value(page.role)}
+        for page in session.exec(
+            select(SourcePage).where(SourcePage.run_id == run.id)
+        ).all()
+    ]
+    graph_issues = validate_document_graph(graph, page_roles=page_roles)
     node_by_path = {node.canonical_path: node for node in parsed_nodes}
     candidates_by_path: dict[str, ExtractionCandidate] = {}
     issues_by_candidate_id: dict[uuid.UUID, list[ReviewIssue]] = {}
@@ -763,6 +930,44 @@ def handle_parsing_structure(
         issues_by_candidate_id[candidate.id] = issues
         issue_count += len(issues)
         blocking_issue_count += sum(1 for issue in issues if issue.blocking)
+    for graph_issue in graph_issues:
+        # Per-candidate validators already cover parents, punctuation, and
+        # source spans; only emit document-level findings here to avoid
+        # double-reporting the same defect.
+        if graph_issue.issue_type in {
+            "missing_parent",
+            "unbalanced_punctuation",
+            "source_span_coverage",
+            "duplicate_canonical_path",
+        }:
+            continue
+        target_candidate: ExtractionCandidate | None = (
+            candidates_by_path.get(graph_issue.canonical_path or "")
+            if graph_issue.canonical_path
+            else None
+        )
+        if target_candidate is None and candidates_by_path:
+            target_candidate = next(iter(candidates_by_path.values()))
+        if target_candidate is None:
+            continue
+        issue = _ensure_review_issue(
+            session,
+            candidate=target_candidate,
+            issue_type=f"graph_{graph_issue.issue_type}",
+            severity=ReviewIssueSeverity.BLOCKING
+            if graph_issue.blocking
+            else ReviewIssueSeverity.HIGH,
+            blocking=graph_issue.blocking,
+            message=graph_issue.message,
+            evidence=graph_issue.evidence,
+        )
+        issues_by_candidate_id.setdefault(target_candidate.id, []).append(issue)
+        target_candidate.blocking_issue_count = sum(
+            1 for item in issues_by_candidate_id[target_candidate.id] if item.blocking
+        )
+        session.add(target_candidate)
+        issue_count += 1
+        blocking_issue_count += 1 if issue.blocking else 0
     quality_report = _maybe_compute_gold_quality_report(
         session, run, list(candidates_by_path.values())
     )
@@ -937,7 +1142,11 @@ def handle_materializing(
         "unresolved_gates": [
             "retrieval_documents_pending",
             "selected_embedding_run_missing",
-            "ready_vector_index_missing",
+            (
+                "ready_retrieval_index_build_missing"
+                if settings.RETRIEVAL_INDEX_BACKEND == "pgvector"
+                else "ready_vector_index_missing"
+            ),
         ],
     }
     session.add(release)
@@ -1034,7 +1243,11 @@ def handle_building_retrieval_documents(
         "retrieval_document_count": len(retrieval_documents),
         "unresolved_gates": [
             "selected_embedding_run_missing",
-            "ready_vector_index_missing",
+            (
+                "ready_retrieval_index_build_missing"
+                if settings.RETRIEVAL_INDEX_BACKEND == "pgvector"
+                else "ready_vector_index_missing"
+            ),
         ],
     }
     release.lock_version += 1
@@ -1083,9 +1296,17 @@ def handle_embedding(
     if len(benchmark_queries) != benchmark_query_count:
         raise IngestionWorkerError("Embedding benchmark query count changed during run")
 
-    sparse_vectors = SparseLegalEncoder().encode(texts)
+    sparse_vectors = (
+        SparseLegalEncoder().encode(texts)
+        if settings.RETRIEVAL_INDEX_BACKEND == "qdrant"
+        else []
+    )
     embedding_runs: list[EmbeddingRun] = []
     for profile in profiles:
+        if profile.is_active and not profile.model_revision:
+            raise IngestionWorkerError(
+                f"Embedding profile {profile.name} is active but has no pinned model_revision"
+            )
         embedding_run = _embedding_run_for_profile(session, release, profile)
         embedding_run.status = EmbeddingRunStatus.RUNNING
         embedding_run.started_at = embedding_run.started_at or get_datetime_utc()
@@ -1094,13 +1315,18 @@ def handle_embedding(
         session.commit()
         try:
             provider = _embedding_provider_for_profile(profile)
-            batch = provider.embed(texts)
+            batch_size = _profile_int(
+                profile, "batch_size", default=DEFAULT_EMBEDDING_BATCH_SIZE
+            )
+            batch = batched_embed(provider, texts, batch_size=batch_size)
             if batch.dimensions != profile.vector_dimensions:
                 raise IngestionWorkerError(
                     "Embedding vector dimensions do not match the profile"
                 )
-            query_batch = provider.embed(
-                [query.query_text for query in benchmark_queries]
+            query_batch = batched_embed(
+                provider,
+                [query.query_text for query in benchmark_queries],
+                batch_size=batch_size,
             )
             if query_batch.dimensions != profile.vector_dimensions:
                 raise IngestionWorkerError(
@@ -1119,7 +1345,7 @@ def handle_embedding(
                 ],
                 query_vectors=query_batch.vectors,
             )
-            artifact_payload = {
+            artifact_payload: dict[str, Any] = {
                 "release_id": str(release.id),
                 "release_version": release.version,
                 "embedding_run_id": str(embedding_run.id),
@@ -1130,11 +1356,12 @@ def handle_embedding(
                 "benchmark": benchmark.to_metrics(),
                 "documents": documents,
                 "dense_vectors": batch.vectors,
-                "sparse_vectors": [
+            }
+            if settings.RETRIEVAL_INDEX_BACKEND == "qdrant":
+                artifact_payload["sparse_vectors"] = [
                     {"indices": vector.indices, "values": vector.values}
                     for vector in sparse_vectors
-                ],
-            }
+                ]
             blob = get_blob_store().put_artifact(
                 run_id=str(run.id),
                 artifact_type=IngestionArtifactType.EMBEDDINGS.value,
@@ -1210,7 +1437,13 @@ def handle_embedding(
         **(release.validation_report or {}),
         "selected_embedding_run_id": str(selected_run.id),
         "embedding_profile_id": str(selected_profile.id),
-        "unresolved_gates": ["ready_vector_index_missing"],
+        "unresolved_gates": [
+            (
+                "ready_retrieval_index_build_missing"
+                if settings.RETRIEVAL_INDEX_BACKEND == "pgvector"
+                else "ready_vector_index_missing"
+            )
+        ],
     }
     release.lock_version += 1
     session.add(selected_run)
@@ -1241,6 +1474,14 @@ def handle_indexing(
     profile = session.get(EmbeddingProfile, embedding_run.profile_id)
     if not profile:
         raise IngestionWorkerError("Embedding run is missing its profile")
+    if settings.RETRIEVAL_INDEX_BACKEND == "pgvector":
+        return _handle_pgvector_indexing(
+            session,
+            run=run,
+            release=release,
+            embedding_run=embedding_run,
+            profile=profile,
+        )
     payload = _embedding_payload(session, run, embedding_run.id)
     points = _qdrant_points_from_embedding_payload(payload)
     report = validate_qdrant_points(points, vector_dimensions=profile.vector_dimensions)
@@ -1249,11 +1490,15 @@ def handle_indexing(
         "duplicate_ids": report.duplicate_ids,
         "dimension_errors": report.dimension_errors,
         "payload_errors": report.payload_errors,
+        "sparse_errors": report.sparse_errors,
     }
+    index_kind = _index_kind_for_points(points)
+    profile_hash = _sha256_json(profile.configuration)
     collection_name = collection_name_for_release(
         release_version=release.version,
         embedding_profile_name=profile.name,
-        profile_hash=_sha256_json(profile.configuration),
+        profile_hash=profile_hash,
+        index_kind=index_kind,
     )
     vector_index = _vector_index_for_collection(
         session,
@@ -1261,6 +1506,8 @@ def handle_indexing(
         embedding_run=embedding_run,
         profile=profile,
         collection_name=collection_name,
+        index_kind=index_kind,
+        profile_hash=profile_hash,
     )
     vector_index.point_count = report.point_count
     vector_index.payload_schema_hash = report.payload_schema_hash
@@ -1326,9 +1573,187 @@ def handle_indexing(
     )
 
 
+def _handle_pgvector_indexing(
+    session: Session,
+    *,
+    run: IngestionRun,
+    release: CorpusRelease,
+    embedding_run: EmbeddingRun,
+    profile: EmbeddingProfile,
+) -> StageOutcome:
+    if embedding_run.status != EmbeddingRunStatus.SUCCEEDED:
+        raise IngestionWorkerError(
+            "Only a succeeded embedding run may be loaded into pgvector"
+        )
+    if profile.vector_dimensions != settings.RETRIEVAL_VECTOR_DIMENSIONS:
+        raise IngestionWorkerError(
+            "The active embedding profile dimensions do not match the retrieval schema"
+        )
+    payload = _embedding_payload(session, run, embedding_run.id)
+    documents_payload = _payload_list(payload, "documents")
+    vectors = payload.get("dense_vectors")
+    if not isinstance(vectors, list):
+        raise IngestionWorkerError("Embedding artifact did not contain dense vectors")
+    documents: list[RetrievalDocument] = []
+    for item in documents_payload:
+        raw_payload = item.get("payload")
+        if not isinstance(raw_payload, dict):
+            raise IngestionWorkerError("Retrieval document payload was invalid")
+        documents.append(
+            RetrievalDocument(
+                document_id=str(item.get("id", "")),
+                segment_id=str(item.get("segment_id", "")),
+                release_version=str(item.get("release_version", release.version)),
+                citation=str(item.get("citation", "")),
+                ancestor_headings=[
+                    str(value) for value in item.get("ancestor_headings", [])
+                ],
+                heading=(
+                    str(item["heading"]) if item.get("heading") is not None else None
+                ),
+                authoritative_text=str(item.get("authoritative_text", "")),
+                retrieval_text=str(item.get("retrieval_text", "")),
+                payload=cast(dict[str, object], raw_payload),
+            )
+        )
+    index_kind = _index_kind_for_documents(documents)
+    try:
+        segments = write_segments(
+            session,
+            release_id=release.id,
+            documents=documents,
+            index_kind=index_kind,
+        )
+        vector_values = [
+            _float_vector(value) if isinstance(value, list) else [] for value in vectors
+        ]
+        embeddings = write_embeddings(
+            session,
+            release_id=release.id,
+            embedding_run=embedding_run,
+            profile=profile,
+            segments=segments,
+            vectors=vector_values,
+        )
+    except PgVectorRetrievalError as exc:
+        raise IngestionWorkerError(str(exc)) from exc
+    profile_hash = _sha256_json(
+        {
+            "name": profile.name,
+            "model_name": profile.model_name,
+            "model_revision": profile.model_revision,
+            "configuration": profile.configuration,
+        }
+    )
+    build = session.exec(
+        select(RetrievalIndexBuild).where(
+            RetrievalIndexBuild.release_id == release.id,
+            RetrievalIndexBuild.embedding_run_id == embedding_run.id,
+            RetrievalIndexBuild.index_kind == index_kind,
+        )
+    ).first()
+    if build is None:
+        build = RetrievalIndexBuild(
+            release_id=release.id,
+            embedding_run_id=embedding_run.id,
+            profile_id=profile.id,
+            backend="pgvector",
+            index_kind=index_kind,
+            expected_segment_count=len(documents),
+            vector_dimensions=profile.vector_dimensions,
+            profile_hash=profile_hash,
+        )
+    elif build.status in {VectorIndexStatus.READY, VectorIndexStatus.PROMOTED}:
+        raise IngestionWorkerError("A ready pgvector build is immutable")
+    build.expected_segment_count = len(documents)
+    build.stored_segment_count = len(segments)
+    build.stored_embedding_count = len(embeddings)
+    build.profile_hash = profile_hash
+    build.vector_dimensions = profile.vector_dimensions
+    build.status = VectorIndexStatus.VALIDATING
+    build.updated_at = get_datetime_utc()
+    build.validation_report = {
+        "backend": "pgvector",
+        "index_kind": index_kind,
+        "exact_search": True,
+        "candidate_limits": {
+            "dense": settings.RETRIEVAL_DENSE_CANDIDATE_LIMIT,
+            "lexical": settings.RETRIEVAL_LEXICAL_CANDIDATE_LIMIT,
+        },
+    }
+    session.add(build)
+    session.commit()
+    return StageOutcome(
+        metrics={
+            "release_id": str(release.id),
+            "retrieval_index_build_id": str(build.id),
+            "backend": "pgvector",
+            "index_kind": index_kind,
+            "segment_count": len(segments),
+            "embedding_count": len(embeddings),
+        },
+        next_stage=IngestionStage.VALIDATING_INDEX,
+        next_status=IngestionRunStatus.INDEXING,
+        next_task_payload={
+            "source_document_id": str(run.source_document_id),
+            "release_id": str(release.id),
+            "retrieval_index_build_id": str(build.id),
+        },
+    )
+
+
 def handle_validating_index(
     session: Session, _run: IngestionRun, task: IngestionTask
 ) -> StageOutcome:
+    retrieval_index_build_id = task.payload.get("retrieval_index_build_id")
+    if retrieval_index_build_id:
+        build = session.get(
+            RetrievalIndexBuild, uuid.UUID(str(retrieval_index_build_id))
+        )
+        if not build:
+            raise IngestionWorkerError("Retrieval index build was not found")
+        report = validate_index_build(
+            session,
+            build=build,
+            expected_segment_count=build.expected_segment_count,
+        )
+        build.validation_report = report
+        build.stored_segment_count = int(report["stored_segment_count"])
+        build.stored_embedding_count = int(report["stored_embedding_count"])
+        build.checksum = _sha256_json(
+            {
+                "segment_checksum": report["segment_checksum"],
+                "embedding_checksum": report["embedding_checksum"],
+            }
+        )
+        if not report["is_valid"]:
+            build.status = VectorIndexStatus.FAILED
+            session.add(build)
+            session.commit()
+            raise IngestionWorkerError("pgvector validation did not pass")
+        build.status = VectorIndexStatus.READY
+        build.updated_at = get_datetime_utc()
+        session.add(build)
+        release = session.get(CorpusRelease, build.release_id)
+        if release:
+            release.validation_report = {
+                **(release.validation_report or {}),
+                "ready_retrieval_index_build_id": str(build.id),
+            }
+            release.lock_version += 1
+            session.add(release)
+        session.commit()
+        return StageOutcome(
+            metrics={
+                "retrieval_index_build_id": str(build.id),
+                "segment_count": build.stored_segment_count,
+                "embedding_count": build.stored_embedding_count,
+                "checksum": build.checksum,
+            },
+            next_stage=IngestionStage.PUBLISHING,
+            next_status=IngestionRunStatus.READY_TO_PUBLISH,
+            block_next_stage=True,
+        )
     vector_index_id = task.payload.get("vector_index_id")
     if not vector_index_id:
         raise IngestionWorkerError("Task does not identify a vector index")
@@ -1392,6 +1817,7 @@ def _advance_run_after_success(
     run: IngestionRun,
     *,
     outcome: StageOutcome,
+    commit: bool = True,
 ) -> None:
     now = get_datetime_utc()
     run.status = outcome.next_status
@@ -1421,6 +1847,7 @@ def _advance_run_after_success(
             message=f"{outcome.next_stage.value} requires admin input",
             step=next_step,
             payload=outcome.metrics,
+            commit=False,
         )
     elif outcome.next_stage:
         next_step = _get_step(session, run.id, outcome.next_stage, None)
@@ -1432,8 +1859,12 @@ def _advance_run_after_success(
             idempotency_key=f"{run.id}:{outcome.next_stage.value}",
             payload=outcome.next_task_payload or {},
             priority=_priority_for_stage(outcome.next_stage),
+            commit=False,
         )
-    session.commit()
+    if commit:
+        session.commit()
+    else:
+        session.flush()
 
 
 def _handle_stage_failure(
@@ -1458,6 +1889,16 @@ def _handle_stage_failure(
         step.status = IngestionStepStatus.FAILED
         step.completed_at = now
         run.status = IngestionRunStatus.FAILED
+        if stage == IngestionStage.VERIFYING_UPLOAD:
+            upload_id = task.payload.get("source_upload_id") or run.source_upload_id
+            if upload_id:
+                upload = session.get(SourceUpload, uuid.UUID(str(upload_id)))
+                if upload:
+                    upload.status = SourceUploadStatus.FAILED
+                    upload.error_message = str(exc)[:2000]
+                    upload.updated_at = now
+                    upload.lock_version += 1
+                    session.add(upload)
         run.failed_units += 1
         run.error_details = error_details
         run.updated_at = now
@@ -1504,7 +1945,11 @@ def _mark_step_running(
 
 
 def _mark_step_succeeded(
-    session: Session, step: IngestionStep, *, metrics: dict[str, Any]
+    session: Session,
+    step: IngestionStep,
+    *,
+    metrics: dict[str, Any],
+    commit: bool = True,
 ) -> None:
     now = get_datetime_utc()
     step.status = IngestionStepStatus.SUCCEEDED
@@ -1517,7 +1962,10 @@ def _mark_step_succeeded(
     step.lock_version += 1
     step.updated_at = now
     session.add(step)
-    session.commit()
+    if commit:
+        session.commit()
+    else:
+        session.flush()
 
 
 def _mark_run_running(
@@ -1569,6 +2017,25 @@ def _get_source_for_run(
     if not source:
         raise IngestionWorkerError("Source document was not found")
     return source
+
+
+def _get_upload_for_run(
+    session: Session, run: IngestionRun, task: IngestionTask
+) -> SourceUpload:
+    upload_id = task.payload.get("source_upload_id") or run.source_upload_id
+    if not upload_id:
+        raise IngestionWorkerError("Task does not identify a source upload")
+    upload = session.get(SourceUpload, uuid.UUID(str(upload_id)))
+    if not upload:
+        raise IngestionWorkerError("Source upload was not found")
+    return upload
+
+
+def _read_upload_bytes(upload: SourceUpload) -> bytes:
+    try:
+        return get_blob_store().read_bytes(upload.quarantine_key)
+    except FileNotFoundError:
+        raise IngestionWorkerError("Quarantined upload file was not found")
 
 
 def _read_source_bytes(source: SourceDocument) -> bytes:
@@ -1651,7 +2118,11 @@ def _upsert_source_page(
     page.image_coverage = profile.image_coverage
     page.width = profile.width
     page.height = profile.height
-    page.quality_signals = profile.quality_signals
+    page.quality_signals = {
+        **profile.quality_signals,
+        "preview_text": profile.extracted_text[:4000],
+        "preview_provisional": True,
+    }
     page.lock_version += 1
     session.add(page)
     return page
@@ -2330,6 +2801,17 @@ def _profile_float(profile: EmbeddingProfile, key: str) -> float | None:
     return None
 
 
+def _profile_int(profile: EmbeddingProfile, key: str, *, default: int) -> int:
+    value = (profile.configuration or {}).get(key)
+    if isinstance(value, bool):
+        return default
+    if isinstance(value, int) and value > 0:
+        return value
+    if isinstance(value, float) and value > 0:
+        return int(value)
+    return default
+
+
 def _sum_optional_costs(*costs: float | None) -> float | None:
     present = [cost for cost in costs if cost is not None]
     if not present:
@@ -2348,18 +2830,25 @@ def _get_embedding_run_for_task(session: Session, task: IngestionTask) -> Embedd
 
 
 def _qdrant_points_from_embedding_payload(payload: dict[str, Any]) -> list[QdrantPoint]:
+
     documents = _payload_list(payload, "documents")
     dense_vectors = payload.get("dense_vectors")
+    sparse_vectors = payload.get("sparse_vectors")
     if not isinstance(dense_vectors, list):
         raise IngestionWorkerError("Embedding artifact did not contain dense vectors")
-    if len(documents) != len(dense_vectors):
+    if not isinstance(sparse_vectors, list):
+        raise IngestionWorkerError("Embedding artifact did not contain sparse vectors")
+    if len(documents) != len(dense_vectors) or len(documents) != len(sparse_vectors):
         raise IngestionWorkerError("Document and embedding vector counts do not match")
     points: list[QdrantPoint] = []
-    for document, vector in zip(documents, dense_vectors, strict=True):
+    for document, vector, sparse in zip(
+        documents, dense_vectors, sparse_vectors, strict=True
+    ):
         document_payload = document.get("payload")
         if not isinstance(document_payload, dict):
             raise IngestionWorkerError("Retrieval document payload was invalid")
         point_id = str(document.get("id") or document.get("segment_id"))
+        sparse_vector = _coerce_sparse_vector(sparse)
         points.append(
             QdrantPoint(
                 point_id=point_id,
@@ -2369,9 +2858,48 @@ def _qdrant_points_from_embedding_payload(payload: dict[str, Any]) -> list[Qdran
                     "segment_id": document.get("segment_id"),
                     "citation": document.get("citation"),
                 },
+                sparse=sparse_vector,
             )
         )
     return points
+
+
+def _coerce_sparse_vector(value: object) -> QdrantSparseVector:
+    if not isinstance(value, dict):
+        raise IngestionWorkerError("Sparse vector payload was invalid")
+    indices = value.get("indices")
+    values = value.get("values")
+    if not isinstance(indices, list) or not isinstance(values, list):
+        raise IngestionWorkerError("Sparse vector payload was invalid")
+    clean_indices: list[int] = []
+    for index in indices:
+        if not isinstance(index, int) or isinstance(index, bool) or index < 0:
+            raise IngestionWorkerError("Sparse vector index was invalid")
+        clean_indices.append(index)
+    clean_values: list[float] = []
+    for item in values:
+        if not isinstance(item, int | float) or isinstance(item, bool):
+            raise IngestionWorkerError("Sparse vector value was invalid")
+        clean_values.append(float(item))
+    if len(clean_indices) != len(clean_values):
+        raise IngestionWorkerError("Sparse vector indices/values length mismatch")
+    return QdrantSparseVector(indices=clean_indices, values=clean_values)
+
+
+def _index_kind_for_points(points: list[QdrantPoint]) -> str:
+    kinds = {str(point.payload.get("legal_status", "")).lower() for point in points}
+    if kinds and kinds <= {"proposed"}:
+        return "proposals"
+    return "enacted"
+
+
+def _index_kind_for_documents(documents: list[RetrievalDocument]) -> str:
+    kinds = {
+        str(document.payload.get("legal_status", "")).lower() for document in documents
+    }
+    if kinds and kinds <= {"proposed"}:
+        return "proposals"
+    return "enacted"
 
 
 def _float_vector(value: object) -> list[float]:
@@ -2392,22 +2920,45 @@ def _vector_index_for_collection(
     embedding_run: EmbeddingRun,
     profile: EmbeddingProfile,
     collection_name: str,
+    index_kind: str = "enacted",
+    profile_hash: str | None = None,
 ) -> VectorIndex:
     vector_index = session.exec(
         select(VectorIndex).where(VectorIndex.collection_name == collection_name)
     ).first()
     if vector_index:
-        vector_index.release_id = release.id
-        vector_index.embedding_run_id = embedding_run.id
-        vector_index.profile_id = profile.id
-        vector_index.vector_dimensions = profile.vector_dimensions
+        if (
+            vector_index.release_id != release.id
+            or vector_index.embedding_run_id != embedding_run.id
+            or vector_index.profile_id != profile.id
+        ):
+            raise IngestionWorkerError(
+                f"Collection {collection_name} already exists for a different release/profile; "
+                "collections are immutable"
+            )
+        if vector_index.status in {
+            VectorIndexStatus.READY,
+            VectorIndexStatus.PROMOTED,
+            VectorIndexStatus.VALIDATING,
+        }:
+            raise IngestionWorkerError(
+                f"Collection {collection_name} is already "
+                f"{_enum_value(vector_index.status)}; "
+                "refusing to rebuild an immutable collection"
+            )
         vector_index.status = VectorIndexStatus.BUILDING
+        if profile_hash is not None:
+            vector_index.profile_hash = profile_hash
+        vector_index.index_kind = index_kind
         return vector_index
     vector_index = VectorIndex(
         release_id=release.id,
         embedding_run_id=embedding_run.id,
         profile_id=profile.id,
         collection_name=collection_name,
+        alias_name=alias_for_index_kind(index_kind),
+        index_kind=index_kind,
+        profile_hash=profile_hash,
         status=VectorIndexStatus.BUILDING,
         vector_dimensions=profile.vector_dimensions,
     )

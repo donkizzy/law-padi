@@ -17,6 +17,13 @@ class RetrievalEvaluationQuery:
     metadata: dict[str, Any]
 
 
+@dataclass(frozen=True)
+class OcrEvaluationPage:
+    item_key: str
+    expected_text: str
+    metadata: dict[str, Any]
+
+
 def load_gold_provisions_for_dataset(
     session: Session, dataset_version: str
 ) -> list[GoldProvision]:
@@ -85,6 +92,38 @@ def load_retrieval_evaluation_queries(
             )
         )
     return queries
+
+
+def load_ocr_evaluation_pages(
+    session: Session, dataset_version: str
+) -> list[OcrEvaluationPage]:
+    dataset = _active_dataset(
+        session,
+        version=dataset_version,
+        dataset_kind=EvaluationDatasetKind.OCR_BENCHMARK,
+    )
+    if not dataset:
+        return []
+    items = session.exec(
+        select(EvaluationItem)
+        .where(
+            EvaluationItem.dataset_id == dataset.id,
+            EvaluationItem.item_kind == EvaluationItemKind.OCR_PAGE,
+        )
+        .order_by(col(EvaluationItem.item_key))
+    ).all()
+    pages: list[OcrEvaluationPage] = []
+    for item in items:
+        if not item.expected_text:
+            continue
+        pages.append(
+            OcrEvaluationPage(
+                item_key=item.item_key,
+                expected_text=item.expected_text,
+                metadata=item.item_metadata or {},
+            )
+        )
+    return pages
 
 
 def active_evaluation_item_count(

@@ -1,3 +1,4 @@
+from collections.abc import Callable
 from datetime import UTC, datetime, timedelta
 from typing import Any
 from uuid import UUID
@@ -104,6 +105,7 @@ def append_run_event(
     step: IngestionStep | None = None,
     stage: IngestionStage | None = None,
     payload: dict[str, Any] | None = None,
+    commit: bool = True,
 ) -> IngestionEvent:
     session.exec(
         select(IngestionRun).where(IngestionRun.id == run.id).with_for_update()
@@ -142,7 +144,10 @@ def append_run_event(
             "payload": payload or {},
         },
     )
-    session.commit()
+    if commit:
+        session.commit()
+    else:
+        session.flush()
     session.refresh(event)
     return event
 
@@ -156,6 +161,7 @@ def enqueue_task(
     idempotency_key: str,
     payload: dict[str, Any] | None = None,
     priority: int = 100,
+    commit: bool = True,
 ) -> IngestionTask:
     existing_task = session.exec(
         select(IngestionTask).where(IngestionTask.idempotency_key == idempotency_key)
@@ -189,8 +195,11 @@ def enqueue_task(
             "payload": payload or {},
         },
     )
-    session.commit()
-    session.refresh(task)
+    if commit:
+        session.commit()
+        session.refresh(task)
+    else:
+        session.flush()
     return task
 
 
@@ -265,7 +274,34 @@ def mark_task_running(session: Session, task: IngestionTask) -> IngestionTask:
     return task
 
 
-def complete_task(session: Session, task: IngestionTask) -> IngestionTask:
+def renew_task_lease(
+    session: Session,
+    *,
+    task_id: UUID,
+    worker_id: str,
+    lease_seconds: int,
+) -> bool:
+    """Renew only the live lease owned by this worker."""
+    task = session.get(IngestionTask, task_id)
+    if (
+        task is None
+        or task.lease_owner != worker_id
+        or task.status != IngestionTaskStatus.RUNNING
+    ):
+        return False
+    now = get_datetime_utc()
+    task.leased_until = now + timedelta(seconds=max(1, lease_seconds))
+    task.heartbeat_at = now
+    task.updated_at = now
+    task.lock_version += 1
+    session.add(task)
+    session.commit()
+    return True
+
+
+def complete_task(
+    session: Session, task: IngestionTask, *, commit: bool = True
+) -> IngestionTask:
     now = get_datetime_utc()
     task.status = IngestionTaskStatus.SUCCEEDED
     task.lease_owner = None
@@ -274,8 +310,11 @@ def complete_task(session: Session, task: IngestionTask) -> IngestionTask:
     task.updated_at = now
     task.lock_version += 1
     session.add(task)
-    session.commit()
-    session.refresh(task)
+    if commit:
+        session.commit()
+        session.refresh(task)
+    else:
+        session.flush()
     return task
 
 
@@ -370,6 +409,39 @@ def _append_outbox_event(
     )
     session.add(outbox)
     return outbox
+
+
+def drain_outbox_batch(
+    session: Session,
+    *,
+    limit: int = 100,
+    publisher: Callable[[TransactionalOutbox], None] | None = None,
+) -> list[TransactionalOutbox]:
+    """Claim outbox rows and mark them only after the publisher succeeds."""
+    pending = list(
+        session.exec(
+            select(TransactionalOutbox)
+            .where(col(TransactionalOutbox.published_at).is_(None))
+            .order_by(col(TransactionalOutbox.created_at))
+            .limit(limit)
+            .with_for_update(skip_locked=True)
+        ).all()
+    )
+    if publisher is None:
+        return pending
+    now = datetime.now(UTC)
+    for event in pending:
+        try:
+            event.attempt_count += 1
+            publisher(event)
+            event.published_at = now
+            event.error_message = None
+            session.add(event)
+        except Exception as exc:
+            event.error_message = str(exc)[:2000]
+            session.add(event)
+    session.commit()
+    return pending
 
 
 def _task_type_at_concurrency_limit(

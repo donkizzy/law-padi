@@ -3,7 +3,7 @@ import re
 from collections import Counter
 from dataclasses import dataclass
 from io import BytesIO
-from typing import Any
+from typing import Any, BinaryIO
 
 from pypdf import PdfReader
 
@@ -72,6 +72,41 @@ def inspect_pdf_bytes(
     if page_count > max_pages:
         raise PdfInspectionError("Source PDFs must contain 1,000 pages or fewer")
     return PdfInspection(sha256=sha256, size_bytes=len(content), page_count=page_count)
+
+
+def inspect_pdf_file(
+    file: BinaryIO,
+    *,
+    expected_sha256: str | None = None,
+    expected_size: int | None = None,
+    max_pages: int,
+) -> PdfInspection:
+    """Inspect a seekable PDF without requiring the whole object in memory."""
+    file.seek(0)
+    prefix = file.read(5)
+    if prefix != b"%PDF-":
+        raise PdfInspectionError("Uploaded source is not a valid PDF")
+
+    digest = hashlib.sha256()
+    size = 0
+    file.seek(0)
+    while chunk := file.read(1024 * 1024):
+        digest.update(chunk)
+        size += len(chunk)
+    sha256 = digest.hexdigest()
+    if expected_sha256 and sha256 != expected_sha256:
+        raise PdfInspectionError("Uploaded object SHA-256 does not match")
+    if expected_size is not None and size != expected_size:
+        raise PdfInspectionError("Uploaded object size does not match")
+
+    file.seek(0)
+    reader = _reader_for_stream(file)
+    page_count = len(reader.pages)
+    if page_count == 0:
+        raise PdfInspectionError("Uploaded source does not contain any PDF pages")
+    if page_count > max_pages:
+        raise PdfInspectionError("Source PDFs must contain 1,000 pages or fewer")
+    return PdfInspection(sha256=sha256, size_bytes=size, page_count=page_count)
 
 
 def scan_pdf_bytes(content: bytes) -> dict[str, Any]:
@@ -144,8 +179,12 @@ def profile_pdf_pages(content: bytes, *, max_pages: int) -> list[PageProfile]:
 
 
 def _reader_for(content: bytes) -> PdfReader:
+    return _reader_for_stream(BytesIO(content))
+
+
+def _reader_for_stream(file: BinaryIO) -> PdfReader:
     try:
-        reader = PdfReader(BytesIO(content))
+        reader = PdfReader(file)
         if reader.is_encrypted:
             raise PdfInspectionError("Password-protected PDFs are not supported")
         return reader
