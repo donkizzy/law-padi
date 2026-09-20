@@ -91,9 +91,22 @@ class R2BlobStore:
         extension: str,
         metadata: Mapping[str, str] | None = None,
     ) -> BlobObject:
-        source_head = self.head(quarantine_key)
         canonical_key = self.original_key(sha256=expected_sha256, extension=extension)
         merged_metadata = {"sha256": expected_sha256, **dict(metadata or {})}
+
+        try:
+            source_head = self.head(quarantine_key)
+        except FileNotFoundError:
+            existing_head = self.head(canonical_key)
+            if existing_head.sha256 != expected_sha256:
+                raise BlobStoreError("Existing original SHA-256 does not match")
+            return BlobObject(
+                key=canonical_key,
+                size_bytes=existing_head.size_bytes,
+                sha256=existing_head.sha256,
+                content_type=existing_head.content_type,
+                metadata=existing_head.metadata,
+            )
 
         try:
             existing_head = self.head(canonical_key)
@@ -214,6 +227,16 @@ class R2BlobStore:
                 "content-type": content_type,
                 **_metadata_headers(metadata or {}),
             },
+            expires_in_seconds=expires_in_seconds,
+        )
+
+    def create_presigned_get_url(self, *, key: str, expires_in_seconds: int) -> str:
+        """Return a short-lived private download URL for an artifact."""
+        return self._presign(
+            "GET",
+            key,
+            query={},
+            headers={},
             expires_in_seconds=expires_in_seconds,
         )
 

@@ -55,6 +55,42 @@ class LocalBlobStore:
         self._write_metadata(blob)
         return blob
 
+    def put_quarantine_stream(
+        self,
+        *,
+        upload_id: str,
+        filename: str,
+        stream: BinaryIO,
+        content_type: str,
+        metadata: Mapping[str, str] | None = None,
+    ) -> BlobObject:
+        key = self.quarantine_key(upload_id=upload_id, filename=filename)
+        path = self._path_for_key(key)
+        path.parent.mkdir(parents=True, exist_ok=True)
+        digest = hashlib.sha256()
+        size = 0
+        try:
+            with path.open("wb") as destination:
+                while chunk := stream.read(1024 * 1024):
+                    digest.update(chunk)
+                    size += len(chunk)
+                    destination.write(chunk)
+        except Exception:
+            path.unlink(missing_ok=True)
+            raise
+        if size == 0:
+            path.unlink(missing_ok=True)
+            raise BlobStoreError("Quarantine objects cannot be empty")
+        blob = BlobObject(
+            key=key,
+            size_bytes=size,
+            sha256=digest.hexdigest(),
+            content_type=content_type,
+            metadata=dict(metadata or {}),
+        )
+        self._write_metadata(blob)
+        return blob
+
     def promote_quarantine_to_original(
         self,
         *,
@@ -65,22 +101,37 @@ class LocalBlobStore:
         metadata: Mapping[str, str] | None = None,
     ) -> BlobObject:
         quarantine_path = self._path_for_key(quarantine_key)
+        original_key = self.original_key(sha256=expected_sha256, extension=extension)
+        original_path = self._path_for_key(original_key)
         if not quarantine_path.exists():
-            raise FileNotFoundError(quarantine_key)
+            if not original_path.exists():
+                raise FileNotFoundError(quarantine_key)
+            existing = self.head(original_key)
+            if existing.sha256 != expected_sha256:
+                raise BlobStoreError("Existing original SHA-256 does not match")
+            return BlobObject(
+                key=original_key,
+                size_bytes=existing.size_bytes,
+                sha256=existing.sha256,
+                content_type=existing.content_type,
+                metadata=existing.metadata,
+            )
 
-        content = quarantine_path.read_bytes()
-        actual_sha256 = hashlib.sha256(content).hexdigest()
+        digest = hashlib.sha256()
+        size = 0
+        with quarantine_path.open("rb") as source:
+            while chunk := source.read(1024 * 1024):
+                digest.update(chunk)
+                size += len(chunk)
+        actual_sha256 = digest.hexdigest()
         if actual_sha256 != expected_sha256:
             raise BlobStoreError("Quarantine object SHA-256 does not match")
 
-        original_key = self.original_key(sha256=actual_sha256, extension=extension)
-        original_path = self._path_for_key(original_key)
         original_path.parent.mkdir(parents=True, exist_ok=True)
         if original_path.exists():
-            if original_path.read_bytes() != content:
-                raise BlobStoreError(
-                    "Content-addressed original exists with different bytes"
-                )
+            existing = self.head(original_key)
+            if existing.sha256 != expected_sha256 or existing.size_bytes != size:
+                raise BlobStoreError("Content-addressed original conflicts with upload")
         else:
             quarantine_path.replace(original_path)
 
@@ -88,7 +139,7 @@ class LocalBlobStore:
         self._metadata_path(quarantine_key).unlink(missing_ok=True)
         blob = BlobObject(
             key=original_key,
-            size_bytes=len(content),
+            size_bytes=size,
             sha256=actual_sha256,
             content_type=content_type,
             metadata=dict(metadata or {}),

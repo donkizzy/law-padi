@@ -2,11 +2,13 @@ import hashlib
 import json
 import uuid
 from collections.abc import Generator
+from concurrent.futures import ThreadPoolExecutor
 from datetime import UTC, date, datetime
 from io import BytesIO
 from pathlib import Path
 
 import pytest
+from fastapi.testclient import TestClient
 from pypdf import PdfWriter
 from pypdf.generic import DictionaryObject, NameObject, StreamObject
 from sqlmodel import Session, delete, select
@@ -15,6 +17,7 @@ from app.core.config import settings
 from app.ingestion.blob_store import LocalBlobStore
 from app.ingestion.embedding import EmbeddingBatch
 from app.ingestion.ocr import OcrPageInput, OcrPageResult, OcrWord
+from app.ingestion.pgvector_repository import dense_search, hybrid_search
 from app.ingestion.qdrant import QdrantPoint, QdrantSearchHit
 from app.ingestion.rendering import RenderedPageThumbnail
 from app.ingestion.worker import (
@@ -44,11 +47,13 @@ from app.legal.enums import (
     PageInclusionStatus,
     PageRole,
     ProvisionKind,
+    ReviewDecisionType,
     SourceTier,
     VectorIndexStatus,
     VerificationStatus,
 )
 from app.legal.models import (
+    ActiveRetrievalTarget,
     CandidateRevision,
     CorpusRelease,
     CorpusReleaseEntry,
@@ -65,9 +70,14 @@ from app.legal.models import (
     LegalInstrument,
     Provision,
     ProvisionVersion,
+    ReleasePromotionAttempt,
+    RetrievalEmbedding,
+    RetrievalIndexBuild,
+    RetrievalSegment,
     ReviewIssue,
     SourceDocument,
     SourcePage,
+    SourceUpload,
     VectorIndex,
 )
 from app.legal.parser import PARSER_VERSION, legal_text_sha256, normalize_legal_text
@@ -104,6 +114,7 @@ def test_worker_runs_verify_scan_and_profile_until_page_confirmation(
         IngestionStage.VERIFYING_UPLOAD,
         IngestionStage.MALWARE_SCAN,
         IngestionStage.PROFILING,
+        IngestionStage.RENDERING,
     ]
     db.refresh(run)
     db.refresh(source)
@@ -169,8 +180,10 @@ def test_worker_runs_verify_scan_and_profile_until_page_confirmation(
         "stage_started",
         "stage_succeeded",
         "stage_started",
-        "stage_blocked",
         "stage_succeeded",
+        "stage_started",
+        "stage_succeeded",
+        "stage_blocked",
     ]
 
 
@@ -1601,7 +1614,7 @@ def test_active_embedding_profiles_must_share_one_persisted_benchmark_dataset(
         provider=EmbeddingProviderKind.OPENAI,
         model_name="text-embedding-3-large",
         model_revision="pinned-openai",
-        vector_dimensions=3072,
+        vector_dimensions=1024,
         configuration={"benchmark_dataset_version": dataset_version},
     )
     bge_profile = EmbeddingProfile(
@@ -1631,6 +1644,7 @@ def test_active_embedding_profiles_must_share_one_persisted_benchmark_dataset(
 def test_worker_embeds_indexes_and_validates_ready_vector_index(
     db: Session, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
+    monkeypatch.setattr(settings, "RETRIEVAL_INDEX_BACKEND", "qdrant")
     monkeypatch.setattr(settings, "INGESTION_STORAGE_DIR", str(tmp_path))
     source, run, release, profile = _release_with_retrieval_documents(
         db, tmp_path=tmp_path
@@ -1643,7 +1657,7 @@ def test_worker_embeds_indexes_and_validates_ready_vector_index(
                     provider="fake",
                     model_name=profile.model_name,
                     model_revision=profile.model_revision,
-                    vectors=[[1.0, 0.0]],
+                    vectors=[[1.0] + [0.0] * 1023],
                     cost_usd=0.01,
                     metrics={"batch": "documents"},
                 )
@@ -1652,7 +1666,7 @@ def test_worker_embeds_indexes_and_validates_ready_vector_index(
                 provider="fake",
                 model_name=profile.model_name,
                 model_revision=profile.model_revision,
-                vectors=[[1.0, 0.0]],
+                vectors=[[1.0] + [0.0] * 1023],
                 cost_usd=0.02,
                 metrics={"batch": "queries"},
             )
@@ -1666,7 +1680,7 @@ def test_worker_embeds_indexes_and_validates_ready_vector_index(
         def create_collection(
             self, *, collection_name: str, vector_dimensions: int
         ) -> None:
-            assert vector_dimensions == 2
+            assert vector_dimensions == 1024
             self.collection_name = collection_name
 
         def upsert_points(
@@ -1776,13 +1790,14 @@ def test_worker_embeds_indexes_and_validates_ready_vector_index(
     ).one()
     assert vector_index.status == VectorIndexStatus.READY
     assert vector_index.point_count == 1
-    assert vector_index.vector_dimensions == 2
+    assert vector_index.vector_dimensions == 1024
     indexed_point = fake_qdrant.points[0]
     assert vector_index.validation_report == {
         "is_valid": True,
         "duplicate_ids": [],
         "dimension_errors": [],
         "payload_errors": [],
+        "sparse_errors": [],
         "remote_point_count": 1,
         "smoke_queries": [
             {
@@ -1800,6 +1815,372 @@ def test_worker_embeds_indexes_and_validates_ready_vector_index(
         )
     ).one()
     assert publishing_step.status == IngestionStepStatus.BLOCKED
+
+
+def test_worker_embeds_indexes_and_validates_pgvector_dataset(
+    db: Session, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    monkeypatch.setattr(settings, "RETRIEVAL_INDEX_BACKEND", "pgvector")
+    monkeypatch.setattr(settings, "INGESTION_STORAGE_DIR", str(tmp_path))
+    source, run, release, profile = _release_with_retrieval_documents(
+        db, tmp_path=tmp_path
+    )
+
+    class FakeEmbeddingProvider:
+        def embed(self, texts: list[str]) -> EmbeddingBatch:
+            return EmbeddingBatch(
+                provider="fake",
+                model_name=profile.model_name,
+                model_revision=profile.model_revision,
+                vectors=[[1.0] + [0.0] * 1023 for _ in texts],
+                cost_usd=0.01 * len(texts),
+            )
+
+    monkeypatch.setattr(
+        "app.ingestion.worker._embedding_provider_for_profile",
+        lambda _profile: FakeEmbeddingProvider(),
+    )
+    run.status = IngestionRunStatus.READY_TO_EMBED
+    run.current_stage = IngestionStage.EMBEDDING
+    run.pipeline_config = {"auto_start_embedding": True}
+    db.add(run)
+    db.commit()
+    embedding_step = db.exec(
+        select(IngestionStep).where(
+            IngestionStep.run_id == run.id,
+            IngestionStep.stage == IngestionStage.EMBEDDING,
+        )
+    ).one()
+    enqueue_task(
+        db,
+        run=run,
+        step=embedding_step,
+        task_type=IngestionStage.EMBEDDING.value,
+        idempotency_key=f"{run.id}:pgvector-embedding",
+        payload={"source_document_id": str(source.id), "release_id": str(release.id)},
+    )
+
+    results = run_until_idle(db, worker_id="worker-test", max_tasks=3)
+
+    assert [result.stage for result in results] == [
+        IngestionStage.EMBEDDING,
+        IngestionStage.INDEXING,
+        IngestionStage.VALIDATING_INDEX,
+    ]
+    build = db.exec(
+        select(RetrievalIndexBuild).where(RetrievalIndexBuild.release_id == release.id)
+    ).one()
+    assert build.status == VectorIndexStatus.READY
+    assert build.stored_segment_count == 1
+    assert build.stored_embedding_count == 1
+    segment = db.exec(
+        select(RetrievalSegment).where(RetrievalSegment.release_id == release.id)
+    ).one()
+    embedding = db.exec(
+        select(RetrievalEmbedding).where(
+            RetrievalEmbedding.embedding_run_id == build.embedding_run_id
+        )
+    ).one()
+    assert embedding.vector_dimensions == 1024
+    assert (
+        dense_search(
+            db,
+            release_id=release.id,
+            embedding_run_id=build.embedding_run_id,
+            query_vector=[1.0] + [0.0] * 1023,
+        )[0][0].id
+        == segment.id
+    )
+    assert (
+        hybrid_search(
+            db,
+            release_id=release.id,
+            embedding_run_id=build.embedding_run_id,
+            query_vector=[1.0] + [0.0] * 1023,
+            query="privacy",
+            top_k=1,
+        )[0].segment.id
+        == segment.id
+    )
+
+
+def test_api_upload_worker_publish_and_production_search_end_to_end(
+    client: TestClient,
+    superuser_token_headers: dict[str, str],
+    db: Session,
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Exercise one source across the real API, worker, release, and search paths."""
+    monkeypatch.setattr(settings, "INGESTION_STORAGE_DIR", str(tmp_path))
+    monkeypatch.setattr(settings, "RETRIEVAL_INDEX_BACKEND", "pgvector")
+
+    for profile in db.exec(
+        select(EmbeddingProfile).where(EmbeddingProfile.is_active == True)  # noqa: E712
+    ).all():
+        profile.is_active = False
+        db.add(profile)
+    db.commit()
+
+    pdf = _pdf_with_pages(
+        [
+            "37. Right to private and family life. The privacy of citizens, their homes and correspondence is guaranteed."
+        ]
+    )
+    slug = f"constitution-e2e-{uuid.uuid4().hex}"
+    upload_response = client.post(
+        f"{settings.API_V1_STR}/admin/source-uploads",
+        headers=superuser_token_headers,
+        json={
+            "idempotency_key": f"upload-{uuid.uuid4().hex}",
+            "expected_size": len(pdf),
+            "expected_sha256": _sha256(pdf),
+            "original_filename": "constitution.pdf",
+            "mime_type": "application/pdf",
+            "instrument_slug": slug,
+            "instrument_title": "Constitution of the Federal Republic of Nigeria 1999",
+            "instrument_short_title": "CFRN 1999",
+            "instrument_year": 1999,
+            "instrument_status": InstrumentStatus.ENACTED.value,
+            "enacted_at": "1999-05-29",
+            "effective_at": "1999-05-29",
+            "source_title": "Official Constitution PDF",
+            "authority": "Official Gazette",
+            "source_url": f"https://example.test/{slug}.pdf",
+            "source_tier": SourceTier.OFFICIAL.value,
+            "published_at": "1999-05-29",
+            "retrieved_at": date.today().isoformat(),
+        },
+    )
+    assert upload_response.status_code == 200, upload_response.text
+    upload = upload_response.json()
+    upload_id = uuid.UUID(upload["id"])
+    put_response = client.put(
+        f"{settings.API_V1_STR}/admin/source-uploads/{upload['id']}/object",
+        headers={**superuser_token_headers, "content-type": "application/pdf"},
+        content=pdf,
+    )
+    assert put_response.status_code == 204, put_response.text
+    upload_record = db.get(SourceUpload, upload_id)
+    assert upload_record
+    db.refresh(upload_record)
+    complete_response = client.post(
+        f"{settings.API_V1_STR}/admin/source-uploads/{upload['id']}/complete",
+        headers=superuser_token_headers,
+        json={
+            "idempotency_key": f"complete-{uuid.uuid4().hex}",
+            "expected_version": upload_record.lock_version,
+            "actual_sha256": _sha256(pdf),
+        },
+    )
+    assert complete_response.status_code == 200, complete_response.text
+    completion = complete_response.json()
+    assert completion["source_document"] is None
+    run_id = uuid.UUID(completion["run"]["id"])
+
+    first_results = run_until_idle(db, worker_id="e2e-worker", max_tasks=20)
+    assert first_results
+    run = db.get(IngestionRun, run_id)
+    assert run
+    db.refresh(run)
+    assert run.status == IngestionRunStatus.WAITING_FOR_INPUT
+    assert run.current_stage == IngestionStage.AWAITING_PAGE_CONFIRMATION
+    source = db.exec(
+        select(SourceDocument).where(SourceDocument.id == run.source_document_id)
+    ).one()
+    pages = db.exec(
+        select(SourcePage)
+        .where(SourcePage.run_id == run.id)
+        .order_by(SourcePage.page_number)
+    ).all()
+    assert pages
+    page_selection = client.patch(
+        f"{settings.API_V1_STR}/admin/ingestion-runs/{run.id}/page-selection",
+        headers=superuser_token_headers,
+        json={
+            "idempotency_key": f"pages-{uuid.uuid4().hex}",
+            "expected_run_version": run.lock_version,
+            "pages": [
+                {
+                    "page_number": page.page_number,
+                    "inclusion_status": PageInclusionStatus.INCLUDED.value,
+                    "inclusion_reason": "Included by end-to-end acceptance test",
+                    "expected_version": page.lock_version,
+                }
+                for page in pages
+            ],
+        },
+    )
+    assert page_selection.status_code == 200, page_selection.text
+
+    run_until_idle(db, worker_id="e2e-worker", max_tasks=30)
+    db.refresh(run)
+    assert run.status == IngestionRunStatus.WAITING_FOR_REVIEW
+    review_response = client.get(
+        f"{settings.API_V1_STR}/admin/review-items",
+        headers=superuser_token_headers,
+        params={"run_id": str(run.id)},
+    )
+    assert review_response.status_code == 200, review_response.text
+    review_items = review_response.json()["data"]
+    assert review_items
+    for item in review_items:
+        decision_response = client.post(
+            f"{settings.API_V1_STR}/admin/review-items/{item['id']}/decision",
+            headers=superuser_token_headers,
+            json={
+                "idempotency_key": f"approve-{item['id']}-{uuid.uuid4().hex}",
+                "expected_version": item["lock_version"],
+                "decision": ReviewDecisionType.APPROVE.value,
+                "reason": "Approved by end-to-end acceptance test",
+            },
+        )
+        assert decision_response.status_code == 200, decision_response.text
+
+    db.refresh(source)
+    verify_response = client.post(
+        f"{settings.API_V1_STR}/admin/source-documents/{source.id}/verify",
+        headers=superuser_token_headers,
+        json={
+            "idempotency_key": f"verify-{uuid.uuid4().hex}",
+            "expected_version": source.lock_version,
+            "reason": "Official source reviewed by end-to-end acceptance test",
+        },
+    )
+    assert verify_response.status_code == 200, verify_response.text
+
+    run_until_idle(db, worker_id="e2e-worker", max_tasks=30)
+    db.refresh(run)
+    assert run.status == IngestionRunStatus.READY_TO_EMBED
+    release = db.exec(
+        select(CorpusRelease)
+        .join(CorpusReleaseEntry)
+        .where(CorpusReleaseEntry.ingestion_run_id == run.id)
+    ).one()
+    version = db.exec(
+        select(ProvisionVersion).where(ProvisionVersion.source_document_id == source.id)
+    ).one()
+    provision = db.get(Provision, version.provision_id)
+    assert provision
+
+    benchmark_version = f"e2e-retrieval-{uuid.uuid4().hex}"
+    _create_retrieval_benchmark_dataset(
+        db, version=benchmark_version, canonical_path=provision.canonical_path
+    )
+    profile = EmbeddingProfile(
+        name=f"e2e-profile-{uuid.uuid4().hex}",
+        provider=EmbeddingProviderKind.OPENAI,
+        model_name="fake-e2e",
+        model_revision="pinned-e2e",
+        vector_dimensions=1024,
+        is_active=True,
+        configuration={"benchmark_dataset_version": benchmark_version},
+    )
+    db.add(profile)
+    db.commit()
+    db.refresh(profile)
+
+    class FakeEmbeddingProvider:
+        def embed(self, texts: list[str]) -> EmbeddingBatch:
+            return EmbeddingBatch(
+                provider="fake",
+                model_name="fake-e2e",
+                model_revision="pinned-e2e",
+                vectors=[[1.0] + [0.0] * 1023 for _ in texts],
+                cost_usd=0.01 * len(texts),
+            )
+
+    monkeypatch.setattr(
+        "app.ingestion.worker._embedding_provider_for_profile",
+        lambda _profile: FakeEmbeddingProvider(),
+    )
+    monkeypatch.setattr(
+        "app.api.routes.search._query_embedding_provider",
+        lambda _profile: FakeEmbeddingProvider(),
+    )
+    db.refresh(run)
+    start_response = client.post(
+        f"{settings.API_V1_STR}/admin/ingestion-runs/{run.id}/start-embedding",
+        headers=superuser_token_headers,
+        json={
+            "idempotency_key": f"start-embedding-{uuid.uuid4().hex}",
+            "expected_version": run.lock_version,
+        },
+    )
+    assert start_response.status_code == 200, start_response.text
+    embedding_results = run_until_idle(db, worker_id="e2e-worker", max_tasks=5)
+    assert [result.stage for result in embedding_results] == [
+        IngestionStage.EMBEDDING,
+        IngestionStage.INDEXING,
+        IngestionStage.VALIDATING_INDEX,
+    ]
+    db.refresh(run)
+    db.refresh(release)
+    assert run.status == IngestionRunStatus.READY_TO_PUBLISH
+    assert release.status in {
+        CorpusReleaseStatus.BUILDING,
+        CorpusReleaseStatus.VALIDATING,
+    }
+
+    validate_response = client.post(
+        f"{settings.API_V1_STR}/admin/corpus-releases/{release.id}/validate",
+        headers=superuser_token_headers,
+        json={
+            "idempotency_key": f"validate-{uuid.uuid4().hex}",
+            "expected_version": release.lock_version,
+        },
+    )
+    assert validate_response.status_code == 200, validate_response.text
+    assert validate_response.json()["status"] == CorpusReleaseStatus.APPROVED.value
+    db.refresh(release)
+    expected_release_version = release.lock_version
+
+    def publish_once() -> int:
+        response = client.post(
+            f"{settings.API_V1_STR}/admin/corpus-releases/{release.id}/publish",
+            headers=superuser_token_headers,
+            json={
+                "idempotency_key": f"publish-{uuid.uuid4().hex}",
+                "expected_version": expected_release_version,
+                "superuser_override_reason": "Acceptance test actor-separation override",
+            },
+        )
+        return response.status_code
+
+    with ThreadPoolExecutor(max_workers=2) as executor:
+        publish_statuses = list(executor.map(lambda _index: publish_once(), range(2)))
+    assert sorted(publish_statuses) == [200, 409]
+
+    db.refresh(run)
+    db.refresh(release)
+    assert run.status == IngestionRunStatus.PUBLISHED
+    assert release.status == CorpusReleaseStatus.PRODUCTION
+    assert db.exec(
+        select(ActiveRetrievalTarget).where(
+            ActiveRetrievalTarget.release_id == release.id,
+            ActiveRetrievalTarget.index_kind == "enacted",
+        )
+    ).one()
+    assert (
+        db.exec(
+            select(ReleasePromotionAttempt).where(
+                ReleasePromotionAttempt.release_id == release.id
+            )
+        )
+        .one()
+        .status
+        == "succeeded"
+    )
+
+    search_response = client.post(
+        f"{settings.API_V1_STR}/legal/search",
+        json={"query": "Which section protects privacy?", "top_k": 1},
+    )
+    assert search_response.status_code == 200, search_response.text
+    result = search_response.json()["data"][0]
+    assert result["canonical_path"] == provision.canonical_path
+    assert result["authoritative_text"] == version.text
+    assert result["source_document_id"] == str(source.id)
 
 
 def test_worker_requires_persisted_embedding_benchmark_dataset(
@@ -1866,6 +2247,7 @@ def test_worker_requires_persisted_embedding_benchmark_dataset(
 def test_worker_fails_vector_index_when_qdrant_smoke_query_misses_point(
     db: Session, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
+    monkeypatch.setattr(settings, "RETRIEVAL_INDEX_BACKEND", "qdrant")
     monkeypatch.setattr(settings, "INGESTION_STORAGE_DIR", str(tmp_path))
     source, run, release, profile = _release_with_retrieval_documents(
         db, tmp_path=tmp_path
@@ -1878,7 +2260,7 @@ def test_worker_fails_vector_index_when_qdrant_smoke_query_misses_point(
                     provider="fake",
                     model_name=profile.model_name,
                     model_revision=profile.model_revision,
-                    vectors=[[1.0, 0.0]],
+                    vectors=[[1.0] + [0.0] * 1023],
                     metrics={"batch": "documents"},
                 )
             assert texts == ["Which section protects privacy?"]
@@ -1886,7 +2268,7 @@ def test_worker_fails_vector_index_when_qdrant_smoke_query_misses_point(
                 provider="fake",
                 model_name=profile.model_name,
                 model_revision=profile.model_revision,
-                vectors=[[1.0, 0.0]],
+                vectors=[[1.0] + [0.0] * 1023],
                 metrics={"batch": "queries"},
             )
 
@@ -1898,7 +2280,7 @@ def test_worker_fails_vector_index_when_qdrant_smoke_query_misses_point(
         def create_collection(
             self, *, collection_name: str, vector_dimensions: int
         ) -> None:
-            assert vector_dimensions == 2
+            assert vector_dimensions == 1024
             self.collection_name = collection_name
 
         def upsert_points(
@@ -1915,7 +2297,7 @@ def test_worker_fails_vector_index_when_qdrant_smoke_query_misses_point(
             self, *, collection_name: str, vector: list[float], limit: int = 5
         ) -> list[QdrantSearchHit]:
             assert collection_name == self.collection_name
-            assert vector == [1.0, 0.0]
+            assert vector == [1.0] + [0.0] * 1023
             return [
                 QdrantSearchHit(
                     point_id="wrong-point",
@@ -2118,7 +2500,7 @@ def _release_with_retrieval_documents(
         provider=EmbeddingProviderKind.OPENAI,
         model_name="fake-large",
         model_revision="pinned-test",
-        vector_dimensions=2,
+        vector_dimensions=1024,
         configuration={
             "benchmark_dataset_version": benchmark_dataset_version,
             "estimated_cost_usd": 0.01,
@@ -2424,3 +2806,376 @@ def _escape_pdf_text(text: str) -> str:
 
 def _sha256(content: bytes) -> str:
     return hashlib.sha256(content).hexdigest()
+
+
+def test_vector_index_collection_is_immutable(db: Session) -> None:
+    from app.ingestion.worker import _vector_index_for_collection
+
+    release, other_release = (
+        CorpusRelease(
+            version=f"draft-aaa-{uuid.uuid4().hex[:8]}",
+            status=CorpusReleaseStatus.BUILDING,
+        ),
+        CorpusRelease(
+            version=f"draft-bbb-{uuid.uuid4().hex[:8]}",
+            status=CorpusReleaseStatus.BUILDING,
+        ),
+    )
+    db.add_all([release, other_release])
+    db.commit()
+    db.refresh(release)
+    db.refresh(other_release)
+    profile = EmbeddingProfile(
+        name=f"immutable-{uuid.uuid4().hex}",
+        provider=EmbeddingProviderKind.OPENAI,
+        model_name="text-embedding-3-large",
+        model_revision="pinned-rev",
+        vector_dimensions=1024,
+        configuration={},
+    )
+    db.add(profile)
+    db.commit()
+    db.refresh(profile)
+    run_a = EmbeddingRun(release_id=release.id, profile_id=profile.id)
+    run_b = EmbeddingRun(release_id=other_release.id, profile_id=profile.id)
+    db.add_all([run_a, run_b])
+    db.commit()
+    db.refresh(run_a)
+    db.refresh(run_b)
+
+    shared_name = f"ng_constitution_enacted_pinned_{uuid.uuid4().hex[:8]}"
+    _vector_index_for_collection(
+        db,
+        release=release,
+        embedding_run=run_a,
+        profile=profile,
+        collection_name=shared_name,
+        index_kind="enacted",
+        profile_hash="hash-a",
+    )
+    db.commit()
+
+    with pytest.raises(IngestionWorkerError, match="immutable"):
+        _vector_index_for_collection(
+            db,
+            release=other_release,
+            embedding_run=run_b,
+            profile=profile,
+            collection_name=shared_name,
+            index_kind="enacted",
+            profile_hash="hash-a",
+        )
+
+
+def test_qdrant_points_require_sparse_vectors() -> None:
+    from app.ingestion.worker import (
+        _qdrant_points_from_embedding_payload,
+    )
+
+    with pytest.raises(IngestionWorkerError, match="sparse"):
+        _qdrant_points_from_embedding_payload(
+            {
+                "documents": [
+                    {
+                        "id": "doc-1",
+                        "segment_id": "seg-1",
+                        "citation": "Section 1",
+                        "payload": {"canonical_path": "x"},
+                        "retrieval_text": "hello",
+                    }
+                ],
+                "dense_vectors": [[0.1, 0.2]],
+            }
+        )
+
+
+def test_index_kind_for_points_splits_proposals() -> None:
+    from app.ingestion.worker import _index_kind_for_points
+
+    def _point(status: str) -> QdrantPoint:
+        return QdrantPoint(
+            point_id=f"p-{status}-{uuid.uuid4().hex[:6]}",
+            vector=[0.1, 0.2],
+            payload={"legal_status": status},
+        )
+
+    assert _index_kind_for_points([_point("proposed")]) == "proposals"
+    assert _index_kind_for_points([_point("current")]) == "enacted"
+    assert _index_kind_for_points([_point("current"), _point("proposed")]) == "enacted"
+    assert _index_kind_for_points([]) == "enacted"
+
+
+def test_coerce_sparse_vector_rejects_invalid_payloads() -> None:
+    from app.ingestion.worker import (
+        _coerce_sparse_vector,
+        _qdrant_points_from_embedding_payload,
+    )
+
+    valid = _coerce_sparse_vector({"indices": [1, 7], "values": [0.5, 0.5]})
+    assert valid.indices == [1, 7]
+
+    with pytest.raises(IngestionWorkerError, match="Sparse vector"):
+        _coerce_sparse_vector({"indices": [1], "values": [0.5, 0.5]})
+    with pytest.raises(IngestionWorkerError, match="Sparse vector"):
+        _coerce_sparse_vector({"indices": [-1], "values": [0.5]})
+    with pytest.raises(IngestionWorkerError, match="Sparse vector"):
+        _coerce_sparse_vector(["not-a-dict"])  # type: ignore[arg-type]
+
+    with pytest.raises(IngestionWorkerError, match="counts do not match"):
+        _qdrant_points_from_embedding_payload(
+            {
+                "documents": [
+                    {
+                        "id": "doc-1",
+                        "segment_id": "seg-1",
+                        "citation": "Section 1",
+                        "payload": {"canonical_path": "x"},
+                    }
+                ],
+                "dense_vectors": [[0.1, 0.2], [0.3, 0.4]],
+                "sparse_vectors": [{"indices": [1], "values": [1.0]}],
+            }
+        )
+
+
+def test_vector_index_same_triple_rebuild_while_building_is_allowed(
+    db: Session,
+) -> None:
+    from app.ingestion.worker import _vector_index_for_collection
+
+    release = CorpusRelease(
+        version=f"draft-aaa-{uuid.uuid4().hex[:8]}", status=CorpusReleaseStatus.BUILDING
+    )
+    db.add(release)
+    db.commit()
+    db.refresh(release)
+    profile = EmbeddingProfile(
+        name=f"rebuild-{uuid.uuid4().hex}",
+        provider=EmbeddingProviderKind.OPENAI,
+        model_name="text-embedding-3-large",
+        model_revision="pinned-rev",
+        vector_dimensions=1024,
+        configuration={},
+    )
+    db.add(profile)
+    db.commit()
+    db.refresh(profile)
+    run = EmbeddingRun(release_id=release.id, profile_id=profile.id)
+    db.add(run)
+    db.commit()
+    db.refresh(run)
+    name_rebuild = f"ng_constitution_enacted_rebuild_{uuid.uuid4().hex[:8]}"
+
+    first = _vector_index_for_collection(
+        db,
+        release=release,
+        embedding_run=run,
+        profile=profile,
+        collection_name=name_rebuild,
+        index_kind="enacted",
+        profile_hash="hash-a",
+    )
+    db.commit()
+    second = _vector_index_for_collection(
+        db,
+        release=release,
+        embedding_run=run,
+        profile=profile,
+        collection_name=name_rebuild,
+        index_kind="enacted",
+        profile_hash="hash-a",
+    )
+
+    assert first.id == second.id
+    assert second.profile_hash == "hash-a"
+    assert second.index_kind == "enacted"
+
+
+def test_vector_index_refuses_rebuild_of_ready_collection(db: Session) -> None:
+    from app.ingestion.worker import _vector_index_for_collection
+
+    release = CorpusRelease(
+        version=f"draft-bbb-{uuid.uuid4().hex[:8]}", status=CorpusReleaseStatus.BUILDING
+    )
+    db.add(release)
+    db.commit()
+    db.refresh(release)
+    profile = EmbeddingProfile(
+        name=f"ready-{uuid.uuid4().hex}",
+        provider=EmbeddingProviderKind.OPENAI,
+        model_name="text-embedding-3-large",
+        model_revision="pinned-rev",
+        vector_dimensions=1024,
+        configuration={},
+    )
+    db.add(profile)
+    db.commit()
+    db.refresh(profile)
+    run = EmbeddingRun(release_id=release.id, profile_id=profile.id)
+    db.add(run)
+    db.commit()
+    db.refresh(run)
+    name_ready = f"ng_constitution_enacted_ready_{uuid.uuid4().hex[:8]}"
+
+    index = _vector_index_for_collection(
+        db,
+        release=release,
+        embedding_run=run,
+        profile=profile,
+        collection_name=name_ready,
+        index_kind="enacted",
+        profile_hash="hash-a",
+    )
+    index.status = VectorIndexStatus.READY
+    db.add(index)
+    db.commit()
+
+    with pytest.raises(IngestionWorkerError, match="already ready"):
+        _vector_index_for_collection(
+            db,
+            release=release,
+            embedding_run=run,
+            profile=profile,
+            collection_name=name_ready,
+            index_kind="enacted",
+            profile_hash="hash-a",
+        )
+
+
+def test_embedding_rejects_active_profile_without_pinned_revision(
+    db: Session, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    monkeypatch.setattr(settings, "INGESTION_STORAGE_DIR", str(tmp_path))
+    source, run, release, profile = _release_with_retrieval_documents(
+        db, tmp_path=tmp_path
+    )
+    profile.model_revision = None
+    db.add(profile)
+    db.commit()
+
+    def _unexpected_provider(_profile: EmbeddingProfile) -> EmbeddingBatch:
+        raise AssertionError("Provider must not run without a pinned revision")
+
+    monkeypatch.setattr(
+        "app.ingestion.worker._embedding_provider_for_profile",
+        _unexpected_provider,
+    )
+    run.status = IngestionRunStatus.READY_TO_EMBED
+    run.current_stage = IngestionStage.EMBEDDING
+    run.pipeline_config = {"auto_start_embedding": True}
+    db.add(run)
+    db.commit()
+    embedding_step = db.exec(
+        select(IngestionStep).where(
+            IngestionStep.run_id == run.id,
+            IngestionStep.stage == IngestionStage.EMBEDDING,
+        )
+    ).one()
+    enqueue_task(
+        db,
+        run=run,
+        step=embedding_step,
+        task_type=IngestionStage.EMBEDDING.value,
+        idempotency_key=f"{run.id}:embedding-unpinned",
+        payload={"source_document_id": str(source.id), "release_id": str(release.id)},
+    )
+
+    # Three attempts are exhausted (default max_attempts=3) before the
+    # task and run reach FAILED.
+    results = run_until_idle(db, worker_id="worker-test", max_tasks=4)
+
+    assert results[-1].task_status == IngestionTaskStatus.FAILED
+    db.refresh(run)
+    assert run.status == IngestionRunStatus.FAILED
+    assert run.error_details
+    assert "pinned model_revision" in run.error_details["message"]
+
+
+def test_embedding_honors_configured_batch_size(
+    db: Session, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    monkeypatch.setattr(settings, "INGESTION_STORAGE_DIR", str(tmp_path))
+    source, run, release, profile = _release_with_retrieval_documents(
+        db, tmp_path=tmp_path
+    )
+    dataset_version = profile.configuration["benchmark_dataset_version"]
+    dataset = db.exec(
+        select(EvaluationDataset).where(EvaluationDataset.version == dataset_version)
+    ).one()
+    db.add(
+        EvaluationItem(
+            dataset_id=dataset.id,
+            item_key="citizenship-query",
+            item_kind=EvaluationItemKind.RETRIEVAL_QUERY,
+            query_text="Which section protects movement?",
+            expected_canonical_paths=[f"{dataset_version}"],
+        )
+    )
+    # Point the second query at the same provision so recall stays perfect.
+    provision = db.exec(
+        select(Provision).where(Provision.instrument_id == source.legal_instrument_id)
+    ).one()
+    second_query = db.exec(
+        select(EvaluationItem).where(EvaluationItem.item_key == "citizenship-query")
+    ).one()
+    second_query.expected_canonical_paths = [provision.canonical_path]
+    profile.configuration = {
+        **profile.configuration,
+        "batch_size": 1,
+    }
+    db.add_all([profile, second_query])
+    db.commit()
+
+    calls: list[list[str]] = []
+
+    class RecordingEmbeddingProvider:
+        def embed(self, texts: list[str]) -> EmbeddingBatch:
+            calls.append(list(texts))
+            return EmbeddingBatch(
+                provider="fake",
+                model_name=profile.model_name,
+                model_revision=profile.model_revision,
+                vectors=[[1.0] + [0.0] * 1023 for _ in texts],
+            )
+
+    monkeypatch.setattr(
+        "app.ingestion.worker._embedding_provider_for_profile",
+        lambda _profile: RecordingEmbeddingProvider(),
+    )
+    run.status = IngestionRunStatus.READY_TO_EMBED
+    run.current_stage = IngestionStage.EMBEDDING
+    run.pipeline_config = {"auto_start_embedding": True}
+    db.add(run)
+    db.commit()
+    embedding_step = db.exec(
+        select(IngestionStep).where(
+            IngestionStep.run_id == run.id,
+            IngestionStep.stage == IngestionStage.EMBEDDING,
+        )
+    ).one()
+    enqueue_task(
+        db,
+        run=run,
+        step=embedding_step,
+        task_type=IngestionStage.EMBEDDING.value,
+        idempotency_key=f"{run.id}:embedding-batched",
+        payload={"source_document_id": str(source.id), "release_id": str(release.id)},
+    )
+
+    results = run_until_idle(db, worker_id="worker-test", max_tasks=1)
+
+    assert results[0].task_status == IngestionTaskStatus.SUCCEEDED
+    # One document call plus one call per benchmark query.
+    assert calls[0] == ["Section 37\nRight to private and family life"]
+    assert sorted(calls[1:]) == [
+        ["Which section protects movement?"],
+        ["Which section protects privacy?"],
+    ]
+    embedding_run = db.exec(
+        select(EmbeddingRun).where(
+            EmbeddingRun.release_id == release.id,
+            EmbeddingRun.profile_id == profile.id,
+        )
+    ).one()
+    assert embedding_run.status == EmbeddingRunStatus.SUCCEEDED
+    assert embedding_run.recall_at_10 == 1

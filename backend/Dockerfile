@@ -20,6 +20,11 @@ FROM python:3.14
 
 ENV PYTHONUNBUFFERED=1
 
+# PDF rendering is part of the ingestion evidence workflow.
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends poppler-utils \
+    && rm -rf /var/lib/apt/lists/*
+
 # Install uv
 # Ref: https://docs.astral.sh/uv/guides/integration/docker/#installing-uv
 COPY --from=ghcr.io/astral-sh/uv:0.9.26 /uv /uvx /bin/

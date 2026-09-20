@@ -152,3 +152,45 @@ def test_retrieval_benchmark_queries_and_counts_require_active_dataset(
         )
         == 0
     )
+
+
+def test_load_ocr_evaluation_pages_requires_active_benchmark_dataset(
+    db: Session,
+) -> None:
+    from app.ingestion.evaluation import load_ocr_evaluation_pages
+
+    dataset = EvaluationDataset(
+        version=f"ocr-pages-{uuid.uuid4().hex}",
+        name="OCR pages",
+        dataset_kind=EvaluationDatasetKind.OCR_BENCHMARK,
+        language="en",
+        jurisdiction="NG",
+    )
+    db.add(dataset)
+    db.commit()
+    db.refresh(dataset)
+    db.add_all(
+        [
+            EvaluationItem(
+                dataset_id=dataset.id,
+                item_key="page-1",
+                item_kind=EvaluationItemKind.OCR_PAGE,
+                expected_text="Right to private and family life",
+                item_metadata={"page_number": 22},
+            ),
+            EvaluationItem(
+                dataset_id=dataset.id,
+                item_key="page-without-text",
+                item_kind=EvaluationItemKind.OCR_PAGE,
+            ),
+        ]
+    )
+    db.commit()
+
+    pages = load_ocr_evaluation_pages(db, dataset.version)
+
+    assert len(pages) == 1
+    assert pages[0].item_key == "page-1"
+    assert pages[0].expected_text == "Right to private and family life"
+    assert pages[0].metadata == {"page_number": 22}
+    assert load_ocr_evaluation_pages(db, "missing-version") == []

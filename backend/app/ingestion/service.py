@@ -1,10 +1,11 @@
+import difflib
 import hashlib
 import json
 import uuid
 from collections.abc import Sequence
 from datetime import UTC, datetime, time, timedelta
 from pathlib import Path
-from typing import cast
+from typing import BinaryIO, cast
 
 from fastapi import HTTPException, status
 from sqlmodel import Session, col, func, select
@@ -20,6 +21,7 @@ from app.ingestion.contracts import (
 )
 from app.ingestion.evaluation import active_evaluation_item_count
 from app.ingestion.pdf import PdfInspectionError, inspect_pdf_bytes
+from app.ingestion.pgvector_repository import validate_index_build
 from app.ingestion.qdrant import QdrantHttpIndexAdapter, QdrantIndexError
 from app.ingestion.r2_blob_store import R2BlobStore
 from app.ingestion.validation import has_unbalanced_punctuation
@@ -52,11 +54,13 @@ from app.legal.enums import (
     VerificationStatus,
 )
 from app.legal.models import (
+    ActiveRetrievalTarget,
     AdminRoleAssignment,
     AuditEvent,
     CandidateRevision,
     CorpusRelease,
     CorpusReleaseEntry,
+    EmbeddingProfile,
     EmbeddingRun,
     ExtractionCandidate,
     IdempotencyRecord,
@@ -67,6 +71,7 @@ from app.legal.models import (
     IngestionTask,
     LegalInstrument,
     ReleasePromotionAttempt,
+    RetrievalIndexBuild,
     ReviewDecisionRecord,
     ReviewIssue,
     SourceDocument,
@@ -78,6 +83,7 @@ from app.legal.schemas import (
     AdminOperationalAlertPublic,
     PageSelectionUpdate,
     ReviewDecisionCreate,
+    ReviewIssueUpdate,
     ReviewItemUpdate,
     SourceUploadComplete,
     SourceUploadCreate,
@@ -515,7 +521,7 @@ def create_source_upload_session(
 
 
 def put_local_upload_object(
-    session: Session, upload_id: uuid.UUID, content: bytes, content_type: str
+    session: Session, upload_id: uuid.UUID, content: BinaryIO, content_type: str
 ) -> SourceUpload:
     upload = _get_upload(session, upload_id)
     if upload.upload_backend != "local":
@@ -529,10 +535,13 @@ def put_local_upload_object(
             detail="Uploaded object content type does not match the upload session",
         )
     try:
-        blob = get_blob_store().put_quarantine(
+        store = get_blob_store()
+        if not isinstance(store, LocalBlobStore):
+            raise BlobStoreError("Local upload endpoint requires local storage")
+        blob = store.put_quarantine_stream(
             upload_id=str(upload.id),
             filename=upload.original_filename,
-            content=content,
+            stream=content,
             content_type=upload.mime_type,
             metadata={"source_upload_id": str(upload.id)},
         )
@@ -590,7 +599,6 @@ def complete_source_upload(
                 ],
             )
         head = store.head(upload.quarantine_key)
-        content = store.read_bytes(upload.quarantine_key)
     except (BlobStoreError, FileNotFoundError) as exc:
         _mark_upload_failed(session, upload, str(exc))
         raise HTTPException(
@@ -604,99 +612,20 @@ def complete_source_upload(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="Uploaded object size does not match the upload session",
         )
-    actual_sha256 = head.sha256 or hashlib.sha256(content).hexdigest()
-    if upload.expected_sha256 and actual_sha256 != upload.expected_sha256:
-        _mark_upload_failed(session, upload, "Uploaded object hash does not match")
+    if upload.expected_sha256 and head.sha256 and head.sha256 != upload.expected_sha256:
+        _mark_upload_failed(
+            session, upload, "Uploaded object metadata hash does not match"
+        )
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="Uploaded object SHA-256 does not match the upload session",
         )
-    if body.actual_sha256 and actual_sha256 != body.actual_sha256:
-        _mark_upload_failed(session, upload, "Completion hash does not match")
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Completion SHA-256 does not match the uploaded object",
-        )
 
-    try:
-        page_count = _validate_pdf(content)
-    except HTTPException as exc:
-        _mark_upload_failed(session, upload, str(exc.detail))
-        raise
-    existing_source = session.exec(
-        select(SourceDocument).where(SourceDocument.sha256 == actual_sha256)
-    ).first()
-    if existing_source:
-        upload.source_document_id = existing_source.id
-        upload.actual_sha256 = actual_sha256
-        upload.canonical_key = existing_source.storage_key
-        upload.status = SourceUploadStatus.DUPLICATE
-        upload.completed_at = get_datetime_utc()
-        upload.lock_version += 1
-        upload.updated_at = upload.completed_at
-        session.add(upload)
-        _add_idempotency_record(
-            session,
-            scope=scope,
-            idempotency_key=body.idempotency_key,
-            request_hash=request_hash,
-            result_type="source_upload_complete",
-            result_id=upload.id,
-            created_by=current_user.id,
-            result_payload={
-                "upload_id": str(upload.id),
-                "source_document_id": str(existing_source.id),
-                "run_id": None,
-                "duplicate": True,
-            },
-        )
-        session.commit()
-        session.refresh(upload)
-        return upload, existing_source, None, True
-
-    original = store.promote_quarantine_to_original(
-        quarantine_key=upload.quarantine_key,
-        expected_sha256=actual_sha256,
-        content_type=upload.mime_type,
-        extension=Path(upload.original_filename).suffix or ".pdf",
-        metadata={
-            "source_upload_id": str(upload.id),
-            "source_url": upload.source_url,
-        },
-    )
-    instrument = _get_or_create_constitution_instrument(session, upload)
-    source = SourceDocument(
-        legal_instrument_id=instrument.id,
-        authority=upload.authority,
-        title=upload.source_title,
-        source_url=upload.source_url,
-        mime_type=upload.mime_type,
-        sha256=original.sha256,
-        storage_backend=upload.upload_backend,
-        storage_bucket=settings.R2_BUCKET_NAME
-        if upload.upload_backend == "r2"
-        else None,
-        storage_key=original.key,
-        original_filename=upload.original_filename,
-        file_size=original.size_bytes,
-        page_count=page_count,
-        published_at=upload.published_at,
-        retrieved_at=datetime.combine(upload.retrieved_at, time.min, tzinfo=UTC),
-        is_legal_revision=upload.is_legal_revision,
-        legal_revision_effective_at=upload.legal_revision_effective_at,
-        source_tier=upload.source_tier,
-        verification_status=VerificationStatus.UNVERIFIED,
-        created_by=current_user.id,
-    )
-    session.add(source)
-    session.commit()
-    session.refresh(source)
-
-    upload.legal_instrument_id = instrument.id
-    upload.source_document_id = source.id
-    upload.actual_sha256 = original.sha256
-    upload.canonical_key = original.key
-    upload.status = SourceUploadStatus.COMPLETED
+    # Completion is deliberately a control-plane operation. The object remains
+    # under quarantine until the worker has streamed it, validated the PDF, and
+    # completed malware scanning.
+    upload.actual_sha256 = None
+    upload.status = SourceUploadStatus.UPLOADED_PENDING_VERIFICATION
     upload.completed_at = get_datetime_utc()
     upload.lock_version += 1
     upload.updated_at = upload.completed_at
@@ -706,14 +635,16 @@ def complete_source_upload(
 
     run = IngestionRun(
         source_upload_id=upload.id,
-        source_document_id=source.id,
+        source_document_id=None,
         created_by=current_user.id,
         status=IngestionRunStatus.QUEUED,
         current_stage=IngestionStage.VERIFYING_UPLOAD,
         pipeline_config={
             "instrument_parser": "constitution",
             "max_pages": MAX_SOURCE_PAGES,
-            "source_sha256": original.sha256,
+            "expected_sha256": upload.expected_sha256,
+            "expected_size": upload.expected_size,
+            "claimed_sha256": body.actual_sha256,
             "storage_backend": upload.upload_backend,
             "is_legal_revision": upload.is_legal_revision,
             "legal_revision_effective_at": (
@@ -722,7 +653,7 @@ def complete_source_upload(
                 else None
             ),
         },
-        expected_page_count=page_count,
+        expected_page_count=None,
     )
     session.add(run)
     session.commit()
@@ -734,9 +665,8 @@ def complete_source_upload(
     uploading_step.status = IngestionStepStatus.SUCCEEDED
     uploading_step.completed_units = 1
     uploading_step.metrics = {
-        "sha256": original.sha256,
-        "size_bytes": original.size_bytes,
-        "page_count": page_count,
+        "expected_sha256": upload.expected_sha256,
+        "size_bytes": upload.expected_size,
     }
     uploading_step.completed_at = get_datetime_utc()
     uploading_step.updated_at = uploading_step.completed_at
@@ -751,16 +681,16 @@ def complete_source_upload(
         step=first_step,
         task_type=IngestionStage.VERIFYING_UPLOAD.value,
         idempotency_key=f"{run.id}:verify-upload",
-        payload={"source_document_id": str(source.id), "sha256": original.sha256},
+        payload={"source_upload_id": str(upload.id)},
         priority=10,
     )
     append_run_event(
         session,
         run,
         event_type="upload_completed",
-        message="Upload validated and ingestion run queued",
+        message="Upload completion recorded; verification queued",
         stage=IngestionStage.VERIFYING_UPLOAD,
-        payload={"source_document_id": str(source.id), "page_count": page_count},
+        payload={"source_upload_id": str(upload.id)},
     )
     _add_idempotency_record(
         session,
@@ -772,13 +702,13 @@ def complete_source_upload(
         created_by=current_user.id,
         result_payload={
             "upload_id": str(upload.id),
-            "source_document_id": str(source.id),
+            "source_document_id": None,
             "run_id": str(run.id),
             "duplicate": False,
         },
     )
     session.commit()
-    return upload, source, run, False
+    return upload, None, run, False
 
 
 def verify_source_document(
@@ -859,15 +789,39 @@ def update_page_selection(
     )
     if record:
         return _pages_for_idempotency_record(session, record)
-    run = _get_run(session, run_id)
+    run = session.exec(
+        select(IngestionRun).where(IngestionRun.id == run_id).with_for_update()
+    ).one_or_none()
+    if run is None:
+        raise HTTPException(status_code=404, detail="Ingestion run not found")
+    _check_expected_version(run.lock_version, body.expected_run_version)
+    if (
+        run.status != IngestionRunStatus.WAITING_FOR_INPUT
+        or run.current_stage != IngestionStage.AWAITING_PAGE_CONFIRMATION
+    ):
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail="Page selection is not currently awaiting confirmation",
+        )
+    all_pages = session.exec(
+        select(SourcePage).where(SourcePage.run_id == run.id).with_for_update()
+    ).all()
+    requested_numbers = [item.page_number for item in body.pages]
+    if len(requested_numbers) != len(set(requested_numbers)):
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            detail="Each profiled page must be included exactly once",
+        )
+    profiled_numbers = {page.page_number for page in all_pages}
+    if set(requested_numbers) != profiled_numbers:
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            detail="Page selection must include every profiled page exactly once",
+        )
+    pages_by_number = {page.page_number: page for page in all_pages}
     pages: list[SourcePage] = []
     for requested_page in body.pages:
-        page = session.exec(
-            select(SourcePage).where(
-                SourcePage.run_id == run.id,
-                SourcePage.page_number == requested_page.page_number,
-            )
-        ).first()
+        page = pages_by_number.get(requested_page.page_number)
         if not page:
             raise HTTPException(status_code=404, detail="Source page not found")
         _check_expected_version(page.lock_version, requested_page.expected_version)
@@ -884,23 +838,23 @@ def update_page_selection(
     awaiting_step.completed_at = get_datetime_utc()
     awaiting_step.updated_at = awaiting_step.completed_at
     session.add(awaiting_step)
-    rendering_step = _get_run_step(session, run.id, IngestionStage.RENDERING)
+    native_extraction_step = _get_run_step(
+        session, run.id, IngestionStage.NATIVE_EXTRACTION
+    )
     run.status = IngestionRunStatus.RUNNING
-    run.current_stage = IngestionStage.RENDERING
+    run.current_stage = IngestionStage.NATIVE_EXTRACTION
     run.lock_version += 1
     run.updated_at = get_datetime_utc()
     session.add(run)
-    session.commit()
-    for page in pages:
-        session.refresh(page)
     enqueue_task(
         session,
         run=run,
-        step=rendering_step,
-        task_type=IngestionStage.RENDERING.value,
-        idempotency_key=f"{run.id}:{IngestionStage.RENDERING.value}",
+        step=native_extraction_step,
+        task_type=IngestionStage.NATIVE_EXTRACTION.value,
+        idempotency_key=f"{run.id}:{IngestionStage.NATIVE_EXTRACTION.value}",
         payload={"source_document_id": str(run.source_document_id)},
         priority=30,
+        commit=False,
     )
     append_run_event(
         session,
@@ -909,6 +863,7 @@ def update_page_selection(
         message="Page inclusion ranges confirmed",
         stage=IngestionStage.AWAITING_PAGE_CONFIRMATION,
         payload={"page_count": len(pages)},
+        commit=False,
     )
     _add_idempotency_record(
         session,
@@ -924,6 +879,8 @@ def update_page_selection(
         },
     )
     session.commit()
+    for page in pages:
+        session.refresh(page)
     return pages
 
 
@@ -959,13 +916,41 @@ def update_review_candidate(
     previous_text = (
         latest_revision.revised_text if latest_revision else candidate.raw_text
     )
+    next_text = body.revised_text if body.revised_text is not None else previous_text
+    before_snapshot = _candidate_snapshot(candidate, previous_text)
+    changed_fields: dict[str, object] = {}
+    for field_name in (
+        "heading",
+        "kind",
+        "number",
+        "parent_candidate_id",
+        "canonical_path",
+        "sort_key",
+        "source_page_start",
+        "source_page_end",
+        "source_spans",
+    ):
+        value = getattr(body, field_name)
+        if value is not None:
+            setattr(candidate, field_name, value)
+            changed_fields[field_name] = value
+    after_snapshot = _candidate_snapshot(candidate, next_text)
+    for field_name, after_value in after_snapshot.items():
+        before_value = before_snapshot.get(field_name)
+        if before_value != after_value:
+            changed_fields.setdefault(
+                field_name, {"before": before_value, "after": after_value}
+            )
     revision_number = (latest_revision.revision_number if latest_revision else 1) + 1
     revision = CandidateRevision(
         candidate_id=candidate.id,
         revision_number=revision_number,
         previous_text=previous_text,
-        revised_text=body.revised_text,
-        diff=_line_diff(previous_text or "", body.revised_text),
+        revised_text=next_text,
+        diff=_line_diff(previous_text or "", next_text or ""),
+        before_snapshot=before_snapshot,
+        after_snapshot=after_snapshot,
+        changed_fields=changed_fields,
         reason=body.reason,
         revised_by=current_user.id,
     )
@@ -979,7 +964,7 @@ def update_review_candidate(
     _revalidate_candidate_revision_text(
         session,
         candidate=candidate,
-        revised_text=body.revised_text,
+        revised_text=next_text or "",
         current_user=current_user,
     )
     _add_idempotency_record(
@@ -1049,6 +1034,82 @@ def decide_review_candidate(
     return candidate
 
 
+def update_review_issue(
+    session: Session,
+    issue_id: uuid.UUID,
+    body: ReviewIssueUpdate,
+    current_user: User,
+) -> ReviewIssue:
+    scope = _idempotency_scope("review_issue.update", issue_id)
+    request_hash = _idempotency_request_hash(body)
+    record = _idempotency_record_for_request(
+        session,
+        scope=scope,
+        idempotency_key=body.idempotency_key,
+        request_hash=request_hash,
+    )
+    if record:
+        issue = session.get(ReviewIssue, issue_id)
+        if issue is None:
+            raise HTTPException(status_code=404, detail="Review issue not found")
+        return issue
+    issue = session.exec(
+        select(ReviewIssue).where(ReviewIssue.id == issue_id).with_for_update()
+    ).one_or_none()
+    if issue is None:
+        raise HTTPException(status_code=404, detail="Review issue not found")
+    if issue.status == ReviewIssueStatus.RESOLVED:
+        raise HTTPException(status_code=409, detail="Review issue is already resolved")
+    if issue.blocking and not current_user.is_superuser:
+        raise HTTPException(
+            status_code=409,
+            detail="Blocking issues must be resolved by candidate revalidation",
+        )
+    if issue.blocking and not body.superuser_override_reason:
+        raise HTTPException(
+            status_code=409,
+            detail="A blocking issue override requires a reason",
+        )
+    now = get_datetime_utc()
+    issue.status = ReviewIssueStatus.RESOLVED
+    issue.resolved_by = current_user.id
+    issue.resolved_at = now
+    issue.resolution_reason = body.reason
+    issue.resolution_evidence = body.evidence
+    session.add(issue)
+    candidate = session.get(ExtractionCandidate, issue.candidate_id)
+    if candidate:
+        candidate.blocking_issue_count = _open_blocking_issue_count(
+            session, candidate.id
+        )
+        candidate.updated_at = now
+        session.add(candidate)
+    if body.superuser_override_reason:
+        session.add(
+            AuditEvent(
+                actor_user_id=current_user.id,
+                action="review_issue.blocking_override",
+                entity_type="review_issue",
+                entity_id=issue.id,
+                severity=AuditSeverity.HIGH,
+                reason=body.superuser_override_reason,
+                payload={"issue_type": issue.issue_type},
+            )
+        )
+    _add_idempotency_record(
+        session,
+        scope=scope,
+        idempotency_key=body.idempotency_key,
+        request_hash=request_hash,
+        result_type="review_issue",
+        result_id=issue.id,
+        created_by=current_user.id,
+    )
+    session.commit()
+    session.refresh(issue)
+    return issue
+
+
 def validate_corpus_release(
     session: Session,
     release_id: uuid.UUID,
@@ -1082,18 +1143,31 @@ def validate_corpus_release(
         )
     ).first()
     vector_index = None
+    retrieval_index_build = None
     if embedding_run:
-        vector_index = session.exec(
-            select(VectorIndex).where(
-                VectorIndex.release_id == release.id,
-                VectorIndex.embedding_run_id == embedding_run.id,
-                VectorIndex.status == VectorIndexStatus.READY,
-            )
-        ).first()
+        if settings.RETRIEVAL_INDEX_BACKEND == "pgvector":
+            retrieval_index_build = session.exec(
+                select(RetrievalIndexBuild)
+                .where(
+                    RetrievalIndexBuild.release_id == release.id,
+                    RetrievalIndexBuild.embedding_run_id == embedding_run.id,
+                    RetrievalIndexBuild.status == VectorIndexStatus.READY,
+                )
+                .order_by(col(RetrievalIndexBuild.updated_at).desc())
+            ).first()
+        else:
+            vector_index = session.exec(
+                select(VectorIndex).where(
+                    VectorIndex.release_id == release.id,
+                    VectorIndex.embedding_run_id == embedding_run.id,
+                    VectorIndex.status == VectorIndexStatus.READY,
+                )
+            ).first()
     unresolved_gates: list[str] = []
     benchmark_item_count: int | None = None
     if not entries:
         unresolved_gates.append("release_has_no_entries")
+    unresolved_gates.extend(_release_source_and_review_gates(session, entries))
     if not embedding_run:
         unresolved_gates.append("selected_embedding_run_missing")
     elif (
@@ -1112,7 +1186,14 @@ def validate_corpus_release(
         )
         if benchmark_item_count <= 0:
             unresolved_gates.append("benchmark_dataset_missing_or_empty")
-    if not vector_index:
+    if settings.RETRIEVAL_INDEX_BACKEND == "pgvector":
+        if not retrieval_index_build:
+            unresolved_gates.append("ready_retrieval_index_build_missing")
+        else:
+            unresolved_gates.extend(
+                _retrieval_index_build_validation_gates(retrieval_index_build)
+            )
+    elif not vector_index:
         unresolved_gates.append("ready_vector_index_missing")
     else:
         unresolved_gates.extend(_vector_index_validation_gates(vector_index))
@@ -1125,6 +1206,10 @@ def validate_corpus_release(
         ),
         "benchmark_query_count": benchmark_item_count,
         "ready_vector_index_id": str(vector_index.id) if vector_index else None,
+        "ready_retrieval_index_build_id": (
+            str(retrieval_index_build.id) if retrieval_index_build else None
+        ),
+        "retrieval_backend": settings.RETRIEVAL_INDEX_BACKEND,
         "minimum_recall_at_10": MIN_PUBLICATION_RECALL_AT_10,
         "unresolved_gates": unresolved_gates,
     }
@@ -1188,14 +1273,68 @@ def read_corpus_release_manifest(
     return release, artifact, cast(dict[str, object], manifest)
 
 
+def _release_source_and_review_gates(
+    session: Session, entries: Sequence[CorpusReleaseEntry]
+) -> list[str]:
+    """Recheck mutable source/review state immediately before approval/publication."""
+    gates: list[str] = []
+    source_ids = {
+        entry.source_document_id for entry in entries if entry.source_document_id
+    }
+    sources = (
+        session.exec(
+            select(SourceDocument).where(col(SourceDocument.id).in_(source_ids))
+        ).all()
+        if source_ids
+        else []
+    )
+    if len(sources) != len(source_ids):
+        gates.append("release_source_missing")
+    if any(
+        source.verification_status != VerificationStatus.VERIFIED for source in sources
+    ):
+        gates.append("release_source_not_verified")
+
+    run_ids = {entry.ingestion_run_id for entry in entries if entry.ingestion_run_id}
+    if not run_ids:
+        return gates
+    candidates = session.exec(
+        select(ExtractionCandidate).where(col(ExtractionCandidate.run_id).in_(run_ids))
+    ).all()
+    if any(
+        candidate.status
+        not in {
+            ExtractionCandidateStatus.APPROVED,
+            ExtractionCandidateStatus.AUTO_APPROVED,
+            ExtractionCandidateStatus.MATERIALIZED,
+        }
+        for candidate in candidates
+    ):
+        gates.append("release_candidate_not_approved")
+    candidate_ids = [candidate.id for candidate in candidates]
+    if candidate_ids:
+        blocking_issue = session.exec(
+            select(ReviewIssue).where(
+                col(ReviewIssue.candidate_id).in_(candidate_ids),
+                ReviewIssue.blocking == True,  # noqa: E712
+                ReviewIssue.status == ReviewIssueStatus.OPEN,
+            )
+        ).first()
+        if blocking_issue:
+            gates.append("release_blocking_review_issue_open")
+    return gates
+
+
 def read_corpus_release_publication_evidence(
     session: Session, release_id: uuid.UUID
 ) -> tuple[
     CorpusRelease,
     list[VectorIndex],
+    list[RetrievalIndexBuild],
     list[ReleasePromotionAttempt],
     list[uuid.UUID],
     list[AuditEvent],
+    list[ActiveRetrievalTarget],
 ]:
     release = _get_release(session, release_id)
     vector_indexes = list(
@@ -1203,6 +1342,13 @@ def read_corpus_release_publication_evidence(
             select(VectorIndex)
             .where(VectorIndex.release_id == release.id)
             .order_by(col(VectorIndex.updated_at).desc())
+        ).all()
+    )
+    retrieval_index_builds = list(
+        session.exec(
+            select(RetrievalIndexBuild)
+            .where(RetrievalIndexBuild.release_id == release.id)
+            .order_by(col(RetrievalIndexBuild.updated_at).desc())
         ).all()
     )
     promotion_attempts = list(
@@ -1247,12 +1393,21 @@ def read_corpus_release_publication_evidence(
             .order_by(col(AuditEvent.created_at).desc())
         ).all()
     )
+    active_targets = list(
+        session.exec(
+            select(ActiveRetrievalTarget)
+            .where(ActiveRetrievalTarget.release_id == release.id)
+            .order_by(ActiveRetrievalTarget.index_kind)
+        ).all()
+    )
     return (
         release,
         vector_indexes,
+        retrieval_index_builds,
         promotion_attempts,
         source_uploader_ids,
         override_events,
+        active_targets,
     )
 
 
@@ -1300,19 +1455,50 @@ def publish_corpus_release(
             status_code=status.HTTP_409_CONFLICT,
             detail="Release must validate cleanly before publication",
         )
-    vector_index = _ready_vector_index(session, release.id)
-    if not vector_index:
+    entries = session.exec(
+        select(CorpusReleaseEntry).where(CorpusReleaseEntry.release_id == release.id)
+    ).all()
+    quality_gates = _release_source_and_review_gates(session, entries)
+    if quality_gates:
         raise HTTPException(
             status_code=status.HTTP_409_CONFLICT,
-            detail="Release does not have a ready vector index",
+            detail={
+                "message": "Release source/review gates no longer pass",
+                "gates": quality_gates,
+            },
         )
+    vector_index = None
+    if settings.RETRIEVAL_INDEX_BACKEND == "pgvector":
+        if not _ready_retrieval_index_build(session, release.id):
+            raise HTTPException(
+                status_code=status.HTTP_409_CONFLICT,
+                detail="Release does not have a ready pgvector index build",
+            )
+    else:
+        vector_index = _ready_vector_index(session, release.id)
+        if not vector_index:
+            raise HTTPException(
+                status_code=status.HTTP_409_CONFLICT,
+                detail="Release does not have a ready vector index",
+            )
     _enforce_actor_separation(
         session,
         release,
         current_user,
         superuser_override_reason=superuser_override_reason,
     )
+    if settings.RETRIEVAL_INDEX_BACKEND == "pgvector":
+        return _publish_pgvector_release(
+            session,
+            release_id=release_id,
+            expected_version=expected_version,
+            current_user=current_user,
+            idempotency_scope=scope,
+            idempotency_key=idempotency_key,
+            idempotency_request_hash=request_hash,
+        )
 
+    assert vector_index is not None
     previous_release = session.exec(
         select(CorpusRelease).where(
             CorpusRelease.status == CorpusReleaseStatus.PRODUCTION
@@ -1540,6 +1726,93 @@ def resume_ingestion_run(
     )
     session.commit()
     session.refresh(run)
+    return run
+
+
+def start_embedding(
+    session: Session,
+    run_id: uuid.UUID,
+    *,
+    expected_version: int,
+    idempotency_key: str,
+    current_user: User,
+) -> IngestionRun:
+    """Atomically move a release from the human pause into embedding."""
+    scope = _idempotency_scope("ingestion_run.start_embedding", run_id)
+    request_hash = _idempotency_payload_hash(
+        {"expected_version": expected_version, "run_id": str(run_id)}
+    )
+    record = _idempotency_record_for_request(
+        session,
+        scope=scope,
+        idempotency_key=idempotency_key,
+        request_hash=request_hash,
+    )
+    if record:
+        return _get_run(session, run_id)
+    run = _get_run(session, run_id)
+    _check_expected_version(run.lock_version, expected_version)
+    if run.status != IngestionRunStatus.READY_TO_EMBED:
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail="Only runs ready to embed can start embedding",
+        )
+    profiles = session.exec(
+        select(EmbeddingProfile).where(col(EmbeddingProfile.is_active).is_(True))
+    ).all()
+    if not profiles:
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail="At least one active embedding profile is required",
+        )
+    if any(
+        profile.vector_dimensions != settings.RETRIEVAL_VECTOR_DIMENSIONS
+        or not profile.model_revision
+        for profile in profiles
+    ):
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail="Active embedding profiles must use 1,024 dimensions and pinned revisions",
+        )
+    step = _get_run_step(session, run.id, IngestionStage.EMBEDDING)
+    step.status = IngestionStepStatus.PENDING
+    step.lock_version += 1
+    step.updated_at = get_datetime_utc()
+    run.status = IngestionRunStatus.QUEUED
+    run.current_stage = IngestionStage.EMBEDDING
+    run.lock_version += 1
+    run.updated_at = get_datetime_utc()
+    session.add_all([run, step])
+    session.commit()
+    enqueue_task(
+        session,
+        run=run,
+        step=step,
+        task_type=IngestionStage.EMBEDDING.value,
+        idempotency_key=f"{run.id}:{IngestionStage.EMBEDDING.value}:manual",
+        payload={
+            "source_document_id": str(run.source_document_id),
+            "release_id": str(_release_id_for_run(session, run)),
+        },
+        priority=40,
+    )
+    append_run_event(
+        session,
+        run,
+        event_type="embedding_started",
+        message="Embedding benchmark and indexing queued",
+        stage=IngestionStage.EMBEDDING,
+    )
+    _add_idempotency_record(
+        session,
+        scope=scope,
+        idempotency_key=idempotency_key,
+        request_hash=request_hash,
+        result_type="ingestion_run",
+        result_id=run.id,
+        created_by=current_user.id,
+    )
+    session.commit()
     return run
 
 
@@ -1840,6 +2113,20 @@ def _get_run(session: Session, run_id: uuid.UUID) -> IngestionRun:
     return run
 
 
+def _release_id_for_run(session: Session, run: IngestionRun) -> uuid.UUID:
+    release_id = session.exec(
+        select(CorpusReleaseEntry.release_id).where(
+            CorpusReleaseEntry.ingestion_run_id == run.id
+        )
+    ).first()
+    if release_id is None:
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail="Ingestion run is not associated with a corpus release",
+        )
+    return release_id
+
+
 def _get_source_document(
     session: Session, source_document_id: uuid.UUID
 ) -> SourceDocument:
@@ -1937,6 +2224,100 @@ def _get_or_create_constitution_instrument(
     return instrument
 
 
+def finalize_verified_upload(
+    session: Session,
+    *,
+    run: IngestionRun,
+    upload: SourceUpload,
+    sha256: str,
+    page_count: int,
+) -> SourceDocument:
+    """Promote a quarantined upload only after worker verification and malware scan."""
+    existing_source = session.exec(
+        select(SourceDocument).where(SourceDocument.sha256 == sha256)
+    ).first()
+    if existing_source is not None:
+        get_blob_store().delete_quarantine(upload.quarantine_key)
+        source = existing_source
+        upload.status = SourceUploadStatus.DUPLICATE
+        upload.canonical_key = source.storage_key
+    else:
+        store = get_blob_store()
+        original = store.promote_quarantine_to_original(
+            quarantine_key=upload.quarantine_key,
+            expected_sha256=sha256,
+            content_type=upload.mime_type,
+            extension=Path(upload.original_filename).suffix or ".pdf",
+            metadata={
+                "source_upload_id": str(upload.id),
+                "source_url": upload.source_url,
+            },
+        )
+        instrument = _get_or_create_constitution_instrument(session, upload)
+        source = SourceDocument(
+            legal_instrument_id=instrument.id,
+            authority=upload.authority,
+            title=upload.source_title,
+            source_url=upload.source_url,
+            mime_type=upload.mime_type,
+            sha256=original.sha256,
+            storage_backend=upload.upload_backend,
+            storage_bucket=settings.R2_BUCKET_NAME
+            if upload.upload_backend == "r2"
+            else None,
+            storage_key=original.key,
+            original_filename=upload.original_filename,
+            file_size=original.size_bytes,
+            page_count=page_count,
+            published_at=upload.published_at,
+            retrieved_at=datetime.combine(upload.retrieved_at, time.min, tzinfo=UTC),
+            is_legal_revision=upload.is_legal_revision,
+            legal_revision_effective_at=upload.legal_revision_effective_at,
+            source_tier=upload.source_tier,
+            verification_status=VerificationStatus.NEEDS_REVIEW,
+            created_by=run.created_by,
+        )
+        session.add(source)
+        session.flush()
+        upload.legal_instrument_id = instrument.id
+        upload.status = SourceUploadStatus.COMPLETED
+        upload.canonical_key = original.key
+
+    upload.source_document_id = source.id
+    upload.actual_sha256 = sha256
+    upload.completed_at = upload.completed_at or get_datetime_utc()
+    upload.lock_version += 1
+    upload.updated_at = get_datetime_utc()
+    run.source_document_id = source.id
+    run.expected_page_count = page_count
+    run.pipeline_config = {
+        **run.pipeline_config,
+        "source_sha256": sha256,
+        "page_count": page_count,
+    }
+    run.lock_version += 1
+    run.updated_at = get_datetime_utc()
+    verification_artifact = session.exec(
+        select(IngestionArtifact).where(
+            IngestionArtifact.run_id == run.id,
+            IngestionArtifact.artifact_type == IngestionArtifactType.ORIGINAL_SOURCE,
+            IngestionArtifact.sha256 == sha256,
+        )
+    ).first()
+    if verification_artifact:
+        verification_artifact.storage_key = source.storage_key
+        verification_artifact.artifact_metadata = {
+            **(verification_artifact.artifact_metadata or {}),
+            "quarantine": False,
+            "canonical_source_document_id": str(source.id),
+        }
+        session.add(verification_artifact)
+    session.add_all([upload, run])
+    session.commit()
+    session.refresh(source)
+    return source
+
+
 def _latest_candidate_revision(
     session: Session, candidate_id: uuid.UUID
 ) -> CandidateRevision | None:
@@ -1948,9 +2329,35 @@ def _latest_candidate_revision(
 
 
 def _line_diff(before: str, after: str) -> str:
-    before_hash = hashlib.sha256(before.encode()).hexdigest()
-    after_hash = hashlib.sha256(after.encode()).hexdigest()
-    return f"before_sha256={before_hash}\nafter_sha256={after_hash}"
+    return "".join(
+        difflib.unified_diff(
+            before.splitlines(keepends=True),
+            after.splitlines(keepends=True),
+            fromfile="before",
+            tofile="after",
+        )
+    )
+
+
+def _candidate_snapshot(
+    candidate: ExtractionCandidate, revised_text: str | None
+) -> dict[str, object]:
+    return {
+        "heading": candidate.heading,
+        "kind": str(candidate.kind),
+        "number": candidate.number,
+        "parent_candidate_id": (
+            str(candidate.parent_candidate_id)
+            if candidate.parent_candidate_id
+            else None
+        ),
+        "canonical_path": candidate.canonical_path,
+        "sort_key": candidate.sort_key,
+        "source_page_start": candidate.source_page_start,
+        "source_page_end": candidate.source_page_end,
+        "source_spans": candidate.source_spans,
+        "revised_text": revised_text,
+    }
 
 
 def _has_open_blocking_issue(session: Session, candidate_id: uuid.UUID) -> bool:
@@ -2218,6 +2625,231 @@ def _ready_vector_index(session: Session, release_id: uuid.UUID) -> VectorIndex 
     return None
 
 
+def _ready_retrieval_index_build(
+    session: Session, release_id: uuid.UUID
+) -> RetrievalIndexBuild | None:
+    builds = session.exec(
+        select(RetrievalIndexBuild)
+        .where(
+            RetrievalIndexBuild.release_id == release_id,
+            RetrievalIndexBuild.status == VectorIndexStatus.READY,
+        )
+        .order_by(col(RetrievalIndexBuild.updated_at).desc())
+    ).all()
+    for build in builds:
+        if not _retrieval_index_build_validation_gates(build):
+            return build
+    return None
+
+
+def _retrieval_index_build_validation_gates(
+    build: RetrievalIndexBuild,
+) -> list[str]:
+    gates: list[str] = []
+    report = build.validation_report or {}
+    if build.backend != "pgvector":
+        gates.append("retrieval_index_backend_mismatch")
+    if build.vector_dimensions != settings.RETRIEVAL_VECTOR_DIMENSIONS:
+        gates.append("retrieval_index_vector_dimensions_mismatch")
+    if build.expected_segment_count <= 0:
+        gates.append("retrieval_index_has_no_expected_segments")
+    if build.stored_segment_count != build.expected_segment_count:
+        gates.append("retrieval_index_segment_count_mismatch")
+    if build.stored_embedding_count != build.expected_segment_count:
+        gates.append("retrieval_index_embedding_count_mismatch")
+    if not build.profile_hash:
+        gates.append("retrieval_index_profile_hash_missing")
+    if not build.checksum:
+        gates.append("retrieval_index_checksum_missing")
+    if report.get("is_valid") is not True:
+        gates.append("retrieval_index_local_validation_missing")
+    if report.get("vector_dimensions") != settings.RETRIEVAL_VECTOR_DIMENSIONS:
+        gates.append("retrieval_index_report_dimensions_mismatch")
+    if report.get("lexical_smoke_query_supported") is not True:
+        gates.append("retrieval_index_lexical_validation_missing")
+    return gates
+
+
+def _publish_pgvector_release(
+    session: Session,
+    *,
+    release_id: uuid.UUID,
+    expected_version: int,
+    current_user: User,
+    idempotency_scope: str,
+    idempotency_key: str,
+    idempotency_request_hash: str,
+) -> tuple[CorpusRelease, ReleasePromotionAttempt]:
+    """Atomically promote a validated pgvector build and its active target."""
+    release = session.exec(
+        select(CorpusRelease).where(CorpusRelease.id == release_id).with_for_update()
+    ).one()
+    _check_expected_version(release.lock_version, expected_version)
+    build = _ready_retrieval_index_build(session, release.id)
+    if build is None:
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail="Release does not have a ready pgvector index build",
+        )
+    report = validate_index_build(
+        session,
+        build=build,
+        expected_segment_count=build.expected_segment_count,
+    )
+    build.validation_report = report
+    if not report["is_valid"] or _retrieval_index_build_validation_gates(build):
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail="pgvector index validation no longer passes",
+        )
+    index_kind = build.index_kind
+    target = session.exec(
+        select(ActiveRetrievalTarget)
+        .where(ActiveRetrievalTarget.index_kind == index_kind)
+        .with_for_update()
+    ).first()
+    # During the expand/migrate period a production release may have been
+    # published by the legacy backend without an active pgvector target. Lock
+    # the canonical production row as well so the single-production invariant
+    # is preserved across the backend cutover.
+    previous_release = session.exec(
+        select(CorpusRelease)
+        .where(
+            CorpusRelease.status == CorpusReleaseStatus.PRODUCTION,
+            CorpusRelease.id != release.id,
+        )
+        .with_for_update()
+    ).first()
+    if previous_release is None and target is not None:
+        target_release = session.get(CorpusRelease, target.release_id)
+        if target_release is not None and target_release.id != release.id:
+            previous_release = target_release
+    now = get_datetime_utc()
+    promotion = ReleasePromotionAttempt(
+        release_id=release.id,
+        retrieval_index_build_id=build.id,
+        index_kind=index_kind,
+        requested_by=current_user.id,
+        status=ReleasePromotionStatus.PUBLISHING,
+        previous_release_id=previous_release.id if previous_release else None,
+        started_at=now,
+    )
+    session.add(promotion)
+    session.flush()
+    if target is None:
+        target = ActiveRetrievalTarget(
+            index_kind=index_kind,
+            release_id=release.id,
+            embedding_run_id=build.embedding_run_id,
+            retrieval_index_build_id=build.id,
+            profile_id=build.profile_id,
+            lock_version=1,
+            activated_by=current_user.id,
+            activated_at=now,
+            updated_at=now,
+        )
+    else:
+        target.release_id = release.id
+        target.embedding_run_id = build.embedding_run_id
+        target.retrieval_index_build_id = build.id
+        target.profile_id = build.profile_id
+        target.lock_version += 1
+        target.activated_by = current_user.id
+        target.activated_at = now
+        target.updated_at = now
+    if previous_release and previous_release.id != release.id:
+        previous_release.status = CorpusReleaseStatus.RETIRED
+        previous_release.lock_version += 1
+        session.add(previous_release)
+    release.status = CorpusReleaseStatus.PRODUCTION
+    release.approved_by = current_user.id
+    release.approved_at = now
+    release.lock_version += 1
+    build.status = VectorIndexStatus.PROMOTED
+    build.updated_at = now
+    promotion.status = ReleasePromotionStatus.SUCCEEDED
+    promotion.completed_at = now
+    contributing_run_ids = session.exec(
+        select(CorpusReleaseEntry.ingestion_run_id)
+        .where(
+            CorpusReleaseEntry.release_id == release.id,
+            col(CorpusReleaseEntry.ingestion_run_id).is_not(None),
+        )
+        .distinct()
+    ).all()
+    for run_id in contributing_run_ids:
+        if run_id is None:
+            continue
+        contributing_run = session.exec(
+            select(IngestionRun).where(IngestionRun.id == run_id).with_for_update()
+        ).one_or_none()
+        if contributing_run is None:
+            continue
+        publishing_step = session.exec(
+            select(IngestionStep)
+            .where(
+                IngestionStep.run_id == contributing_run.id,
+                IngestionStep.stage == IngestionStage.PUBLISHING,
+            )
+            .with_for_update()
+        ).first()
+        if publishing_step is not None:
+            publishing_step.status = IngestionStepStatus.SUCCEEDED
+            publishing_step.completed_at = now
+            publishing_step.updated_at = now
+            publishing_step.lock_version += 1
+            session.add(publishing_step)
+        contributing_run.status = IngestionRunStatus.PUBLISHED
+        contributing_run.current_stage = IngestionStage.PUBLISHING
+        contributing_run.completed_at = now
+        contributing_run.updated_at = now
+        contributing_run.lock_version += 1
+        session.add(contributing_run)
+        append_run_event(
+            session,
+            contributing_run,
+            event_type="release_published",
+            message="Corpus release published to the active pgvector target",
+            step=publishing_step,
+            stage=IngestionStage.PUBLISHING,
+            payload={
+                "release_id": str(release.id),
+                "retrieval_index_build_id": str(build.id),
+                "index_kind": index_kind,
+            },
+            commit=False,
+        )
+    session.add_all([target, release, build, promotion])
+    session.add(
+        AuditEvent(
+            actor_user_id=current_user.id,
+            action="corpus_release.publish",
+            entity_type="corpus_release",
+            entity_id=release.id,
+            severity=AuditSeverity.INFO,
+            payload={
+                "backend": "pgvector",
+                "index_kind": index_kind,
+                "retrieval_index_build_id": str(build.id),
+                "active_target_lock_version": target.lock_version,
+            },
+        )
+    )
+    _add_idempotency_record(
+        session,
+        scope=idempotency_scope,
+        idempotency_key=idempotency_key,
+        request_hash=idempotency_request_hash,
+        result_type="release_promotion_attempt",
+        result_id=promotion.id,
+        created_by=current_user.id,
+    )
+    session.commit()
+    session.refresh(release)
+    session.refresh(promotion)
+    return release, promotion
+
+
 def _vector_index_validation_gates(vector_index: VectorIndex) -> list[str]:
     gates: list[str] = []
     report = vector_index.validation_report or {}
@@ -2227,8 +2859,13 @@ def _vector_index_validation_gates(vector_index: VectorIndex) -> list[str]:
         gates.append("vector_index_payload_schema_hash_missing")
     if not vector_index.checksum:
         gates.append("vector_index_checksum_missing")
+    if not vector_index.profile_hash:
+        gates.append("vector_index_profile_hash_missing")
     if report.get("is_valid") is not True:
         gates.append("vector_index_local_validation_missing")
+    sparse_errors = report.get("sparse_errors")
+    if isinstance(sparse_errors, list) and sparse_errors:
+        gates.append("vector_index_sparse_validation_failed")
     if report.get("remote_point_count") != vector_index.point_count:
         gates.append("vector_index_remote_count_mismatch")
     smoke_queries = report.get("smoke_queries")
