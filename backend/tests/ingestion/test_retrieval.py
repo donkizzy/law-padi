@@ -7,7 +7,9 @@ from app.legal.models import CorpusReleaseEntry, Provision, ProvisionVersion
 from app.legal.parser import legal_text_sha256
 
 
-def test_retrieval_documents_include_citation_context_and_deterministic_segments() -> None:
+def test_retrieval_documents_include_citation_context_and_deterministic_segments() -> (
+    None
+):
     instrument_id = uuid.uuid4()
     source_id = uuid.uuid4()
     release_id = uuid.uuid4()

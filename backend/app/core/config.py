@@ -44,6 +44,13 @@ class Settings(BaseSettings):
     OPENAI_API_KEY: str | None = None
     HUGGINGFACE_TEI_ENDPOINT_URL: str | None = None
     HUGGINGFACE_API_TOKEN: str | None = None
+    RETRIEVAL_INDEX_BACKEND: Literal["pgvector", "qdrant"] = "pgvector"
+    RETRIEVAL_VECTOR_DIMENSIONS: int = Field(default=1024, ge=1)
+    RETRIEVAL_DENSE_CANDIDATE_LIMIT: int = Field(default=50, ge=1)
+    RETRIEVAL_LEXICAL_CANDIDATE_LIMIT: int = Field(default=50, ge=1)
+    RETRIEVAL_RRF_K: int = Field(default=60, ge=1)
+    RETRIEVAL_LEXICAL_PROFILE_VERSION: str = "postgres-simple-v1"
+    INGESTION_WORKER_LEASE_SECONDS: int = Field(default=900, ge=1)
     QDRANT_URL: str | None = None
     QDRANT_API_KEY: str | None = None
     MANAGED_OCR_PROVIDER: Literal[

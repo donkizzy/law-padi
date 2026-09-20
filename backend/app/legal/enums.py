@@ -41,6 +41,7 @@ class VerificationStatus(StrEnum):
 class SourceUploadStatus(StrEnum):
     CREATED = "created"
     UPLOADING = "uploading"
+    UPLOADED_PENDING_VERIFICATION = "uploaded_pending_verification"
     COMPLETED = "completed"
     DUPLICATE = "duplicate"
     FAILED = "failed"

@@ -91,6 +91,7 @@ class NewPassword(SQLModel):
 
 
 from app.legal.models import (  # noqa: E402,F401
+    ActiveRetrievalTarget,
     AdminRoleAssignment,
     Amendment,
     AmendmentOperation,
@@ -119,6 +120,9 @@ from app.legal.models import (  # noqa: E402,F401
     Provision,
     ProvisionVersion,
     ReleasePromotionAttempt,
+    RetrievalEmbedding,
+    RetrievalIndexBuild,
+    RetrievalSegment,
     ReviewDecisionRecord,
     ReviewIssue,
     SourceDocument,
