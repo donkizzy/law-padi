@@ -7,12 +7,15 @@ import time
 from collections.abc import Callable, Iterator
 from contextlib import contextmanager
 from dataclasses import dataclass, field
+from pathlib import Path
 from typing import Any
 
 from sqlmodel import Session
 
 from app.core.db import engine
 from app.ingestion.worker import run_once
+from app.ingestion.workflow import drain_outbox_batch
+from app.legal.models import TransactionalOutbox
 
 logger = logging.getLogger(__name__)
 
@@ -25,6 +28,7 @@ class WorkerSettings:
     max_tasks_per_poll: int
     task_type: str | None = None
     stage_concurrency_limits: dict[str, int] = field(default_factory=dict)
+    outbox_sink_path: str = "/app/backend/storage/source-documents/outbox-events.jsonl"
 
     @classmethod
     def from_env(cls) -> WorkerSettings:
@@ -40,6 +44,10 @@ class WorkerSettings:
             task_type=os.getenv("INGESTION_WORKER_TASK_TYPE") or None,
             stage_concurrency_limits=_env_int_map(
                 "INGESTION_STAGE_CONCURRENCY_LIMITS"
+            ),
+            outbox_sink_path=os.getenv(
+                "INGESTION_OUTBOX_SINK_PATH",
+                "/app/backend/storage/source-documents/outbox-events.jsonl",
             ),
         )
 
@@ -101,6 +109,18 @@ def run_worker(
             if stop_requested and stop_requested():
                 break
             with session_factory() as session:
+                if isinstance(session, Session):
+                    published = drain_outbox_batch(
+                        session,
+                        publisher=JsonLinesOutboxPublisher(
+                            Path(worker_settings.outbox_sink_path)
+                        ).publish,
+                    )
+                    if published:
+                        logger.info(
+                            "published ingestion outbox events",
+                            extra={"count": len(published)},
+                        )
                 result = run_once_fn(
                     session,
                     worker_id=worker_settings.worker_id,
@@ -135,6 +155,38 @@ def run_worker(
         tasks_processed=tasks_processed,
         idle_polls=idle_polls,
     )
+
+
+class JsonLinesOutboxPublisher:
+    """Durable local publisher used by the worker's development deployment.
+
+    The append is fsynced before the outbox row is marked published. Production
+    deployments can point this sink at a managed mounted relay or replace this
+    publisher with their event-bus adapter without changing workflow writes.
+    """
+
+    def __init__(self, path: Path) -> None:
+        self.path = path
+
+    def publish(self, event: TransactionalOutbox) -> None:
+        self.path.parent.mkdir(parents=True, exist_ok=True)
+        event_id = str(event.id)
+        if self.path.exists():
+            with self.path.open("r", encoding="utf-8") as sink:
+                if any(f'"id": "{event_id}"' in line for line in sink):
+                    return
+        record = {
+            "id": event_id,
+            "aggregate_type": event.aggregate_type,
+            "aggregate_id": str(event.aggregate_id),
+            "event_type": event.event_type,
+            "idempotency_key": event.idempotency_key,
+            "payload": event.payload,
+        }
+        with self.path.open("a", encoding="utf-8") as sink:
+            sink.write(json.dumps(record, sort_keys=True) + "\n")
+            sink.flush()
+            os.fsync(sink.fileno())
 
 
 def main() -> int:
