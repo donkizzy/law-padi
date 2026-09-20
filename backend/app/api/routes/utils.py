@@ -1,7 +1,10 @@
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, HTTPException, status
 from pydantic.networks import EmailStr
+from sqlalchemy import text
+from sqlalchemy.exc import SQLAlchemyError
 
-from app.api.deps import get_current_active_superuser
+from app.api.deps import SessionDep, get_current_active_superuser
+from app.core.config import settings
 from app.models import Message
 from app.utils import generate_test_email, send_email
 
@@ -27,5 +30,34 @@ def test_email(email_to: EmailStr) -> Message:
 
 
 @router.get("/health-check/")
-async def health_check() -> bool:
-    return True
+def health_check(session: SessionDep) -> dict[str, str | bool]:
+    """Verify the database and the configured retrieval backend are usable."""
+    try:
+        session.connection().execute(text("SELECT 1"))
+        if settings.RETRIEVAL_INDEX_BACKEND == "pgvector":
+            extension_version = (
+                session.connection()
+                .execute(
+                    text("SELECT extversion FROM pg_extension WHERE extname = 'vector'")
+                )
+                .scalar_one_or_none()
+            )
+            if not extension_version:
+                raise HTTPException(
+                    status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+                    detail="pgvector extension is not installed",
+                )
+            return {
+                "ok": True,
+                "database": "ready",
+                "retrieval_backend": "pgvector",
+                "pgvector_version": str(extension_version),
+            }
+    except HTTPException:
+        raise
+    except SQLAlchemyError as exc:
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail="database health check failed",
+        ) from exc
+    return {"ok": True, "database": "ready", "retrieval_backend": "qdrant"}

@@ -2,11 +2,13 @@ from collections.abc import Generator
 
 import pytest
 from fastapi.testclient import TestClient
-from sqlmodel import Session, delete
+from sqlmodel import Session, delete, update
 
 from app.core.config import settings
 from app.core.db import engine, init_db
+from app.legal.enums import CorpusReleaseStatus
 from app.legal.models import (
+    ActiveRetrievalTarget,
     AdminRoleAssignment,
     Amendment,
     AmendmentOperation,
@@ -35,6 +37,9 @@ from app.legal.models import (
     Provision,
     ProvisionVersion,
     ReleasePromotionAttempt,
+    RetrievalEmbedding,
+    RetrievalIndexBuild,
+    RetrievalSegment,
     ReviewDecisionRecord,
     ReviewIssue,
     SourceDocument,
@@ -61,10 +66,19 @@ def db() -> Generator[Session]:
 
 def _cleanup_db(session: Session) -> None:
     session.rollback()
+    # Published releases are intentionally immutable in application traffic.
+    # Test teardown must first move them back to a draft state so the
+    # immutability trigger does not turn cleanup into a failed test run.
+    session.exec(update(CorpusRelease).values(status=CorpusReleaseStatus.BUILDING))
+    session.commit()
     for model in (
         AuditEvent,
         AdminRoleAssignment,
         ReleasePromotionAttempt,
+        ActiveRetrievalTarget,
+        RetrievalEmbedding,
+        RetrievalIndexBuild,
+        RetrievalSegment,
         VectorIndex,
         EmbeddingRun,
         EmbeddingProfile,

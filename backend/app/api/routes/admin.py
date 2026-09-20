@@ -1,12 +1,18 @@
+import asyncio
+import tempfile
 import uuid
-from collections.abc import AsyncIterable
+from collections.abc import AsyncIterable, Iterator
 from typing import Annotated
 
 from fastapi import APIRouter, Header, HTTPException, Request, Response
+from fastapi.responses import RedirectResponse, StreamingResponse
 from fastapi.sse import EventSourceResponse, ServerSentEvent
 from sqlmodel import Session, col, func, select
 
 from app.api.deps import CurrentUser, SessionDep
+from app.core.config import settings
+from app.ingestion.blob_store import BlobStoreError
+from app.ingestion.r2_blob_store import R2BlobStore
 from app.ingestion.service import (
     MULTIPART_THRESHOLD_BYTES,
     cancel_ingestion_run,
@@ -14,6 +20,7 @@ from app.ingestion.service import (
     create_source_upload_multipart_parts,
     create_source_upload_session,
     decide_review_candidate,
+    get_blob_store,
     latest_revision_text,
     publish_corpus_release,
     put_local_upload_object,
@@ -24,10 +31,13 @@ from app.ingestion.service import (
     require_admin_role,
     resume_ingestion_run,
     retry_ingestion_run,
+    start_embedding,
     update_page_selection,
     update_review_candidate,
+    update_review_issue,
     upload_headers_for_upload,
     upload_url_for_upload,
+    user_has_admin_role,
     validate_corpus_release,
     verify_source_document,
 )
@@ -36,6 +46,7 @@ from app.legal.enums import (
     CorpusReleaseStatus,
     EmbeddingRunStatus,
     ExtractionCandidateStatus,
+    IngestionArtifactType,
     IngestionRunStatus,
     IngestionStage,
     IngestionStepStatus,
@@ -49,12 +60,14 @@ from app.legal.models import (
     EmbeddingProfile,
     EmbeddingRun,
     ExtractionCandidate,
+    IngestionArtifact,
     IngestionEvent,
     IngestionRun,
     IngestionStep,
     IngestionTask,
     Provision,
     ProvisionVersion,
+    RetrievalIndexBuild,
     ReviewDecisionRecord,
     ReviewIssue,
     SourceDocument,
@@ -63,8 +76,11 @@ from app.legal.models import (
     VectorIndex,
 )
 from app.legal.schemas import (
+    ActiveRetrievalTargetPublic,
     AdminMetrics,
     AdminOperationalAlertsPublic,
+    AuditEventPublic,
+    AuditEventsPublic,
     CandidateRevisionPublic,
     CorpusReleaseActorSeparationPublic,
     CorpusReleaseManifestPublic,
@@ -73,11 +89,15 @@ from app.legal.schemas import (
     CorpusReleasePublicationEvidencePublic,
     CorpusReleasePublishRequest,
     CorpusReleasePublishResponse,
+    CorpusReleaseRetrievalIndexBuildPublic,
     CorpusReleasesPublic,
     CorpusReleaseValidationRequest,
     CorpusReleaseVectorIndexPublic,
     EmbeddingBenchmarkPublic,
     EmbeddingBenchmarkResult,
+    EmbeddingProfileCreate,
+    EmbeddingProfilePublic,
+    EmbeddingProfileUpdate,
     IngestionArtifactPublic,
     IngestionEventPublic,
     IngestionRunControlRequest,
@@ -89,12 +109,17 @@ from app.legal.schemas import (
     MultipartPartPublic,
     MultipartPartsPublic,
     MultipartPartsRequest,
+    MyAdminRolesPublic,
+    OcrBenchmarkEvaluateRequest,
+    OcrBenchmarkProviderResult,
+    OcrBenchmarkPublic,
     PageSelectionUpdate,
     PublicProvisionVersion,
     PublicProvisionVersions,
     ReviewDecisionCreate,
     ReviewDecisionPublic,
     ReviewIssuePublic,
+    ReviewIssueUpdate,
     ReviewItemPublic,
     ReviewItemsPublic,
     ReviewItemUpdate,
@@ -109,6 +134,56 @@ from app.legal.schemas import (
 )
 
 router = APIRouter(prefix="/admin", tags=["admin"])
+
+
+@router.get("/my-roles")
+def read_my_admin_roles(
+    session: SessionDep, current_user: CurrentUser
+) -> MyAdminRolesPublic:
+    from app.ingestion.service import user_has_admin_role
+
+    if current_user.is_superuser:
+        roles = [
+            AdminRole.INGESTION_UPLOADER,
+            AdminRole.LEGAL_REVIEWER,
+            AdminRole.CORPUS_PUBLISHER,
+        ]
+    else:
+        roles = [
+            role
+            for role in (
+                AdminRole.INGESTION_UPLOADER,
+                AdminRole.LEGAL_REVIEWER,
+                AdminRole.CORPUS_PUBLISHER,
+            )
+            if user_has_admin_role(session, current_user, role)
+        ]
+    return MyAdminRolesPublic(
+        user_id=current_user.id, is_superuser=current_user.is_superuser, roles=roles
+    )
+
+
+@router.get("/audit-events")
+def read_audit_events(
+    session: SessionDep,
+    current_user: CurrentUser,
+    entity_id: uuid.UUID | None = None,
+    entity_type: str | None = None,
+    limit: int = 100,
+) -> AuditEventsPublic:
+    from app.legal.models import AuditEvent
+
+    _require_any_admin(session, current_user)
+    query = select(AuditEvent).order_by(col(AuditEvent.created_at).desc()).limit(limit)
+    if entity_id is not None:
+        query = query.where(AuditEvent.entity_id == entity_id)
+    if entity_type is not None:
+        query = query.where(AuditEvent.entity_type == entity_type)
+    events = session.exec(query).all()
+    return AuditEventsPublic(
+        data=[AuditEventPublic.model_validate(event) for event in events],
+        count=len(events),
+    )
 
 
 @router.get("/metrics")
@@ -229,9 +304,27 @@ async def put_source_upload_object(
     current_user: CurrentUser,
 ) -> Response:
     require_admin_role(session, current_user, AdminRole.INGESTION_UPLOADER)
-    content = await request.body()
     content_type = request.headers.get("content-type", "application/octet-stream")
-    put_local_upload_object(session, upload_id, content, content_type)
+    upload = session.get(SourceUpload, upload_id)
+    if upload is None:
+        raise HTTPException(status_code=404, detail="Source upload not found")
+    with tempfile.TemporaryFile(mode="w+b") as content:
+        received = 0
+        async for chunk in request.stream():
+            received += len(chunk)
+            if received > upload.expected_size:
+                raise HTTPException(
+                    status_code=413,
+                    detail="Uploaded object exceeds the expected size",
+                )
+            content.write(chunk)
+        if received != upload.expected_size:
+            raise HTTPException(
+                status_code=400,
+                detail="Uploaded object size does not match the upload session",
+            )
+        content.seek(0)
+        put_local_upload_object(session, upload_id, content, content_type)
     return Response(status_code=204)
 
 
@@ -365,31 +458,103 @@ def read_ingestion_run(
     )
 
 
+@router.get("/ingestion-artifacts/{artifact_id}/content")
+def read_ingestion_artifact_content(
+    artifact_id: uuid.UUID,
+    session: SessionDep,
+    current_user: CurrentUser,
+) -> Response:
+    """Stream a retained artifact only to authorized ingestion administrators."""
+    _require_any_admin(session, current_user)
+    artifact = session.get(IngestionArtifact, artifact_id)
+    if artifact is None:
+        raise HTTPException(status_code=404, detail="Ingestion artifact not found")
+    run = session.get(IngestionRun, artifact.run_id)
+    if run is None:
+        raise HTTPException(status_code=404, detail="Ingestion run not found")
+    if (
+        not current_user.is_superuser
+        and not user_has_admin_role(session, current_user, AdminRole.LEGAL_REVIEWER)
+        and not user_has_admin_role(session, current_user, AdminRole.CORPUS_PUBLISHER)
+        and run.created_by != current_user.id
+    ):
+        raise HTTPException(status_code=403, detail="Artifact access is not permitted")
+
+    store = get_blob_store()
+    try:
+        head = store.head(artifact.storage_key)
+    except (BlobStoreError, FileNotFoundError) as exc:
+        raise HTTPException(
+            status_code=404, detail="Ingestion artifact object was not found"
+        ) from exc
+
+    if isinstance(store, R2BlobStore):
+        return RedirectResponse(
+            store.create_presigned_get_url(
+                key=artifact.storage_key,
+                expires_in_seconds=5 * 60,
+            ),
+            status_code=307,
+        )
+
+    def stream() -> Iterator[bytes]:
+        with store.open_read(artifact.storage_key) as handle:
+            while chunk := handle.read(1024 * 1024):
+                yield chunk
+
+    return StreamingResponse(
+        stream(),
+        media_type=artifact.mime_type or head.content_type,
+        headers={
+            "Content-Length": str(head.size_bytes),
+            "Content-Disposition": f'inline; filename="artifact-{artifact.id}"',
+        },
+    )
+
+
 @router.get("/ingestion-runs/{run_id}/events", response_class=EventSourceResponse)
 async def stream_ingestion_run_events(
     run_id: uuid.UUID,
     session: SessionDep,
     current_user: CurrentUser,
+    request: Request,
+    replay_only: bool = False,
     last_event_id: Annotated[str | None, Header(alias="Last-Event-ID")] = None,
 ) -> AsyncIterable[ServerSentEvent]:
     _require_any_admin(session, current_user)
     if not session.get(IngestionRun, run_id):
         raise HTTPException(status_code=404, detail="Ingestion run not found")
-    after_sequence = int(last_event_id or 0)
-    events = session.exec(
-        select(IngestionEvent)
-        .where(
-            IngestionEvent.run_id == run_id,
-            IngestionEvent.sequence > after_sequence,
-        )
-        .order_by(col(IngestionEvent.sequence))
-    ).all()
-    for event in events:
-        yield ServerSentEvent(
-            data=_event_public(event).model_dump(mode="json"),
-            event=event.event_type,
-            id=str(event.sequence),
-        )
+    try:
+        after_sequence = int(last_event_id or 0)
+    except ValueError as exc:
+        raise HTTPException(
+            status_code=400, detail="Last-Event-ID must be numeric"
+        ) from exc
+
+    from app.core.db import engine
+
+    while not await request.is_disconnected():
+        with Session(engine) as poll_session:
+            events = poll_session.exec(
+                select(IngestionEvent)
+                .where(
+                    IngestionEvent.run_id == run_id,
+                    IngestionEvent.sequence > after_sequence,
+                )
+                .order_by(col(IngestionEvent.sequence))
+            ).all()
+            for event in events:
+                after_sequence = event.sequence
+                yield ServerSentEvent(
+                    data=_event_public(event).model_dump(mode="json"),
+                    event=event.event_type,
+                    id=str(event.sequence),
+                )
+        if not events:
+            yield ServerSentEvent(comment="keepalive")
+        if replay_only:
+            break
+        await asyncio.sleep(1)
 
 
 @router.get("/ingestion-runs/{run_id}/pages")
@@ -403,7 +568,7 @@ def read_ingestion_run_pages(
         .order_by(col(SourcePage.page_number))
     ).all()
     return SourcePagesPublic(
-        data=[_page_public(page) for page in pages], count=len(pages)
+        data=[_page_public(session, page) for page in pages], count=len(pages)
     )
 
 
@@ -417,7 +582,7 @@ def patch_page_selection(
     require_admin_role(session, current_user, AdminRole.INGESTION_UPLOADER)
     pages = update_page_selection(session, run_id, body, current_user)
     return SourcePagesPublic(
-        data=[_page_public(page) for page in pages], count=len(pages)
+        data=[_page_public(session, page) for page in pages], count=len(pages)
     )
 
 
@@ -467,6 +632,24 @@ def resume_run(
 ) -> IngestionRunPublic:
     require_admin_role(session, current_user, AdminRole.INGESTION_UPLOADER)
     run = resume_ingestion_run(
+        session,
+        run_id,
+        expected_version=body.expected_version,
+        idempotency_key=body.idempotency_key,
+        current_user=current_user,
+    )
+    return _run_public(run)
+
+
+@router.post("/ingestion-runs/{run_id}/start-embedding")
+def start_embedding_run(
+    run_id: uuid.UUID,
+    body: IngestionRunControlRequest,
+    session: SessionDep,
+    current_user: CurrentUser,
+) -> IngestionRunPublic:
+    require_admin_role(session, current_user, AdminRole.CORPUS_PUBLISHER)
+    run = start_embedding(
         session,
         run_id,
         expected_version=body.expected_version,
@@ -590,6 +773,18 @@ def decide_review_item(
     return _review_public(session, candidate)
 
 
+@router.patch("/review-issues/{issue_id}")
+def patch_review_issue(
+    issue_id: uuid.UUID,
+    body: ReviewIssueUpdate,
+    session: SessionDep,
+    current_user: CurrentUser,
+) -> ReviewIssuePublic:
+    require_admin_role(session, current_user, AdminRole.LEGAL_REVIEWER)
+    issue = update_review_issue(session, issue_id, body, current_user)
+    return ReviewIssuePublic.model_validate(issue)
+
+
 @router.get("/embedding-benchmarks/{release_id}")
 def read_embedding_benchmark(
     release_id: uuid.UUID,
@@ -619,6 +814,200 @@ def read_embedding_benchmark(
                 )
             )
     return EmbeddingBenchmarkPublic(release_id=release_id, results=results)
+
+
+@router.get("/embedding-profiles")
+def read_embedding_profiles(
+    session: SessionDep, current_user: CurrentUser
+) -> list[EmbeddingProfilePublic]:
+    _require_any_admin(session, current_user)
+    profiles = session.exec(
+        select(EmbeddingProfile).order_by(col(EmbeddingProfile.name))
+    ).all()
+    return [EmbeddingProfilePublic.model_validate(profile) for profile in profiles]
+
+
+@router.post("/embedding-profiles", status_code=201)
+def create_embedding_profile(
+    body: EmbeddingProfileCreate,
+    session: SessionDep,
+    current_user: CurrentUser,
+) -> EmbeddingProfilePublic:
+    require_admin_role(session, current_user, AdminRole.CORPUS_PUBLISHER)
+    if body.vector_dimensions != settings.RETRIEVAL_VECTOR_DIMENSIONS:
+        raise HTTPException(
+            status_code=409, detail="V1 profiles require 1,024 dimensions"
+        )
+    if body.is_active and not body.model_revision:
+        raise HTTPException(
+            status_code=409, detail="Active profiles require a pinned revision"
+        )
+    if session.exec(
+        select(EmbeddingProfile).where(EmbeddingProfile.name == body.name)
+    ).first():
+        raise HTTPException(status_code=409, detail="Embedding profile already exists")
+    profile = EmbeddingProfile.model_validate(body)
+    session.add(profile)
+    session.commit()
+    session.refresh(profile)
+    return EmbeddingProfilePublic.model_validate(profile)
+
+
+@router.patch("/embedding-profiles/{profile_id}")
+def update_embedding_profile(
+    profile_id: uuid.UUID,
+    body: EmbeddingProfileUpdate,
+    session: SessionDep,
+    current_user: CurrentUser,
+) -> EmbeddingProfilePublic:
+    require_admin_role(session, current_user, AdminRole.CORPUS_PUBLISHER)
+    profile = session.get(EmbeddingProfile, profile_id)
+    if profile is None:
+        raise HTTPException(status_code=404, detail="Embedding profile not found")
+    values = body.model_dump(exclude_unset=True)
+    if values.get("is_active") is True and not values.get(
+        "model_revision", profile.model_revision
+    ):
+        raise HTTPException(
+            status_code=409, detail="Active profiles require a pinned revision"
+        )
+    profile.sqlmodel_update(values)
+    session.add(profile)
+    session.commit()
+    session.refresh(profile)
+    return EmbeddingProfilePublic.model_validate(profile)
+
+
+@router.get("/ocr-benchmarks/{dataset_version}")
+def read_ocr_benchmark(
+    dataset_version: str,
+    session: SessionDep,
+    current_user: CurrentUser,
+) -> OcrBenchmarkPublic:
+    from app.ingestion.evaluation import (
+        active_evaluation_item_count,
+        load_ocr_evaluation_pages,
+    )
+    from app.legal.enums import EvaluationDatasetKind, EvaluationItemKind
+
+    _require_any_admin(session, current_user)
+    pages = load_ocr_evaluation_pages(session, dataset_version)
+    count = active_evaluation_item_count(
+        session,
+        dataset_version,
+        dataset_kind=EvaluationDatasetKind.OCR_BENCHMARK,
+        item_kind=EvaluationItemKind.OCR_PAGE,
+    )
+    return OcrBenchmarkPublic(
+        dataset_version=dataset_version,
+        sample_count=len(pages),
+        winner=None,
+        providers=[],
+        active_dataset_items=count,
+    )
+
+
+@router.post("/ocr-benchmarks/{dataset_version}/evaluate")
+def evaluate_ocr_benchmark_route(
+    dataset_version: str,
+    body: OcrBenchmarkEvaluateRequest,
+    session: SessionDep,
+    current_user: CurrentUser,
+) -> OcrBenchmarkPublic:
+    from app.ingestion.evaluation import (
+        active_evaluation_item_count,
+        load_ocr_evaluation_pages,
+    )
+    from app.ingestion.ocr_benchmark import OcrBenchmarkSample, evaluate_ocr_benchmark
+    from app.legal.enums import EvaluationDatasetKind, EvaluationItemKind
+
+    _require_any_admin(session, current_user)
+    if body.dataset_version != dataset_version:
+        raise HTTPException(
+            status_code=400, detail="Dataset version mismatch in OCR benchmark request"
+        )
+    pages = {
+        page.item_key: page
+        for page in load_ocr_evaluation_pages(session, dataset_version)
+    }
+    if not pages:
+        raise HTTPException(
+            status_code=404, detail="OCR benchmark dataset has no pages"
+        )
+    grouped_texts: dict[str, dict[str, str]] = {}
+    grouped_conf: dict[str, dict[str, float]] = {}
+    grouped_cost: dict[str, dict[str, float]] = {}
+    grouped_timing: dict[str, dict[str, float]] = {}
+    grouped_failures: dict[str, dict[str, str]] = {}
+    for sample in body.samples:
+        if sample.provider not in (
+            "google_document_ai",
+            "azure_document_intelligence",
+            "tesseract",
+        ):
+            raise HTTPException(
+                status_code=400,
+                detail=f"Unknown OCR provider: {sample.provider}",
+            )
+        grouped_texts.setdefault(sample.item_key, {})
+        if sample.text is not None:
+            grouped_texts[sample.item_key][sample.provider] = sample.text
+        if sample.confidence is not None:
+            grouped_conf.setdefault(sample.item_key, {})[sample.provider] = (
+                sample.confidence
+            )
+        if sample.cost_usd is not None:
+            grouped_cost.setdefault(sample.item_key, {})[sample.provider] = (
+                sample.cost_usd
+            )
+        if sample.timing_ms is not None:
+            grouped_timing.setdefault(sample.item_key, {})[sample.provider] = (
+                sample.timing_ms
+            )
+        if sample.failure is not None:
+            grouped_failures.setdefault(sample.item_key, {})[sample.provider] = (
+                sample.failure
+            )
+    benchmark_samples: list[OcrBenchmarkSample] = []
+    for item_key, page in pages.items():
+        benchmark_samples.append(
+            OcrBenchmarkSample(
+                item_key=item_key,
+                expected_text=page.expected_text,
+                provider_texts=grouped_texts.get(item_key, {}),
+                provider_confidence=grouped_conf.get(item_key, {}),
+                provider_cost_usd=grouped_cost.get(item_key, {}),
+                provider_timing_ms=grouped_timing.get(item_key, {}),
+                provider_failures=grouped_failures.get(item_key, {}),
+            )
+        )
+    result = evaluate_ocr_benchmark(
+        dataset_version=dataset_version, samples=benchmark_samples
+    )
+    count = active_evaluation_item_count(
+        session,
+        dataset_version,
+        dataset_kind=EvaluationDatasetKind.OCR_BENCHMARK,
+        item_kind=EvaluationItemKind.OCR_PAGE,
+    )
+    return OcrBenchmarkPublic(
+        dataset_version=dataset_version,
+        sample_count=result.sample_count,
+        winner=result.winner,
+        providers=[
+            OcrBenchmarkProviderResult(
+                provider=item.provider,
+                page_count=item.page_count,
+                failure_count=item.failure_count,
+                mean_character_accuracy=item.mean_character_accuracy,
+                mean_confidence=item.mean_confidence,
+                total_cost_usd=item.total_cost_usd,
+                mean_timing_ms=item.mean_timing_ms,
+            )
+            for item in result.providers
+        ],
+        active_dataset_items=count,
+    )
 
 
 @router.get("/corpus-releases")
@@ -687,9 +1076,11 @@ def read_release_publication_evidence(
     (
         release,
         vector_indexes,
+        retrieval_index_builds,
         promotion_attempts,
         source_uploader_ids,
         override_events,
+        active_targets,
     ) = read_corpus_release_publication_evidence(session, release_id)
     approved_by_differs_from_uploaders = (
         None
@@ -703,9 +1094,17 @@ def read_release_publication_evidence(
             CorpusReleaseVectorIndexPublic.model_validate(vector_index)
             for vector_index in vector_indexes
         ],
+        retrieval_index_builds=[
+            CorpusReleaseRetrievalIndexBuildPublic.model_validate(build)
+            for build in retrieval_index_builds
+        ],
         promotion_attempts=[
             CorpusReleasePromotionAttemptPublic.model_validate(promotion)
             for promotion in promotion_attempts
+        ],
+        active_targets=[
+            ActiveRetrievalTargetPublic.model_validate(target)
+            for target in active_targets
         ],
         actor_separation=CorpusReleaseActorSeparationPublic(
             current_actor_id=current_user.id,
@@ -737,11 +1136,26 @@ def publish_release(
         current_user=current_user,
         superuser_override_reason=body.superuser_override_reason,
     )
-    vector_index = session.get(VectorIndex, promotion.vector_index_id)
+    vector_index = (
+        session.get(VectorIndex, promotion.vector_index_id)
+        if promotion.vector_index_id is not None
+        else None
+    )
+    retrieval_build = (
+        session.get(RetrievalIndexBuild, promotion.retrieval_index_build_id)
+        if promotion.retrieval_index_build_id is not None
+        else None
+    )
     return CorpusReleasePublishResponse(
         release=_release_public(session, release),
         promotion_status=promotion.status,
-        vector_index_status=vector_index.status if vector_index else None,
+        vector_index_status=(
+            retrieval_build.status
+            if retrieval_build is not None
+            else vector_index.status
+            if vector_index is not None
+            else None
+        ),
     )
 
 
@@ -906,8 +1320,21 @@ def _task_public(task: IngestionTask) -> IngestionTaskPublic:
     return IngestionTaskPublic.model_validate(task)
 
 
-def _page_public(page: SourcePage) -> SourcePagePublic:
-    return SourcePagePublic.model_validate(page)
+def _page_public(session: Session, page: SourcePage) -> SourcePagePublic:
+    artifact = session.exec(
+        select(IngestionArtifact).where(
+            IngestionArtifact.run_id == page.run_id,
+            IngestionArtifact.source_page_id == page.id,
+            IngestionArtifact.artifact_type == IngestionArtifactType.PAGE_THUMBNAIL,
+        )
+    ).first()
+    public = SourcePagePublic.model_validate(page)
+    public.thumbnail_url = (
+        f"{settings.API_V1_STR}/admin/ingestion-artifacts/{artifact.id}/content"
+        if artifact
+        else None
+    )
+    return public
 
 
 def _review_public(
@@ -929,6 +1356,29 @@ def _review_public(
         .order_by(col(ReviewDecisionRecord.created_at))
     ).all()
     source = session.get(SourceDocument, candidate.source_document_id)
+    source_page_thumbnail_url = None
+    if candidate.source_page_start is not None:
+        source_page = session.exec(
+            select(SourcePage).where(
+                SourcePage.run_id == candidate.run_id,
+                SourcePage.source_document_id == candidate.source_document_id,
+                SourcePage.page_number == candidate.source_page_start,
+            )
+        ).first()
+        if source_page:
+            thumbnail = session.exec(
+                select(IngestionArtifact).where(
+                    IngestionArtifact.run_id == candidate.run_id,
+                    IngestionArtifact.source_page_id == source_page.id,
+                    IngestionArtifact.artifact_type
+                    == IngestionArtifactType.PAGE_THUMBNAIL,
+                )
+            ).first()
+            if thumbnail:
+                source_page_thumbnail_url = (
+                    f"{settings.API_V1_STR}/admin/ingestion-artifacts/"
+                    f"{thumbnail.id}/content"
+                )
     return ReviewItemPublic(
         id=candidate.id,
         run_id=candidate.run_id,
@@ -947,6 +1397,7 @@ def _review_public(
         normalized_text=candidate.normalized_text,
         source_page_start=candidate.source_page_start,
         source_page_end=candidate.source_page_end,
+        source_page_thumbnail_url=source_page_thumbnail_url,
         source_spans=candidate.source_spans,
         ancestor_headings=candidate.ancestor_headings,
         parser_version=candidate.parser_version,
