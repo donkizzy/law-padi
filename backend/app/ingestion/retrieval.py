@@ -40,6 +40,9 @@ class RetrievalDocument:
         }
 
 
+SUPPORTED_RETRIEVAL_LANGUAGE = "en"
+
+
 def build_retrieval_documents(
     *,
     release_version: str,
@@ -47,7 +50,12 @@ def build_retrieval_documents(
     versions_by_id: dict[uuid.UUID, ProvisionVersion],
     provisions_by_id: dict[uuid.UUID, Provision],
     max_chars: int = DEFAULT_MAX_RETRIEVAL_TEXT_CHARS,
+    language: str = SUPPORTED_RETRIEVAL_LANGUAGE,
 ) -> list[RetrievalDocument]:
+    if language.strip().lower() != SUPPORTED_RETRIEVAL_LANGUAGE:
+        raise ValueError(
+            f"V1 retrieval input is English-only; received language={language!r}"
+        )
     documents: list[RetrievalDocument] = []
     ordered_entries = sorted(
         entries,
@@ -89,6 +97,7 @@ def build_retrieval_documents(
                 "segment_index": segment_index,
                 "segment_count": len(segments),
                 "text_sha256": version.text_sha256,
+                "authoritative_text_sha256": _sha256(segment_text),
                 "retrieval_text_sha256": _sha256(retrieval_text),
             }
             documents.append(
@@ -234,6 +243,27 @@ def _document_id(
             },
             sort_keys=True,
         )
+    )
+
+
+def deterministic_segment_id(
+    *,
+    release_id: uuid.UUID,
+    provision_version_id: uuid.UUID,
+    segment_index: int,
+    retrieval_text_sha256: str,
+) -> uuid.UUID:
+    """Return the stable database identity for a derived retrieval segment."""
+    return uuid.uuid5(
+        uuid.NAMESPACE_URL,
+        ":".join(
+            (
+                str(release_id),
+                str(provision_version_id),
+                str(segment_index),
+                retrieval_text_sha256,
+            )
+        ),
     )
 
 

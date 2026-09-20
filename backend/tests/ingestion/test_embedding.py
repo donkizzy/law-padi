@@ -9,6 +9,7 @@ from app.ingestion.embedding import (
     HuggingFaceTeiEmbeddingProvider,
     OpenAIEmbeddingProvider,
     SparseLegalEncoder,
+    batched_embed,
     evaluate_embedding_benchmark,
     select_best_embedding_run,
 )
@@ -42,7 +43,11 @@ def test_openai_embedding_provider_batches_inputs_and_sorts_vectors_by_index() -
     batch = provider.embed(["Section 1", "Section 2"])
 
     assert requests == [
-        {"model": "text-embedding-3-large", "input": ["Section 1", "Section 2"]}
+        {
+            "model": "text-embedding-3-large",
+            "input": ["Section 1", "Section 2"],
+            "dimensions": 1024,
+        }
     ]
     assert batch.provider == "openai"
     assert batch.dimensions == 2
@@ -76,6 +81,56 @@ def test_huggingface_tei_provider_retries_cold_start_and_parses_vectors() -> Non
     assert batch.model_revision == "pinned-revision"
     assert batch.vectors == [[0.1, 0.2, 0.3], [0.4, 0.5, 0.6]]
     assert batch.metrics == {"attempts": 2}
+
+
+def test_huggingface_tei_provider_retries_rate_limit() -> None:
+    statuses = [429, 200]
+    sleeps: list[float] = []
+
+    def handler(_request: httpx.Request) -> httpx.Response:
+        status = statuses.pop(0)
+        if status == 429:
+            return httpx.Response(429, json={"error": "rate limited"})
+        return httpx.Response(200, json=[[0.1, 0.2]])
+
+    provider = HuggingFaceTeiEmbeddingProvider(
+        endpoint_url="https://tei.example.test/embed",
+        api_token="hf-token",
+        sleep=sleeps.append,
+        transport=httpx.MockTransport(handler),
+    )
+
+    batch = provider.embed(["privacy"])
+
+    assert sleeps == [1]
+    assert batch.vectors == [[0.1, 0.2]]
+    assert batch.metrics == {"attempts": 2}
+
+
+def test_batched_embed_preserves_order_across_batches() -> None:
+    calls: list[list[str]] = []
+
+    def handler(request: httpx.Request) -> httpx.Response:
+        body = json.loads(request.content)
+        inputs = body["inputs"]
+        calls.append(list(inputs))
+        start = len(calls) * 10
+        return httpx.Response(
+            200, json=[[float(start + i)] for i in range(len(inputs))]
+        )
+
+    provider = HuggingFaceTeiEmbeddingProvider(
+        endpoint_url="https://tei.example.test/embed",
+        api_token="hf-token",
+        transport=httpx.MockTransport(handler),
+    )
+
+    batch = batched_embed(provider, ["a", "b", "c", "d", "e"], batch_size=2)
+
+    assert calls == [["a", "b"], ["c", "d"], ["e"]]
+    assert batch.vectors == [[10.0], [11.0], [20.0], [21.0], [30.0]]
+    assert batch.metrics is not None
+    assert batch.metrics["batched_batches"] == 3
 
 
 def test_sparse_legal_encoder_is_deterministic_and_normalized() -> None:

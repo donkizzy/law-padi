@@ -12,10 +12,17 @@ class QdrantIndexError(RuntimeError):
 
 
 @dataclass(frozen=True)
+class QdrantSparseVector:
+    indices: list[int]
+    values: list[float]
+
+
+@dataclass(frozen=True)
 class QdrantPoint:
     point_id: str
     vector: list[float]
     payload: dict[str, Any]
+    sparse: QdrantSparseVector | None = None
 
 
 @dataclass(frozen=True)
@@ -34,6 +41,7 @@ class QdrantValidationReport:
     duplicate_ids: list[str]
     dimension_errors: list[str]
     payload_errors: list[str]
+    sparse_errors: list[str]
 
     @property
     def is_valid(self) -> bool:
@@ -41,7 +49,18 @@ class QdrantValidationReport:
             not self.duplicate_ids
             and not self.dimension_errors
             and not self.payload_errors
+            and not self.sparse_errors
         )
+
+
+CONSTITUTION_ENACTED_ALIAS = "constitution_enacted"
+CONSTITUTION_PROPOSALS_ALIAS = "constitution_proposals"
+# Dev-mode default: enacted law is the production retrieval path.
+DEFAULT_PRODUCTION_ALIAS = CONSTITUTION_ENACTED_ALIAS
+SPARSE_LEGAL_VECTOR_NAME = "sparse_legal"
+DENSE_VECTOR_NAME = "dense"
+# Legacy alias retained only for test-data migration; do not use for new indexes.
+LEGACY_PRODUCTION_ALIAS = "law_padi_production"
 
 
 REQUIRED_QDRANT_PAYLOAD_KEYS = (
@@ -63,14 +82,30 @@ REQUIRED_QDRANT_PAYLOAD_KEYS = (
 
 
 def collection_name_for_release(
-    *, release_version: str, embedding_profile_name: str, profile_hash: str
+    *,
+    release_version: str,
+    embedding_profile_name: str,
+    profile_hash: str,
+    index_kind: str = "enacted",
 ) -> str:
+    kind = index_kind.strip().lower() or "enacted"
+    if kind not in {"enacted", "proposals"}:
+        raise QdrantIndexError(f"Unknown index kind: {index_kind}")
     digest = hashlib.sha256(
-        f"{release_version}:{embedding_profile_name}:{profile_hash}".encode()
+        f"{release_version}:{embedding_profile_name}:{profile_hash}:{kind}".encode()
     ).hexdigest()[:16]
     safe_version = _safe_token(release_version)
     safe_profile = _safe_token(embedding_profile_name)
-    return f"law_padi_{safe_version}_{safe_profile}_{digest}"
+    return f"ng_constitution_{kind}_{safe_version}_{safe_profile}_{digest}"
+
+
+def alias_for_index_kind(index_kind: str = "enacted") -> str:
+    kind = index_kind.strip().lower() or "enacted"
+    if kind == "proposals":
+        return CONSTITUTION_PROPOSALS_ALIAS
+    if kind == "enacted":
+        return CONSTITUTION_ENACTED_ALIAS
+    raise QdrantIndexError(f"Unknown index kind: {index_kind}")
 
 
 def validate_qdrant_points(
@@ -78,6 +113,7 @@ def validate_qdrant_points(
     *,
     vector_dimensions: int,
     required_payload_keys: tuple[str, ...] = REQUIRED_QDRANT_PAYLOAD_KEYS,
+    require_sparse: bool = True,
 ) -> QdrantValidationReport:
     id_counts = Counter(point.point_id for point in points)
     duplicate_ids = sorted(
@@ -89,6 +125,7 @@ def validate_qdrant_points(
     payload_errors = _payload_errors(
         points, required_payload_keys=required_payload_keys
     )
+    sparse_errors = _sparse_errors(points, required=require_sparse)
     payload_keys = sorted({key for point in points for key in point.payload})
     payload_schema_hash = _sha256_json(payload_keys)
     checksum = _sha256_json(
@@ -96,6 +133,14 @@ def validate_qdrant_points(
             {
                 "id": point.point_id,
                 "vector": point.vector,
+                "sparse": (
+                    {
+                        "indices": point.sparse.indices,
+                        "values": point.sparse.values,
+                    }
+                    if point.sparse is not None
+                    else None
+                ),
                 "payload": point.payload,
             }
             for point in sorted(points, key=lambda item: item.point_id)
@@ -109,6 +154,7 @@ def validate_qdrant_points(
         duplicate_ids=duplicate_ids,
         dimension_errors=dimension_errors,
         payload_errors=payload_errors,
+        sparse_errors=sparse_errors,
     )
 
 
@@ -171,34 +217,43 @@ class QdrantHttpIndexAdapter:
         )
 
     def create_collection(
-        self, *, collection_name: str, vector_dimensions: int
+        self,
+        *,
+        collection_name: str,
+        vector_dimensions: int,
+        sparse_vector_name: str = SPARSE_LEGAL_VECTOR_NAME,
     ) -> None:
         response = self.client.put(
             f"/collections/{collection_name}",
             json={
                 "vectors": {
-                    "size": vector_dimensions,
-                    "distance": "Cosine",
-                }
+                    DENSE_VECTOR_NAME: {
+                        "size": vector_dimensions,
+                        "distance": "Cosine",
+                    }
+                },
+                "sparse_vectors": {
+                    sparse_vector_name: {},
+                },
             },
         )
         _raise_for_qdrant(response, "create collection")
 
-    def upsert_points(self, *, collection_name: str, points: list[QdrantPoint]) -> None:
-        response = self.client.put(
-            f"/collections/{collection_name}/points",
-            json={
-                "points": [
-                    {
-                        "id": point.point_id,
-                        "vector": point.vector,
-                        "payload": point.payload,
-                    }
-                    for point in points
-                ]
-            },
-        )
-        _raise_for_qdrant(response, "upsert points")
+    def upsert_points(
+        self,
+        *,
+        collection_name: str,
+        points: list[QdrantPoint],
+        batch_size: int = 256,
+    ) -> None:
+        for batch in _chunked(points, batch_size):
+            response = self.client.put(
+                f"/collections/{collection_name}/points",
+                json={
+                    "points": [_point_payload(point) for point in batch],
+                },
+            )
+            _raise_for_qdrant(response, "upsert points")
 
     def read_point_count(self, *, collection_name: str) -> int:
         response = self.client.post(
@@ -317,6 +372,55 @@ def _payload_errors(
             ):
                 errors.append(f"{point.point_id}:invalid:{key}")
     return errors
+
+
+def _sparse_errors(points: list[QdrantPoint], *, required: bool) -> list[str]:
+    errors: list[str] = []
+    for point in points:
+        if point.sparse is None:
+            if required:
+                errors.append(f"{point.point_id}:missing:sparse_legal")
+            continue
+        if len(point.sparse.indices) != len(point.sparse.values):
+            errors.append(f"{point.point_id}:invalid:sparse_legal_length")
+            continue
+        if any(
+            not isinstance(index, int) or isinstance(index, bool) or index < 0
+            for index in point.sparse.indices
+        ):
+            errors.append(f"{point.point_id}:invalid:sparse_legal_indices")
+        if any(
+            not isinstance(value, int | float) or isinstance(value, bool)
+            for value in point.sparse.values
+        ):
+            errors.append(f"{point.point_id}:invalid:sparse_legal_values")
+        if sorted(point.sparse.indices) != list(point.sparse.indices):
+            errors.append(f"{point.point_id}:invalid:sparse_legal_order")
+    return errors
+
+
+def _point_payload(point: QdrantPoint) -> dict[str, Any]:
+    vector: Any = {DENSE_VECTOR_NAME: point.vector}
+    if point.sparse is not None:
+        vector[SPARSE_LEGAL_VECTOR_NAME] = {
+            "indices": point.sparse.indices,
+            "values": point.sparse.values,
+        }
+    else:
+        # Dense-only fallback for legacy test fixtures; production points
+        # always carry sparse_legal (validated separately).
+        vector = point.vector
+    payload: dict[str, Any] = {
+        "id": point.point_id,
+        "vector": vector,
+        "payload": point.payload,
+    }
+    return payload
+
+
+def _chunked(points: list[QdrantPoint], batch_size: int) -> list[list[QdrantPoint]]:
+    size = max(1, batch_size)
+    return [points[index : index + size] for index in range(0, len(points), size)]
 
 
 def _sha256_json(value: object) -> str:

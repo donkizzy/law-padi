@@ -1,11 +1,12 @@
 import uuid
 from datetime import date, datetime
-from typing import Any
+from typing import Any, Literal
 
 from pydantic import field_validator, model_validator
 from sqlmodel import Field, SQLModel
 
 from app.legal.enums import (
+    AdminRole,
     AuditSeverity,
     CorpusReleaseStatus,
     EmbeddingProviderKind,
@@ -303,6 +304,7 @@ class SourcePagePublic(SQLModel):
     inclusion_status: PageInclusionStatus
     inclusion_reason: str | None = None
     thumbnail_key: str | None = None
+    thumbnail_url: str | None = None
     text_density: float | None = None
     orientation: str | None = None
     column_count: int | None = None
@@ -328,6 +330,7 @@ class PageSelectionItem(SQLModel):
 
 class PageSelectionUpdate(SQLModel):
     idempotency_key: str = Field(min_length=8, max_length=256)
+    expected_run_version: int = Field(ge=1)
     pages: list[PageSelectionItem] = Field(min_length=1)
 
 
@@ -355,6 +358,8 @@ class ReviewIssuePublic(SQLModel):
     evidence: dict[str, Any] | None = None
     resolved_by: uuid.UUID | None = None
     resolved_at: datetime | None = None
+    resolution_reason: str | None = None
+    resolution_evidence: dict[str, Any] | None = None
     created_at: datetime
 
 
@@ -365,6 +370,9 @@ class CandidateRevisionPublic(SQLModel):
     previous_text: str | None = None
     revised_text: str | None = None
     diff: str | None = None
+    before_snapshot: dict[str, Any] | None = None
+    after_snapshot: dict[str, Any] | None = None
+    changed_fields: dict[str, Any] | None = None
     reason: str
     revised_by: uuid.UUID | None = None
     created_at: datetime
@@ -397,6 +405,7 @@ class ReviewItemPublic(SQLModel):
     normalized_text: str | None = None
     source_page_start: int | None = None
     source_page_end: int | None = None
+    source_page_thumbnail_url: str | None = None
     source_spans: list[dict[str, Any]] | None = None
     ancestor_headings: list[str] | None = None
     parser_version: str | None = None
@@ -420,13 +429,54 @@ class ReviewItemsPublic(SQLModel):
 
 
 class ReviewItemUpdate(IdempotentMutation):
-    revised_text: str = Field(min_length=1)
+    revised_text: str | None = Field(default=None, min_length=1)
+    heading: str | None = Field(default=None, max_length=512)
+    kind: ProvisionKind | None = None
+    number: str | None = Field(default=None, max_length=64)
+    parent_candidate_id: uuid.UUID | None = None
+    canonical_path: str | None = Field(default=None, min_length=1, max_length=512)
+    sort_key: str | None = Field(default=None, min_length=1, max_length=255)
+    source_page_start: int | None = Field(default=None, ge=1)
+    source_page_end: int | None = Field(default=None, ge=1)
+    source_spans: list[dict[str, Any]] | None = None
     reason: str = Field(min_length=1)
+
+    @model_validator(mode="after")
+    def require_patch_field(self) -> ReviewItemUpdate:
+        if not any(
+            value is not None
+            for value in (
+                self.revised_text,
+                self.heading,
+                self.kind,
+                self.number,
+                self.parent_candidate_id,
+                self.canonical_path,
+                self.sort_key,
+                self.source_page_start,
+                self.source_page_end,
+                self.source_spans,
+            )
+        ):
+            raise ValueError("At least one candidate field must be revised")
+        if (
+            self.source_page_start is not None
+            and self.source_page_end is not None
+            and self.source_page_end < self.source_page_start
+        ):
+            raise ValueError("source_page_end must be at least source_page_start")
+        return self
 
 
 class ReviewDecisionCreate(IdempotentMutation):
     decision: ReviewDecisionType
     reason: str = Field(min_length=1)
+    superuser_override_reason: str | None = None
+
+
+class ReviewIssueUpdate(IdempotentMutation):
+    reason: str = Field(min_length=1)
+    evidence: dict[str, Any] | None = None
     superuser_override_reason: str | None = None
 
 
@@ -446,6 +496,67 @@ class EmbeddingBenchmarkResult(SQLModel):
 class EmbeddingBenchmarkPublic(SQLModel):
     release_id: uuid.UUID
     results: list[EmbeddingBenchmarkResult]
+
+
+class EmbeddingProfileCreate(SQLModel):
+    name: str = Field(min_length=1, max_length=128)
+    provider: EmbeddingProviderKind
+    model_name: str = Field(min_length=1, max_length=255)
+    model_revision: str = Field(min_length=1, max_length=128)
+    vector_dimensions: int = Field(default=1024, ge=1024, le=1024)
+    configuration: dict[str, Any] = Field(default_factory=dict)
+    is_active: bool = True
+
+
+class EmbeddingProfileUpdate(SQLModel):
+    model_revision: str | None = Field(default=None, min_length=1, max_length=128)
+    configuration: dict[str, Any] | None = None
+    is_active: bool | None = None
+
+
+class EmbeddingProfilePublic(SQLModel):
+    id: uuid.UUID
+    name: str
+    provider: EmbeddingProviderKind
+    model_name: str
+    model_revision: str | None
+    vector_dimensions: int
+    configuration: dict[str, Any]
+    is_active: bool
+    created_at: datetime
+
+
+class OcrBenchmarkSampleInput(SQLModel):
+    item_key: str
+    provider: str
+    text: str | None = None
+    confidence: float | None = None
+    cost_usd: float | None = None
+    timing_ms: float | None = None
+    failure: str | None = None
+
+
+class OcrBenchmarkEvaluateRequest(IdempotentMutation):
+    dataset_version: str
+    samples: list[OcrBenchmarkSampleInput]
+
+
+class OcrBenchmarkProviderResult(SQLModel):
+    provider: str
+    page_count: int
+    failure_count: int
+    mean_character_accuracy: float
+    mean_confidence: float | None = None
+    total_cost_usd: float | None = None
+    mean_timing_ms: float | None = None
+
+
+class OcrBenchmarkPublic(SQLModel):
+    dataset_version: str
+    sample_count: int
+    winner: str | None = None
+    providers: list[OcrBenchmarkProviderResult]
+    active_dataset_items: int
 
 
 class CorpusReleasePublic(SQLModel):
@@ -494,10 +605,34 @@ class CorpusReleaseVectorIndexPublic(SQLModel):
     updated_at: datetime
 
 
+class CorpusReleaseRetrievalIndexBuildPublic(SQLModel):
+    id: uuid.UUID
+    release_id: uuid.UUID
+    embedding_run_id: uuid.UUID
+    profile_id: uuid.UUID
+    backend: str
+    index_kind: str
+    relation_name: str
+    physical_index_name: str | None = None
+    status: VectorIndexStatus
+    expected_segment_count: int
+    stored_segment_count: int
+    stored_embedding_count: int
+    vector_dimensions: int
+    profile_hash: str | None = None
+    payload_schema_hash: str | None = None
+    checksum: str | None = None
+    validation_report: dict[str, Any] | None = None
+    created_at: datetime
+    updated_at: datetime
+
+
 class CorpusReleasePromotionAttemptPublic(SQLModel):
     id: uuid.UUID
     release_id: uuid.UUID
     vector_index_id: uuid.UUID | None = None
+    retrieval_index_build_id: uuid.UUID | None = None
+    index_kind: str | None = None
     requested_by: uuid.UUID | None = None
     status: ReleasePromotionStatus
     previous_release_id: uuid.UUID | None = None
@@ -524,8 +659,22 @@ class CorpusReleasePublicationEvidencePublic(SQLModel):
     release_id: uuid.UUID
     release_version: str
     vector_indexes: list[CorpusReleaseVectorIndexPublic]
+    retrieval_index_builds: list[CorpusReleaseRetrievalIndexBuildPublic]
     promotion_attempts: list[CorpusReleasePromotionAttemptPublic]
+    active_targets: list[ActiveRetrievalTargetPublic]
     actor_separation: CorpusReleaseActorSeparationPublic
+
+
+class ActiveRetrievalTargetPublic(SQLModel):
+    index_kind: str
+    release_id: uuid.UUID
+    embedding_run_id: uuid.UUID
+    retrieval_index_build_id: uuid.UUID
+    profile_id: uuid.UUID
+    lock_version: int
+    activated_by: uuid.UUID | None = None
+    activated_at: datetime
+    updated_at: datetime
 
 
 class CorpusReleaseValidationRequest(IdempotentMutation):
@@ -553,4 +702,54 @@ class PublicProvisionVersion(SQLModel):
 
 class PublicProvisionVersions(SQLModel):
     data: list[PublicProvisionVersion]
+    count: int
+
+
+class LegalSearchRequest(SQLModel):
+    query: str = Field(min_length=1, max_length=2000)
+    top_k: int = Field(default=10, ge=1, le=50)
+    index_kind: Literal["enacted", "proposals"] = "enacted"
+
+
+class LegalSearchResult(SQLModel):
+    canonical_path: str
+    citation: str
+    heading: str | None = None
+    ancestor_headings: list[str]
+    authoritative_text: str
+    source_document_id: uuid.UUID
+    source_page_start: int | None = None
+    source_page_end: int | None = None
+    legal_status: str
+    release_version: str
+    dense_rank: int | None = None
+    lexical_rank: int | None = None
+    hybrid_score: float
+
+
+class LegalSearchResponse(SQLModel):
+    data: list[LegalSearchResult]
+    count: int
+
+
+class MyAdminRolesPublic(SQLModel):
+    user_id: uuid.UUID
+    is_superuser: bool
+    roles: list[AdminRole]
+
+
+class AuditEventPublic(SQLModel):
+    id: uuid.UUID
+    actor_user_id: uuid.UUID | None = None
+    action: str
+    entity_type: str | None = None
+    entity_id: uuid.UUID | None = None
+    severity: AuditSeverity
+    reason: str | None = None
+    payload: dict[str, Any] | None = None
+    created_at: datetime
+
+
+class AuditEventsPublic(SQLModel):
+    data: list[AuditEventPublic]
     count: int

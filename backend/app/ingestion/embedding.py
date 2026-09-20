@@ -98,7 +98,11 @@ class OpenAIEmbeddingProvider:
         response = self.client.post(
             "/embeddings",
             headers={"Authorization": f"Bearer {self.api_key}"},
-            json={"model": self.model_name, "input": list(texts)},
+            json={
+                "model": self.model_name,
+                "input": list(texts),
+                "dimensions": 1024,
+            },
         )
         if response.status_code >= 400:
             raise EmbeddingProviderError(
@@ -126,6 +130,39 @@ class OpenAIEmbeddingProvider:
         )
 
 
+RETRYABLE_TEI_STATUSES = frozenset({429, 502, 503, 504})
+DEFAULT_EMBEDDING_BATCH_SIZE = 128
+
+
+def batched_embed(
+    provider: DenseEmbeddingProvider,
+    texts: Sequence[str],
+    *,
+    batch_size: int = DEFAULT_EMBEDDING_BATCH_SIZE,
+) -> EmbeddingBatch:
+    """Embed large corpora in bounded batches while preserving input order."""
+    size = max(1, batch_size)
+    if len(texts) <= size:
+        return provider.embed(texts)
+    batches = [list(texts[i : i + size]) for i in range(0, len(texts), size)]
+    combined: list[list[float]] = []
+    first: EmbeddingBatch | None = None
+    for batch_texts in batches:
+        batch = provider.embed(batch_texts)
+        if first is None:
+            first = batch
+        combined.extend(batch.vectors)
+    assert first is not None
+    return EmbeddingBatch(
+        provider=first.provider,
+        model_name=first.model_name,
+        model_revision=first.model_revision,
+        vectors=combined,
+        cost_usd=first.cost_usd,
+        metrics={**(first.metrics or {}), "batched_batches": len(batches)},
+    )
+
+
 class HuggingFaceTeiEmbeddingProvider:
     def __init__(
         self,
@@ -135,7 +172,7 @@ class HuggingFaceTeiEmbeddingProvider:
         model_name: str = "BAAI/bge-m3",
         model_revision: str | None = None,
         timeout_seconds: float = 60,
-        max_attempts: int = 3,
+        max_attempts: int = 5,
         sleep: Callable[[float], None] = time.sleep,
         transport: httpx.BaseTransport | None = None,
     ) -> None:
@@ -164,7 +201,7 @@ class HuggingFaceTeiEmbeddingProvider:
                 json={"inputs": list(texts), "truncate": True},
             )
             last_status = response.status_code
-            if response.status_code not in {502, 503, 504}:
+            if response.status_code not in RETRYABLE_TEI_STATUSES:
                 break
             if attempt < self.max_attempts:
                 self.sleep(min(2 ** (attempt - 1), 8))
