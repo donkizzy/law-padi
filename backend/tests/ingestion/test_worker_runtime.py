@@ -26,9 +26,9 @@ from app.legal.enums import (  # noqa: E402
 class FakeWorkerResult:
     task_id: uuid.UUID
     run_id: uuid.UUID
-    stage: IngestionStage
-    task_status: IngestionTaskStatus
-    run_status: IngestionRunStatus
+    stage: IngestionStage | str
+    task_status: IngestionTaskStatus | str
+    run_status: IngestionRunStatus | str
 
 
 def test_worker_package_is_independent_python_312_runtime() -> None:
@@ -149,6 +149,45 @@ def test_worker_loop_processes_batches_then_sleeps_when_idle() -> None:
     assert all(call["stage_concurrency_limits"] == {"profiling": 1} for call in calls)
 
 
+def test_worker_loop_logs_string_status_results() -> None:
+    task_results: list[FakeWorkerResult | None] = [
+        _fake_result(
+            task_status=IngestionTaskStatus.SUCCEEDED.value,
+            run_status=IngestionRunStatus.RUNNING.value,
+        ),
+        None,
+    ]
+
+    @contextmanager
+    def session_factory() -> Iterator[object]:
+        yield object()
+
+    def fake_run_once(
+        _session: object,
+        *,
+        _worker_id: str,
+        _task_type: str | None,
+        _lease_seconds: int,
+        _stage_concurrency_limits: dict[str, int],
+    ) -> FakeWorkerResult | None:
+        return task_results.pop(0)
+
+    stats = run_worker(
+        settings=WorkerSettings(
+            worker_id="worker-a",
+            poll_interval_seconds=0,
+            lease_seconds=60,
+            max_tasks_per_poll=2,
+        ),
+        session_factory=session_factory,
+        sleep=lambda _seconds: None,
+        max_iterations=1,
+        run_once_fn=fake_run_once,
+    )
+
+    assert stats.tasks_processed == 1
+
+
 def test_worker_loop_rejects_invalid_poll_settings() -> None:
     invalid_settings = WorkerSettings(
         worker_id="worker-a",
@@ -185,11 +224,13 @@ def test_worker_loop_rejects_invalid_stage_concurrency_limits() -> None:
 def _fake_result(
     *,
     stage: IngestionStage = IngestionStage.VERIFYING_UPLOAD,
+    task_status: IngestionTaskStatus | str = IngestionTaskStatus.SUCCEEDED,
+    run_status: IngestionRunStatus | str = IngestionRunStatus.RUNNING,
 ) -> FakeWorkerResult:
     return FakeWorkerResult(
         task_id=uuid.uuid4(),
         run_id=uuid.uuid4(),
         stage=stage,
-        task_status=IngestionTaskStatus.SUCCEEDED,
-        run_status=IngestionRunStatus.RUNNING,
+        task_status=task_status,
+        run_status=run_status,
     )
