@@ -1,4 +1,4 @@
-FROM python:3.12-slim
+FROM python:3.14-slim
 
 ENV PYTHONUNBUFFERED=1
 ENV PYTHONPATH=/app/backend:/app/services/ingestion-worker
@@ -22,4 +22,3 @@ COPY backend/app /app/backend/app
 COPY services/ingestion-worker /app/services/ingestion-worker
 
 CMD ["python", "-m", "ingestion_worker.cli"]
-

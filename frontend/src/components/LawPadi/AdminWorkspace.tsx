@@ -47,6 +47,7 @@ import {
   type SourceUploadCreate,
   type SourceUploadPublic,
 } from "@/client"
+import { client } from "@/client/client.gen"
 import {
   SectionHeading,
   SegmentedControl,
@@ -3183,7 +3184,7 @@ async function putSourceObject(
     return putMultipartSourceObject(upload, file)
   }
   const token = localStorage.getItem("access_token")
-  const response = await fetch(upload.upload_url, {
+  const response = await fetch(uploadFetchUrl(upload.upload_url), {
     method: "PUT",
     headers: {
       ...upload.upload_headers,
@@ -3223,7 +3224,7 @@ async function putMultipartSourceObject(
   for (const part of multipart.parts) {
     const start = (part.part_number - 1) * multipartChunkBytes
     const end = Math.min(start + multipartChunkBytes, file.size)
-    const response = await fetch(part.upload_url, {
+    const response = await fetch(uploadFetchUrl(part.upload_url), {
       method: "PUT",
       body: file.slice(start, end),
     })
@@ -3240,6 +3241,15 @@ async function putMultipartSourceObject(
     completedParts,
     expectedVersion: upload.lock_version + 1,
   }
+}
+
+function uploadFetchUrl(uploadUrl: string): string {
+  const apiBaseUrl =
+    client.getConfig().baseURL || import.meta.env.VITE_API_URL || ""
+  if (!apiBaseUrl || /^https?:\/\//i.test(uploadUrl)) {
+    return uploadUrl
+  }
+  return new URL(uploadUrl, apiBaseUrl).toString()
 }
 
 async function controlRun(

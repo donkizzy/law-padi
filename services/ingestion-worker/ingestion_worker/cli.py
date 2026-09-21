@@ -31,7 +31,7 @@ class WorkerSettings:
     outbox_sink_path: str = "/app/backend/storage/source-documents/outbox-events.jsonl"
 
     @classmethod
-    def from_env(cls) -> WorkerSettings:
+    def from_env(cls) -> "WorkerSettings":
         return cls(
             worker_id=os.getenv("INGESTION_WORKER_ID") or socket.gethostname(),
             poll_interval_seconds=_env_float(
@@ -42,9 +42,7 @@ class WorkerSettings:
                 "INGESTION_WORKER_MAX_TASKS_PER_POLL", default=10
             ),
             task_type=os.getenv("INGESTION_WORKER_TASK_TYPE") or None,
-            stage_concurrency_limits=_env_int_map(
-                "INGESTION_STAGE_CONCURRENCY_LIMITS"
-            ),
+            stage_concurrency_limits=_env_int_map("INGESTION_STAGE_CONCURRENCY_LIMITS"),
             outbox_sink_path=os.getenv(
                 "INGESTION_OUTBOX_SINK_PATH",
                 "/app/backend/storage/source-documents/outbox-events.jsonl",
@@ -126,9 +124,7 @@ def run_worker(
                     worker_id=worker_settings.worker_id,
                     task_type=worker_settings.task_type,
                     lease_seconds=worker_settings.lease_seconds,
-                    stage_concurrency_limits=(
-                        worker_settings.stage_concurrency_limits
-                    ),
+                    stage_concurrency_limits=(worker_settings.stage_concurrency_limits),
                 )
             if result is None:
                 break
@@ -139,9 +135,9 @@ def run_worker(
                 extra={
                     "task_id": str(result.task_id),
                     "run_id": str(result.run_id),
-                    "stage": result.stage.value,
-                    "task_status": result.task_status.value,
-                    "run_status": result.run_status.value,
+                    "stage": _enum_value(result.stage),
+                    "task_status": _enum_value(result.task_status),
+                    "run_status": _enum_value(result.run_status),
                 },
             )
 
@@ -258,6 +254,10 @@ def _env_int_map(name: str) -> dict[str, int]:
             raise ValueError(f"{name} values must be integers")
         limits[key] = raw_limit
     return limits
+
+
+def _enum_value(value: object) -> str:
+    return str(getattr(value, "value", value))
 
 
 if __name__ == "__main__":

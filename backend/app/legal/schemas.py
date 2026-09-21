@@ -655,16 +655,6 @@ class CorpusReleaseActorSeparationPublic(SQLModel):
     override_reasons: list[str] = Field(default_factory=list)
 
 
-class CorpusReleasePublicationEvidencePublic(SQLModel):
-    release_id: uuid.UUID
-    release_version: str
-    vector_indexes: list[CorpusReleaseVectorIndexPublic]
-    retrieval_index_builds: list[CorpusReleaseRetrievalIndexBuildPublic]
-    promotion_attempts: list[CorpusReleasePromotionAttemptPublic]
-    active_targets: list[ActiveRetrievalTargetPublic]
-    actor_separation: CorpusReleaseActorSeparationPublic
-
-
 class ActiveRetrievalTargetPublic(SQLModel):
     index_kind: str
     release_id: uuid.UUID
@@ -675,6 +665,16 @@ class ActiveRetrievalTargetPublic(SQLModel):
     activated_by: uuid.UUID | None = None
     activated_at: datetime
     updated_at: datetime
+
+
+class CorpusReleasePublicationEvidencePublic(SQLModel):
+    release_id: uuid.UUID
+    release_version: str
+    vector_indexes: list[CorpusReleaseVectorIndexPublic]
+    retrieval_index_builds: list[CorpusReleaseRetrievalIndexBuildPublic]
+    promotion_attempts: list[CorpusReleasePromotionAttemptPublic]
+    active_targets: list[ActiveRetrievalTargetPublic]
+    actor_separation: CorpusReleaseActorSeparationPublic
 
 
 class CorpusReleaseValidationRequest(IdempotentMutation):
