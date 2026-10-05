@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import hashlib
 import re
 from dataclasses import dataclass, field
@@ -9,7 +11,22 @@ from app.ingestion.blob_store import BlobStoreError, LocalBlobStore
 from app.legal.enums import ProvisionKind
 from app.legal.models import SourceDocument
 
-PARSER_VERSION = "constitution-hierarchy-v2"
+PARSER_VERSION = "constitution-hierarchy-v4"
+
+_APPENDED_RULES_RE = re.compile(
+    r"^FUNDAMENTAL RIGHTS\s*\(ENFORCEMENT PROCEDURE\)\s*RULES\b", re.I
+)
+_OATH_HEADINGS = {
+    "oaths of allegiance": "allegiance",
+    "oath of allegiance": "allegiance",
+    "oath of office of president": "president",
+    "oath of office of governor of a state": "governor",
+    "oath of office of vice-president, deputy governor, minister, commissioner or special adviser": "executive",
+    "oath of a member of the national assembly or of a house of assembly": "legislator",
+    "judicial oath": "judicial",
+}
+
+_ARRANGEMENT_RE = re.compile(r"\barrangement\s+of\s+(?:sections|provisions)\b", re.I)
 
 _CHAPTER_RE = re.compile(
     r"^CHAPTER\s+([IVXLCDM]+|\d+)\b(?:\s*[-:]\s*(.*)|\s+(.*))?$", re.I
@@ -18,6 +35,7 @@ _PART_RE = re.compile(
     r"^PART\s+([IVXLCDM]+|\d+|[A-Z])\b(?:\s*[-:]\s*(.*)|\s+(.*))?$", re.I
 )
 _SECTION_RE = re.compile(r"^(\d+[A-Za-z]?)\s*[\.\-–—]\s*(.*)$")
+_WRAPPED_SCHEDULE_ITEM_RE = re.compile(r"^\((\d+[A-Za-z]?)\.\)\s+(.*)$")
 _SUBSECTION_RE = re.compile(r"(?m)^\s*\((\d+[A-Za-z]?)\)\s+")
 _PARAGRAPH_RE = re.compile(r"(?m)^\s*\(([a-z])\)\s+")
 _SUBSECTION_LINE_RE = re.compile(r"^\((\d+[A-Za-z]?)\)\s+")
@@ -84,6 +102,14 @@ def extract_source_pages(source: SourceDocument) -> list[SourcePage]:
 def parse_constitution_pages(
     pages: list[SourcePage], instrument_slug: str
 ) -> list[ParsedProvision]:
+    pages = [
+        SourcePage(
+            page_number=page.page_number,
+            text=_repair_split_number_markers(page.text),
+        )
+        for page in pages
+    ]
+    pages = _legal_body_pages(pages)
     parsed: list[ParsedProvision] = []
     paths_seen: set[str] = set()
     current_chapter: ParsedProvision | None = None
@@ -92,6 +118,8 @@ def parse_constitution_pages(
     current_text_node: ParsedProvision | None = None
     current_text_lines: list[str] = []
     schedule_item_count = 0
+    schedule_next_item_number: dict[str, int] = {}
+    next_section_number = 1
 
     def append_node(node: ParsedProvision) -> ParsedProvision:
         if node.canonical_path in paths_seen:
@@ -133,8 +161,40 @@ def parse_constitution_pages(
             if not line:
                 continue
 
+            # This source compilation appends separate rules after the oaths,
+            # including on the same PDF page. Keep the Constitution boundary
+            # explicit instead of attaching those rules to its last schedule.
+            if current_schedule and current_schedule.number == "7":
+                if _APPENDED_RULES_RE.match(line):
+                    finish_text_node()
+                    current_schedule.parser_metadata["appended_instrument_boundary"] = {
+                        "page_number": page.page_number,
+                        "heading": line,
+                        "retained_in_original_source": True,
+                    }
+                    return parsed
+                oath_key = _OATH_HEADINGS.get(line.lower())
+                if oath_key:
+                    finish_text_node()
+                    schedule_item_count += 1
+                    current_text_node = append_node(
+                        ParsedProvision(
+                            kind=ProvisionKind.SCHEDULE_ITEM,
+                            number=None,
+                            heading=line,
+                            canonical_path=f"{current_schedule.canonical_path}.oath-{oath_key}",
+                            sort_key=f"{current_schedule.sort_key}.{schedule_item_count:04d}",
+                            parent_path=current_schedule.canonical_path,
+                            page_start=page.page_number,
+                            page_end=page.page_number,
+                            parser_metadata={"parser_version": PARSER_VERSION},
+                        )
+                    )
+                    current_text_lines = []
+                    continue
+
             chapter_match = _CHAPTER_RE.match(line)
-            if chapter_match:
+            if chapter_match and not _is_hierarchy_cross_reference(chapter_match):
                 finish_text_node()
                 number = _normalize_number(chapter_match.group(1))
                 heading = _coalesce_heading(
@@ -158,21 +218,32 @@ def parse_constitution_pages(
                 continue
 
             part_match = _PART_RE.match(line)
-            if part_match and current_schedule is None:
+            if part_match and not _is_hierarchy_cross_reference(part_match):
                 finish_text_node()
                 number = _normalize_number(part_match.group(1))
                 heading = _coalesce_heading(part_match.group(2), part_match.group(3))
                 parent_path = (
-                    current_chapter.canonical_path if current_chapter else None
+                    current_schedule.canonical_path
+                    if current_schedule
+                    else current_chapter.canonical_path
+                    if current_chapter
+                    else None
                 )
                 prefix = parent_path or instrument_slug
+                parent_sort = (
+                    current_schedule.sort_key
+                    if current_schedule
+                    else current_chapter.sort_key
+                    if current_chapter
+                    else "000"
+                )
                 current_part = append_node(
                     ParsedProvision(
                         kind=ProvisionKind.PART,
                         number=number,
                         heading=heading,
                         canonical_path=f"{prefix}.part{number}",
-                        sort_key=f"{current_chapter.sort_key if current_chapter else '000'}.{_sort_number(number):03d}",
+                        sort_key=f"{parent_sort}.{_sort_number(number):03d}",
                         parent_path=parent_path,
                         page_start=page.page_number,
                         page_end=page.page_number,
@@ -205,20 +276,39 @@ def parse_constitution_pages(
                 continue
 
             section_match = _SECTION_RE.match(line)
+            if not section_match and current_schedule:
+                section_match = _WRAPPED_SCHEDULE_ITEM_RE.match(line)
             if section_match:
-                finish_text_node()
                 number = _normalize_number(section_match.group(1))
                 rest = section_match.group(2).strip()
                 if current_schedule:
+                    parent_path = (
+                        current_part.canonical_path
+                        if current_part
+                        else current_schedule.canonical_path
+                    )
+                    expected_number = schedule_next_item_number.get(parent_path, 1)
+                    if number.isdigit() and int(number) != expected_number:
+                        if current_text_node:
+                            current_text_node.page_end = page.page_number
+                            current_text_lines.append(line)
+                        continue
+                    finish_text_node()
+                    if number.isdigit():
+                        schedule_next_item_number[parent_path] = int(number) + 1
                     schedule_item_count += 1
-                    parent_path = current_schedule.canonical_path
+                    parent_sort = (
+                        current_part.sort_key
+                        if current_part
+                        else current_schedule.sort_key
+                    )
                     current_text_node = append_node(
                         ParsedProvision(
                             kind=ProvisionKind.SCHEDULE_ITEM,
                             number=number,
                             heading=_heading_from_text(rest),
                             canonical_path=f"{parent_path}.item{number}",
-                            sort_key=f"{current_schedule.sort_key}.{schedule_item_count:04d}",
+                            sort_key=f"{parent_sort}.{schedule_item_count:04d}",
                             parent_path=parent_path,
                             page_start=page.page_number,
                             page_end=page.page_number,
@@ -226,6 +316,22 @@ def parse_constitution_pages(
                         )
                     )
                 else:
+                    if (
+                        not rest
+                        and current_text_node
+                        and (
+                            not number.isdigit()
+                            or (
+                                int(number) != next_section_number and int(number) > 999
+                            )
+                        )
+                    ):
+                        current_text_node.page_end = page.page_number
+                        current_text_lines.append(line)
+                        continue
+                    finish_text_node()
+                    if number.isdigit():
+                        next_section_number = int(number) + 1
                     parent_path = (
                         current_part.canonical_path
                         if current_part
@@ -290,6 +396,69 @@ def _clean_line(line: str) -> str:
     return re.sub(r"\s+", " ", line.replace("\u00a0", " ")).strip()
 
 
+def _repair_split_number_markers(text: str) -> str:
+    text = re.sub(
+        r"(?im)^(Oath of Office of Vice-President, Deputy Governor, Minister, Commissioner or)\s*\n\s*(Special Adviser)\s*$",
+        r"\1 \2",
+        text,
+    )
+    text = re.sub(
+        r"(?m)^(\d+)\s*\n\s*(\d+[A-Za-z]?\s*[.\-–—])",
+        r"\1\2",
+        text,
+    )
+    return re.sub(
+        r"(?m)^(\d+[A-Za-z]?)\s*\n\s*([.\-–—])\s*",
+        r"\1\2 ",
+        text,
+    )
+
+
+def _legal_body_pages(pages: list[SourcePage]) -> list[SourcePage]:
+    """Discard an included arrangement-of-sections prefix when it is unambiguous.
+
+    Operators may explicitly include a contents/arrangement range.  The Nigerian
+    Constitution then repeats the same chapter, part, and section identifiers in
+    the authoritative body.  Starting at the first Chapter I page that also
+    contains the substantive ``1. (1)`` marker prevents those summaries from
+    becoming legal provisions while retaining the original PDF page numbers.
+    """
+
+    arrangement_index = next(
+        (
+            index
+            for index, page in enumerate(pages)
+            if _ARRANGEMENT_RE.search(page.text)
+        ),
+        None,
+    )
+    if arrangement_index is None:
+        return pages
+
+    for index in range(arrangement_index + 1, len(pages)):
+        lines = [_clean_line(line) for line in pages[index].text.splitlines()]
+        has_chapter_one = any(
+            (match := _CHAPTER_RE.match(line))
+            and _normalize_number(match.group(1)) == "1"
+            and not _is_hierarchy_cross_reference(match)
+            for line in lines
+        )
+        has_substantive_section_one = any(
+            (match := _SECTION_RE.match(line))
+            and _normalize_number(match.group(1)) == "1"
+            and match.group(2).lstrip().startswith("(1)")
+            for line in lines
+        )
+        if has_chapter_one and has_substantive_section_one:
+            return pages[index:]
+    return pages
+
+
+def _is_hierarchy_cross_reference(match: re.Match[str]) -> bool:
+    trailing_text = _coalesce_heading(*match.groups()[1:]) or ""
+    return bool(re.match(r"^(?:of|to)\b", trailing_text, re.I))
+
+
 def _coalesce_heading(*parts: str | None) -> str | None:
     heading = " ".join(part.strip() for part in parts if part and part.strip()).strip()
     return heading or None
@@ -317,7 +486,7 @@ def _append_section_children(
     text: str,
     append_node: Any,
 ) -> None:
-    subsection_segments = _marker_segments(text, _SUBSECTION_LINE_RE)
+    subsection_segments = _subsection_segments(text)
     if subsection_segments:
         for subsection_index, segment in enumerate(subsection_segments, start=1):
             number = _normalize_number(segment.marker)
@@ -350,9 +519,7 @@ def _append_paragraph_children(
     text: str,
     append_node: Any,
 ) -> None:
-    for paragraph_index, segment in enumerate(
-        _marker_segments(text, _PARAGRAPH_LINE_RE), start=1
-    ):
+    for paragraph_index, segment in enumerate(_paragraph_segments(text), start=1):
         number = segment.marker.lower()
         append_node(
             ParsedProvision(
@@ -369,6 +536,86 @@ def _append_paragraph_children(
                 parser_metadata={"parser_version": PARSER_VERSION},
             )
         )
+
+
+def _paragraph_segments(text: str) -> list[_MarkerSegment]:
+    """Extract the top-level alphabetical sequence, ignoring roman subclauses.
+
+    A line such as ``(i)`` is ambiguous: it can be paragraph i or the first
+    roman subparagraph nested below paragraph (a).  Top-level constitutional
+    paragraphs progress from (a), so only the next expected letter opens a new
+    node; other markers remain part of the current paragraph's authoritative
+    text.
+    """
+
+    segments: list[_MarkerSegment] = []
+    current_marker: str | None = None
+    current_lines: list[str] = []
+    expected_codepoint = ord("a")
+    for line in text.splitlines():
+        match = _PARAGRAPH_LINE_RE.match(line)
+        marker = match.group(1).lower() if match else None
+        if marker and ord(marker) == expected_codepoint:
+            if current_marker:
+                segments.append(
+                    _MarkerSegment(
+                        marker=current_marker,
+                        text="\n".join(current_lines).strip(),
+                    )
+                )
+            current_marker = marker
+            current_lines = [line.strip()]
+            expected_codepoint += 1
+            continue
+        if current_marker:
+            current_lines.append(line.strip())
+    if current_marker:
+        segments.append(
+            _MarkerSegment(
+                marker=current_marker,
+                text="\n".join(current_lines).strip(),
+            )
+        )
+    return segments
+
+
+def _subsection_segments(text: str) -> list[_MarkerSegment]:
+    """Extract the sequential top-level numeric subsections.
+
+    Wrapped cross-references such as ``(1) of this section`` can begin a PDF
+    extraction line and otherwise look exactly like a new subsection.  A real
+    subsection sequence starts at 1 and advances monotonically.
+    """
+
+    segments: list[_MarkerSegment] = []
+    current_marker: str | None = None
+    current_lines: list[str] = []
+    expected_number = 1
+    for line in text.splitlines():
+        match = _SUBSECTION_LINE_RE.match(line)
+        marker = _normalize_number(match.group(1)) if match else None
+        if marker == str(expected_number):
+            if current_marker:
+                segments.append(
+                    _MarkerSegment(
+                        marker=current_marker,
+                        text="\n".join(current_lines).strip(),
+                    )
+                )
+            current_marker = marker
+            current_lines = [line.strip()]
+            expected_number += 1
+            continue
+        if current_marker:
+            current_lines.append(line.strip())
+    if current_marker:
+        segments.append(
+            _MarkerSegment(
+                marker=current_marker,
+                text="\n".join(current_lines).strip(),
+            )
+        )
+    return segments
 
 
 @dataclass(frozen=True)
