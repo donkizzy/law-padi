@@ -81,6 +81,27 @@ def test_profile_pdf_pages_classifies_roles_and_keeps_schedules_included() -> No
     assert profiles[2].quality_signals["has_extractable_text"] is True
 
 
+def test_profile_pdf_pages_excludes_multi_page_arrangement_prefix() -> None:
+    pdf = _pdf_with_pages(
+        [
+            "Arrangement of sections\nChapter I\n1. Supremacy of the Constitution",
+            "Chapter II\n13. Fundamental obligations\nFirst Schedule",
+            "CHAPTER I\nPART I\n1. (1) This Constitution is supreme.",
+        ]
+    )
+
+    profiles = profile_pdf_pages(pdf, max_pages=10)
+
+    assert [profile.role for profile in profiles] == [
+        PageRole.TABLE_OF_CONTENTS,
+        PageRole.TABLE_OF_CONTENTS,
+        PageRole.LEGAL_BODY,
+    ]
+    assert profiles[0].inclusion_status == PageInclusionStatus.SUGGESTED_EXCLUDE
+    assert profiles[1].inclusion_status == PageInclusionStatus.SUGGESTED_EXCLUDE
+    assert profiles[2].inclusion_status == PageInclusionStatus.SUGGESTED_INCLUDE
+
+
 def test_profile_pdf_pages_flags_mixed_scanned_and_born_digital_pages() -> None:
     pdf = _pdf_with_pages(
         [

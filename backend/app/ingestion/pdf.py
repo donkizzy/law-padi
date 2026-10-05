@@ -15,8 +15,11 @@ from app.ingestion.malware import (
 )
 from app.legal.enums import PageInclusionStatus, PageRole
 
-PDF_PROFILER_VERSION = "pdf-profile-v1"
-_TOC_RE = re.compile(r"(table\s+of\s+contents|contents)", re.I)
+PDF_PROFILER_VERSION = "pdf-profile-v2"
+_TOC_RE = re.compile(
+    r"(table\s+of\s+contents|contents|arrangement\s+of\s+(?:sections|provisions))",
+    re.I,
+)
 _SCHEDULE_RE = re.compile(r"\b(schedule|schedules)\b", re.I)
 _LEGAL_BODY_RE = re.compile(
     r"\b(chapter|part|section|sections?)\b|^\s*\d+[A-Za-z]?\s*[\.\-]", re.I | re.M
@@ -120,6 +123,7 @@ def profile_pdf_pages(content: bytes, *, max_pages: int) -> list[PageProfile]:
     repeated_headers = _repeated_edge_lines(page_texts, first=True)
     repeated_footers = _repeated_edge_lines(page_texts, first=False)
     page_count = len(reader.pages)
+    arrangement_pages = _arrangement_page_numbers(page_texts)
 
     profiles: list[PageProfile] = []
     for index, page in enumerate(reader.pages):
@@ -131,10 +135,14 @@ def profile_pdf_pages(content: bytes, *, max_pages: int) -> list[PageProfile]:
         rotation_degrees = _page_rotation(page)
         image_count = _image_count(page)
         image_coverage = min(image_count * 0.25, 1.0)
-        role = _classify_page_role(
-            clean_text,
-            page_number=page_number,
-            page_count=page_count,
+        role = (
+            PageRole.TABLE_OF_CONTENTS
+            if page_number in arrangement_pages
+            else _classify_page_role(
+                clean_text,
+                page_number=page_number,
+                page_count=page_count,
+            )
         )
         inclusion_status = (
             PageInclusionStatus.SUGGESTED_INCLUDE
@@ -202,10 +210,10 @@ def _extract_text(page: Any) -> str:
 
 
 def _classify_page_role(text: str, *, page_number: int, page_count: int) -> PageRole:
-    if _SCHEDULE_RE.search(text):
-        return PageRole.SCHEDULE
     if _TOC_RE.search(text) or _looks_like_toc(text):
         return PageRole.TABLE_OF_CONTENTS
+    if _SCHEDULE_RE.search(text):
+        return PageRole.SCHEDULE
     if _LEGAL_BODY_RE.search(text):
         return PageRole.LEGAL_BODY
     if page_number == 1:
@@ -220,6 +228,36 @@ def _looks_like_toc(text: str) -> bool:
         1 for line in text.splitlines() if re.search(r"\.{3,}\s*\d+$", line)
     )
     return dotted_lines >= 3
+
+
+def _arrangement_page_numbers(page_texts: list[str]) -> set[int]:
+    """Return a contiguous arrangement prefix ending before the legal body.
+
+    Older official PDFs often have a multi-page "Arrangement of sections" with
+    no repeated contents heading or dotted leaders.  Its end is identified by
+    the authoritative Chapter I page containing section ``1. (1)``.
+    """
+
+    start_index = next(
+        (
+            index
+            for index, text in enumerate(page_texts)
+            if _TOC_RE.search(_clean_text(text))
+        ),
+        None,
+    )
+    if start_index is None:
+        return set()
+
+    for index in range(start_index + 1, len(page_texts)):
+        clean_text = _clean_text(page_texts[index])
+        has_chapter_one = bool(re.search(r"(?mi)^\s*chapter\s+i\s*$", clean_text))
+        has_substantive_section_one = bool(
+            re.search(r"(?mi)^\s*1\.\s*\(1\)\s+", clean_text)
+        )
+        if has_chapter_one and has_substantive_section_one:
+            return set(range(start_index + 1, index + 1))
+    return {start_index + 1}
 
 
 def _inclusion_reason(role: PageRole) -> str:

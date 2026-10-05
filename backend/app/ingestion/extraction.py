@@ -5,7 +5,7 @@ from typing import Any, Protocol
 
 from pypdf import PdfReader
 
-NATIVE_PDF_EXTRACTOR_VERSION = "pypdf-native-layout-v1"
+NATIVE_PDF_EXTRACTOR_VERSION = "pypdf-native-layout-v2"
 
 
 class NativeExtractionError(RuntimeError):
@@ -30,6 +30,7 @@ class PageExtraction:
     confidence: float
     timing_ms: float
     quality_flags: dict[str, Any]
+    plain_text: str = ""
 
 
 class PdfExtractor(Protocol):
@@ -75,7 +76,10 @@ class NativePdfExtractor:
                 raise NativeExtractionError(
                     f"PDF page {page_number} text extraction failed"
                 ) from exc
-            spans.sort(key=lambda span: (-span.bbox["y0"], span.bbox["x0"]))
+            # Visitors expose PDF fragments, not lines. Sorting them by y can
+            # move raised ordinal suffixes ahead of their numbers. Preserve
+            # stream order for evidence and let the layout engine reconstruct
+            # page text separately.
             ordered_spans = [
                 TextSpan(
                     page_number=span.page_number,
@@ -85,7 +89,7 @@ class NativePdfExtractor:
                 )
                 for index, span in enumerate(spans)
             ]
-            text = "\n".join(span.text for span in ordered_spans) or extracted_text
+            text, layout_flags = _page_text_with_layout(page, extracted_text)
             timing_ms = (perf_counter() - started_at) * 1000
             extractions.append(
                 PageExtraction(
@@ -100,10 +104,38 @@ class NativePdfExtractor:
                         "span_count": len(ordered_spans),
                         "empty_text": not bool(text.strip()),
                         "needs_ocr": not bool(text.strip()),
+                        **layout_flags,
                     },
+                    plain_text=extracted_text,
                 )
             )
         return extractions
+
+
+def _page_text_with_layout(page: Any, plain_text: str) -> tuple[str, dict[str, Any]]:
+    """Accept layout repair only when every non-whitespace character agrees.
+
+    This allows joining split glyphs and superscripts without guessing words,
+    adding punctuation, or dropping/reordering source content. Uncertain pages
+    retain the plain extraction and an explicit diagnostic.
+    """
+    try:
+        layout_text = (
+            page.extract_text(
+                extraction_mode="layout", layout_mode_space_vertically=False
+            )
+            or ""
+        )
+    except Exception:
+        return plain_text, {"text_strategy": "plain", "layout_failed": True}
+    agrees = "".join(layout_text.split()) == "".join(plain_text.split())
+    if agrees:
+        return layout_text, {"text_strategy": "layout", "layout_content_verified": True}
+    return plain_text, {
+        "text_strategy": "plain",
+        "layout_content_verified": False,
+        "layout_content_mismatch": True,
+    }
 
 
 def _text_span_visitor(*, page_number: int, spans: list[TextSpan]) -> Any:

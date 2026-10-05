@@ -24,6 +24,7 @@ from app.ingestion.worker import (
     NORMALIZER_VERSION,
     IngestionWorkerError,
     _benchmark_dataset_for_embedding_profiles,
+    _normalize_page_text,
     handle_profiling,
     run_once,
     run_until_idle,
@@ -185,6 +186,15 @@ def test_worker_runs_verify_scan_and_profile_until_page_confirmation(
         "stage_succeeded",
         "stage_blocked",
     ]
+
+
+def test_normalize_page_text_rejoins_split_section_markers() -> None:
+    assert (
+        _normalize_page_text(
+            "Chapter I\n1\n. (1) This Constitution is supreme.\n1\n2. Twelfth item"
+        )
+        == "Chapter I\n1. (1) This Constitution is supreme.\n12. Twelfth item"
+    )
 
 
 def test_worker_fails_malware_scan_before_profiling(

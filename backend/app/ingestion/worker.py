@@ -31,6 +31,7 @@ from app.ingestion.evaluation import (
 )
 from app.ingestion.extraction import NativePdfExtractor
 from app.ingestion.malware import malware_scanner_from_settings
+from app.ingestion.normalization import NORMALIZER_VERSION, normalize_page_text
 from app.ingestion.ocr import (
     OcrPageInput,
     OcrPageResult,
@@ -72,6 +73,7 @@ from app.ingestion.service import (
     get_datetime_utc,
 )
 from app.ingestion.structure_validators import validate_document_graph
+from app.ingestion.text_alignment import aligned_source_spans, compact_text
 from app.ingestion.validation import has_unbalanced_punctuation
 from app.ingestion.workflow import (
     append_run_event,
@@ -136,7 +138,6 @@ from app.legal.parser import (
     SourcePage as ParserSourcePage,
 )
 
-NORMALIZER_VERSION = "legal-page-normalizer-v1"
 AUTO_APPROVAL_MIN_CONFIDENCE = 0.9
 
 
@@ -534,6 +535,7 @@ def handle_native_extraction(
             "provider_version": extraction.provider_version,
             "confidence": extraction.confidence,
             "text": extraction.text,
+            "plain_text": extraction.plain_text,
             "spans": [
                 {
                     "text": span.text,
@@ -810,7 +812,8 @@ def handle_normalizing(
     normalized_pages = []
     empty_pages = 0
     for payload in raw_payloads:
-        text = _normalize_page_text(str(payload.get("text") or ""))
+        normalization = normalize_page_text(str(payload.get("text") or ""))
+        text = normalization.text
         if not text:
             empty_pages += 1
         normalized_pages.append(
@@ -821,6 +824,7 @@ def handle_normalizing(
                 "method": payload.get("method"),
                 "provider_version": payload.get("provider_version"),
                 "confidence": payload.get("confidence"),
+                "normalization_changes": normalization.changes,
             }
         )
 
@@ -908,7 +912,9 @@ def handle_parsing_structure(
             node=node,
             parent_candidate=candidates_by_path.get(node.parent_path or ""),
             ancestor_headings=_ancestor_headings(node.parent_path, node_by_path),
-            source_spans=_source_spans_for_node(node, page_payloads),
+            source_spans=_source_spans_for_node(
+                node, page_payloads, nodes_by_path=node_by_path
+            ),
         )
         candidates_by_path[node.canonical_path] = candidate
         missing_parent_issue = None
@@ -3158,10 +3164,7 @@ def _json_object(content: bytes) -> dict[str, Any]:
 
 
 def _normalize_page_text(text: str) -> str:
-    text = text.replace("\u00a0", " ")
-    text = re.sub(r"-\n(?=\w)", "", text)
-    lines = [re.sub(r"[ \t]+", " ", line).strip() for line in text.splitlines()]
-    return "\n".join(line for line in lines if line).strip()
+    return normalize_page_text(text).text
 
 
 def _upsert_candidate(
@@ -3229,7 +3232,10 @@ def _ancestor_headings(
 
 
 def _source_spans_for_node(
-    node: Any, page_payloads: list[dict[str, Any]]
+    node: Any,
+    page_payloads: list[dict[str, Any]],
+    *,
+    nodes_by_path: dict[str, Any] | None = None,
 ) -> list[dict[str, Any]]:
     if node.page_start is None or node.page_end is None:
         return []
@@ -3258,7 +3264,16 @@ def _source_spans_for_node(
             )
             if _span_text_matches_node(span_text, node_text):
                 matched_spans.append(spans[-1])
-    return matched_spans or spans
+    aligned = aligned_source_spans(node_text, spans)
+    parent_path = getattr(node, "parent_path", None)
+    while aligned is None and parent_path and nodes_by_path:
+        parent = nodes_by_path.get(parent_path)
+        if parent is None:
+            break
+        if parent.text:
+            aligned = aligned_source_spans(node_text, spans, context=parent.text)
+        parent_path = parent.parent_path
+    return aligned or matched_spans or spans
 
 
 def _validate_candidate_for_review(
@@ -3485,6 +3500,12 @@ def _span_text_matches_node(span_text: str, node_text: str) -> bool:
 def _source_span_text_metrics(
     raw_text: str, source_spans: list[dict[str, Any]]
 ) -> tuple[float, float]:
+    # Fragment boundaries can split words. Exact character agreement is a
+    # stronger coverage check than token counts in that case.
+    span_text = "\n".join(str(span.get("text") or "") for span in source_spans)
+    compact_raw, _ = compact_text(raw_text)
+    if compact_raw and compact_raw == compact_text(span_text)[0]:
+        return 1.0, 1.0
     raw_tokens = _coverage_tokens(raw_text)
     span_tokens = _coverage_tokens(
         " ".join(str(span.get("text") or "") for span in source_spans)
