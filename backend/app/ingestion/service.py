@@ -24,6 +24,7 @@ from app.ingestion.pdf import PdfInspectionError, inspect_pdf_bytes
 from app.ingestion.pgvector_repository import validate_index_build
 from app.ingestion.qdrant import QdrantHttpIndexAdapter, QdrantIndexError
 from app.ingestion.r2_blob_store import R2BlobStore
+from app.ingestion.text_alignment import compact_text
 from app.ingestion.validation import has_unbalanced_punctuation
 from app.ingestion.workflow import (
     append_run_event,
@@ -1199,6 +1200,7 @@ def validate_corpus_release(
         unresolved_gates.extend(_vector_index_validation_gates(vector_index))
 
     release.validation_report = {
+        **(release.validation_report or {}),
         "entry_count": len(entries),
         "selected_embedding_run_id": str(embedding_run.id) if embedding_run else None,
         "benchmark_dataset_version": (
@@ -1676,24 +1678,55 @@ def resume_ingestion_run(
         )
     was_cancelled = run.status == IngestionRunStatus.CANCELLED
     resume_stage = IngestionStage(_enum_value(run.current_stage))
-    run.status = IngestionRunStatus.QUEUED
+    is_page_confirmation = resume_stage == IngestionStage.AWAITING_PAGE_CONFIRMATION
+    if not was_cancelled:
+        append_run_event(
+            session,
+            run,
+            event_type="run_resume_not_required",
+            message="Ingestion run is already awaiting operator input",
+            stage=resume_stage,
+        )
+        _add_idempotency_record(
+            session,
+            scope=scope,
+            idempotency_key=idempotency_key,
+            request_hash=request_hash,
+            result_type="ingestion_run",
+            result_id=run.id,
+            created_by=current_user.id,
+        )
+        session.commit()
+        session.refresh(run)
+        return run
+
+    run.status = (
+        IngestionRunStatus.WAITING_FOR_INPUT
+        if is_page_confirmation
+        else IngestionRunStatus.QUEUED
+    )
+    run.completed_at = None
+    run.error_details = None
     run.lock_version += 1
     run.updated_at = get_datetime_utc()
     session.add(run)
-    if was_cancelled:
-        resume_step = _get_run_step(session, run.id, resume_stage)
-        resume_step.status = IngestionStepStatus.PENDING
-        resume_step.lease_owner = None
-        resume_step.leased_until = None
-        resume_step.heartbeat_at = None
-        resume_step.started_at = None
-        resume_step.completed_at = None
-        resume_step.error_details = None
-        resume_step.lock_version += 1
-        resume_step.updated_at = run.updated_at
-        session.add(resume_step)
+    resume_step = _get_run_step(session, run.id, resume_stage)
+    resume_step.status = (
+        IngestionStepStatus.BLOCKED
+        if is_page_confirmation
+        else IngestionStepStatus.PENDING
+    )
+    resume_step.lease_owner = None
+    resume_step.leased_until = None
+    resume_step.heartbeat_at = None
+    resume_step.started_at = None
+    resume_step.completed_at = None
+    resume_step.error_details = None
+    resume_step.lock_version += 1
+    resume_step.updated_at = run.updated_at
+    session.add(resume_step)
     session.commit()
-    if was_cancelled:
+    if not is_page_confirmation:
         payload: dict[str, object] = {"resume": True}
         if run.source_document_id:
             payload["source_document_id"] = str(run.source_document_id)
@@ -2385,8 +2418,25 @@ def _revalidate_candidate_revision_text(
             ReviewIssue.status == ReviewIssueStatus.OPEN,
         )
     ).first()
+    open_extraction_issue = session.exec(
+        select(ReviewIssue).where(
+            ReviewIssue.candidate_id == candidate.id,
+            ReviewIssue.issue_type == "unbalanced_punctuation",
+            ReviewIssue.status == ReviewIssueStatus.OPEN,
+        )
+    ).first()
     if has_unbalanced_punctuation(revised_text):
-        if not open_revision_issue:
+        if open_extraction_issue and open_revision_issue:
+            open_revision_issue.status = ReviewIssueStatus.RESOLVED
+            open_revision_issue.resolved_by = current_user.id
+            open_revision_issue.resolved_at = get_datetime_utc()
+            open_revision_issue.resolution_reason = "Duplicate punctuation finding; the extraction-time blocker remains open."
+            open_revision_issue.resolution_evidence = {
+                "duplicate_of": str(open_extraction_issue.id),
+                "revision_number": candidate.revision_number,
+            }
+            session.add(open_revision_issue)
+        elif not open_revision_issue and not open_extraction_issue:
             session.add(
                 ReviewIssue(
                     candidate_id=candidate.id,
@@ -2398,11 +2448,49 @@ def _revalidate_candidate_revision_text(
                     evidence={"canonical_path": candidate.canonical_path},
                 )
             )
-    elif open_revision_issue:
-        open_revision_issue.status = ReviewIssueStatus.RESOLVED
-        open_revision_issue.resolved_by = current_user.id
-        open_revision_issue.resolved_at = get_datetime_utc()
-        session.add(open_revision_issue)
+    # Revalidate the current revision, including extraction-time findings.
+    # Exact source-character agreement can clear an obsolete coverage finding
+    # without waiving the provenance gate or changing the immutable raw text.
+    compact_revision, _ = compact_text(revised_text)
+    source_text = "\n".join(
+        str(span.get("text") or "") for span in candidate.source_spans or []
+    )
+    spans_have_coordinates = bool(candidate.source_spans) and all(
+        all(key in (span.get("bbox") or {}) for key in ("x0", "y0", "x1", "y1"))
+        for span in candidate.source_spans or []
+    )
+    exact_source_match = (
+        bool(compact_revision)
+        and spans_have_coordinates
+        and (compact_revision == compact_text(source_text)[0])
+    )
+    for issue in session.exec(
+        select(ReviewIssue).where(
+            ReviewIssue.candidate_id == candidate.id,
+            ReviewIssue.status == ReviewIssueStatus.OPEN,
+        )
+    ).all():
+        repaired_punctuation = issue.issue_type in {
+            "unbalanced_punctuation",
+            "revision_unbalanced_punctuation",
+        } and not has_unbalanced_punctuation(revised_text)
+        repaired_coverage = (
+            issue.issue_type in {"missing_source_spans", "source_span_coverage"}
+            and exact_source_match
+        )
+        if repaired_punctuation or repaired_coverage:
+            issue.status = ReviewIssueStatus.RESOLVED
+            issue.resolved_by = current_user.id
+            issue.resolved_at = get_datetime_utc()
+            issue.resolution_reason = (
+                "Finding cleared by candidate revision revalidation."
+            )
+            issue.resolution_evidence = {
+                "revision_number": candidate.revision_number,
+                "exact_source_character_match": exact_source_match,
+                "punctuation_balanced": not has_unbalanced_punctuation(revised_text),
+            }
+            session.add(issue)
     session.flush()
     candidate.blocking_issue_count = _open_blocking_issue_count(session, candidate.id)
     session.add(candidate)
@@ -2440,6 +2528,22 @@ def _maybe_complete_review_and_queue_materialization(
         run.current_stage == IngestionStage.REVIEW
         or run.status == IngestionRunStatus.WAITING_FOR_REVIEW
     ):
+        return
+    # Approval is often performed in batches. Avoid loading every candidate's
+    # text and spans after each decision while any review remains unfinished.
+    unfinished = session.exec(
+        select(ExtractionCandidate.id).where(
+            ExtractionCandidate.run_id == run.id,
+            col(ExtractionCandidate.status).not_in(
+                [
+                    ExtractionCandidateStatus.APPROVED,
+                    ExtractionCandidateStatus.AUTO_APPROVED,
+                    ExtractionCandidateStatus.MATERIALIZED,
+                ]
+            ),
+        )
+    ).first()
+    if unfinished:
         return
     candidates = session.exec(
         select(ExtractionCandidate).where(ExtractionCandidate.run_id == run.id)

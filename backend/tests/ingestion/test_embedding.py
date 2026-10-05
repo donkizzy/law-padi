@@ -17,6 +17,27 @@ from app.legal.enums import EmbeddingRunStatus
 from app.legal.models import EmbeddingRun
 
 
+def test_query_and_corpus_embeddings_share_profile_endpoint() -> None:
+    from app.api.routes.search import _query_embedding_provider
+    from app.ingestion.worker import _embedding_provider_for_profile
+    from app.legal.enums import EmbeddingProviderKind
+    from app.legal.models import EmbeddingProfile
+
+    endpoint = "https://example.test/pipeline/feature-extraction"
+    profile = EmbeddingProfile(
+        name="source-edition",
+        provider=EmbeddingProviderKind.HUGGINGFACE_TEI,
+        model_name="BAAI/bge-m3",
+        model_revision="reviewed-revision",
+        vector_dimensions=1024,
+        configuration={"endpoint_url": endpoint},
+    )
+    for factory in (_query_embedding_provider, _embedding_provider_for_profile):
+        provider = factory(profile)
+        assert isinstance(provider, HuggingFaceTeiEmbeddingProvider)
+        assert provider.endpoint_url == endpoint
+
+
 def test_openai_embedding_provider_batches_inputs_and_sorts_vectors_by_index() -> None:
     requests: list[dict[str, object]] = []
 
