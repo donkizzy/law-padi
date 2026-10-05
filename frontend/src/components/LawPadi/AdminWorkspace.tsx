@@ -32,6 +32,7 @@ import {
   type CorpusReleasePublishRequest,
   type CorpusReleaseValidationRequest,
   type EmbeddingBenchmarkPublic,
+  type ExtractionCandidateStatus,
   type IngestionEventPublic,
   type IngestionRunControlRequest,
   type IngestionRunDetail,
@@ -153,6 +154,9 @@ export function AdminWorkspace() {
   const [uploadOpen, setUploadOpen] = useState(false)
   const [selectedRunId, setSelectedRunId] = useState<string>()
   const [selectedReviewId, setSelectedReviewId] = useState<string>()
+  const [reviewOffset, setReviewOffset] = useState(0)
+  const [reviewStatus, setReviewStatus] =
+    useState<ExtractionCandidateStatus>("needs_review")
   const [selectedReleaseId, setSelectedReleaseId] = useState<string>()
 
   const metricsQuery = useQuery({
@@ -198,10 +202,33 @@ export function AdminWorkspace() {
   })
 
   const reviewsQuery = useQuery({
-    queryKey: ["admin", "review-items"],
-    queryFn: async () => (await AdminService.readReviewItems()).data,
+    queryKey: [
+      "admin",
+      "review-items",
+      selectedRunId,
+      reviewStatus,
+      reviewOffset,
+    ],
+    queryFn: async () =>
+      (
+        await AdminService.readReviewItems({
+          query: {
+            run_id: selectedRunId,
+            status: reviewStatus,
+            skip: reviewOffset,
+            limit: 100,
+          },
+        })
+      ).data,
     refetchInterval: 5000,
   })
+
+  useEffect(() => {
+    const count = reviewsQuery.data?.count
+    if (count !== undefined && reviewOffset > 0 && reviewOffset >= count) {
+      setReviewOffset(Math.max(0, Math.floor((count - 1) / 100) * 100))
+    }
+  }, [reviewsQuery.data?.count, reviewOffset])
 
   const releasesQuery = useQuery({
     queryKey: ["admin", "corpus-releases"],
@@ -570,7 +597,11 @@ export function AdminWorkspace() {
             onControl={(action, run, reason) =>
               runControlMutation.mutate({ action, run, reason })
             }
-            onSelect={setSelectedRunId}
+            onSelect={(id) => {
+              setSelectedRunId(id)
+              setReviewOffset(0)
+              setSelectedReviewId(undefined)
+            }}
             runs={runs}
             selected={selectedRun}
             selectedId={selectedRunId}
@@ -596,6 +627,15 @@ export function AdminWorkspace() {
         {tab === "review" ? (
           <ReviewWorkspace
             canReview={canReview}
+            totalCount={reviewsQuery.data?.count ?? 0}
+            pageOffset={reviewOffset}
+            onPageChange={setReviewOffset}
+            statusFilter={reviewStatus}
+            onStatusFilterChange={(value) => {
+              setReviewStatus(value)
+              setReviewOffset(0)
+              setSelectedReviewId(undefined)
+            }}
             isLoading={reviewsQuery.isLoading}
             isMutating={
               reviewUpdateMutation.isPending ||
@@ -623,6 +663,7 @@ export function AdminWorkspace() {
             auditEvents={auditEventsQuery.data?.data ?? []}
             benchmark={benchmarkQuery.data}
             canPublish={canPublish}
+            canOverride={isSuperuser}
             evidence={publicationEvidenceQuery.data}
             isBenchmarkLoading={benchmarkQuery.isLoading}
             isEvidenceLoading={publicationEvidenceQuery.isLoading}
@@ -933,6 +974,9 @@ function PageBoundaryWorkspace({
   isMutating: boolean
   onConfirm: (pages: SourcePagePublic[]) => void
 }) {
+  const canConfirm =
+    selectedRun?.status === "waiting_for_input" &&
+    selectedRun.current_stage === "awaiting_page_confirmation"
   const [pageDrafts, setPageDrafts] = useState<
     Record<string, PageBoundaryDraft>
   >({})
@@ -1001,7 +1045,7 @@ function PageBoundaryWorkspace({
     <Panel
       action={
         <SquircleButton
-          disabled={!pages.length || isMutating}
+          disabled={!canConfirm || !pages.length || isMutating}
           loading={isMutating}
           onClick={() => onConfirm(draftedPages)}
           type="button"
@@ -1019,6 +1063,12 @@ function PageBoundaryWorkspace({
       {selectedRun ? (
         <p className="mb-4 text-sm text-muted-foreground">
           {labelize(selectedRun.current_stage)} · {shortId(selectedRun.id)}
+        </p>
+      ) : null}
+      {selectedRun && !canConfirm ? (
+        <p className="mb-4 text-sm text-muted-foreground">
+          Page selection is available only while this run is awaiting page
+          confirmation.
         </p>
       ) : null}
       <section
@@ -1154,6 +1204,11 @@ function PageBoundaryDecision({
 
 function ReviewWorkspace({
   reviews,
+  totalCount,
+  pageOffset,
+  onPageChange,
+  statusFilter,
+  onStatusFilterChange,
   selected,
   selectedId,
   isLoading,
@@ -1165,6 +1220,11 @@ function ReviewWorkspace({
   onVerifySource,
 }: {
   reviews: ReviewItemPublic[]
+  totalCount: number
+  pageOffset: number
+  onPageChange: (offset: number) => void
+  statusFilter: ExtractionCandidateStatus
+  onStatusFilterChange: (status: ExtractionCandidateStatus) => void
   selected?: ReviewItemPublic
   selectedId?: string
   isLoading: boolean
@@ -1206,7 +1266,54 @@ function ReviewWorkspace({
 
   return (
     <div className="grid gap-4 lg:grid-cols-[360px_1fr]">
-      <Panel title="Review queue" count={reviews.length}>
+      <Panel title="Review queue" count={totalCount}>
+        <label className="mb-3 grid gap-1 text-sm">
+          Candidate status
+          <select
+            className={inputClass}
+            value={statusFilter}
+            onChange={(event) =>
+              onStatusFilterChange(
+                event.target.value as ExtractionCandidateStatus,
+              )
+            }
+          >
+            {[
+              "needs_review",
+              "needs_correction",
+              "approved",
+              "auto_approved",
+              "rejected",
+              "materialized",
+            ].map((status) => (
+              <option key={status} value={status}>
+                {labelize(status)}
+              </option>
+            ))}
+          </select>
+        </label>
+        <div className="mb-3 flex items-center justify-between gap-2 text-sm">
+          <SquircleButton
+            disabled={isLoading || pageOffset === 0}
+            onClick={() => onPageChange(Math.max(0, pageOffset - 100))}
+            type="button"
+            variant="outline"
+          >
+            Previous
+          </SquircleButton>
+          <span>
+            {totalCount === 0 ? 0 : pageOffset + 1}–
+            {Math.min(pageOffset + reviews.length, totalCount)} of {totalCount}
+          </span>
+          <SquircleButton
+            disabled={isLoading || pageOffset + 100 >= totalCount}
+            onClick={() => onPageChange(pageOffset + 100)}
+            type="button"
+            variant="outline"
+          >
+            Next
+          </SquircleButton>
+        </div>
         <ListState isLoading={isLoading} isEmpty={!reviews.length} />
         <div className="grid gap-2">
           {reviews.map((item) => (
@@ -1705,6 +1812,7 @@ function ReleaseWorkspace({
   auditEvents = [],
   benchmark,
   canPublish = true,
+  canOverride = false,
   evidence,
   isBenchmarkLoading,
   isEvidenceLoading,
@@ -1726,6 +1834,7 @@ function ReleaseWorkspace({
   }[]
   benchmark?: EmbeddingBenchmarkPublic
   canPublish?: boolean
+  canOverride?: boolean
   evidence?: CorpusReleasePublicationEvidencePublic
   isBenchmarkLoading: boolean
   isEvidenceLoading: boolean
@@ -1747,6 +1856,11 @@ function ReleaseWorkspace({
   }, [])
 
   const gates = selected?.validation_report?.unresolved_gates
+  const sourceEdition = selected?.validation_report?.source_edition_review
+  const sourceExceptions =
+    sourceEdition && typeof sourceEdition === "object"
+      ? (sourceEdition as Record<string, unknown>).known_exceptions
+      : undefined
   const unresolvedGates = Array.isArray(gates) ? gates : []
   const releaseManifest = releaseManifestSummary(manifest)
   const benchmarkResults = benchmark?.results ?? []
@@ -1817,6 +1931,20 @@ function ReleaseWorkspace({
                 value={formatMetric(selected.lock_version)}
               />
             </div>
+
+            {selected.validation_report?.corpus_legal_status ===
+            "historical" ? (
+              <div className="sq-md border border-border bg-background p-4 text-sm">
+                <p className="font-bold">Historical source edition</p>
+                <p className="mt-1 text-muted-foreground">
+                  This release preserves the uploaded edition. It has not been
+                  verified as the current amended Constitution.
+                </p>
+                {typeof sourceExceptions === "string" ? (
+                  <p className="mt-2">Source exceptions: {sourceExceptions}</p>
+                ) : null}
+              </div>
+            ) : null}
 
             {unresolvedGates.length ? (
               <div className="sq-md border border-[color:var(--legal-red)]/20 bg-[color:var(--legal-red-soft)] p-4 text-sm text-[color:var(--legal-red)]">
@@ -2160,6 +2288,14 @@ function ReleaseWorkspace({
                 onChange={(event) => setOverrideReason(event.target.value)}
               />
             </FieldLabel>
+            {actorEvidence?.current_actor_is_source_uploader ? (
+              <p className="text-sm text-muted-foreground" role="note">
+                You uploaded this source. Use a separate publisher account
+                {canOverride
+                  ? ", or enter a superuser override reason before publishing."
+                  : "; only a superuser can override this requirement."}
+              </p>
+            ) : null}
 
             {!canPublish ? (
               <p
@@ -2199,7 +2335,15 @@ function ReleaseWorkspace({
                 Validate
               </SquircleButton>
               <SquircleButton
-                disabled={isMutating || !canPublish}
+                disabled={
+                  isMutating ||
+                  !canPublish ||
+                  selected.status !== "approved" ||
+                  unresolvedGates.length > 0 ||
+                  isEvidenceLoading ||
+                  (actorEvidence?.current_actor_is_source_uploader &&
+                    (!canOverride || !overrideReason.trim()))
+                }
                 loading={isMutating}
                 onClick={() =>
                   onMutate(
@@ -2214,6 +2358,13 @@ function ReleaseWorkspace({
                 Publish
               </SquircleButton>
             </div>
+            {selected.status === "building" ||
+            selected.status === "validating" ? (
+              <p className="text-sm text-muted-foreground" role="note">
+                Select Validate first. When all checks pass, the release becomes
+                approved and Publish is enabled.
+              </p>
+            ) : null}
           </div>
         ) : (
           <EmptyState text="No corpus release selected." />
@@ -3026,9 +3177,7 @@ function mergeRunEvents(
 }
 
 function canResumeRun(run: IngestionRunPublic | IngestionRunDetail): boolean {
-  return ["waiting_for_input", "waiting_for_review", "cancelled"].includes(
-    run.status,
-  )
+  return run.status === "cancelled"
 }
 
 function canRetryRun(run: IngestionRunPublic | IngestionRunDetail): boolean {

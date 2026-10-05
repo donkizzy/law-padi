@@ -56,6 +56,124 @@ test("Admin legal workspace is accessible and shows evidence operations", async 
   }
 })
 
+test("Review queue paginates the full total and filters completed candidates", async ({
+  page,
+}) => {
+  await mockAdminApi(page)
+  await page.route("**/api/v1/admin/review-items?**", async (route) => {
+    const url = new URL(route.request().url())
+    const skip = Number(url.searchParams.get("skip") ?? 0)
+    const materialized = url.searchParams.get("status") === "materialized"
+    const total = materialized ? 1 : 144
+    const count = Math.min(100, total - skip)
+    return json(route, {
+      data: Array.from({ length: count }, (_, index) => ({
+        ...reviewItem(true),
+        id: `candidate-${skip + index}`,
+        heading: `Candidate ${skip + index + 1}`,
+        status: materialized ? "materialized" : "needs_review",
+      })),
+      count: total,
+    })
+  })
+  await page.goto("/admin")
+  await page.getByRole("tab", { name: "Review queue" }).click()
+  await expect(page.getByText("1–100 of 144")).toBeVisible()
+  await page.getByRole("button", { name: "Next", exact: true }).click()
+  await expect(page.getByText("101–144 of 144")).toBeVisible()
+  await expect(
+    page.getByRole("button", { name: "Next", exact: true }),
+  ).toBeDisabled()
+  await page.getByLabel("Candidate status").selectOption("materialized")
+  await expect(page.getByText("1–1 of 1")).toBeVisible()
+  await expect(
+    page.getByRole("button", { name: "Previous", exact: true }),
+  ).toBeDisabled()
+})
+
+test("Historical release review displays preserved source exceptions", async ({
+  page,
+}) => {
+  await mockAdminApi(page)
+  await page.route("**/api/v1/admin/corpus-releases", async (route) =>
+    json(route, {
+      data: [
+        {
+          ...corpusRelease(),
+          validation_report: {
+            corpus_legal_status: "historical",
+            source_edition_review: {
+              known_exceptions:
+                "Printed duplicate 189; missing 168; punctuation retained.",
+            },
+            unresolved_gates: [],
+          },
+        },
+      ],
+      count: 1,
+    }),
+  )
+  await page.goto("/admin")
+  await page.getByRole("tab", { name: "Corpus releases" }).click()
+  await expect(
+    page.getByText("Historical source edition", { exact: true }),
+  ).toBeVisible()
+  await expect(
+    page.getByText(/Source exceptions: Printed duplicate 189; missing 168/),
+  ).toBeVisible()
+})
+
+test("Publish waits for validation and uses the updated release version", async ({
+  page,
+}) => {
+  await mockAdminApi(page)
+  let release = { ...corpusRelease(), status: "building", lock_version: 4 }
+  await page.route("**/api/v1/admin/corpus-releases", (route) =>
+    json(route, { data: [release], count: 1 }),
+  )
+  await page.route(
+    `**/api/v1/admin/corpus-releases/${releaseId}/validate`,
+    async (route) => {
+      expect(route.request().postDataJSON().expected_version).toBe(4)
+      release = { ...release, status: "approved", lock_version: 5 }
+      return json(route, release)
+    },
+  )
+  let published = false
+  await page.route(
+    `**/api/v1/admin/corpus-releases/${releaseId}/publish`,
+    async (route) => {
+      expect(route.request().postDataJSON().expected_version).toBe(5)
+      published = true
+      release = { ...release, status: "production", lock_version: 6 }
+      return json(route, { release, promotion_status: "succeeded" })
+    },
+  )
+  await page.goto("/admin")
+  await page.getByRole("tab", { name: "Corpus releases" }).click()
+  await expect(
+    page.getByRole("button", { name: "Publish", exact: true }),
+  ).toBeDisabled()
+  await expect(page.getByText(/Select Validate first/)).toBeVisible()
+  expect(published).toBe(false)
+  await page.getByRole("button", { name: "Validate", exact: true }).click()
+  await expect(page.getByText(/You uploaded this source/)).toBeVisible()
+  await expect(
+    page.getByRole("button", { name: "Publish", exact: true }),
+  ).toBeDisabled()
+  await page
+    .getByLabel("Superuser override reason")
+    .fill("Authorized local development publication after source review.")
+  await expect(
+    page.getByRole("button", { name: "Publish", exact: true }),
+  ).toBeEnabled()
+  await page.getByRole("button", { name: "Publish", exact: true }).click()
+  await expect(
+    page.getByRole("button", { name: "Publish", exact: true }),
+  ).toBeDisabled()
+  expect(published).toBe(true)
+})
+
 test("Admin can complete a PDF upload session from the browser", async ({
   page,
 }) => {
@@ -256,12 +374,14 @@ test("Admin sees provisional page previews and source-span evidence before revie
 test("Admin can confirm pages, correct review text, control runs, inspect benchmarks, and publish", async ({
   page,
 }) => {
-  const requests = await mockAdminApi(page)
+  const requests = await mockAdminApi(page, {
+    initialRunStage: "awaiting_page_confirmation",
+  })
 
   await page.goto("/admin")
   await expect(
     page.getByRole("button", { exact: true, name: "Resume" }),
-  ).toBeEnabled()
+  ).toBeDisabled()
   await expect(
     page.getByRole("button", { exact: true, name: "Retry" }),
   ).toBeDisabled()
@@ -269,8 +389,6 @@ test("Admin can confirm pages, correct review text, control runs, inspect benchm
     page.getByRole("button", { exact: true, name: "Cancel" }),
   ).toBeEnabled()
 
-  await page.getByRole("button", { exact: true, name: "Resume" }).click()
-  await expect(page.getByText("Run control saved.").last()).toBeVisible()
   await page.getByRole("button", { exact: true, name: "Cancel" }).click()
   await expect(page.getByText("Run control saved.").last()).toBeVisible()
 
@@ -289,6 +407,15 @@ test("Admin can confirm pages, correct review text, control runs, inspect benchm
     page.getByRole("button", { exact: true, name: "Resume" }),
   ).toBeEnabled()
 
+  await page.getByRole("tab", { name: "Page boundaries" }).click()
+  await expect(
+    page.getByRole("button", { name: "Confirm suggested pages" }),
+  ).toBeDisabled()
+  await page.getByRole("tab", { name: "Ingestion runs" }).click()
+  await page.getByRole("button", { name: /Awaiting Page Confirmation/ }).click()
+  await expect(
+    page.getByRole("button", { exact: true, name: "Resume" }),
+  ).toBeDisabled()
   await page.getByRole("tab", { name: "Page boundaries" }).click()
   await expect(page.getByText("p.1")).toBeVisible()
   await expect(page.getByText("p.2")).toBeVisible()
@@ -450,6 +577,7 @@ async function runEventStreamLastEventIds(page: Page) {
 
 type AdminMockOptions = {
   eventStream?: "ok" | "fail" | "fail-once"
+  initialRunStage?: "awaiting_page_confirmation" | "verifying_upload"
   multipartRequired?: boolean
   uploadBackend?: "local" | "r2"
   roles?: string[]
@@ -494,6 +622,7 @@ async function mockAdminApi(
     sourceVerifications: 0,
   }
   let sourceVerified = false
+  let releaseStatus = "validating"
   let revisionText: string | null = null
 
   await page.addInitScript(() => {
@@ -562,7 +691,7 @@ async function mockAdminApi(
     }
 
     if (method === "GET" && path.endsWith("/ingestion-runs")) {
-      const runs = ingestionRuns()
+      const runs = ingestionRuns(options.initialRunStage)
       requests.runs += 1
       return json(route, { data: runs, count: runs.length })
     }
@@ -611,13 +740,16 @@ async function mockAdminApi(
     const runDetailMatch = path.match(/\/ingestion-runs\/([^/]+)$/)
     if (method === "GET" && runDetailMatch) {
       requests.detail += 1
-      return json(route, ingestionRunDetail(runDetailMatch[1]))
+      return json(
+        route,
+        ingestionRunDetail(runDetailMatch[1], options.initialRunStage),
+      )
     }
 
     const retryMatch = path.match(/\/ingestion-runs\/([^/]+)\/retry$/)
     if (method === "POST" && retryMatch) {
       return json(route, {
-        ...ingestionRunFor(retryMatch[1]),
+        ...ingestionRunFor(retryMatch[1], options.initialRunStage),
         status: "queued",
       })
     }
@@ -625,7 +757,7 @@ async function mockAdminApi(
     const cancelMatch = path.match(/\/ingestion-runs\/([^/]+)\/cancel$/)
     if (method === "POST" && cancelMatch) {
       return json(route, {
-        ...ingestionRunFor(cancelMatch[1]),
+        ...ingestionRunFor(cancelMatch[1], options.initialRunStage),
         status: "cancelled",
       })
     }
@@ -633,7 +765,7 @@ async function mockAdminApi(
     const resumeMatch = path.match(/\/ingestion-runs\/([^/]+)\/resume$/)
     if (method === "POST" && resumeMatch) {
       return json(route, {
-        ...ingestionRunFor(resumeMatch[1]),
+        ...ingestionRunFor(resumeMatch[1], options.initialRunStage),
         status: "queued",
       })
     }
@@ -774,7 +906,10 @@ async function mockAdminApi(
     }
 
     if (method === "GET" && path.endsWith("/corpus-releases")) {
-      return json(route, { data: [corpusRelease()], count: 1 })
+      return json(route, {
+        data: [{ ...corpusRelease(), status: releaseStatus }],
+        count: 1,
+      })
     }
 
     if (
@@ -820,6 +955,7 @@ async function mockAdminApi(
       method === "POST" &&
       path.endsWith(`/corpus-releases/${releaseId}/validate`)
     ) {
+      releaseStatus = "approved"
       return json(route, { ...corpusRelease(), status: "approved" })
     }
 
@@ -827,6 +963,7 @@ async function mockAdminApi(
       method === "POST" &&
       path.endsWith(`/corpus-releases/${releaseId}/publish`)
     ) {
+      releaseStatus = "production"
       return json(route, {
         release: { ...corpusRelease(), status: "production" },
         promotion_status: "succeeded",
@@ -891,22 +1028,42 @@ async function mockAdminApi(
   return requests
 }
 
-function ingestionRuns() {
-  return [ingestionRun(), failedIngestionRun(), cancelledIngestionRun()]
+function ingestionRuns(
+  initialRunStage:
+    | "awaiting_page_confirmation"
+    | "verifying_upload" = "verifying_upload",
+) {
+  return [
+    ingestionRun(initialRunStage),
+    failedIngestionRun(initialRunStage),
+    cancelledIngestionRun(initialRunStage),
+  ]
 }
 
-function ingestionRunFor(id: string) {
-  return ingestionRuns().find((run) => run.id === id) ?? ingestionRun()
+function ingestionRunFor(
+  id: string,
+  initialRunStage:
+    | "awaiting_page_confirmation"
+    | "verifying_upload" = "verifying_upload",
+) {
+  return (
+    ingestionRuns(initialRunStage).find((run) => run.id === id) ??
+    ingestionRun(initialRunStage)
+  )
 }
 
-function ingestionRun() {
+function ingestionRun(
+  initialRunStage:
+    | "awaiting_page_confirmation"
+    | "verifying_upload" = "verifying_upload",
+) {
   return {
     id: runId,
     source_upload_id: uploadId,
     source_document_id: sourceDocumentId,
     created_by: "99999999-9999-4999-8999-999999999999",
     status: "waiting_for_input",
-    current_stage: "verifying_upload",
+    current_stage: initialRunStage,
     pipeline_version: "legal-ingestion-v1",
     pipeline_config: { instrument_parser: "constitution" },
     expected_page_count: 2,
@@ -921,9 +1078,13 @@ function ingestionRun() {
   }
 }
 
-function failedIngestionRun() {
+function failedIngestionRun(
+  initialRunStage:
+    | "awaiting_page_confirmation"
+    | "verifying_upload" = "verifying_upload",
+) {
   return {
-    ...ingestionRun(),
+    ...ingestionRun(initialRunStage),
     id: failedRunId,
     status: "failed",
     current_stage: "native_extraction",
@@ -934,9 +1095,13 @@ function failedIngestionRun() {
   }
 }
 
-function cancelledIngestionRun() {
+function cancelledIngestionRun(
+  initialRunStage:
+    | "awaiting_page_confirmation"
+    | "verifying_upload" = "verifying_upload",
+) {
   return {
-    ...ingestionRun(),
+    ...ingestionRun(initialRunStage),
     id: cancelledRunId,
     status: "cancelled",
     current_stage: "publishing",
@@ -946,8 +1111,13 @@ function cancelledIngestionRun() {
   }
 }
 
-function ingestionRunDetail(id = runId) {
-  const run = ingestionRunFor(id)
+function ingestionRunDetail(
+  id = runId,
+  initialRunStage:
+    | "awaiting_page_confirmation"
+    | "verifying_upload" = "verifying_upload",
+) {
+  const run = ingestionRunFor(id, initialRunStage)
   return {
     ...run,
     steps: [
@@ -1482,7 +1652,9 @@ function onePagePdf() {
 test("Admin uses range selection, revision diffs, audit history, and OCR benchmarks", async ({
   page,
 }) => {
-  const requests = await mockAdminApi(page)
+  const requests = await mockAdminApi(page, {
+    initialRunStage: "awaiting_page_confirmation",
+  })
 
   await page.goto("/admin")
 
