@@ -22,6 +22,64 @@ from app.legal.parser import (
 )
 
 
+def test_oaths_are_retained_and_appended_rules_do_not_become_constitution_items() -> (
+    None
+):
+    parsed = parse_constitution_pages(
+        [
+            SourcePage(
+                170,
+                "Seventh Schedule\nOaths\nOaths of Allegiance\nI, ... do solemnly swear/affirm.\nSo help me God.",
+            ),
+            SourcePage(
+                171,
+                "Oath of Office of Vice-President, Deputy Governor, Minister, Commissioner or\nSpecial Adviser\nI shall perform my duties faithfully.",
+            ),
+            SourcePage(
+                172,
+                "Judicial Oath\nI shall preserve the Constitution.\nSo help me God\nFUNDAMENTAL RIGHTS (ENFORCEMENT PROCEDURE) RULES S.I 1 OF 1979\n1. (1) These Rules may be cited as separate Rules.",
+            ),
+            SourcePage(191, "13. Each Secretariat shall submit a Report."),
+        ],
+        "constitution-1999",
+    )
+    by_path = {node.canonical_path: node for node in parsed}
+    assert set(by_path) == {
+        "constitution-1999.schedule7",
+        "constitution-1999.schedule7.oath-allegiance",
+        "constitution-1999.schedule7.oath-executive",
+        "constitution-1999.schedule7.oath-judicial",
+    }
+    executive_heading = by_path["constitution-1999.schedule7.oath-executive"].heading
+    assert executive_heading is not None
+    assert executive_heading.endswith("Special Adviser")
+    judicial = by_path["constitution-1999.schedule7.oath-judicial"]
+    assert judicial.text == "I shall preserve the Constitution.\nSo help me God"
+    assert judicial.page_start == judicial.page_end == 172
+    assert (
+        by_path["constitution-1999.schedule7"].parser_metadata[
+            "appended_instrument_boundary"
+        ]["page_number"]
+        == 172
+    )
+
+
+def test_wrapped_schedule_number_does_not_swallow_later_items() -> None:
+    parsed = parse_constitution_pages(
+        [
+            SourcePage(
+                149,
+                "Third Schedule\nPart I\n1. First item\n(2.) The Council shall have power to advise.\n3. The Commission shall comprise members.",
+            )
+        ],
+        "constitution-1999",
+    )
+    items = [node for node in parsed if node.kind == ProvisionKind.SCHEDULE_ITEM]
+    assert [node.number for node in items] == ["1", "2", "3"]
+    assert items[0].text == "First item"
+    assert items[1].text == "The Council shall have power to advise."
+
+
 def test_parse_constitution_pages_builds_hierarchy_and_text_metadata() -> None:
     parsed = parse_constitution_pages(
         [
@@ -131,6 +189,102 @@ This duplicate should fail before persistence.
             ],
             "cfrn-1999",
         )
+
+
+def test_parse_constitution_pages_skips_arrangement_prefix_and_part_references() -> (
+    None
+):
+    parsed = parse_constitution_pages(
+        [
+            SourcePage(
+                page_number=1,
+                text="""
+Arrangement of sections
+Chapter I
+General Provisions
+Part I
+1. Supremacy of the Constitution
+""",
+            ),
+            SourcePage(
+                page_number=2,
+                text="""
+Chapter I
+General Provisions
+Part I
+Federal Republic of Nigeria
+1
+. (1) This Constitution is supreme and binding throughout Nigeria.
+Part I of the First Schedule to this Constitution remains applicable.
+""",
+            ),
+        ],
+        "cfrn-1999",
+    )
+
+    assert [node.canonical_path for node in parsed] == [
+        "cfrn-1999.chapter1",
+        "cfrn-1999.chapter1.part1",
+        "cfrn-1999.chapter1.part1.section1",
+        "cfrn-1999.chapter1.part1.section1.subsection1",
+    ]
+    assert parsed[0].page_start == 2
+    assert "Part I of the First Schedule" in (parsed[2].text or "")
+
+
+def test_parse_constitution_pages_models_schedule_parts_and_nested_numbering() -> None:
+    parsed = parse_constitution_pages(
+        [
+            SourcePage(
+                page_number=1,
+                text="""
+FIRST SCHEDULE
+PART I
+1. First item
+2. (1) Second item
+2. This repeated marker is a nested paragraph, not another item.
+PART II
+1. First item in the second part
+""",
+            )
+        ],
+        "cfrn-1999",
+    )
+
+    paths = [node.canonical_path for node in parsed]
+    assert paths == [
+        "cfrn-1999.schedule1",
+        "cfrn-1999.schedule1.part1",
+        "cfrn-1999.schedule1.part1.item1",
+        "cfrn-1999.schedule1.part1.item2",
+        "cfrn-1999.schedule1.part2",
+        "cfrn-1999.schedule1.part2.item1",
+    ]
+    second_item = next(
+        node for node in parsed if node.canonical_path.endswith("part1.item2")
+    )
+    assert "nested paragraph" in (second_item.text or "")
+
+
+def test_parse_constitution_pages_keeps_bare_year_with_current_section() -> None:
+    parsed = parse_constitution_pages(
+        [
+            SourcePage(
+                page_number=1,
+                text="""
+CHAPTER I
+319. This Constitution may be cited as the Constitution of Nigeria
+1999.
+320. This Constitution comes into force on the appointed day.
+""",
+            )
+        ],
+        "cfrn-1999",
+    )
+
+    sections = [node for node in parsed if node.kind == ProvisionKind.SECTION]
+    assert [node.number for node in sections] == ["319", "320"]
+    assert (sections[0].text or "").endswith("1999.")
 
 
 def test_parse_constitution_pages_requires_text_nodes() -> None:
