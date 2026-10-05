@@ -16,11 +16,11 @@ from app.core.config import settings
 from app.ingestion.embedding import (
     DEFAULT_EMBEDDING_BATCH_SIZE,
     DenseEmbeddingProvider,
+    EmbeddingBatch,
     EmbeddingBenchmarkQuery,
     HuggingFaceTeiEmbeddingProvider,
     OpenAIEmbeddingProvider,
     SparseLegalEncoder,
-    batched_embed,
     evaluate_embedding_benchmark,
     select_best_embedding_run,
 )
@@ -1063,14 +1063,19 @@ def handle_materializing(
         )
     _ensure_no_open_blocking_issues(session, candidates)
 
+    corpus_legal_status = _corpus_legal_status(run)
     provision_ids_by_candidate_id: dict[uuid.UUID, uuid.UUID] = {}
     materialized_version_ids: set[uuid.UUID] = set()
     created_provisions = 0
     created_versions = 0
     reused_versions = 0
     superseded_versions = 0
-    changed_current_law_text_count = _block_unclassified_current_law_changes(
-        session, source=source, candidates=candidates
+    changed_current_law_text_count = (
+        _block_unclassified_current_law_changes(
+            session, source=source, candidates=candidates
+        )
+        if corpus_legal_status == LegalStatus.CURRENT
+        else 0
     )
     if changed_current_law_text_count:
         session.commit()
@@ -1101,7 +1106,12 @@ def handle_materializing(
         candidate.materialized_provision_id = provision.id
         text = _candidate_text_for_materialization(session, candidate)
         if text:
-            version, version_action = _upsert_current_version_from_candidate(
+            upsert_version = (
+                _upsert_historical_version_from_candidate
+                if corpus_legal_status == LegalStatus.HISTORICAL
+                else _upsert_current_version_from_candidate
+            )
+            version, version_action = upsert_version(
                 session,
                 source=source,
                 instrument=instrument,
@@ -1141,6 +1151,10 @@ def handle_materializing(
     release.parser_version = PARSER_VERSION
     release.validation_report = {
         "entry_count": len(entries),
+        "corpus_legal_status": corpus_legal_status.value,
+        "source_edition_review": (run.pipeline_config or {}).get(
+            "source_edition_review"
+        ),
         "materialized_run_id": str(run.id),
         "ingestion_run_ids": manifest["ingestion_run_ids"],
         "source_document_ids": manifest["source_document_ids"],
@@ -1324,15 +1338,29 @@ def handle_embedding(
             batch_size = _profile_int(
                 profile, "batch_size", default=DEFAULT_EMBEDDING_BATCH_SIZE
             )
-            batch = batched_embed(provider, texts, batch_size=batch_size)
+            batch = _embed_with_checkpoints(
+                session,
+                run=run,
+                profile=profile,
+                embedding_run=embedding_run,
+                provider=provider,
+                texts=texts,
+                batch_size=batch_size,
+                kind="documents",
+            )
             if batch.dimensions != profile.vector_dimensions:
                 raise IngestionWorkerError(
                     "Embedding vector dimensions do not match the profile"
                 )
-            query_batch = batched_embed(
-                provider,
-                [query.query_text for query in benchmark_queries],
+            query_batch = _embed_with_checkpoints(
+                session,
+                run=run,
+                profile=profile,
+                embedding_run=embedding_run,
+                provider=provider,
+                texts=[query.query_text for query in benchmark_queries],
                 batch_size=batch_size,
+                kind="queries",
             )
             if query_batch.dimensions != profile.vector_dimensions:
                 raise IngestionWorkerError(
@@ -1430,6 +1458,11 @@ def handle_embedding(
 
     selected_run = select_best_embedding_run(embedding_runs)
     if not selected_run:
+        failures = [item.error_details for item in embedding_runs if item.error_details]
+        if failures:
+            raise IngestionWorkerError(
+                f"Embedding provider failures: {json.dumps(failures)}"
+            )
         raise IngestionWorkerError(
             "No embedding run reached the Recall@10 publication threshold"
         )
@@ -1444,11 +1477,24 @@ def handle_embedding(
         "selected_embedding_run_id": str(selected_run.id),
         "embedding_profile_id": str(selected_profile.id),
         "unresolved_gates": [
+            *[
+                gate
+                for gate in (release.validation_report or {}).get(
+                    "unresolved_gates", []
+                )
+                if gate
+                not in {
+                    "selected_embedding_run_missing",
+                    "retrieval_documents_pending",
+                    "ready_retrieval_index_build_missing",
+                    "ready_vector_index_missing",
+                }
+            ],
             (
                 "ready_retrieval_index_build_missing"
                 if settings.RETRIEVAL_INDEX_BACKEND == "pgvector"
                 else "ready_vector_index_missing"
-            )
+            ),
         ],
     }
     release.lock_version += 1
@@ -1469,6 +1515,138 @@ def handle_embedding(
             "release_id": str(release.id),
             "embedding_run_id": str(selected_run.id),
         },
+    )
+
+
+def _embed_with_checkpoints(
+    session: Session,
+    *,
+    run: IngestionRun,
+    profile: EmbeddingProfile,
+    embedding_run: EmbeddingRun,
+    provider: DenseEmbeddingProvider,
+    texts: list[str],
+    batch_size: int,
+    kind: str,
+) -> EmbeddingBatch:
+    size = max(1, batch_size)
+    if len(texts) <= size:
+        return provider.embed(texts)
+    artifacts = session.exec(
+        select(IngestionArtifact).where(
+            IngestionArtifact.run_id == run.id,
+            IngestionArtifact.artifact_type == IngestionArtifactType.EMBEDDINGS,
+        )
+    ).all()
+    checkpoints = {
+        item.artifact_metadata.get("checkpoint_key"): item
+        for item in artifacts
+        if item.artifact_metadata and item.artifact_metadata.get("checkpoint_key")
+    }
+    vectors: list[list[float]] = []
+    first: EmbeddingBatch | None = None
+    costs: list[float | None] = []
+    for offset in range(0, len(texts), size):
+        inputs = texts[offset : offset + size]
+        key = _sha256_json(
+            {
+                "profile_id": str(profile.id),
+                "model_name": profile.model_name,
+                "model_revision": profile.model_revision,
+                "provider": str(profile.provider),
+                "vector_dimensions": profile.vector_dimensions,
+                "configuration": profile.configuration,
+                "kind": kind,
+                "offset": offset,
+                "inputs": inputs,
+            }
+        )
+        cached = checkpoints.get(key)
+        if cached:
+            content = get_blob_store().read_bytes(cached.storage_key)
+            if hashlib.sha256(content).hexdigest() != cached.sha256:
+                raise IngestionWorkerError("Embedding checkpoint hash mismatch")
+            payload = _json_object(content)
+            raw_vectors = payload["vectors"]
+            batch = EmbeddingBatch(
+                provider=str(payload["provider"]),
+                model_name=profile.model_name,
+                model_revision=profile.model_revision,
+                vectors=[_float_vector(value) for value in raw_vectors],
+                cost_usd=payload.get("cost_usd"),
+                metrics=payload.get("metrics"),
+            )
+        else:
+            batch = provider.embed(inputs)
+            if len(batch.vectors) != len(inputs) or any(
+                len(vector) != profile.vector_dimensions for vector in batch.vectors
+            ):
+                raise IngestionWorkerError(
+                    "Embedding batch count or dimensions mismatch"
+                )
+            content = json.dumps(
+                {
+                    "provider": batch.provider,
+                    "vectors": batch.vectors,
+                    "cost_usd": batch.cost_usd,
+                    "metrics": batch.metrics,
+                },
+                sort_keys=True,
+            ).encode()
+            content_hash = hashlib.sha256(content).hexdigest()
+            blob = get_blob_store().put_artifact(
+                run_id=str(run.id),
+                artifact_type=IngestionArtifactType.EMBEDDINGS.value,
+                filename=f"batch-{key}-{content_hash}.json",
+                content=content,
+                content_type="application/json",
+            )
+            _ensure_artifact(
+                session,
+                run_id=run.id,
+                artifact_type=IngestionArtifactType.EMBEDDINGS,
+                storage_key=blob.key,
+                sha256=blob.sha256,
+                mime_type=blob.content_type,
+                metadata={
+                    "checkpoint_key": key,
+                    "profile_id": str(profile.id),
+                    "kind": kind,
+                    "offset": offset,
+                    "input_count": len(inputs),
+                },
+            )
+        if len(batch.vectors) != len(inputs) or any(
+            len(vector) != profile.vector_dimensions for vector in batch.vectors
+        ):
+            raise IngestionWorkerError(
+                "Embedding checkpoint count or dimensions mismatch"
+            )
+        first = first or batch
+        vectors.extend(batch.vectors)
+        costs.append(batch.cost_usd)
+        embedding_run.metrics = {
+            **(embedding_run.metrics or {}),
+            f"{kind}_progress": {
+                "completed": len(vectors),
+                "total": len(texts),
+                "batch_size": size,
+            },
+        }
+        session.add(embedding_run)
+        session.commit()
+    assert first is not None
+    return EmbeddingBatch(
+        provider=first.provider,
+        model_name=first.model_name,
+        model_revision=first.model_revision,
+        vectors=vectors,
+        cost_usd=(
+            sum(cast(list[float], costs))
+            if all(cost is not None for cost in costs)
+            else None
+        ),
+        metrics={**(first.metrics or {}), "batched_batches": len(costs)},
     )
 
 
@@ -1745,6 +1923,13 @@ def handle_validating_index(
             release.validation_report = {
                 **(release.validation_report or {}),
                 "ready_retrieval_index_build_id": str(build.id),
+                "unresolved_gates": [
+                    gate
+                    for gate in (release.validation_report or {}).get(
+                        "unresolved_gates", []
+                    )
+                    if gate != "ready_retrieval_index_build_missing"
+                ],
             }
             release.lock_version += 1
             session.add(release)
@@ -2257,6 +2442,55 @@ def _candidate_text_for_materialization(
     return text.strip()
 
 
+def _corpus_legal_status(run: IngestionRun) -> LegalStatus:
+    value = (run.pipeline_config or {}).get("corpus_legal_status", "current")
+    if value not in {LegalStatus.CURRENT.value, LegalStatus.HISTORICAL.value}:
+        raise IngestionWorkerError("Corpus legal status must be current or historical")
+    return LegalStatus(value)
+
+
+def _upsert_historical_version_from_candidate(
+    session: Session,
+    *,
+    source: SourceDocument,
+    instrument: LegalInstrument,
+    provision: Provision,
+    candidate: ExtractionCandidate,
+    text: str,
+) -> tuple[ProvisionVersion, str]:
+    """Store a source edition without changing or reusing current-law versions."""
+    text_sha256 = legal_text_sha256(text)
+    versions = session.exec(
+        select(ProvisionVersion).where(ProvisionVersion.provision_id == provision.id)
+    ).all()
+    for version in versions:
+        if (
+            version.legal_status == LegalStatus.HISTORICAL
+            and version.source_document_id == source.id
+            and version.text_sha256 == text_sha256
+        ):
+            return version, "reused"
+    if versions:
+        raise IngestionWorkerError(
+            "Historical source editions need a separate provision identity or "
+            "reviewed validity dates when versions already exist"
+        )
+    version = ProvisionVersion(
+        provision_id=provision.id,
+        text=text,
+        normalized_text=normalize_legal_text(text),
+        valid_from=_version_valid_from(instrument, source),
+        legal_status=LegalStatus.HISTORICAL,
+        source_document_id=source.id,
+        source_page_start=candidate.source_page_start,
+        source_page_end=candidate.source_page_end,
+        text_sha256=text_sha256,
+    )
+    session.add(version)
+    session.flush()
+    return version, "created"
+
+
 def _upsert_current_version_from_candidate(
     session: Session,
     *,
@@ -2435,7 +2669,17 @@ def _sync_release_entries(
     instrument: LegalInstrument,
     materialized_version_ids: set[uuid.UUID],
 ) -> list[CorpusReleaseEntry]:
-    versions = _current_versions_for_instrument(session, instrument.id)
+    versions = (
+        list(
+            session.exec(
+                select(ProvisionVersion)
+                .where(col(ProvisionVersion.id).in_(materialized_version_ids))
+                .order_by(col(ProvisionVersion.id))
+            ).all()
+        )
+        if _corpus_legal_status(run) == LegalStatus.HISTORICAL
+        else _current_versions_for_instrument(session, instrument.id)
+    )
     run_ids_by_version = _materialized_run_ids_by_version(
         session, [version.id for version in versions]
     )
@@ -2785,10 +3029,14 @@ def _embedding_provider_for_profile(
         )
     if provider == EmbeddingProviderKind.HUGGINGFACE_TEI.value:
         return HuggingFaceTeiEmbeddingProvider(
-            endpoint_url=settings.HUGGINGFACE_TEI_ENDPOINT_URL,
+            endpoint_url=(
+                _profile_string(profile, "endpoint_url")
+                or settings.HUGGINGFACE_TEI_ENDPOINT_URL
+            ),
             api_token=settings.HUGGINGFACE_API_TOKEN,
             model_name=profile.model_name,
             model_revision=profile.model_revision,
+            timeout_seconds=_profile_float(profile, "timeout_seconds") or 120,
         )
     raise IngestionWorkerError(f"Unsupported embedding provider: {provider}")
 

@@ -1,5 +1,57 @@
 # Ingestion Runbooks (V1, dev mode)
 
+## Source-verified formatting repair
+
+Native PDF extraction now collects coordinate spans in PDF stream order and
+reconstructs page text with pypdf's layout mode. Layout output is accepted only
+when its complete non-whitespace character sequence matches plain extraction;
+otherwise the plain text and a diagnostic are retained. Raw extraction artifacts
+also retain `plain_text`. This repairs split glyphs and raised ordinal suffixes
+without guessing missing letters or changing punctuation.
+
+The versioned normalizer records the rules applied to each page. It preserves
+hard hyphens at line breaks, subsection markers, and line boundaries. Spans can
+be narrowed to a provision's exact character range while retaining their
+original text, offsets, and enclosing bounding boxes. Repeated wording must have
+unique parent context before it can be matched. Revision revalidation clears
+coverage findings only on exact source-character agreement with coordinate
+evidence; unrelated blockers remain open.
+
+For a run already waiting for review, run the maintenance command from
+`backend/`. Supply a local copy of its original PDF (its SHA-256 is checked), a
+known superuser's email, and a report destination:
+
+```bash
+uv run python -m scripts.repair_extraction_formatting \
+  --run-id RUN_UUID \
+  --source-file /absolute/path/original.pdf \
+  --reviewer-email REVIEWER_EMAIL \
+  --report /absolute/path/formatting-preview.json
+```
+
+The default is a dry run. Inspect the JSON before rerunning with `--apply`.
+`--repair-boundaries` restores schedule items swallowed by an unrecognized
+source marker and creates their missing candidates; `--separate-appendices`
+marks misattributed appendix candidates rejected while retaining the original
+source, candidate text, issues, and decision history for separate ingestion.
+The original PDF and raw candidates are never overwritten. Candidates with
+existing revisions or decisions are skipped. New edits use the normal revision
+service, optimistic versions, idempotency keys, before/after snapshots, diffs,
+and recorded reasons. The command never approves or publishes candidates.
+
+The Constitution parser handles wrapped schedule markers such as `(6.)` and
+unnumbered Schedule 7 oaths. In the current source compilation, the appended
+Fundamental Rights Rules begin partway through PDF page 172. That heading is an
+explicit instrument boundary; its page and title are recorded in parser metadata.
+The full original PDF is retained. Appended rules, orders, and their schedules
+require a separate supported instrument parser and reviewed identity/date/status
+metadata before ingestion; they must not be published as Constitution schedules.
+
+Malformed punctuation and numbering already present in the source require source
+review, not speculative normalization. Preserve those findings until a reviewer
+has authoritative evidence for a correction. A whitespace revision does not
+approve legal wording or establish the source's legal status.
+
 ## Upload quarantine and promotion
 
 Upload completion is not source verification. The API only checks the

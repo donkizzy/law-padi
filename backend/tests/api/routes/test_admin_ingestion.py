@@ -930,6 +930,9 @@ def test_run_control_mutations_are_idempotent(
         json=resume_body,
     )
     assert resume_response.status_code == 200
+    db.refresh(resume_run)
+    assert resume_run.status == IngestionRunStatus.WAITING_FOR_INPUT
+    assert resume_run.current_stage == IngestionStage.AWAITING_PAGE_CONFIRMATION
     repeated_resume = client.post(
         f"{settings.API_V1_STR}/admin/ingestion-runs/{resume_run.id}/resume",
         headers=superuser_token_headers,
@@ -942,7 +945,7 @@ def test_run_control_mutations_are_idempotent(
             .select_from(IngestionEvent)
             .where(
                 IngestionEvent.run_id == resume_run.id,
-                IngestionEvent.event_type == "run_resumed",
+                IngestionEvent.event_type == "run_resume_not_required",
             )
         ).one()
         == 1
@@ -1064,6 +1067,89 @@ def test_resume_cancelled_run_requeues_current_stage_once(
         ).one()
         == 1
     )
+
+
+def test_resume_cancelled_page_confirmation_reopens_admin_gate(
+    client: TestClient,
+    superuser_token_headers: dict[str, str],
+    db: Session,
+) -> None:
+    source, run = _source_and_run(db)
+    page = SourcePage(
+        run_id=run.id,
+        source_document_id=source.id,
+        page_number=1,
+        role=PageRole.LEGAL_BODY,
+        inclusion_status=PageInclusionStatus.SUGGESTED_INCLUDE,
+        inclusion_reason="Suggested legal body page",
+    )
+    db.add(page)
+    db.commit()
+    db.refresh(run)
+    db.refresh(page)
+    awaiting_step = db.exec(
+        select(IngestionStep).where(
+            IngestionStep.run_id == run.id,
+            IngestionStep.stage == IngestionStage.AWAITING_PAGE_CONFIRMATION,
+        )
+    ).one()
+
+    cancel_response = client.post(
+        f"{settings.API_V1_STR}/admin/ingestion-runs/{run.id}/cancel",
+        headers=superuser_token_headers,
+        json={
+            "idempotency_key": f"cancel-{uuid.uuid4().hex}",
+            "expected_version": run.lock_version,
+            "reason": "Operator cancelled run",
+        },
+    )
+    assert cancel_response.status_code == 200
+    db.refresh(run)
+    db.refresh(awaiting_step)
+    assert run.status == IngestionRunStatus.CANCELLED
+    assert awaiting_step.status == IngestionStepStatus.CANCELLED
+
+    resume_response = client.post(
+        f"{settings.API_V1_STR}/admin/ingestion-runs/{run.id}/resume",
+        headers=superuser_token_headers,
+        json={
+            "idempotency_key": f"resume-{uuid.uuid4().hex}",
+            "expected_version": run.lock_version,
+        },
+    )
+    assert resume_response.status_code == 200
+    db.refresh(run)
+    db.refresh(awaiting_step)
+    assert run.status == IngestionRunStatus.WAITING_FOR_INPUT
+    assert run.current_stage == IngestionStage.AWAITING_PAGE_CONFIRMATION
+    assert run.error_details is None
+    assert run.completed_at is None
+    assert awaiting_step.status == IngestionStepStatus.BLOCKED
+    assert awaiting_step.completed_at is None
+    assert not db.exec(
+        select(IngestionTask).where(
+            IngestionTask.run_id == run.id,
+            IngestionTask.task_type == IngestionStage.AWAITING_PAGE_CONFIRMATION.value,
+        )
+    ).first()
+
+    page_selection_response = client.patch(
+        f"{settings.API_V1_STR}/admin/ingestion-runs/{run.id}/page-selection",
+        headers=superuser_token_headers,
+        json={
+            "idempotency_key": f"pages-{uuid.uuid4().hex}",
+            "expected_run_version": run.lock_version,
+            "pages": [
+                {
+                    "page_number": page.page_number,
+                    "inclusion_status": PageInclusionStatus.INCLUDED,
+                    "inclusion_reason": "Confirmed legal body page",
+                    "expected_version": page.lock_version,
+                }
+            ],
+        },
+    )
+    assert page_selection_response.status_code == 200
 
 
 def test_review_item_revision_and_decision_enforce_blocking_issues(
@@ -1307,6 +1393,127 @@ def test_review_revision_reruns_unit_validators_and_resolves_fixed_issue(
     assert issue.resolved_at is not None
 
 
+@pytest.mark.parametrize("source_matches", [True, False])
+def test_revision_revalidates_original_coverage_without_waiving_unrelated_issues(
+    client: TestClient,
+    superuser_token_headers: dict[str, str],
+    db: Session,
+    source_matches: bool,
+) -> None:
+    source, run = _source_and_run(db)
+    candidate = ExtractionCandidate(
+        run_id=run.id,
+        source_document_id=source.id,
+        kind=ProvisionKind.SECTION,
+        canonical_path=f"constitution.1999.section37.{uuid.uuid4().hex}",
+        sort_key="037",
+        raw_text="Each Secretariat shall su bmit a Report.",
+        status=ExtractionCandidateStatus.NEEDS_REVIEW,
+        blocking_issue_count=2,
+    )
+    db.add(candidate)
+    db.commit()
+    db.refresh(candidate)
+    coverage = ReviewIssue(
+        candidate_id=candidate.id,
+        issue_type="source_span_coverage",
+        severity=ReviewIssueSeverity.BLOCKING,
+        blocking=True,
+        message="Source coverage",
+    )
+    unrelated = ReviewIssue(
+        candidate_id=candidate.id,
+        issue_type="graph_numbering_gap",
+        severity=ReviewIssueSeverity.BLOCKING,
+        blocking=True,
+        message="Numbering gap",
+    )
+    db.add_all([coverage, unrelated])
+    db.commit()
+    response = client.patch(
+        f"{settings.API_V1_STR}/admin/review-items/{candidate.id}",
+        headers=superuser_token_headers,
+        json={
+            "idempotency_key": f"formatting-{uuid.uuid4().hex}",
+            "expected_version": candidate.lock_version,
+            "revised_text": "Each Secretariat shall submit a Report.",
+            "source_spans": [
+                {
+                    "text": "Each Secretariat shall su bmit a Report."
+                    if source_matches
+                    else "An unrelated paragraph.",
+                    "bbox": {"x0": 1, "y0": 2, "x1": 3, "y1": 4},
+                }
+            ],
+            "reason": "Whitespace-only source-verified revision",
+        },
+    )
+    assert response.status_code == 200
+    db.refresh(coverage)
+    db.refresh(unrelated)
+    db.refresh(candidate)
+    assert candidate.raw_text == "Each Secretariat shall su bmit a Report."
+    assert candidate.status == ExtractionCandidateStatus.NEEDS_REVIEW
+    assert coverage.status == (
+        ReviewIssueStatus.RESOLVED if source_matches else ReviewIssueStatus.OPEN
+    )
+    assert unrelated.status == ReviewIssueStatus.OPEN
+    assert candidate.blocking_issue_count == (1 if source_matches else 2)
+    revision = db.exec(
+        select(CandidateRevision).where(CandidateRevision.candidate_id == candidate.id)
+    ).one()
+    assert revision.previous_text == candidate.raw_text
+    assert revision.diff
+    if source_matches:
+        assert coverage.resolution_evidence is not None
+        assert coverage.resolution_evidence["exact_source_character_match"] is True
+
+
+def test_formatting_revision_does_not_duplicate_original_punctuation_blocker(
+    client: TestClient,
+    superuser_token_headers: dict[str, str],
+    db: Session,
+) -> None:
+    source, run = _source_and_run(db)
+    candidate = ExtractionCandidate(
+        run_id=run.id,
+        source_document_id=source.id,
+        kind=ProvisionKind.SECTION,
+        canonical_path=f"constitution.1999.section54.{uuid.uuid4().hex}",
+        sort_key="054",
+        raw_text="(3 The decision shall be made.",
+        status=ExtractionCandidateStatus.NEEDS_REVIEW,
+        blocking_issue_count=1,
+    )
+    db.add(candidate)
+    db.commit()
+    issue = ReviewIssue(
+        candidate_id=candidate.id,
+        issue_type="unbalanced_punctuation",
+        severity=ReviewIssueSeverity.BLOCKING,
+        blocking=True,
+        message="Malformed punctuation in source",
+    )
+    db.add(issue)
+    db.commit()
+    response = client.patch(
+        f"{settings.API_V1_STR}/admin/review-items/{candidate.id}",
+        headers=superuser_token_headers,
+        json={
+            "idempotency_key": f"formatting-{uuid.uuid4().hex}",
+            "expected_version": candidate.lock_version,
+            "revised_text": "(3 The decision shall be made.",
+            "reason": "Preserve punctuation exactly as in source",
+        },
+    )
+    assert response.status_code == 200
+    payload = response.json()
+    assert payload["blocking_issue_count"] == 1
+    assert [
+        item["issue_type"] for item in payload["issues"] if item["status"] == "open"
+    ] == ["unbalanced_punctuation"]
+
+
 def test_final_review_approval_requires_explicit_source_verification(
     client: TestClient,
     superuser_token_headers: dict[str, str],
@@ -1499,6 +1706,13 @@ def test_release_validation_and_publish_require_selected_ready_index_and_two_peo
     )
     release, vector_index = _release_bundle(db, uploader=_superuser(db))
 
+    release.validation_report = {
+        **(release.validation_report or {}),
+        "corpus_legal_status": "historical",
+        "source_edition_review": {"known_exceptions": "Printed 189; missing 168"},
+    }
+    db.add(release)
+    db.commit()
     validate_key = f"validate-{uuid.uuid4().hex}"
     validate_body = {
         "idempotency_key": validate_key,
@@ -1512,6 +1726,13 @@ def test_release_validation_and_publish_require_selected_ready_index_and_two_peo
     assert validate_response.status_code == 200
     assert validate_response.json()["status"] == CorpusReleaseStatus.APPROVED
     assert validate_response.json()["validation_report"]["unresolved_gates"] == []
+    assert (
+        validate_response.json()["validation_report"]["corpus_legal_status"]
+        == "historical"
+    )
+    assert validate_response.json()["validation_report"]["source_edition_review"] == {
+        "known_exceptions": "Printed 189; missing 168"
+    }
     db.refresh(release)
     validated_lock_version = release.lock_version
 

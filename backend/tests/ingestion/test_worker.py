@@ -24,7 +24,9 @@ from app.ingestion.worker import (
     NORMALIZER_VERSION,
     IngestionWorkerError,
     _benchmark_dataset_for_embedding_profiles,
+    _embed_with_checkpoints,
     _normalize_page_text,
+    _upsert_historical_version_from_candidate,
     handle_profiling,
     run_once,
     run_until_idle,
@@ -1070,12 +1072,19 @@ def test_profile_stage_is_idempotent_and_preserves_admin_inclusion_choices(
     assert pages[0].inclusion_reason == "Confirmed by legal reviewer"
 
 
+@pytest.mark.parametrize("corpus_status", [LegalStatus.CURRENT, LegalStatus.HISTORICAL])
 def test_worker_materializes_approved_candidates_and_builds_retrieval_artifact(
-    db: Session, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+    db: Session,
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+    corpus_status: LegalStatus,
 ) -> None:
     monkeypatch.setattr(settings, "INGESTION_STORAGE_DIR", str(tmp_path))
     pdf = _pdf_with_pages([f"CHAPTER IV Fundamental Rights {uuid.uuid4().hex}"])
     source, run = _stored_source_and_run(db, tmp_path=tmp_path, pdf=pdf)
+    run.pipeline_config = {"corpus_legal_status": corpus_status.value}
+    db.add(run)
+    db.commit()
     _clear_run_tasks(db, run)
     _store_raw_extraction(
         db,
@@ -1175,7 +1184,7 @@ def test_worker_materializes_approved_candidates_and_builds_retrieval_artifact(
         "(1) The privacy of citizens is hereby guaranteed and protected."
     )
     assert section_version.valid_from == date(1999, 5, 29)
-    assert section_version.legal_status == LegalStatus.CURRENT
+    assert section_version.legal_status == corpus_status
     subsection_version = db.exec(
         select(ProvisionVersion).where(
             ProvisionVersion.provision_id == provisions[3].id
@@ -1226,6 +1235,7 @@ def test_worker_materializes_approved_candidates_and_builds_retrieval_artifact(
         "(1) The privacy of citizens is hereby guaranteed and protected."
     )
     assert "Section 37" in document["retrieval_text"]
+    assert document["payload"]["legal_status"] == corpus_status.value
 
     embedding_step = db.exec(
         select(IngestionStep).where(
@@ -1234,6 +1244,48 @@ def test_worker_materializes_approved_candidates_and_builds_retrieval_artifact(
         )
     ).one()
     assert embedding_step.status == IngestionStepStatus.BLOCKED
+
+
+def test_historical_materialization_does_not_reuse_current_law(
+    db: Session, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    monkeypatch.setattr(settings, "INGESTION_STORAGE_DIR", str(tmp_path))
+    source, run = _stored_source_and_run(
+        db, tmp_path=tmp_path, pdf=_pdf_with_pages([uuid.uuid4().hex])
+    )
+    instrument = db.get(LegalInstrument, source.legal_instrument_id)
+    assert instrument
+    candidate = _approved_candidate(db, run=run, source=source, text="Source wording")
+    provision = Provision(
+        instrument_id=instrument.id,
+        kind=ProvisionKind.SECTION,
+        number="37",
+        canonical_path=candidate.canonical_path,
+        sort_key="037",
+    )
+    db.add(provision)
+    db.flush()
+    current = ProvisionVersion(
+        provision_id=provision.id,
+        text="Source wording",
+        normalized_text="source wording",
+        valid_from=date(1999, 5, 29),
+        source_document_id=source.id,
+        text_sha256=legal_text_sha256("Source wording"),
+    )
+    db.add(current)
+    db.commit()
+    with pytest.raises(IngestionWorkerError, match="separate provision identity"):
+        _upsert_historical_version_from_candidate(
+            db,
+            source=source,
+            instrument=instrument,
+            provision=provision,
+            candidate=candidate,
+            text="Source wording",
+        )
+    assert current.legal_status == LegalStatus.CURRENT
+    assert current.valid_until is None
 
 
 def test_materialization_release_snapshot_is_cumulative_across_sources_and_runs(
@@ -1835,6 +1887,14 @@ def test_worker_embeds_indexes_and_validates_pgvector_dataset(
     source, run, release, profile = _release_with_retrieval_documents(
         db, tmp_path=tmp_path
     )
+    release.validation_report = {
+        "unresolved_gates": [
+            "ready_retrieval_index_build_missing",
+            "unrelated_review_gate",
+        ]
+    }
+    db.add(release)
+    db.commit()
 
     class FakeEmbeddingProvider:
         def embed(self, texts: list[str]) -> EmbeddingBatch:
@@ -1883,6 +1943,8 @@ def test_worker_embeds_indexes_and_validates_pgvector_dataset(
     assert build.status == VectorIndexStatus.READY
     assert build.stored_segment_count == 1
     assert build.stored_embedding_count == 1
+    db.refresh(release)
+    assert release.validation_report["unresolved_gates"] == ["unrelated_review_gate"]
     segment = db.exec(
         select(RetrievalSegment).where(RetrievalSegment.release_id == release.id)
     ).one()
@@ -3189,3 +3251,50 @@ def test_embedding_honors_configured_batch_size(
     ).one()
     assert embedding_run.status == EmbeddingRunStatus.SUCCEEDED
     assert embedding_run.recall_at_10 == 1
+
+
+def test_embedding_retry_reuses_completed_batches_and_invalidates_changed_inputs(
+    db: Session,
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    monkeypatch.setattr(settings, "INGESTION_STORAGE_DIR", str(tmp_path))
+    _, run, release, profile = _release_with_retrieval_documents(db, tmp_path=tmp_path)
+    embedding_run = EmbeddingRun(release_id=release.id, profile_id=profile.id)
+    db.add(embedding_run)
+    db.commit()
+    calls: list[list[str]] = []
+
+    class InterruptedProvider:
+        failed = False
+
+        def embed(self, texts: list[str]) -> EmbeddingBatch:
+            calls.append(texts)
+            if texts == ["second"] and not self.failed:
+                self.failed = True
+                raise RuntimeError("provider timeout")
+            return EmbeddingBatch(
+                provider="fake",
+                model_name=profile.model_name,
+                model_revision=profile.model_revision,
+                vectors=[[1.0] + [0.0] * 1023 for _ in texts],
+            )
+
+    provider = InterruptedProvider()
+    arguments = {
+        "run": run,
+        "profile": profile,
+        "embedding_run": embedding_run,
+        "provider": provider,
+        "batch_size": 1,
+        "kind": "documents",
+    }
+    with pytest.raises(RuntimeError, match="provider timeout"):
+        _embed_with_checkpoints(db, texts=["first", "second", "third"], **arguments)
+    batch = _embed_with_checkpoints(db, texts=["first", "second", "third"], **arguments)
+    assert calls == [["first"], ["second"], ["second"], ["third"]]
+    assert len(batch.vectors) == 3
+    _embed_with_checkpoints(db, texts=["changed", "second", "third"], **arguments)
+    assert calls[-1] == ["changed"]
+    assert len(calls) == 5
+    assert embedding_run.metrics["documents_progress"]["completed"] == 3
