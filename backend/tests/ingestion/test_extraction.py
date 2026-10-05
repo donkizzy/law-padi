@@ -6,6 +6,7 @@ from pypdf.generic import DictionaryObject, NameObject, StreamObject
 from app.ingestion.extraction import (
     NATIVE_PDF_EXTRACTOR_VERSION,
     NativePdfExtractor,
+    _page_text_with_layout,
 )
 
 
@@ -37,7 +38,57 @@ def test_native_pdf_extractor_preserves_text_and_source_coordinates() -> None:
     assert span.bbox["y1"] > span.bbox["y0"]
 
 
-def _pdf_with_pages(texts: list[str]) -> bytes:
+def test_layout_rejoins_fragments_without_changing_source_characters() -> None:
+    class Page:
+        def extract_text(self, **_kwargs: object) -> str:
+            return "13. Each Secretariat shall submit on 31st March."
+
+    text, flags = _page_text_with_layout(
+        Page(), "13. Each Secretariat shall su bmit on 31 st March."
+    )
+    assert "submit on 31st" in text
+    assert flags["layout_content_verified"] is True
+
+
+def test_layout_cannot_add_missing_letters_or_drop_punctuation() -> None:
+    class Page:
+        def extract_text(self, **_kwargs: object) -> str:
+            return "submit to the Minister"
+
+    original = "su bmit t the Minister;"
+    text, flags = _page_text_with_layout(Page(), original)
+    assert text == original
+    assert flags["layout_content_mismatch"] is True
+
+
+def test_layout_failure_preserves_plain_text() -> None:
+    class Page:
+        def extract_text(self, **_kwargs: object) -> str:
+            raise ValueError("Unsupported layout")
+
+    text, flags = _page_text_with_layout(Page(), "original text")
+    assert text == "original text"
+    assert flags["layout_failed"] is True
+
+
+def test_native_extraction_keeps_superscript_with_its_number() -> None:
+    extraction = NativePdfExtractor().extract(
+        _pdf_with_pages(
+            ["unused"],
+            operations=(
+                "BT /F1 12 Tf 1 0 0 1 36 450 Tm (31) Tj "
+                "/F1 7 Tf 1 0 0 1 50 454 Tm (st) Tj "
+                "/F1 12 Tf 1 0 0 1 60 450 Tm ( March) Tj ET"
+            ),
+        )
+    )[0]
+    assert "".join(extraction.text.split()) == "31stMarch"
+    assert extraction.spans[0].text == "31"
+    assert extraction.spans[1].text.strip() == "st"
+    assert extraction.plain_text
+
+
+def _pdf_with_pages(texts: list[str], *, operations: str | None = None) -> bytes:
     output = BytesIO()
     writer = PdfWriter()
     for text in texts:
@@ -57,8 +108,8 @@ def _pdf_with_pages(texts: list[str]) -> bytes:
         )
         content = StreamObject()
         content._data = (
-            f"BT /F1 12 Tf 36 450 Td ({_escape_pdf_text(text)}) Tj ET".encode()
-        )
+            operations or f"BT /F1 12 Tf 36 450 Td ({_escape_pdf_text(text)}) Tj ET"
+        ).encode()
         page[NameObject("/Resources")] = resources
         page[NameObject("/Contents")] = writer._add_object(content)
     writer.write(output)
