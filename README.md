@@ -79,6 +79,10 @@ General development docs: [development.md](./development.md).
 
 This includes the local FastAPI and Vite workflow, Docker Compose services, `.env` configuration, and more.
 
+Copy `.env.example` to `.env` before starting local services. Keep credentials in
+the ignored `.env` file or your deployment environment; the example contains
+portable defaults and empty provider credentials.
+
 ## Release Notes
 
 Check the file [release-notes.md](./release-notes.md).

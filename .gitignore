@@ -11,3 +11,6 @@ backend/app/frontend/
 /design-qa.md
 /.idea/
 backend/storage/
+/.env
+/.env.*
+!/.env.example
