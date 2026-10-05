@@ -34,4 +34,4 @@ History currently contains only an initial commit, so no mature commit conventio
 
 ## Security & Configuration
 
-Use the tracked `.env` only for local defaults. Never commit production credentials; configure deployment secrets through the documented deployment environment.
+Copy the tracked `.env.example` to the ignored `.env` for local configuration. Never commit credentials; configure deployment secrets through the documented deployment environment.
