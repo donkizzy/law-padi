@@ -465,10 +465,12 @@ export function CopyButton({
 export function InlineAction({
   children,
   className,
+  asChild = false,
   ...props
-}: ComponentProps<"button">) {
+}: ComponentProps<"button"> & { asChild?: boolean }) {
+  const Comp = asChild ? Slot : "button"
   return (
-    <button
+    <Comp
       className={cn(
         "sq-sm inline-flex min-h-10 items-center gap-2 border border-border bg-card px-3 py-2 text-xs font-semibold text-[color:var(--legal-blue)]",
         "transition hover:border-[color:var(--legal-blue)]/35 hover:bg-[color:var(--legal-blue-soft)] focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-ring/25",
@@ -477,9 +479,9 @@ export function InlineAction({
       type="button"
       {...props}
     >
-      {children}
+      <Slottable>{children}</Slottable>
       <FiArrowRight className="size-3.5" aria-hidden />
-    </button>
+    </Comp>
   )
 }
 

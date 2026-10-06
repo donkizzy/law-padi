@@ -1,9 +1,7 @@
-import { useEffect, useRef, useState } from "react"
-import { FiPaperclip, FiSend } from "react-icons/fi"
-import { LiaLanguageSolid } from "react-icons/lia"
+import { useEffect, useRef } from "react"
+import { FiSend } from "react-icons/fi"
 
-import { IconButton, SquircleButton } from "@/components/LawPadi/primitives"
-import { type LanguageValue, languageOptions } from "@/lib/law-padi-data"
+import { SquircleButton } from "@/components/LawPadi/primitives"
 import { cn } from "@/lib/utils"
 
 type ChatComposerProps = {
@@ -29,16 +27,15 @@ export function ChatComposer({
   disabled = false,
   className,
 }: ChatComposerProps) {
-  const [language, setLanguage] = useState<LanguageValue>("auto")
   const textareaRef = useRef<HTMLTextAreaElement | null>(null)
 
   useEffect(() => {
     const textarea = textareaRef.current
     if (!textarea) return
 
-    textarea.style.height = "0px"
+    textarea.style.height = value.length ? "0px" : "auto"
     textarea.style.height = `${Math.min(textarea.scrollHeight, compact ? 140 : 220)}px`
-  }, [compact])
+  }, [compact, value])
 
   const submit = () => {
     if (disabled || loading || !value.trim()) return
@@ -76,33 +73,9 @@ export function ChatComposer({
 
       <div className="mt-3 flex flex-wrap items-center justify-between gap-3 border-t border-border pt-3">
         <div className="flex min-w-0 flex-wrap items-center gap-2">
-          <label className="sq-sm inline-flex min-h-10 items-center gap-2 bg-secondary px-3 text-xs font-semibold text-muted-foreground">
-            <LiaLanguageSolid className="size-4" aria-hidden />
-            <span className="sr-only">Answer language</span>
-            <select
-              aria-label="Answer language"
-              className="bg-transparent text-xs font-semibold text-foreground outline-none"
-              disabled={disabled}
-              onChange={(event) =>
-                setLanguage(event.target.value as LanguageValue)
-              }
-              value={language}
-            >
-              {languageOptions.map((option) => (
-                <option key={option.value} value={option.value}>
-                  {option.label}
-                </option>
-              ))}
-            </select>
-          </label>
-          <IconButton
-            disabled
-            label="Attach source document"
-            title="Source upload is reserved for a future release"
-            type="button"
-          >
-            <FiPaperclip className="size-4" aria-hidden />
-          </IconButton>
+          <span className="sq-sm bg-secondary px-3 py-2 text-xs font-semibold text-muted-foreground">
+            English source search
+          </span>
           {contextLabel ? (
             <span className="text-xs text-muted-foreground">
               {contextLabel}
