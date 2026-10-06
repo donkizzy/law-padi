@@ -616,3 +616,11 @@ Every radius-based UI element should use a centralized squircle primitive or squ
 - Which fields must be admin-editable versus ingestion-only?
 - Do we need row-level access rules for saved conversations at the database level in V1?
 - Should corpus releases be required before any provision becomes visible, or can V1 expose a manually seeded draft corpus?
+
+## Implemented Public Retrieval Integration (6 October 2026)
+
+Home, Browse, Provision Detail, and browser-local Saved now use the published corpus under `/api/v1/legal`. Exact section/subsection/paragraph references resolve against stored release entries independently of embedding providers. Topic searches reuse the saved pgvector index and return ranked choices; provider failures disclose a lexical fallback. Wording and complete citations are loaded from canonical versions and ancestry. Original PDF access, parent context, children, stored published history, copy/share, and release-pinned bookmarks are integrated.
+
+Public reads require an active production target or an explicitly selected previously published release. Drafts remain private. The active local release `draft-c8d50d87fae9` was verified as production, with the historical LFN 2004 source-edition label. No publication state, corpus wording, indexed text, or corpus embeddings were changed. Section 168 remains missing and the two Section 189 identities remain distinguishable by source location.
+
+English retrieval and browser bookmarks are the current milestone. AI explanations, translations, persistent conversations, account-synced bookmarks, and proposed-change ingestion remain later milestones. See [the integration report](docs/public-corpus-integration.md) for API behavior, rollout state, and verification evidence; the earlier API/UI direction above records the broader product roadmap.
