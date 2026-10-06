@@ -30,7 +30,7 @@ function Layout() {
             <Logo variant="full" />
           </div>
           <div className="hidden min-w-0 items-center gap-2 text-xs font-semibold text-muted-foreground sm:flex">
-            <span>Ask the Constitution</span>
+            <span>Explore the Constitution</span>
             <span aria-hidden className="sq-xs size-1.5 bg-primary" />
             <span>Sources always visible</span>
           </div>
@@ -42,7 +42,7 @@ function Layout() {
               size="sm"
               variant="ghost"
             >
-              <RouterLink to="/">
+              <RouterLink to="/" search={{ q: undefined, mode: "auto" }}>
                 <FiMessageSquare className="size-4" aria-hidden />
                 New
               </RouterLink>
