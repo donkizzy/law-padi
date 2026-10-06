@@ -1389,6 +1389,44 @@ export type IngestionTaskStatus = 'pending' | 'leased' | 'running' | 'succeeded'
 export type InstrumentStatus = 'draft' | 'proposed' | 'enacted' | 'repealed' | 'superseded';
 
 /**
+ * LegalReleasePublic
+ */
+export type LegalReleasePublic = {
+    /**
+     * Release Id
+     */
+    release_id: string;
+    /**
+     * Release Version
+     */
+    release_version: string;
+    /**
+     * Index Kind
+     */
+    index_kind: string;
+    /**
+     * Embedding Run Id
+     */
+    embedding_run_id: string;
+    /**
+     * Retrieval Index Build Id
+     */
+    retrieval_index_build_id: string;
+    /**
+     * Edition Label
+     */
+    edition_label: string;
+    /**
+     * Available
+     */
+    available?: boolean;
+    /**
+     * Legal Statuses
+     */
+    legal_statuses: Array<string>;
+};
+
+/**
  * LegalSearchRequest
  */
 export type LegalSearchRequest = {
@@ -1404,6 +1442,10 @@ export type LegalSearchRequest = {
      * Index Kind
      */
     index_kind?: 'enacted' | 'proposals';
+    /**
+     * Mode
+     */
+    mode?: 'auto' | 'semantic';
 };
 
 /**
@@ -1418,6 +1460,26 @@ export type LegalSearchResponse = {
      * Count
      */
     count: number;
+    /**
+     * Outcome
+     */
+    outcome?: 'exact' | 'matches' | 'ambiguous' | 'not_found' | 'unsupported_reference';
+    /**
+     * Retrieval Mode
+     */
+    retrieval_mode?: 'exact' | 'hybrid' | 'lexical';
+    /**
+     * Message
+     */
+    message?: string | null;
+    /**
+     * Release Version
+     */
+    release_version: string;
+    /**
+     * Edition Label
+     */
+    edition_label: string;
 };
 
 /**
@@ -1476,6 +1538,47 @@ export type LegalSearchResult = {
      * Hybrid Score
      */
     hybrid_score: number;
+    /**
+     * Provision Id
+     */
+    provision_id: string;
+    /**
+     * Provision Version Id
+     */
+    provision_version_id: string;
+    /**
+     * Release Id
+     */
+    release_id: string;
+    kind: ProvisionKind;
+    /**
+     * Edition Label
+     */
+    edition_label: string;
+    /**
+     * Source Title
+     */
+    source_title: string;
+    /**
+     * Source Authority
+     */
+    source_authority: string;
+    /**
+     * Source Url
+     */
+    source_url: string;
+    /**
+     * Source Content Url
+     */
+    source_content_url: string;
+    /**
+     * Ancestors
+     */
+    ancestors: Array<ProvisionReference>;
+    /**
+     * Children
+     */
+    children: Array<ProvisionReference>;
 };
 
 /**
@@ -1759,6 +1862,63 @@ export type PrivateUserCreate = {
  * ProvisionKind
  */
 export type ProvisionKind = 'chapter' | 'part' | 'section' | 'subsection' | 'paragraph' | 'schedule' | 'schedule_item';
+
+/**
+ * ProvisionReference
+ */
+export type ProvisionReference = {
+    /**
+     * Id
+     */
+    id: string;
+    /**
+     * Canonical Path
+     */
+    canonical_path: string;
+    kind: ProvisionKind;
+    /**
+     * Number
+     */
+    number?: string | null;
+    /**
+     * Heading
+     */
+    heading?: string | null;
+    /**
+     * Citation
+     */
+    citation: string;
+    /**
+     * Has Text
+     */
+    has_text: boolean;
+    /**
+     * Authoritative Text
+     */
+    authoritative_text?: string | null;
+};
+
+/**
+ * ProvisionTreePublic
+ */
+export type ProvisionTreePublic = {
+    /**
+     * Data
+     */
+    data: Array<ProvisionReference>;
+    /**
+     * Count
+     */
+    count: number;
+    /**
+     * Release Version
+     */
+    release_version: string;
+    /**
+     * Edition Label
+     */
+    edition_label: string;
+};
 
 /**
  * PublicProvisionVersion
@@ -4322,41 +4482,6 @@ export type legalSearchLegalResponses = {
 
 export type legalSearchLegalResponse = legalSearchLegalResponses[keyof legalSearchLegalResponses];
 
-export type legalReadCurrentProvisionData = {
-    body?: never;
-    path: {
-        /**
-         * Canonical Path
-         */
-        canonical_path: string;
-    };
-    query?: {
-        /**
-         * Index Kind
-         */
-        index_kind?: string;
-    };
-    url: '/api/v1/legal/provisions/{canonical_path}';
-};
-
-export type legalReadCurrentProvisionErrors = {
-    /**
-     * Validation Error
-     */
-    422: HTTPValidationError;
-};
-
-export type legalReadCurrentProvisionError = legalReadCurrentProvisionErrors[keyof legalReadCurrentProvisionErrors];
-
-export type legalReadCurrentProvisionResponses = {
-    /**
-     * Successful Response
-     */
-    200: LegalSearchResponse;
-};
-
-export type legalReadCurrentProvisionResponse = legalReadCurrentProvisionResponses[keyof legalReadCurrentProvisionResponses];
-
 export type legalReadCurrentReleaseData = {
     body?: never;
     path?: never;
@@ -4380,16 +4505,164 @@ export type legalReadCurrentReleaseError = legalReadCurrentReleaseErrors[keyof l
 
 export type legalReadCurrentReleaseResponses = {
     /**
-     * Response Legal-Read Current Release
-     *
      * Successful Response
      */
-    200: {
-        [key: string]: unknown;
-    };
+    200: LegalReleasePublic;
 };
 
 export type legalReadCurrentReleaseResponse = legalReadCurrentReleaseResponses[keyof legalReadCurrentReleaseResponses];
+
+export type legalReadProvisionTreeData = {
+    body?: never;
+    path?: never;
+    query?: {
+        /**
+         * Parent Path
+         */
+        parent_path?: string | null;
+        /**
+         * Release Version
+         */
+        release_version?: string | null;
+        /**
+         * Index Kind
+         */
+        index_kind?: string;
+    };
+    url: '/api/v1/legal/provisions/tree';
+};
+
+export type legalReadProvisionTreeErrors = {
+    /**
+     * Validation Error
+     */
+    422: HTTPValidationError;
+};
+
+export type legalReadProvisionTreeError = legalReadProvisionTreeErrors[keyof legalReadProvisionTreeErrors];
+
+export type legalReadProvisionTreeResponses = {
+    /**
+     * Successful Response
+     */
+    200: ProvisionTreePublic;
+};
+
+export type legalReadProvisionTreeResponse = legalReadProvisionTreeResponses[keyof legalReadProvisionTreeResponses];
+
+export type legalReadProvisionHistoryData = {
+    body?: never;
+    path?: never;
+    query: {
+        /**
+         * Canonical Path
+         */
+        canonical_path: string;
+        /**
+         * Release Version
+         */
+        release_version?: string | null;
+        /**
+         * Index Kind
+         */
+        index_kind?: string;
+    };
+    url: '/api/v1/legal/provision-history';
+};
+
+export type legalReadProvisionHistoryErrors = {
+    /**
+     * Validation Error
+     */
+    422: HTTPValidationError;
+};
+
+export type legalReadProvisionHistoryError = legalReadProvisionHistoryErrors[keyof legalReadProvisionHistoryErrors];
+
+export type legalReadProvisionHistoryResponses = {
+    /**
+     * Successful Response
+     */
+    200: LegalSearchResponse;
+};
+
+export type legalReadProvisionHistoryResponse = legalReadProvisionHistoryResponses[keyof legalReadProvisionHistoryResponses];
+
+export type legalReadSourceContentData = {
+    body?: never;
+    path: {
+        /**
+         * Source Document Id
+         */
+        source_document_id: string;
+    };
+    query?: {
+        /**
+         * Release Version
+         */
+        release_version?: string | null;
+        /**
+         * Index Kind
+         */
+        index_kind?: string;
+    };
+    url: '/api/v1/legal/sources/{source_document_id}/content';
+};
+
+export type legalReadSourceContentErrors = {
+    /**
+     * Validation Error
+     */
+    422: HTTPValidationError;
+};
+
+export type legalReadSourceContentError = legalReadSourceContentErrors[keyof legalReadSourceContentErrors];
+
+export type legalReadSourceContentResponses = {
+    /**
+     * Successful Response
+     */
+    200: unknown;
+};
+
+export type legalReadCurrentProvisionData = {
+    body?: never;
+    path: {
+        /**
+         * Canonical Path
+         */
+        canonical_path: string;
+    };
+    query?: {
+        /**
+         * Index Kind
+         */
+        index_kind?: string;
+        /**
+         * Release Version
+         */
+        release_version?: string | null;
+    };
+    url: '/api/v1/legal/provisions/{canonical_path}';
+};
+
+export type legalReadCurrentProvisionErrors = {
+    /**
+     * Validation Error
+     */
+    422: HTTPValidationError;
+};
+
+export type legalReadCurrentProvisionError = legalReadCurrentProvisionErrors[keyof legalReadCurrentProvisionErrors];
+
+export type legalReadCurrentProvisionResponses = {
+    /**
+     * Successful Response
+     */
+    200: LegalSearchResponse;
+};
+
+export type legalReadCurrentProvisionResponse = legalReadCurrentProvisionResponses[keyof legalReadCurrentProvisionResponses];
 
 export type privateCreateUserData = {
     body: PrivateUserCreate;

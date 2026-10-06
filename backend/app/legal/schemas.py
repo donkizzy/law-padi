@@ -709,6 +709,26 @@ class LegalSearchRequest(SQLModel):
     query: str = Field(min_length=1, max_length=2000)
     top_k: int = Field(default=10, ge=1, le=50)
     index_kind: Literal["enacted", "proposals"] = "enacted"
+    mode: Literal["auto", "semantic"] = "auto"
+
+    @field_validator("query")
+    @classmethod
+    def strip_query(cls, value: str) -> str:
+        value = value.strip()
+        if not value:
+            raise ValueError("Enter a section reference or topic")
+        return value
+
+
+class ProvisionReference(SQLModel):
+    id: uuid.UUID
+    canonical_path: str
+    kind: ProvisionKind
+    number: str | None = None
+    heading: str | None = None
+    citation: str
+    has_text: bool
+    authoritative_text: str | None = None
 
 
 class LegalSearchResult(SQLModel):
@@ -725,11 +745,47 @@ class LegalSearchResult(SQLModel):
     dense_rank: int | None = None
     lexical_rank: int | None = None
     hybrid_score: float
+    provision_id: uuid.UUID
+    provision_version_id: uuid.UUID
+    release_id: uuid.UUID
+    kind: ProvisionKind
+    edition_label: str
+    source_title: str
+    source_authority: str
+    source_url: str
+    source_content_url: str
+    ancestors: list[ProvisionReference]
+    children: list[ProvisionReference]
 
 
 class LegalSearchResponse(SQLModel):
     data: list[LegalSearchResult]
     count: int
+    outcome: Literal[
+        "exact", "matches", "ambiguous", "not_found", "unsupported_reference"
+    ] = "matches"
+    retrieval_mode: Literal["exact", "hybrid", "lexical"] = "exact"
+    message: str | None = None
+    release_version: str
+    edition_label: str
+
+
+class LegalReleasePublic(SQLModel):
+    release_id: uuid.UUID
+    release_version: str
+    index_kind: str
+    embedding_run_id: uuid.UUID
+    retrieval_index_build_id: uuid.UUID
+    edition_label: str
+    available: bool = True
+    legal_statuses: list[str]
+
+
+class ProvisionTreePublic(SQLModel):
+    data: list[ProvisionReference]
+    count: int
+    release_version: str
+    edition_label: str
 
 
 class MyAdminRolesPublic(SQLModel):
