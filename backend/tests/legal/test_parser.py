@@ -411,3 +411,40 @@ def _pdf_with_text(text: str) -> bytes:
 
 def _escape_pdf_text(text: str) -> str:
     return text.replace("\\", "\\\\").replace("(", "\\(").replace(")", "\\)")
+
+
+def test_hierarchy_replay_keeps_wrapped_references_and_roman_clauses() -> None:
+    pages = [
+        SourcePage(
+            1,
+            """CHAPTER IV Fundamental Rights
+33. Right to life
+(1) Everyone has a right to life.
+(2) This rule refers to subsection
+(1) of this section and continues without opening a new subsection.
+(a) A top-level paragraph with nested clauses:
+(i) The first nested clause.
+(ii) The second nested clause.
+(b) A second top-level paragraph.
+38. Another right
+(a) A paragraph attached directly to its section.
+(b) Its second paragraph.
+""",
+        )
+    ]
+    first = parse_constitution_pages(pages, "replay")
+    second = parse_constitution_pages(pages, "replay")
+    assert first == second
+    by_path = {node.canonical_path: node for node in first}
+    prefix = "replay.chapter4.section33.subsection2"
+    assert "(1) of this section" in by_path[prefix].text
+    paragraph = by_path[f"{prefix}.paragrapha"]
+    assert "(i) The first" in paragraph.text
+    assert "(ii) The second" in paragraph.text
+    assert paragraph.parent_path == prefix
+    assert f"{prefix}.paragraphi" not in by_path
+    assert (
+        by_path["replay.chapter4.section38.paragrapha"].parent_path
+        == "replay.chapter4.section38"
+    )
+    assert all(node.page_start == node.page_end == 1 for node in first)
