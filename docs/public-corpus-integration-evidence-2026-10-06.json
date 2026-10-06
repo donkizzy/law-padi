@@ -1,0 +1,83 @@
+{
+  "release_version": "draft-c8d50d87fae9",
+  "status": "production",
+  "edition_label": "Historical/source Constitution compilation (LFN 2004)",
+  "provision_count": 1850,
+  "text_version_count": 1811,
+  "index_validation": {
+    "is_valid": true,
+    "errors": [],
+    "expected_segment_count": 1829,
+    "stored_segment_count": 1829,
+    "stored_embedding_count": 1829,
+    "vector_dimensions": 1024,
+    "segment_checksum": "24ae5869a95b0cdfdf93f17029ddd4fe1b462150bbce23e8e707fbffe0fcf54b",
+    "embedding_checksum": "c8433389c71f0506596a237a904bdeabfc3e6c05f2b138c9374e09bf7c90972e",
+    "lexical_smoke_query_supported": true,
+    "lexical_smoke_result_count": 1
+  },
+  "replayed_benchmark": {
+    "query_count": 50,
+    "recall_at_10": 0.98,
+    "ndcg_at_10": 0.977246,
+    "reembedded_corpus_documents": 0,
+    "embedded_new_queries": 0
+  },
+  "hybrid_smoke": [
+    {
+      "query": "Where is the constitutional right to life protected?",
+      "top_paths": [
+        "constitution-1999.chapter4.section33.subsection2.paragrapha",
+        "constitution-1999.chapter4.section33",
+        "constitution-1999.chapter4.section33.subsection2",
+        "constitution-1999.chapter4.section33.subsection2.paragraphc",
+        "constitution-1999.chapter4.section33.subsection2.paragraphb",
+        "constitution-1999.chapter4.section33.subsection1",
+        "constitution-1999.chapter4.section45",
+        "constitution-1999.chapter2.section16.subsection1.paragraphd",
+        "constitution-1999.chapter6.part1.section173.subsection1",
+        "constitution-1999.chapter2.section17"
+      ],
+      "unique_versions": 10
+    },
+    {
+      "query": "Which provision guarantees freedom to hold opinions and receive and impart information?",
+      "top_paths": [
+        "constitution-1999.chapter4.section39",
+        "constitution-1999.chapter4.section39.subsection1",
+        "constitution-1999.chapter4.section39.subsection2",
+        "constitution-1999.chapter4.section39.subsection3.paragrapha",
+        "constitution-1999.chapter4.section39.subsection3",
+        "constitution-1999.chapter4.section38",
+        "constitution-1999.chapter4.section38.subsection1",
+        "constitution-1999.chapter4.section36",
+        "constitution-1999.chapter4.section39.subsection3.paragraphb",
+        "constitution-1999.chapter4.section37"
+      ],
+      "unique_versions": 10
+    },
+    {
+      "query": "What promises appear in the Judicial Oath in the Seventh Schedule?",
+      "top_paths": [
+        "constitution-1999.schedule7.oath-judicial",
+        "constitution-1999.schedule7.oath-legislator",
+        "constitution-1999.schedule7.oath-governor",
+        "constitution-1999.schedule7.oath-president",
+        "constitution-1999.schedule7.oath-executive",
+        "constitution-1999.schedule7.oath-allegiance",
+        "constitution-1999.chapter7.part4.section290",
+        "constitution-1999.chapter7.part4.section290.subsection1",
+        "constitution-1999.chapter5.part1.section52",
+        "constitution-1999.chapter3.section26.subsection1.paragraphc"
+      ],
+      "unique_versions": 10
+    }
+  ],
+  "sources": [
+    {
+      "source_document_id": "f4a4c5d8-98fe-4f69-9412-415671eb1447",
+      "sha256": "26c1b7f15fb6eae02aa2064e5cc2c3fa5d84f6c7c0b04a0f4e94a8183df3e838",
+      "original_pdf_unchanged": true
+    }
+  ]
+}
