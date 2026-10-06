@@ -324,7 +324,16 @@ def hybrid_search(
         for item in merged.values()
     ]
     ranked.sort(key=lambda item: (-item.score, str(item.segment.id)))
-    return ranked[:top_k]
+    # Several derived segments may represent one provision version. Apply the
+    # public limit to identities, rather than allowing one long section to
+    # occupy all result slots.
+    seen: set[uuid.UUID] = set()
+    unique: list[RankedSegment] = []
+    for item in ranked:
+        if item.segment.provision_version_id not in seen:
+            seen.add(item.segment.provision_version_id)
+            unique.append(item)
+    return unique[:top_k]
 
 
 def canonical_results(
