@@ -1,0 +1,2617 @@
+{
+  "version": "constitution-explanation-evaluation-2026-10-07-v1",
+  "release_version": "draft-c8d50d87fae9",
+  "source_manifest_hash": "1e12791867fd8d8b10542b3c431c0b90c1c79a6e17cbbc10cdadecba579fe56f",
+  "description": "English explanation evaluation candidates. Human review and live supported-answer scoring are pending; this file does not assert rollout readiness.",
+  "gates": {
+    "deterministic_citation_provenance": "perfect",
+    "critical_status_errors": 0,
+    "supported_answer_judgment_minimum": 0.95
+  },
+  "cases": [
+    {
+      "id": "e001",
+      "kind": "exact",
+      "prompt": "Section 1",
+      "turns": [
+        "Section 1"
+      ],
+      "expected_paths": [
+        "constitution-1999.chapter1.part1.section1"
+      ],
+      "expected_outcome": "supported",
+      "review_status": "pending_human_review"
+    },
+    {
+      "id": "e002",
+      "kind": "exact",
+      "prompt": "Section 7",
+      "turns": [
+        "Section 7"
+      ],
+      "expected_paths": [
+        "constitution-1999.chapter1.part2.section7"
+      ],
+      "expected_outcome": "supported",
+      "review_status": "pending_human_review"
+    },
+    {
+      "id": "e003",
+      "kind": "exact",
+      "prompt": "Section 13",
+      "turns": [
+        "Section 13"
+      ],
+      "expected_paths": [
+        "constitution-1999.chapter2.section13"
+      ],
+      "expected_outcome": "supported",
+      "review_status": "pending_human_review"
+    },
+    {
+      "id": "e004",
+      "kind": "exact",
+      "prompt": "Section 20",
+      "turns": [
+        "Section 20"
+      ],
+      "expected_paths": [
+        "constitution-1999.chapter2.section20"
+      ],
+      "expected_outcome": "supported",
+      "review_status": "pending_human_review"
+    },
+    {
+      "id": "e005",
+      "kind": "exact",
+      "prompt": "Section 26",
+      "turns": [
+        "Section 26"
+      ],
+      "expected_paths": [
+        "constitution-1999.chapter3.section26"
+      ],
+      "expected_outcome": "supported",
+      "review_status": "pending_human_review"
+    },
+    {
+      "id": "e006",
+      "kind": "exact",
+      "prompt": "Section 32",
+      "turns": [
+        "Section 32"
+      ],
+      "expected_paths": [
+        "constitution-1999.chapter3.section32"
+      ],
+      "expected_outcome": "supported",
+      "review_status": "pending_human_review"
+    },
+    {
+      "id": "e007",
+      "kind": "exact",
+      "prompt": "Section 39",
+      "turns": [
+        "Section 39"
+      ],
+      "expected_paths": [
+        "constitution-1999.chapter4.section39"
+      ],
+      "expected_outcome": "supported",
+      "review_status": "pending_human_review"
+    },
+    {
+      "id": "e008",
+      "kind": "exact",
+      "prompt": "Section 45",
+      "turns": [
+        "Section 45"
+      ],
+      "expected_paths": [
+        "constitution-1999.chapter4.section45"
+      ],
+      "expected_outcome": "supported",
+      "review_status": "pending_human_review"
+    },
+    {
+      "id": "e009",
+      "kind": "exact",
+      "prompt": "Section 51",
+      "turns": [
+        "Section 51"
+      ],
+      "expected_paths": [
+        "constitution-1999.chapter5.part1.section51"
+      ],
+      "expected_outcome": "supported",
+      "review_status": "pending_human_review"
+    },
+    {
+      "id": "e010",
+      "kind": "exact",
+      "prompt": "Section 58",
+      "turns": [
+        "Section 58"
+      ],
+      "expected_paths": [
+        "constitution-1999.chapter5.part1.section58"
+      ],
+      "expected_outcome": "supported",
+      "review_status": "pending_human_review"
+    },
+    {
+      "id": "e011",
+      "kind": "exact",
+      "prompt": "Section 64",
+      "turns": [
+        "Section 64"
+      ],
+      "expected_paths": [
+        "constitution-1999.chapter5.part1.section64"
+      ],
+      "expected_outcome": "supported",
+      "review_status": "pending_human_review"
+    },
+    {
+      "id": "e012",
+      "kind": "exact",
+      "prompt": "Section 70",
+      "turns": [
+        "Section 70"
+      ],
+      "expected_paths": [
+        "constitution-1999.chapter5.part1.section70"
+      ],
+      "expected_outcome": "supported",
+      "review_status": "pending_human_review"
+    },
+    {
+      "id": "e013",
+      "kind": "exact",
+      "prompt": "Section 77",
+      "turns": [
+        "Section 77"
+      ],
+      "expected_paths": [
+        "constitution-1999.chapter5.part1.section77"
+      ],
+      "expected_outcome": "supported",
+      "review_status": "pending_human_review"
+    },
+    {
+      "id": "e014",
+      "kind": "exact",
+      "prompt": "Section 83",
+      "turns": [
+        "Section 83"
+      ],
+      "expected_paths": [
+        "constitution-1999.chapter5.part1.section83"
+      ],
+      "expected_outcome": "supported",
+      "review_status": "pending_human_review"
+    },
+    {
+      "id": "e015",
+      "kind": "exact",
+      "prompt": "Section 90",
+      "turns": [
+        "Section 90"
+      ],
+      "expected_paths": [
+        "constitution-1999.chapter5.part2.section90"
+      ],
+      "expected_outcome": "supported",
+      "review_status": "pending_human_review"
+    },
+    {
+      "id": "e016",
+      "kind": "exact",
+      "prompt": "Section 96",
+      "turns": [
+        "Section 96"
+      ],
+      "expected_paths": [
+        "constitution-1999.chapter5.part2.section96"
+      ],
+      "expected_outcome": "supported",
+      "review_status": "pending_human_review"
+    },
+    {
+      "id": "e017",
+      "kind": "exact",
+      "prompt": "Section 102",
+      "turns": [
+        "Section 102"
+      ],
+      "expected_paths": [
+        "constitution-1999.chapter5.part2.section102"
+      ],
+      "expected_outcome": "supported",
+      "review_status": "pending_human_review"
+    },
+    {
+      "id": "e018",
+      "kind": "exact",
+      "prompt": "Section 109",
+      "turns": [
+        "Section 109"
+      ],
+      "expected_paths": [
+        "constitution-1999.chapter5.part2.section109"
+      ],
+      "expected_outcome": "supported",
+      "review_status": "pending_human_review"
+    },
+    {
+      "id": "e019",
+      "kind": "exact",
+      "prompt": "Section 115",
+      "turns": [
+        "Section 115"
+      ],
+      "expected_paths": [
+        "constitution-1999.chapter5.part2.section115"
+      ],
+      "expected_outcome": "supported",
+      "review_status": "pending_human_review"
+    },
+    {
+      "id": "e020",
+      "kind": "exact",
+      "prompt": "Section 121",
+      "turns": [
+        "Section 121"
+      ],
+      "expected_paths": [
+        "constitution-1999.chapter5.part2.section121"
+      ],
+      "expected_outcome": "supported",
+      "review_status": "pending_human_review"
+    },
+    {
+      "id": "e021",
+      "kind": "exact",
+      "prompt": "Section 128",
+      "turns": [
+        "Section 128"
+      ],
+      "expected_paths": [
+        "constitution-1999.chapter5.part2.section128"
+      ],
+      "expected_outcome": "supported",
+      "review_status": "pending_human_review"
+    },
+    {
+      "id": "e022",
+      "kind": "exact",
+      "prompt": "Section 134",
+      "turns": [
+        "Section 134"
+      ],
+      "expected_paths": [
+        "constitution-1999.chapter6.part1.section134"
+      ],
+      "expected_outcome": "supported",
+      "review_status": "pending_human_review"
+    },
+    {
+      "id": "e023",
+      "kind": "exact",
+      "prompt": "Section 140",
+      "turns": [
+        "Section 140"
+      ],
+      "expected_paths": [
+        "constitution-1999.chapter6.part1.section140"
+      ],
+      "expected_outcome": "supported",
+      "review_status": "pending_human_review"
+    },
+    {
+      "id": "e024",
+      "kind": "exact",
+      "prompt": "Section 147",
+      "turns": [
+        "Section 147"
+      ],
+      "expected_paths": [
+        "constitution-1999.chapter6.part1.section147"
+      ],
+      "expected_outcome": "supported",
+      "review_status": "pending_human_review"
+    },
+    {
+      "id": "e025",
+      "kind": "exact",
+      "prompt": "Section 153",
+      "turns": [
+        "Section 153"
+      ],
+      "expected_paths": [
+        "constitution-1999.chapter6.part1.section153"
+      ],
+      "expected_outcome": "supported",
+      "review_status": "pending_human_review"
+    },
+    {
+      "id": "e026",
+      "kind": "exact",
+      "prompt": "Section 160",
+      "turns": [
+        "Section 160"
+      ],
+      "expected_paths": [
+        "constitution-1999.chapter6.part1.section160"
+      ],
+      "expected_outcome": "supported",
+      "review_status": "pending_human_review"
+    },
+    {
+      "id": "e027",
+      "kind": "exact",
+      "prompt": "Section 166",
+      "turns": [
+        "Section 166"
+      ],
+      "expected_paths": [
+        "constitution-1999.chapter6.part1.section166"
+      ],
+      "expected_outcome": "supported",
+      "review_status": "pending_human_review"
+    },
+    {
+      "id": "e028",
+      "kind": "exact",
+      "prompt": "Section 173",
+      "turns": [
+        "Section 173"
+      ],
+      "expected_paths": [
+        "constitution-1999.chapter6.part1.section173"
+      ],
+      "expected_outcome": "supported",
+      "review_status": "pending_human_review"
+    },
+    {
+      "id": "e029",
+      "kind": "exact",
+      "prompt": "Section 180",
+      "turns": [
+        "Section 180"
+      ],
+      "expected_paths": [
+        "constitution-1999.chapter6.part2.section180"
+      ],
+      "expected_outcome": "supported",
+      "review_status": "pending_human_review"
+    },
+    {
+      "id": "e030",
+      "kind": "exact",
+      "prompt": "Section 186",
+      "turns": [
+        "Section 186"
+      ],
+      "expected_paths": [
+        "constitution-1999.chapter6.part2.section186"
+      ],
+      "expected_outcome": "supported",
+      "review_status": "pending_human_review"
+    },
+    {
+      "id": "e031",
+      "kind": "exact",
+      "prompt": "Section 193",
+      "turns": [
+        "Section 193"
+      ],
+      "expected_paths": [
+        "constitution-1999.chapter6.part2.section193"
+      ],
+      "expected_outcome": "supported",
+      "review_status": "pending_human_review"
+    },
+    {
+      "id": "e032",
+      "kind": "exact",
+      "prompt": "Section 200",
+      "turns": [
+        "Section 200"
+      ],
+      "expected_paths": [
+        "constitution-1999.chapter6.part2.section200"
+      ],
+      "expected_outcome": "supported",
+      "review_status": "pending_human_review"
+    },
+    {
+      "id": "e033",
+      "kind": "exact",
+      "prompt": "Section 206",
+      "turns": [
+        "Section 206"
+      ],
+      "expected_paths": [
+        "constitution-1999.chapter6.part2.section206"
+      ],
+      "expected_outcome": "supported",
+      "review_status": "pending_human_review"
+    },
+    {
+      "id": "e034",
+      "kind": "exact",
+      "prompt": "Section 212",
+      "turns": [
+        "Section 212"
+      ],
+      "expected_paths": [
+        "constitution-1999.chapter6.part2.section212"
+      ],
+      "expected_outcome": "supported",
+      "review_status": "pending_human_review"
+    },
+    {
+      "id": "e035",
+      "kind": "exact",
+      "prompt": "Section 219",
+      "turns": [
+        "Section 219"
+      ],
+      "expected_paths": [
+        "constitution-1999.chapter6.part3.section219"
+      ],
+      "expected_outcome": "supported",
+      "review_status": "pending_human_review"
+    },
+    {
+      "id": "e036",
+      "kind": "exact",
+      "prompt": "Section 225",
+      "turns": [
+        "Section 225"
+      ],
+      "expected_paths": [
+        "constitution-1999.chapter6.part3.section225"
+      ],
+      "expected_outcome": "supported",
+      "review_status": "pending_human_review"
+    },
+    {
+      "id": "e037",
+      "kind": "exact",
+      "prompt": "Section 231",
+      "turns": [
+        "Section 231"
+      ],
+      "expected_paths": [
+        "constitution-1999.chapter7.part1.section231"
+      ],
+      "expected_outcome": "supported",
+      "review_status": "pending_human_review"
+    },
+    {
+      "id": "e038",
+      "kind": "exact",
+      "prompt": "Section 238",
+      "turns": [
+        "Section 238"
+      ],
+      "expected_paths": [
+        "constitution-1999.chapter7.part1.section238"
+      ],
+      "expected_outcome": "supported",
+      "review_status": "pending_human_review"
+    },
+    {
+      "id": "e039",
+      "kind": "exact",
+      "prompt": "Section 244",
+      "turns": [
+        "Section 244"
+      ],
+      "expected_paths": [
+        "constitution-1999.chapter7.part1.section244"
+      ],
+      "expected_outcome": "supported",
+      "review_status": "pending_human_review"
+    },
+    {
+      "id": "e040",
+      "kind": "exact",
+      "prompt": "Section 251",
+      "turns": [
+        "Section 251"
+      ],
+      "expected_paths": [
+        "constitution-1999.chapter7.part1.section251"
+      ],
+      "expected_outcome": "supported",
+      "review_status": "pending_human_review"
+    },
+    {
+      "id": "e041",
+      "kind": "exact",
+      "prompt": "Section 257",
+      "turns": [
+        "Section 257"
+      ],
+      "expected_paths": [
+        "constitution-1999.chapter7.part1.section257"
+      ],
+      "expected_outcome": "supported",
+      "review_status": "pending_human_review"
+    },
+    {
+      "id": "e042",
+      "kind": "exact",
+      "prompt": "Section 263",
+      "turns": [
+        "Section 263"
+      ],
+      "expected_paths": [
+        "constitution-1999.chapter7.part1.section263"
+      ],
+      "expected_outcome": "supported",
+      "review_status": "pending_human_review"
+    },
+    {
+      "id": "e043",
+      "kind": "exact",
+      "prompt": "Section 270",
+      "turns": [
+        "Section 270"
+      ],
+      "expected_paths": [
+        "constitution-1999.chapter7.part2.section270"
+      ],
+      "expected_outcome": "supported",
+      "review_status": "pending_human_review"
+    },
+    {
+      "id": "e044",
+      "kind": "exact",
+      "prompt": "Section 276",
+      "turns": [
+        "Section 276"
+      ],
+      "expected_paths": [
+        "constitution-1999.chapter7.part2.section276"
+      ],
+      "expected_outcome": "supported",
+      "review_status": "pending_human_review"
+    },
+    {
+      "id": "e045",
+      "kind": "exact",
+      "prompt": "Section 282",
+      "turns": [
+        "Section 282"
+      ],
+      "expected_paths": [
+        "constitution-1999.chapter7.part2.section282"
+      ],
+      "expected_outcome": "supported",
+      "review_status": "pending_human_review"
+    },
+    {
+      "id": "e046",
+      "kind": "exact",
+      "prompt": "Section 289",
+      "turns": [
+        "Section 289"
+      ],
+      "expected_paths": [
+        "constitution-1999.chapter7.part4.section289"
+      ],
+      "expected_outcome": "supported",
+      "review_status": "pending_human_review"
+    },
+    {
+      "id": "e047",
+      "kind": "exact",
+      "prompt": "Section 295",
+      "turns": [
+        "Section 295"
+      ],
+      "expected_paths": [
+        "constitution-1999.chapter7.part4.section295"
+      ],
+      "expected_outcome": "supported",
+      "review_status": "pending_human_review"
+    },
+    {
+      "id": "e048",
+      "kind": "exact",
+      "prompt": "Section 301",
+      "turns": [
+        "Section 301"
+      ],
+      "expected_paths": [
+        "constitution-1999.chapter8.part1.section301"
+      ],
+      "expected_outcome": "supported",
+      "review_status": "pending_human_review"
+    },
+    {
+      "id": "e049",
+      "kind": "exact",
+      "prompt": "Section 308",
+      "turns": [
+        "Section 308"
+      ],
+      "expected_paths": [
+        "constitution-1999.chapter8.part2.section308"
+      ],
+      "expected_outcome": "supported",
+      "review_status": "pending_human_review"
+    },
+    {
+      "id": "e050",
+      "kind": "exact",
+      "prompt": "Section 314",
+      "turns": [
+        "Section 314"
+      ],
+      "expected_paths": [
+        "constitution-1999.chapter8.part3.section314"
+      ],
+      "expected_outcome": "supported",
+      "review_status": "pending_human_review"
+    },
+    {
+      "id": "e051",
+      "kind": "topic",
+      "prompt": "Under Section 1, what happens when another law is inconsistent with the Constitution?",
+      "turns": [
+        "Under Section 1, what happens when another law is inconsistent with the Constitution?"
+      ],
+      "expected_paths": [
+        "constitution-1999.chapter1.part1.section1"
+      ],
+      "expected_outcome": "supported",
+      "review_status": "pending_human_review"
+    },
+    {
+      "id": "e052",
+      "kind": "topic",
+      "prompt": "Which provision describes Nigeria as one indivisible and indissoluble sovereign state?",
+      "turns": [
+        "Which provision describes Nigeria as one indivisible and indissoluble sovereign state?"
+      ],
+      "expected_paths": [
+        "constitution-1999.chapter1.part1.section2"
+      ],
+      "expected_outcome": "supported",
+      "review_status": "pending_human_review"
+    },
+    {
+      "id": "e053",
+      "kind": "topic",
+      "prompt": "Where does the Constitution list the states of the Federation and define the Federal Capital Territory?",
+      "turns": [
+        "Where does the Constitution list the states of the Federation and define the Federal Capital Territory?"
+      ],
+      "expected_paths": [
+        "constitution-1999.chapter1.part1.section3"
+      ],
+      "expected_outcome": "supported",
+      "review_status": "pending_human_review"
+    },
+    {
+      "id": "e054",
+      "kind": "topic",
+      "prompt": "Under Section 4, how are legislative powers divided between the National Assembly and State Houses of Assembly?",
+      "turns": [
+        "Under Section 4, how are legislative powers divided between the National Assembly and State Houses of Assembly?"
+      ],
+      "expected_paths": [
+        "constitution-1999.chapter1.part2.section4"
+      ],
+      "expected_outcome": "supported",
+      "review_status": "pending_human_review"
+    },
+    {
+      "id": "e055",
+      "kind": "topic",
+      "prompt": "Which provision vests federal executive powers in the President?",
+      "turns": [
+        "Which provision vests federal executive powers in the President?"
+      ],
+      "expected_paths": [
+        "constitution-1999.chapter1.part2.section5"
+      ],
+      "expected_outcome": "supported",
+      "review_status": "pending_human_review"
+    },
+    {
+      "id": "e056",
+      "kind": "topic",
+      "prompt": "Under Section 6, which courts exercise judicial powers in Nigeria?",
+      "turns": [
+        "Under Section 6, which courts exercise judicial powers in Nigeria?"
+      ],
+      "expected_paths": [
+        "constitution-1999.chapter1.part2.section6"
+      ],
+      "expected_outcome": "supported",
+      "review_status": "pending_human_review"
+    },
+    {
+      "id": "e057",
+      "kind": "topic",
+      "prompt": "Which section guarantees democratically elected local government councils?",
+      "turns": [
+        "Which section guarantees democratically elected local government councils?"
+      ],
+      "expected_paths": [
+        "constitution-1999.chapter1.part2.section7"
+      ],
+      "expected_outcome": "supported",
+      "review_status": "pending_human_review"
+    },
+    {
+      "id": "e058",
+      "kind": "topic",
+      "prompt": "Under Section 9, what procedure is required to alter the Constitution?",
+      "turns": [
+        "Under Section 9, what procedure is required to alter the Constitution?"
+      ],
+      "expected_paths": [
+        "constitution-1999.chapter1.part2.section9"
+      ],
+      "expected_outcome": "supported",
+      "review_status": "pending_human_review"
+    },
+    {
+      "id": "e059",
+      "kind": "topic",
+      "prompt": "Which provision prohibits the Federation or a State from adopting a state religion?",
+      "turns": [
+        "Which provision prohibits the Federation or a State from adopting a state religion?"
+      ],
+      "expected_paths": [
+        "constitution-1999.chapter1.part2.section10"
+      ],
+      "expected_outcome": "supported",
+      "review_status": "pending_human_review"
+    },
+    {
+      "id": "e060",
+      "kind": "topic",
+      "prompt": "Under Section 12, when does an international treaty have the force of law in Nigeria?",
+      "turns": [
+        "Under Section 12, when does an international treaty have the force of law in Nigeria?"
+      ],
+      "expected_paths": [
+        "constitution-1999.chapter1.part2.section12"
+      ],
+      "expected_outcome": "supported",
+      "review_status": "pending_human_review"
+    },
+    {
+      "id": "e061",
+      "kind": "topic",
+      "prompt": "Under Section 14, what does federal character require for government composition?",
+      "turns": [
+        "Under Section 14, what does federal character require for government composition?"
+      ],
+      "expected_paths": [
+        "constitution-1999.chapter2.section14"
+      ],
+      "expected_outcome": "supported",
+      "review_status": "pending_human_review"
+    },
+    {
+      "id": "e062",
+      "kind": "topic",
+      "prompt": "Which section states that the social order is founded on freedom, equality and justice?",
+      "turns": [
+        "Which section states that the social order is founded on freedom, equality and justice?"
+      ],
+      "expected_paths": [
+        "constitution-1999.chapter2.section17"
+      ],
+      "expected_outcome": "supported",
+      "review_status": "pending_human_review"
+    },
+    {
+      "id": "e063",
+      "kind": "topic",
+      "prompt": "Which provision discusses free education and the eradication of illiteracy?",
+      "turns": [
+        "Which provision discusses free education and the eradication of illiteracy?"
+      ],
+      "expected_paths": [
+        "constitution-1999.chapter2.section18"
+      ],
+      "expected_outcome": "supported",
+      "review_status": "pending_human_review"
+    },
+    {
+      "id": "e064",
+      "kind": "topic",
+      "prompt": "Where does the Constitution list discipline, integrity, dignity of labour and social justice as national ethics?",
+      "turns": [
+        "Where does the Constitution list discipline, integrity, dignity of labour and social justice as national ethics?"
+      ],
+      "expected_paths": [
+        "constitution-1999.chapter2.section23"
+      ],
+      "expected_outcome": "supported",
+      "review_status": "pending_human_review"
+    },
+    {
+      "id": "e065",
+      "kind": "topic",
+      "prompt": "Under Section 25, who qualifies as a citizen of Nigeria by birth?",
+      "turns": [
+        "Under Section 25, who qualifies as a citizen of Nigeria by birth?"
+      ],
+      "expected_paths": [
+        "constitution-1999.chapter3.section25"
+      ],
+      "expected_outcome": "supported",
+      "review_status": "pending_human_review"
+    },
+    {
+      "id": "e066",
+      "kind": "topic",
+      "prompt": "Under Section 27, what qualifications must a person meet for Nigerian citizenship by naturalisation?",
+      "turns": [
+        "Under Section 27, what qualifications must a person meet for Nigerian citizenship by naturalisation?"
+      ],
+      "expected_paths": [
+        "constitution-1999.chapter3.section27"
+      ],
+      "expected_outcome": "supported",
+      "review_status": "pending_human_review"
+    },
+    {
+      "id": "e067",
+      "kind": "topic",
+      "prompt": "Which provision allows a citizen of full age to renounce Nigerian citizenship?",
+      "turns": [
+        "Which provision allows a citizen of full age to renounce Nigerian citizenship?"
+      ],
+      "expected_paths": [
+        "constitution-1999.chapter3.section29"
+      ],
+      "expected_outcome": "supported",
+      "review_status": "pending_human_review"
+    },
+    {
+      "id": "e068",
+      "kind": "topic",
+      "prompt": "Where is the constitutional right to life protected?",
+      "turns": [
+        "Where is the constitutional right to life protected?"
+      ],
+      "expected_paths": [
+        "constitution-1999.chapter4.section33"
+      ],
+      "expected_outcome": "supported",
+      "review_status": "pending_human_review"
+    },
+    {
+      "id": "e069",
+      "kind": "topic",
+      "prompt": "Which provision prohibits torture, inhuman treatment, slavery and forced labour?",
+      "turns": [
+        "Which provision prohibits torture, inhuman treatment, slavery and forced labour?"
+      ],
+      "expected_paths": [
+        "constitution-1999.chapter4.section34"
+      ],
+      "expected_outcome": "supported",
+      "review_status": "pending_human_review"
+    },
+    {
+      "id": "e070",
+      "kind": "topic",
+      "prompt": "Under Section 35, what safeguards protect a person arrested or detained?",
+      "turns": [
+        "Under Section 35, what safeguards protect a person arrested or detained?"
+      ],
+      "expected_paths": [
+        "constitution-1999.chapter4.section35"
+      ],
+      "expected_outcome": "supported",
+      "review_status": "pending_human_review"
+    },
+    {
+      "id": "e071",
+      "kind": "topic",
+      "prompt": "Under Section 36, what protections apply to a person charged with a criminal offence?",
+      "turns": [
+        "Under Section 36, what protections apply to a person charged with a criminal offence?"
+      ],
+      "expected_paths": [
+        "constitution-1999.chapter4.section36"
+      ],
+      "expected_outcome": "supported",
+      "review_status": "pending_human_review"
+    },
+    {
+      "id": "e072",
+      "kind": "topic",
+      "prompt": "Which provision protects citizens' homes, correspondence, telephone conversations and telegraphic communications?",
+      "turns": [
+        "Which provision protects citizens' homes, correspondence, telephone conversations and telegraphic communications?"
+      ],
+      "expected_paths": [
+        "constitution-1999.chapter4.section37"
+      ],
+      "expected_outcome": "supported",
+      "review_status": "pending_human_review"
+    },
+    {
+      "id": "e073",
+      "kind": "topic",
+      "prompt": "Which provision guarantees freedom of thought, conscience and religion?",
+      "turns": [
+        "Which provision guarantees freedom of thought, conscience and religion?"
+      ],
+      "expected_paths": [
+        "constitution-1999.chapter4.section38"
+      ],
+      "expected_outcome": "supported",
+      "review_status": "pending_human_review"
+    },
+    {
+      "id": "e074",
+      "kind": "topic",
+      "prompt": "Which provision guarantees freedom to hold opinions and receive and impart information?",
+      "turns": [
+        "Which provision guarantees freedom to hold opinions and receive and impart information?"
+      ],
+      "expected_paths": [
+        "constitution-1999.chapter4.section39"
+      ],
+      "expected_outcome": "supported",
+      "review_status": "pending_human_review"
+    },
+    {
+      "id": "e075",
+      "kind": "topic",
+      "prompt": "Where is the right to assemble freely and associate with other persons protected?",
+      "turns": [
+        "Where is the right to assemble freely and associate with other persons protected?"
+      ],
+      "expected_paths": [
+        "constitution-1999.chapter4.section40"
+      ],
+      "expected_outcome": "supported",
+      "review_status": "pending_human_review"
+    },
+    {
+      "id": "e076",
+      "kind": "topic",
+      "prompt": "Which provision guarantees citizens freedom of movement throughout Nigeria?",
+      "turns": [
+        "Which provision guarantees citizens freedom of movement throughout Nigeria?"
+      ],
+      "expected_paths": [
+        "constitution-1999.chapter4.section41"
+      ],
+      "expected_outcome": "supported",
+      "review_status": "pending_human_review"
+    },
+    {
+      "id": "e077",
+      "kind": "topic",
+      "prompt": "Under Section 42, what forms of discrimination against Nigerian citizens are prohibited?",
+      "turns": [
+        "Under Section 42, what forms of discrimination against Nigerian citizens are prohibited?"
+      ],
+      "expected_paths": [
+        "constitution-1999.chapter4.section42"
+      ],
+      "expected_outcome": "supported",
+      "review_status": "pending_human_review"
+    },
+    {
+      "id": "e078",
+      "kind": "topic",
+      "prompt": "Which section gives citizens the right to acquire and own immovable property anywhere in Nigeria?",
+      "turns": [
+        "Which section gives citizens the right to acquire and own immovable property anywhere in Nigeria?"
+      ],
+      "expected_paths": [
+        "constitution-1999.chapter4.section43"
+      ],
+      "expected_outcome": "supported",
+      "review_status": "pending_human_review"
+    },
+    {
+      "id": "e079",
+      "kind": "topic",
+      "prompt": "Under Section 44, what compensation safeguards apply to compulsory acquisition of property?",
+      "turns": [
+        "Under Section 44, what compensation safeguards apply to compulsory acquisition of property?"
+      ],
+      "expected_paths": [
+        "constitution-1999.chapter4.section44"
+      ],
+      "expected_outcome": "supported",
+      "review_status": "pending_human_review"
+    },
+    {
+      "id": "e080",
+      "kind": "topic",
+      "prompt": "Which section permits an application to the High Court for enforcement of fundamental rights?",
+      "turns": [
+        "Which section permits an application to the High Court for enforcement of fundamental rights?"
+      ],
+      "expected_paths": [
+        "constitution-1999.chapter4.section46"
+      ],
+      "expected_outcome": "supported",
+      "review_status": "pending_human_review"
+    },
+    {
+      "id": "e081",
+      "kind": "topic",
+      "prompt": "Under Section 54, what is the quorum of the Senate and House of Representatives?",
+      "turns": [
+        "Under Section 54, what is the quorum of the Senate and House of Representatives?"
+      ],
+      "expected_paths": [
+        "constitution-1999.chapter5.part1.section54"
+      ],
+      "expected_outcome": "supported",
+      "review_status": "pending_human_review"
+    },
+    {
+      "id": "e082",
+      "kind": "topic",
+      "prompt": "Under Section 58, how does the National Assembly exercise federal legislative power through bills?",
+      "turns": [
+        "Under Section 58, how does the National Assembly exercise federal legislative power through bills?"
+      ],
+      "expected_paths": [
+        "constitution-1999.chapter5.part1.section58"
+      ],
+      "expected_outcome": "supported",
+      "review_status": "pending_human_review"
+    },
+    {
+      "id": "e083",
+      "kind": "topic",
+      "prompt": "Which section sets out how an elected member of the National Assembly may be recalled?",
+      "turns": [
+        "Which section sets out how an elected member of the National Assembly may be recalled?"
+      ],
+      "expected_paths": [
+        "constitution-1999.chapter5.part1.section69"
+      ],
+      "expected_outcome": "supported",
+      "review_status": "pending_human_review"
+    },
+    {
+      "id": "e084",
+      "kind": "topic",
+      "prompt": "Under Section 85, who audits the public accounts of the Federation?",
+      "turns": [
+        "Under Section 85, who audits the public accounts of the Federation?"
+      ],
+      "expected_paths": [
+        "constitution-1999.chapter5.part1.section85"
+      ],
+      "expected_outcome": "supported",
+      "review_status": "pending_human_review"
+    },
+    {
+      "id": "e085",
+      "kind": "topic",
+      "prompt": "Under Section 131 in this source edition, what qualifications apply to election as President?",
+      "turns": [
+        "Under Section 131 in this source edition, what qualifications apply to election as President?"
+      ],
+      "expected_paths": [
+        "constitution-1999.chapter6.part1.section131"
+      ],
+      "expected_outcome": "supported",
+      "review_status": "pending_human_review"
+    },
+    {
+      "id": "e086",
+      "kind": "topic",
+      "prompt": "Under Section 143, how may the President or Vice-President be removed for gross misconduct?",
+      "turns": [
+        "Under Section 143, how may the President or Vice-President be removed for gross misconduct?"
+      ],
+      "expected_paths": [
+        "constitution-1999.chapter6.part1.section143"
+      ],
+      "expected_outcome": "supported",
+      "review_status": "pending_human_review"
+    },
+    {
+      "id": "e087",
+      "kind": "topic",
+      "prompt": "Under Section 153, which federal commissions and councils are established?",
+      "turns": [
+        "Under Section 153, which federal commissions and councils are established?"
+      ],
+      "expected_paths": [
+        "constitution-1999.chapter6.part1.section153"
+      ],
+      "expected_outcome": "supported",
+      "review_status": "pending_human_review"
+    },
+    {
+      "id": "e088",
+      "kind": "topic",
+      "prompt": "Under Section 162, what revenues are paid into the Federation Account?",
+      "turns": [
+        "Under Section 162, what revenues are paid into the Federation Account?"
+      ],
+      "expected_paths": [
+        "constitution-1999.chapter6.part1.section162"
+      ],
+      "expected_outcome": "supported",
+      "review_status": "pending_human_review"
+    },
+    {
+      "id": "e089",
+      "kind": "topic",
+      "prompt": "Under Section 188, what process applies to removal of a State Governor or Deputy Governor?",
+      "turns": [
+        "Under Section 188, what process applies to removal of a State Governor or Deputy Governor?"
+      ],
+      "expected_paths": [
+        "constitution-1999.chapter6.part2.section188"
+      ],
+      "expected_outcome": "supported",
+      "review_status": "pending_human_review"
+    },
+    {
+      "id": "e090",
+      "kind": "topic",
+      "prompt": "Which provision establishes the Nigeria Police Force and prohibits other police forces?",
+      "turns": [
+        "Which provision establishes the Nigeria Police Force and prohibits other police forces?"
+      ],
+      "expected_paths": [
+        "constitution-1999.chapter6.part3.section214"
+      ],
+      "expected_outcome": "supported",
+      "review_status": "pending_human_review"
+    },
+    {
+      "id": "e091",
+      "kind": "topic",
+      "prompt": "Which provision establishes the armed forces and states their constitutional duties?",
+      "turns": [
+        "Which provision establishes the armed forces and states their constitutional duties?"
+      ],
+      "expected_paths": [
+        "constitution-1999.chapter6.part3.section217"
+      ],
+      "expected_outcome": "supported",
+      "review_status": "pending_human_review"
+    },
+    {
+      "id": "e092",
+      "kind": "topic",
+      "prompt": "Under Section 230, how is the Supreme Court of Nigeria constituted?",
+      "turns": [
+        "Under Section 230, how is the Supreme Court of Nigeria constituted?"
+      ],
+      "expected_paths": [
+        "constitution-1999.chapter7.part1.section230"
+      ],
+      "expected_outcome": "supported",
+      "review_status": "pending_human_review"
+    },
+    {
+      "id": "e093",
+      "kind": "topic",
+      "prompt": "Under Section 287, who must enforce decisions of the Supreme Court and other superior courts?",
+      "turns": [
+        "Under Section 287, who must enforce decisions of the Supreme Court and other superior courts?"
+      ],
+      "expected_paths": [
+        "constitution-1999.chapter7.part4.section287"
+      ],
+      "expected_outcome": "supported",
+      "review_status": "pending_human_review"
+    },
+    {
+      "id": "e094",
+      "kind": "topic",
+      "prompt": "Under Section 305, in which situations can the President proclaim a state of emergency?",
+      "turns": [
+        "Under Section 305, in which situations can the President proclaim a state of emergency?"
+      ],
+      "expected_paths": [
+        "constitution-1999.chapter8.part2.section305"
+      ],
+      "expected_outcome": "supported",
+      "review_status": "pending_human_review"
+    },
+    {
+      "id": "e095",
+      "kind": "topic",
+      "prompt": "Under Section 308, which public officers have immunity from civil or criminal proceedings while in office?",
+      "turns": [
+        "Under Section 308, which public officers have immunity from civil or criminal proceedings while in office?"
+      ],
+      "expected_paths": [
+        "constitution-1999.chapter8.part2.section308"
+      ],
+      "expected_outcome": "supported",
+      "review_status": "pending_human_review"
+    },
+    {
+      "id": "e096",
+      "kind": "topic",
+      "prompt": "What is the wording of the Oath of Allegiance in the Seventh Schedule?",
+      "turns": [
+        "What is the wording of the Oath of Allegiance in the Seventh Schedule?"
+      ],
+      "expected_paths": [
+        "constitution-1999.schedule7.oath-allegiance"
+      ],
+      "expected_outcome": "supported",
+      "review_status": "pending_human_review"
+    },
+    {
+      "id": "e097",
+      "kind": "topic",
+      "prompt": "What does the presidential oath of office in the Seventh Schedule require the President to swear?",
+      "turns": [
+        "What does the presidential oath of office in the Seventh Schedule require the President to swear?"
+      ],
+      "expected_paths": [
+        "constitution-1999.schedule7.oath-president"
+      ],
+      "expected_outcome": "supported",
+      "review_status": "pending_human_review"
+    },
+    {
+      "id": "e098",
+      "kind": "topic",
+      "prompt": "What does the Governor of a State swear in the oath of office in the Seventh Schedule?",
+      "turns": [
+        "What does the Governor of a State swear in the oath of office in the Seventh Schedule?"
+      ],
+      "expected_paths": [
+        "constitution-1999.schedule7.oath-governor"
+      ],
+      "expected_outcome": "supported",
+      "review_status": "pending_human_review"
+    },
+    {
+      "id": "e099",
+      "kind": "topic",
+      "prompt": "What oath must a member of the National Assembly or a House of Assembly take?",
+      "turns": [
+        "What oath must a member of the National Assembly or a House of Assembly take?"
+      ],
+      "expected_paths": [
+        "constitution-1999.schedule7.oath-legislator"
+      ],
+      "expected_outcome": "supported",
+      "review_status": "pending_human_review"
+    },
+    {
+      "id": "e100",
+      "kind": "topic",
+      "prompt": "What promises appear in the Judicial Oath in the Seventh Schedule?",
+      "turns": [
+        "What promises appear in the Judicial Oath in the Seventh Schedule?"
+      ],
+      "expected_paths": [
+        "constitution-1999.schedule7.oath-judicial"
+      ],
+      "expected_outcome": "supported",
+      "review_status": "pending_human_review"
+    },
+    {
+      "id": "e101",
+      "kind": "exact_list",
+      "prompt": "Sections 33, 37 and 39",
+      "turns": [
+        "Sections 33, 37 and 39"
+      ],
+      "expected_paths": [
+        "constitution-1999.chapter4.section33",
+        "constitution-1999.chapter4.section37",
+        "constitution-1999.chapter4.section39"
+      ],
+      "expected_outcome": "supported",
+      "review_status": "pending_human_review"
+    },
+    {
+      "id": "e102",
+      "kind": "exact_list",
+      "prompt": "Sections 34, 35 and 36",
+      "turns": [
+        "Sections 34, 35 and 36"
+      ],
+      "expected_paths": [
+        "constitution-1999.chapter4.section34",
+        "constitution-1999.chapter4.section35",
+        "constitution-1999.chapter4.section36"
+      ],
+      "expected_outcome": "supported",
+      "review_status": "pending_human_review"
+    },
+    {
+      "id": "e103",
+      "kind": "exact_list",
+      "prompt": "Sections 37, 38 and 39",
+      "turns": [
+        "Sections 37, 38 and 39"
+      ],
+      "expected_paths": [
+        "constitution-1999.chapter4.section37",
+        "constitution-1999.chapter4.section38",
+        "constitution-1999.chapter4.section39"
+      ],
+      "expected_outcome": "supported",
+      "review_status": "pending_human_review"
+    },
+    {
+      "id": "e104",
+      "kind": "exact_list",
+      "prompt": "Sections 40, 41 and 42",
+      "turns": [
+        "Sections 40, 41 and 42"
+      ],
+      "expected_paths": [
+        "constitution-1999.chapter4.section40",
+        "constitution-1999.chapter4.section41",
+        "constitution-1999.chapter4.section42"
+      ],
+      "expected_outcome": "supported",
+      "review_status": "pending_human_review"
+    },
+    {
+      "id": "e105",
+      "kind": "exact_list",
+      "prompt": "Sections 43, 44 and 46",
+      "turns": [
+        "Sections 43, 44 and 46"
+      ],
+      "expected_paths": [
+        "constitution-1999.chapter4.section43",
+        "constitution-1999.chapter4.section44",
+        "constitution-1999.chapter4.section46"
+      ],
+      "expected_outcome": "supported",
+      "review_status": "pending_human_review"
+    },
+    {
+      "id": "e106",
+      "kind": "exact_list",
+      "prompt": "Sections 131, 137 and 147",
+      "turns": [
+        "Sections 131, 137 and 147"
+      ],
+      "expected_paths": [
+        "constitution-1999.chapter6.part1.section131",
+        "constitution-1999.chapter6.part1.section137",
+        "constitution-1999.chapter6.part1.section147"
+      ],
+      "expected_outcome": "supported",
+      "review_status": "pending_human_review"
+    },
+    {
+      "id": "e107",
+      "kind": "exact_list",
+      "prompt": "Sections 153, 162 and 188",
+      "turns": [
+        "Sections 153, 162 and 188"
+      ],
+      "expected_paths": [
+        "constitution-1999.chapter6.part1.section153",
+        "constitution-1999.chapter6.part1.section162",
+        "constitution-1999.chapter6.part2.section188"
+      ],
+      "expected_outcome": "supported",
+      "review_status": "pending_human_review"
+    },
+    {
+      "id": "e108",
+      "kind": "exact_list",
+      "prompt": "Sections 214, 217 and 233",
+      "turns": [
+        "Sections 214, 217 and 233"
+      ],
+      "expected_paths": [
+        "constitution-1999.chapter6.part3.section214",
+        "constitution-1999.chapter6.part3.section217",
+        "constitution-1999.chapter7.part1.section233"
+      ],
+      "expected_outcome": "supported",
+      "review_status": "pending_human_review"
+    },
+    {
+      "id": "e109",
+      "kind": "exact_list",
+      "prompt": "Sections 251, 305 and 308",
+      "turns": [
+        "Sections 251, 305 and 308"
+      ],
+      "expected_paths": [
+        "constitution-1999.chapter7.part1.section251",
+        "constitution-1999.chapter8.part2.section305",
+        "constitution-1999.chapter8.part2.section308"
+      ],
+      "expected_outcome": "supported",
+      "review_status": "pending_human_review"
+    },
+    {
+      "id": "e110",
+      "kind": "exact_list",
+      "prompt": "Sections 1, 2 and 3",
+      "turns": [
+        "Sections 1, 2 and 3"
+      ],
+      "expected_paths": [
+        "constitution-1999.chapter1.part1.section1",
+        "constitution-1999.chapter1.part1.section2",
+        "constitution-1999.chapter1.part1.section3"
+      ],
+      "expected_outcome": "supported",
+      "review_status": "pending_human_review"
+    },
+    {
+      "id": "e111",
+      "kind": "exact_range",
+      "prompt": "Sections 1–3",
+      "turns": [
+        "Sections 1–3"
+      ],
+      "expected_paths": [
+        "constitution-1999.chapter1.part1.section1",
+        "constitution-1999.chapter1.part1.section2",
+        "constitution-1999.chapter1.part1.section3"
+      ],
+      "expected_outcome": "supported_or_partial",
+      "review_status": "pending_human_review"
+    },
+    {
+      "id": "e112",
+      "kind": "exact_range",
+      "prompt": "Sections 4–6",
+      "turns": [
+        "Sections 4–6"
+      ],
+      "expected_paths": [
+        "constitution-1999.chapter1.part2.section4",
+        "constitution-1999.chapter1.part2.section5",
+        "constitution-1999.chapter1.part2.section6"
+      ],
+      "expected_outcome": "supported_or_partial",
+      "review_status": "pending_human_review"
+    },
+    {
+      "id": "e113",
+      "kind": "exact_range",
+      "prompt": "Sections 33–35",
+      "turns": [
+        "Sections 33–35"
+      ],
+      "expected_paths": [
+        "constitution-1999.chapter4.section33",
+        "constitution-1999.chapter4.section34",
+        "constitution-1999.chapter4.section35"
+      ],
+      "expected_outcome": "supported_or_partial",
+      "review_status": "pending_human_review"
+    },
+    {
+      "id": "e114",
+      "kind": "exact_range",
+      "prompt": "Sections 36–38",
+      "turns": [
+        "Sections 36–38"
+      ],
+      "expected_paths": [
+        "constitution-1999.chapter4.section36",
+        "constitution-1999.chapter4.section37",
+        "constitution-1999.chapter4.section38"
+      ],
+      "expected_outcome": "supported_or_partial",
+      "review_status": "pending_human_review"
+    },
+    {
+      "id": "e115",
+      "kind": "exact_range",
+      "prompt": "Sections 39–41",
+      "turns": [
+        "Sections 39–41"
+      ],
+      "expected_paths": [
+        "constitution-1999.chapter4.section39",
+        "constitution-1999.chapter4.section40",
+        "constitution-1999.chapter4.section41"
+      ],
+      "expected_outcome": "supported_or_partial",
+      "review_status": "pending_human_review"
+    },
+    {
+      "id": "e116",
+      "kind": "exact_range",
+      "prompt": "Sections 42–44",
+      "turns": [
+        "Sections 42–44"
+      ],
+      "expected_paths": [
+        "constitution-1999.chapter4.section42",
+        "constitution-1999.chapter4.section43",
+        "constitution-1999.chapter4.section44"
+      ],
+      "expected_outcome": "supported_or_partial",
+      "review_status": "pending_human_review"
+    },
+    {
+      "id": "e117",
+      "kind": "exact_range",
+      "prompt": "Sections 214–216",
+      "turns": [
+        "Sections 214–216"
+      ],
+      "expected_paths": [
+        "constitution-1999.chapter6.part3.section214",
+        "constitution-1999.chapter6.part3.section215",
+        "constitution-1999.chapter6.part3.section216"
+      ],
+      "expected_outcome": "supported_or_partial",
+      "review_status": "pending_human_review"
+    },
+    {
+      "id": "e118",
+      "kind": "exact_range",
+      "prompt": "Sections 217–219",
+      "turns": [
+        "Sections 217–219"
+      ],
+      "expected_paths": [
+        "constitution-1999.chapter6.part3.section217",
+        "constitution-1999.chapter6.part3.section218",
+        "constitution-1999.chapter6.part3.section219"
+      ],
+      "expected_outcome": "supported_or_partial",
+      "review_status": "pending_human_review"
+    },
+    {
+      "id": "e119",
+      "kind": "exact_range",
+      "prompt": "Sections 305–307",
+      "turns": [
+        "Sections 305–307"
+      ],
+      "expected_paths": [
+        "constitution-1999.chapter8.part2.section305",
+        "constitution-1999.chapter8.part2.section306",
+        "constitution-1999.chapter8.part2.section307"
+      ],
+      "expected_outcome": "supported_or_partial",
+      "review_status": "pending_human_review"
+    },
+    {
+      "id": "e120",
+      "kind": "exact_range",
+      "prompt": "Section 33(1)–(2)",
+      "turns": [
+        "Section 33(1)–(2)"
+      ],
+      "expected_paths": [
+        "constitution-1999.chapter4.section33.subsection1",
+        "constitution-1999.chapter4.section33.subsection2"
+      ],
+      "expected_outcome": "supported_or_partial",
+      "review_status": "pending_human_review"
+    },
+    {
+      "id": "e121",
+      "kind": "scenario",
+      "prompt": "A person was killed during an arrest. Which right in this source edition may be relevant, and what facts are still needed?",
+      "turns": [
+        "A person was killed during an arrest. Which right in this source edition may be relevant, and what facts are still needed?"
+      ],
+      "expected_paths": [
+        "constitution-1999.chapter4.section33"
+      ],
+      "expected_outcome": "supported_with_missing_facts",
+      "review_status": "pending_human_review"
+    },
+    {
+      "id": "e122",
+      "kind": "scenario",
+      "prompt": "A detainee says officers treated them in a degrading way. What provision may matter?",
+      "turns": [
+        "A detainee says officers treated them in a degrading way. What provision may matter?"
+      ],
+      "expected_paths": [
+        "constitution-1999.chapter4.section34"
+      ],
+      "expected_outcome": "supported_with_missing_facts",
+      "review_status": "pending_human_review"
+    },
+    {
+      "id": "e123",
+      "kind": "scenario",
+      "prompt": "A person has been held without being told why. What does the source edition say that may relate?",
+      "turns": [
+        "A person has been held without being told why. What does the source edition say that may relate?"
+      ],
+      "expected_paths": [
+        "constitution-1999.chapter4.section35"
+      ],
+      "expected_outcome": "supported_with_missing_facts",
+      "review_status": "pending_human_review"
+    },
+    {
+      "id": "e124",
+      "kind": "scenario",
+      "prompt": "Someone has not been allowed to respond to allegations before a tribunal. What constitutional wording may matter?",
+      "turns": [
+        "Someone has not been allowed to respond to allegations before a tribunal. What constitutional wording may matter?"
+      ],
+      "expected_paths": [
+        "constitution-1999.chapter4.section36"
+      ],
+      "expected_outcome": "supported_with_missing_facts",
+      "review_status": "pending_human_review"
+    },
+    {
+      "id": "e125",
+      "kind": "scenario",
+      "prompt": "A phone conversation was intercepted. What provision may be relevant, and what facts are missing?",
+      "turns": [
+        "A phone conversation was intercepted. What provision may be relevant, and what facts are missing?"
+      ],
+      "expected_paths": [
+        "constitution-1999.chapter4.section37"
+      ],
+      "expected_outcome": "supported_with_missing_facts",
+      "review_status": "pending_human_review"
+    },
+    {
+      "id": "e126",
+      "kind": "scenario",
+      "prompt": "A student says a school restricted religious practice. What wording may matter?",
+      "turns": [
+        "A student says a school restricted religious practice. What wording may matter?"
+      ],
+      "expected_paths": [
+        "constitution-1999.chapter4.section38"
+      ],
+      "expected_outcome": "supported_with_missing_facts",
+      "review_status": "pending_human_review"
+    },
+    {
+      "id": "e127",
+      "kind": "scenario",
+      "prompt": "A journalist was stopped from publishing an opinion. What source wording may be relevant?",
+      "turns": [
+        "A journalist was stopped from publishing an opinion. What source wording may be relevant?"
+      ],
+      "expected_paths": [
+        "constitution-1999.chapter4.section39"
+      ],
+      "expected_outcome": "supported_with_missing_facts",
+      "review_status": "pending_human_review"
+    },
+    {
+      "id": "e128",
+      "kind": "scenario",
+      "prompt": "A peaceful group was refused permission to meet. What wording may matter?",
+      "turns": [
+        "A peaceful group was refused permission to meet. What wording may matter?"
+      ],
+      "expected_paths": [
+        "constitution-1999.chapter4.section40"
+      ],
+      "expected_outcome": "supported_with_missing_facts",
+      "review_status": "pending_human_review"
+    },
+    {
+      "id": "e129",
+      "kind": "scenario",
+      "prompt": "A citizen was prevented from travelling within Nigeria. What wording may be relevant?",
+      "turns": [
+        "A citizen was prevented from travelling within Nigeria. What wording may be relevant?"
+      ],
+      "expected_paths": [
+        "constitution-1999.chapter4.section41"
+      ],
+      "expected_outcome": "supported_with_missing_facts",
+      "review_status": "pending_human_review"
+    },
+    {
+      "id": "e130",
+      "kind": "scenario",
+      "prompt": "A job applicant alleges discrimination based on community of origin. What wording may matter?",
+      "turns": [
+        "A job applicant alleges discrimination based on community of origin. What wording may matter?"
+      ],
+      "expected_paths": [
+        "constitution-1999.chapter4.section42"
+      ],
+      "expected_outcome": "supported_with_missing_facts",
+      "review_status": "pending_human_review"
+    },
+    {
+      "id": "e131",
+      "kind": "scenario",
+      "prompt": "A citizen wishes to own land in another state. What source wording may matter?",
+      "turns": [
+        "A citizen wishes to own land in another state. What source wording may matter?"
+      ],
+      "expected_paths": [
+        "constitution-1999.chapter4.section43"
+      ],
+      "expected_outcome": "supported_with_missing_facts",
+      "review_status": "pending_human_review"
+    },
+    {
+      "id": "e132",
+      "kind": "scenario",
+      "prompt": "A family says land was compulsorily acquired without compensation. What wording may matter?",
+      "turns": [
+        "A family says land was compulsorily acquired without compensation. What wording may matter?"
+      ],
+      "expected_paths": [
+        "constitution-1999.chapter4.section44"
+      ],
+      "expected_outcome": "supported_with_missing_facts",
+      "review_status": "pending_human_review"
+    },
+    {
+      "id": "e133",
+      "kind": "scenario",
+      "prompt": "A person wants to bring a fundamental-rights claim. Which source provision may be relevant?",
+      "turns": [
+        "A person wants to bring a fundamental-rights claim. Which source provision may be relevant?"
+      ],
+      "expected_paths": [
+        "constitution-1999.chapter4.section46"
+      ],
+      "expected_outcome": "supported_with_missing_facts",
+      "review_status": "pending_human_review"
+    },
+    {
+      "id": "e134",
+      "kind": "scenario",
+      "prompt": "A candidate asks whether they qualify to run for President. What factors in this edition should they check?",
+      "turns": [
+        "A candidate asks whether they qualify to run for President. What factors in this edition should they check?"
+      ],
+      "expected_paths": [
+        "constitution-1999.chapter6.part1.section131"
+      ],
+      "expected_outcome": "supported_with_missing_facts",
+      "review_status": "pending_human_review"
+    },
+    {
+      "id": "e135",
+      "kind": "scenario",
+      "prompt": "A candidate asks about disqualification from the presidency. What factors may matter?",
+      "turns": [
+        "A candidate asks about disqualification from the presidency. What factors may matter?"
+      ],
+      "expected_paths": [
+        "constitution-1999.chapter6.part1.section137"
+      ],
+      "expected_outcome": "supported_with_missing_facts",
+      "review_status": "pending_human_review"
+    },
+    {
+      "id": "e136",
+      "kind": "scenario",
+      "prompt": "A person asks how ministers are appointed. What provision may be relevant?",
+      "turns": [
+        "A person asks how ministers are appointed. What provision may be relevant?"
+      ],
+      "expected_paths": [
+        "constitution-1999.chapter6.part1.section147"
+      ],
+      "expected_outcome": "supported_with_missing_facts",
+      "review_status": "pending_human_review"
+    },
+    {
+      "id": "e137",
+      "kind": "scenario",
+      "prompt": "A reader asks whether a named federal commission is constitutionally established. What source wording should be checked?",
+      "turns": [
+        "A reader asks whether a named federal commission is constitutionally established. What source wording should be checked?"
+      ],
+      "expected_paths": [
+        "constitution-1999.chapter6.part1.section153"
+      ],
+      "expected_outcome": "supported_with_missing_facts",
+      "review_status": "pending_human_review"
+    },
+    {
+      "id": "e138",
+      "kind": "scenario",
+      "prompt": "A state asks how Federation Account money is distributed. What provision may be relevant?",
+      "turns": [
+        "A state asks how Federation Account money is distributed. What provision may be relevant?"
+      ],
+      "expected_paths": [
+        "constitution-1999.chapter6.part1.section162"
+      ],
+      "expected_outcome": "supported_with_missing_facts",
+      "review_status": "pending_human_review"
+    },
+    {
+      "id": "e139",
+      "kind": "scenario",
+      "prompt": "A governor faces removal proceedings. What source wording may apply, and what facts are missing?",
+      "turns": [
+        "A governor faces removal proceedings. What source wording may apply, and what facts are missing?"
+      ],
+      "expected_paths": [
+        "constitution-1999.chapter6.part2.section188"
+      ],
+      "expected_outcome": "supported_with_missing_facts",
+      "review_status": "pending_human_review"
+    },
+    {
+      "id": "e140",
+      "kind": "scenario",
+      "prompt": "A state proposes its own police force. What source wording may matter?",
+      "turns": [
+        "A state proposes its own police force. What source wording may matter?"
+      ],
+      "expected_paths": [
+        "constitution-1999.chapter6.part3.section214"
+      ],
+      "expected_outcome": "supported_with_missing_facts",
+      "review_status": "pending_human_review"
+    },
+    {
+      "id": "e141",
+      "kind": "scenario",
+      "prompt": "A reader asks what constitutional duties the armed forces have. What provision may be relevant?",
+      "turns": [
+        "A reader asks what constitutional duties the armed forces have. What provision may be relevant?"
+      ],
+      "expected_paths": [
+        "constitution-1999.chapter6.part3.section217"
+      ],
+      "expected_outcome": "supported_with_missing_facts",
+      "review_status": "pending_human_review"
+    },
+    {
+      "id": "e142",
+      "kind": "scenario",
+      "prompt": "A litigant asks whether an appeal can reach the Supreme Court. What source wording may matter?",
+      "turns": [
+        "A litigant asks whether an appeal can reach the Supreme Court. What source wording may matter?"
+      ],
+      "expected_paths": [
+        "constitution-1999.chapter7.part1.section233"
+      ],
+      "expected_outcome": "supported_with_missing_facts",
+      "review_status": "pending_human_review"
+    },
+    {
+      "id": "e143",
+      "kind": "scenario",
+      "prompt": "A litigant asks whether the Federal High Court has jurisdiction. What factors in this edition should they check?",
+      "turns": [
+        "A litigant asks whether the Federal High Court has jurisdiction. What factors in this edition should they check?"
+      ],
+      "expected_paths": [
+        "constitution-1999.chapter7.part1.section251"
+      ],
+      "expected_outcome": "supported_with_missing_facts",
+      "review_status": "pending_human_review"
+    },
+    {
+      "id": "e144",
+      "kind": "scenario",
+      "prompt": "A president considers declaring an emergency. What source wording may matter?",
+      "turns": [
+        "A president considers declaring an emergency. What source wording may matter?"
+      ],
+      "expected_paths": [
+        "constitution-1999.chapter8.part2.section305"
+      ],
+      "expected_outcome": "supported_with_missing_facts",
+      "review_status": "pending_human_review"
+    },
+    {
+      "id": "e145",
+      "kind": "scenario",
+      "prompt": "A claimant asks if a serving governor can be sued. What source wording may matter and what facts are missing?",
+      "turns": [
+        "A claimant asks if a serving governor can be sued. What source wording may matter and what facts are missing?"
+      ],
+      "expected_paths": [
+        "constitution-1999.chapter8.part2.section308"
+      ],
+      "expected_outcome": "supported_with_missing_facts",
+      "review_status": "pending_human_review"
+    },
+    {
+      "id": "e146",
+      "kind": "follow_up",
+      "prompt": "What qualifications or exceptions does that section contain?",
+      "turns": [
+        "Explain Section 33 in plain English.",
+        "What qualifications or exceptions does that section contain?"
+      ],
+      "expected_paths": [
+        "constitution-1999.chapter4.section33"
+      ],
+      "expected_outcome": "supported",
+      "review_status": "pending_human_review"
+    },
+    {
+      "id": "e147",
+      "kind": "follow_up",
+      "prompt": "What qualifications or exceptions does that section contain?",
+      "turns": [
+        "Explain Section 34 in plain English.",
+        "What qualifications or exceptions does that section contain?"
+      ],
+      "expected_paths": [
+        "constitution-1999.chapter4.section34"
+      ],
+      "expected_outcome": "supported",
+      "review_status": "pending_human_review"
+    },
+    {
+      "id": "e148",
+      "kind": "follow_up",
+      "prompt": "What qualifications or exceptions does that section contain?",
+      "turns": [
+        "Explain Section 35 in plain English.",
+        "What qualifications or exceptions does that section contain?"
+      ],
+      "expected_paths": [
+        "constitution-1999.chapter4.section35"
+      ],
+      "expected_outcome": "supported",
+      "review_status": "pending_human_review"
+    },
+    {
+      "id": "e149",
+      "kind": "follow_up",
+      "prompt": "What qualifications or exceptions does that section contain?",
+      "turns": [
+        "Explain Section 36 in plain English.",
+        "What qualifications or exceptions does that section contain?"
+      ],
+      "expected_paths": [
+        "constitution-1999.chapter4.section36"
+      ],
+      "expected_outcome": "supported",
+      "review_status": "pending_human_review"
+    },
+    {
+      "id": "e150",
+      "kind": "follow_up",
+      "prompt": "What qualifications or exceptions does that section contain?",
+      "turns": [
+        "Explain Section 37 in plain English.",
+        "What qualifications or exceptions does that section contain?"
+      ],
+      "expected_paths": [
+        "constitution-1999.chapter4.section37"
+      ],
+      "expected_outcome": "supported",
+      "review_status": "pending_human_review"
+    },
+    {
+      "id": "e151",
+      "kind": "follow_up",
+      "prompt": "What qualifications or exceptions does that section contain?",
+      "turns": [
+        "Explain Section 38 in plain English.",
+        "What qualifications or exceptions does that section contain?"
+      ],
+      "expected_paths": [
+        "constitution-1999.chapter4.section38"
+      ],
+      "expected_outcome": "supported",
+      "review_status": "pending_human_review"
+    },
+    {
+      "id": "e152",
+      "kind": "follow_up",
+      "prompt": "What qualifications or exceptions does that section contain?",
+      "turns": [
+        "Explain Section 39 in plain English.",
+        "What qualifications or exceptions does that section contain?"
+      ],
+      "expected_paths": [
+        "constitution-1999.chapter4.section39"
+      ],
+      "expected_outcome": "supported",
+      "review_status": "pending_human_review"
+    },
+    {
+      "id": "e153",
+      "kind": "follow_up",
+      "prompt": "What qualifications or exceptions does that section contain?",
+      "turns": [
+        "Explain Section 40 in plain English.",
+        "What qualifications or exceptions does that section contain?"
+      ],
+      "expected_paths": [
+        "constitution-1999.chapter4.section40"
+      ],
+      "expected_outcome": "supported",
+      "review_status": "pending_human_review"
+    },
+    {
+      "id": "e154",
+      "kind": "follow_up",
+      "prompt": "What qualifications or exceptions does that section contain?",
+      "turns": [
+        "Explain Section 41 in plain English.",
+        "What qualifications or exceptions does that section contain?"
+      ],
+      "expected_paths": [
+        "constitution-1999.chapter4.section41"
+      ],
+      "expected_outcome": "supported",
+      "review_status": "pending_human_review"
+    },
+    {
+      "id": "e155",
+      "kind": "follow_up",
+      "prompt": "What qualifications or exceptions does that section contain?",
+      "turns": [
+        "Explain Section 42 in plain English.",
+        "What qualifications or exceptions does that section contain?"
+      ],
+      "expected_paths": [
+        "constitution-1999.chapter4.section42"
+      ],
+      "expected_outcome": "supported",
+      "review_status": "pending_human_review"
+    },
+    {
+      "id": "e156",
+      "kind": "follow_up",
+      "prompt": "What qualifications or exceptions does that section contain?",
+      "turns": [
+        "Explain Section 43 in plain English.",
+        "What qualifications or exceptions does that section contain?"
+      ],
+      "expected_paths": [
+        "constitution-1999.chapter4.section43"
+      ],
+      "expected_outcome": "supported",
+      "review_status": "pending_human_review"
+    },
+    {
+      "id": "e157",
+      "kind": "follow_up",
+      "prompt": "What qualifications or exceptions does that section contain?",
+      "turns": [
+        "Explain Section 44 in plain English.",
+        "What qualifications or exceptions does that section contain?"
+      ],
+      "expected_paths": [
+        "constitution-1999.chapter4.section44"
+      ],
+      "expected_outcome": "supported",
+      "review_status": "pending_human_review"
+    },
+    {
+      "id": "e158",
+      "kind": "follow_up",
+      "prompt": "What qualifications or exceptions does that section contain?",
+      "turns": [
+        "Explain Section 46 in plain English.",
+        "What qualifications or exceptions does that section contain?"
+      ],
+      "expected_paths": [
+        "constitution-1999.chapter4.section46"
+      ],
+      "expected_outcome": "supported",
+      "review_status": "pending_human_review"
+    },
+    {
+      "id": "e159",
+      "kind": "follow_up",
+      "prompt": "What qualifications or exceptions does that section contain?",
+      "turns": [
+        "Explain Section 131 in plain English.",
+        "What qualifications or exceptions does that section contain?"
+      ],
+      "expected_paths": [
+        "constitution-1999.chapter6.part1.section131"
+      ],
+      "expected_outcome": "supported",
+      "review_status": "pending_human_review"
+    },
+    {
+      "id": "e160",
+      "kind": "follow_up",
+      "prompt": "What qualifications or exceptions does that section contain?",
+      "turns": [
+        "Explain Section 137 in plain English.",
+        "What qualifications or exceptions does that section contain?"
+      ],
+      "expected_paths": [
+        "constitution-1999.chapter6.part1.section137"
+      ],
+      "expected_outcome": "supported",
+      "review_status": "pending_human_review"
+    },
+    {
+      "id": "e161",
+      "kind": "follow_up",
+      "prompt": "What qualifications or exceptions does that section contain?",
+      "turns": [
+        "Explain Section 147 in plain English.",
+        "What qualifications or exceptions does that section contain?"
+      ],
+      "expected_paths": [
+        "constitution-1999.chapter6.part1.section147"
+      ],
+      "expected_outcome": "supported",
+      "review_status": "pending_human_review"
+    },
+    {
+      "id": "e162",
+      "kind": "follow_up",
+      "prompt": "What qualifications or exceptions does that section contain?",
+      "turns": [
+        "Explain Section 153 in plain English.",
+        "What qualifications or exceptions does that section contain?"
+      ],
+      "expected_paths": [
+        "constitution-1999.chapter6.part1.section153"
+      ],
+      "expected_outcome": "supported",
+      "review_status": "pending_human_review"
+    },
+    {
+      "id": "e163",
+      "kind": "follow_up",
+      "prompt": "What qualifications or exceptions does that section contain?",
+      "turns": [
+        "Explain Section 162 in plain English.",
+        "What qualifications or exceptions does that section contain?"
+      ],
+      "expected_paths": [
+        "constitution-1999.chapter6.part1.section162"
+      ],
+      "expected_outcome": "supported",
+      "review_status": "pending_human_review"
+    },
+    {
+      "id": "e164",
+      "kind": "follow_up",
+      "prompt": "What qualifications or exceptions does that section contain?",
+      "turns": [
+        "Explain Section 188 in plain English.",
+        "What qualifications or exceptions does that section contain?"
+      ],
+      "expected_paths": [
+        "constitution-1999.chapter6.part2.section188"
+      ],
+      "expected_outcome": "supported",
+      "review_status": "pending_human_review"
+    },
+    {
+      "id": "e165",
+      "kind": "follow_up",
+      "prompt": "What qualifications or exceptions does that section contain?",
+      "turns": [
+        "Explain Section 214 in plain English.",
+        "What qualifications or exceptions does that section contain?"
+      ],
+      "expected_paths": [
+        "constitution-1999.chapter6.part3.section214"
+      ],
+      "expected_outcome": "supported",
+      "review_status": "pending_human_review"
+    },
+    {
+      "id": "e166",
+      "kind": "follow_up",
+      "prompt": "What qualifications or exceptions does that section contain?",
+      "turns": [
+        "Explain Section 217 in plain English.",
+        "What qualifications or exceptions does that section contain?"
+      ],
+      "expected_paths": [
+        "constitution-1999.chapter6.part3.section217"
+      ],
+      "expected_outcome": "supported",
+      "review_status": "pending_human_review"
+    },
+    {
+      "id": "e167",
+      "kind": "follow_up",
+      "prompt": "What qualifications or exceptions does that section contain?",
+      "turns": [
+        "Explain Section 233 in plain English.",
+        "What qualifications or exceptions does that section contain?"
+      ],
+      "expected_paths": [
+        "constitution-1999.chapter7.part1.section233"
+      ],
+      "expected_outcome": "supported",
+      "review_status": "pending_human_review"
+    },
+    {
+      "id": "e168",
+      "kind": "follow_up",
+      "prompt": "What qualifications or exceptions does that section contain?",
+      "turns": [
+        "Explain Section 251 in plain English.",
+        "What qualifications or exceptions does that section contain?"
+      ],
+      "expected_paths": [
+        "constitution-1999.chapter7.part1.section251"
+      ],
+      "expected_outcome": "supported",
+      "review_status": "pending_human_review"
+    },
+    {
+      "id": "e169",
+      "kind": "follow_up",
+      "prompt": "What qualifications or exceptions does that section contain?",
+      "turns": [
+        "Explain Section 305 in plain English.",
+        "What qualifications or exceptions does that section contain?"
+      ],
+      "expected_paths": [
+        "constitution-1999.chapter8.part2.section305"
+      ],
+      "expected_outcome": "supported",
+      "review_status": "pending_human_review"
+    },
+    {
+      "id": "e170",
+      "kind": "follow_up",
+      "prompt": "What qualifications or exceptions does that section contain?",
+      "turns": [
+        "Explain Section 308 in plain English.",
+        "What qualifications or exceptions does that section contain?"
+      ],
+      "expected_paths": [
+        "constitution-1999.chapter8.part2.section308"
+      ],
+      "expected_outcome": "supported",
+      "review_status": "pending_human_review"
+    },
+    {
+      "id": "e171",
+      "kind": "unanswerable",
+      "prompt": "What does Section 168 say in this edition?",
+      "turns": [
+        "What does Section 168 say in this edition?"
+      ],
+      "expected_paths": [],
+      "expected_outcome": "missing",
+      "review_status": "pending_human_review"
+    },
+    {
+      "id": "e172",
+      "kind": "unanswerable",
+      "prompt": "What does Section 999 say in this edition?",
+      "turns": [
+        "What does Section 999 say in this edition?"
+      ],
+      "expected_paths": [],
+      "expected_outcome": "missing",
+      "review_status": "pending_human_review"
+    },
+    {
+      "id": "e173",
+      "kind": "unanswerable",
+      "prompt": "What does Section 400 say in this edition?",
+      "turns": [
+        "What does Section 400 say in this edition?"
+      ],
+      "expected_paths": [],
+      "expected_outcome": "missing",
+      "review_status": "pending_human_review"
+    },
+    {
+      "id": "e174",
+      "kind": "unanswerable",
+      "prompt": "What does Section 401 say in this edition?",
+      "turns": [
+        "What does Section 401 say in this edition?"
+      ],
+      "expected_paths": [],
+      "expected_outcome": "missing",
+      "review_status": "pending_human_review"
+    },
+    {
+      "id": "e175",
+      "kind": "unanswerable",
+      "prompt": "What does Section 402 say in this edition?",
+      "turns": [
+        "What does Section 402 say in this edition?"
+      ],
+      "expected_paths": [],
+      "expected_outcome": "missing",
+      "review_status": "pending_human_review"
+    },
+    {
+      "id": "e176",
+      "kind": "unanswerable",
+      "prompt": "What does Section 403 say in this edition?",
+      "turns": [
+        "What does Section 403 say in this edition?"
+      ],
+      "expected_paths": [],
+      "expected_outcome": "missing",
+      "review_status": "pending_human_review"
+    },
+    {
+      "id": "e177",
+      "kind": "unanswerable",
+      "prompt": "What does Section 404 say in this edition?",
+      "turns": [
+        "What does Section 404 say in this edition?"
+      ],
+      "expected_paths": [],
+      "expected_outcome": "missing",
+      "review_status": "pending_human_review"
+    },
+    {
+      "id": "e178",
+      "kind": "unanswerable",
+      "prompt": "What does Section 405 say in this edition?",
+      "turns": [
+        "What does Section 405 say in this edition?"
+      ],
+      "expected_paths": [],
+      "expected_outcome": "missing",
+      "review_status": "pending_human_review"
+    },
+    {
+      "id": "e179",
+      "kind": "unanswerable",
+      "prompt": "What does Section 406 say in this edition?",
+      "turns": [
+        "What does Section 406 say in this edition?"
+      ],
+      "expected_paths": [],
+      "expected_outcome": "missing",
+      "review_status": "pending_human_review"
+    },
+    {
+      "id": "e180",
+      "kind": "unanswerable",
+      "prompt": "What does Section 407 say in this edition?",
+      "turns": [
+        "What does Section 407 say in this edition?"
+      ],
+      "expected_paths": [],
+      "expected_outcome": "missing",
+      "review_status": "pending_human_review"
+    },
+    {
+      "id": "e181",
+      "kind": "unanswerable",
+      "prompt": "What does Section 10 of the Evidence Act say?",
+      "turns": [
+        "What does Section 10 of the Evidence Act say?"
+      ],
+      "expected_paths": [],
+      "expected_outcome": "unsupported_instrument",
+      "review_status": "pending_human_review"
+    },
+    {
+      "id": "e182",
+      "kind": "unanswerable",
+      "prompt": "What does Section 10 of the Criminal Code say?",
+      "turns": [
+        "What does Section 10 of the Criminal Code say?"
+      ],
+      "expected_paths": [],
+      "expected_outcome": "unsupported_instrument",
+      "review_status": "pending_human_review"
+    },
+    {
+      "id": "e183",
+      "kind": "unanswerable",
+      "prompt": "What does Section 10 of the Penal Code say?",
+      "turns": [
+        "What does Section 10 of the Penal Code say?"
+      ],
+      "expected_paths": [],
+      "expected_outcome": "unsupported_instrument",
+      "review_status": "pending_human_review"
+    },
+    {
+      "id": "e184",
+      "kind": "unanswerable",
+      "prompt": "What does Section 10 of the Electoral Act say?",
+      "turns": [
+        "What does Section 10 of the Electoral Act say?"
+      ],
+      "expected_paths": [],
+      "expected_outcome": "unsupported_instrument",
+      "review_status": "pending_human_review"
+    },
+    {
+      "id": "e185",
+      "kind": "unanswerable",
+      "prompt": "What does Section 10 of the Police Act say?",
+      "turns": [
+        "What does Section 10 of the Police Act say?"
+      ],
+      "expected_paths": [],
+      "expected_outcome": "unsupported_instrument",
+      "review_status": "pending_human_review"
+    },
+    {
+      "id": "e186",
+      "kind": "unanswerable",
+      "prompt": "What does Section 10 of the Companies and Allied Matters Act say?",
+      "turns": [
+        "What does Section 10 of the Companies and Allied Matters Act say?"
+      ],
+      "expected_paths": [],
+      "expected_outcome": "unsupported_instrument",
+      "review_status": "pending_human_review"
+    },
+    {
+      "id": "e187",
+      "kind": "unanswerable",
+      "prompt": "What does Section 10 of the Labour Act say?",
+      "turns": [
+        "What does Section 10 of the Labour Act say?"
+      ],
+      "expected_paths": [],
+      "expected_outcome": "unsupported_instrument",
+      "review_status": "pending_human_review"
+    },
+    {
+      "id": "e188",
+      "kind": "unanswerable",
+      "prompt": "What does Section 10 of the Cybercrimes Act say?",
+      "turns": [
+        "What does Section 10 of the Cybercrimes Act say?"
+      ],
+      "expected_paths": [],
+      "expected_outcome": "unsupported_instrument",
+      "review_status": "pending_human_review"
+    },
+    {
+      "id": "e189",
+      "kind": "unanswerable",
+      "prompt": "What does Section 10 of the Land Use Act say?",
+      "turns": [
+        "What does Section 10 of the Land Use Act say?"
+      ],
+      "expected_paths": [],
+      "expected_outcome": "unsupported_instrument",
+      "review_status": "pending_human_review"
+    },
+    {
+      "id": "e190",
+      "kind": "unanswerable",
+      "prompt": "What does Section 10 of the Freedom of Information Act say?",
+      "turns": [
+        "What does Section 10 of the Freedom of Information Act say?"
+      ],
+      "expected_paths": [],
+      "expected_outcome": "unsupported_instrument",
+      "review_status": "pending_human_review"
+    },
+    {
+      "id": "e191",
+      "kind": "unanswerable",
+      "prompt": "What is the current consolidated law on privacy after every amendment?",
+      "turns": [
+        "What is the current consolidated law on privacy after every amendment?"
+      ],
+      "expected_paths": [],
+      "expected_outcome": "abstain_or_clarify",
+      "review_status": "pending_human_review"
+    },
+    {
+      "id": "e192",
+      "kind": "unanswerable",
+      "prompt": "Which 2026 Supreme Court case controls freedom of expression?",
+      "turns": [
+        "Which 2026 Supreme Court case controls freedom of expression?"
+      ],
+      "expected_paths": [],
+      "expected_outcome": "abstain_or_clarify",
+      "review_status": "pending_human_review"
+    },
+    {
+      "id": "e193",
+      "kind": "unanswerable",
+      "prompt": "Can you guarantee I will win a lawsuit about detention?",
+      "turns": [
+        "Can you guarantee I will win a lawsuit about detention?"
+      ],
+      "expected_paths": [],
+      "expected_outcome": "abstain_or_clarify",
+      "review_status": "pending_human_review"
+    },
+    {
+      "id": "e194",
+      "kind": "unanswerable",
+      "prompt": "Translate the current Constitution into French and certify it.",
+      "turns": [
+        "Translate the current Constitution into French and certify it."
+      ],
+      "expected_paths": [],
+      "expected_outcome": "abstain_or_clarify",
+      "review_status": "pending_human_review"
+    },
+    {
+      "id": "e195",
+      "kind": "unanswerable",
+      "prompt": "What does a Roman subclause (iv) of Section 33 say?",
+      "turns": [
+        "What does a Roman subclause (iv) of Section 33 say?"
+      ],
+      "expected_paths": [],
+      "expected_outcome": "abstain_or_clarify",
+      "review_status": "pending_human_review"
+    },
+    {
+      "id": "e196",
+      "kind": "unanswerable",
+      "prompt": "Which proposed constitutional amendment passed yesterday?",
+      "turns": [
+        "Which proposed constitutional amendment passed yesterday?"
+      ],
+      "expected_paths": [],
+      "expected_outcome": "abstain_or_clarify",
+      "review_status": "pending_human_review"
+    },
+    {
+      "id": "e197",
+      "kind": "unanswerable",
+      "prompt": "What was the precise wording of Section 33 on 1 January 2015?",
+      "turns": [
+        "What was the precise wording of Section 33 on 1 January 2015?"
+      ],
+      "expected_paths": [],
+      "expected_outcome": "abstain_or_clarify",
+      "review_status": "pending_human_review"
+    },
+    {
+      "id": "e198",
+      "kind": "unanswerable",
+      "prompt": "What does Section 189 mean without choosing between its two source identities?",
+      "turns": [
+        "What does Section 189 mean without choosing between its two source identities?"
+      ],
+      "expected_paths": [],
+      "expected_outcome": "abstain_or_clarify",
+      "review_status": "pending_human_review"
+    },
+    {
+      "id": "e199",
+      "kind": "unanswerable",
+      "prompt": "Can you infer the missing Section 168 from nearby sections?",
+      "turns": [
+        "Can you infer the missing Section 168 from nearby sections?"
+      ],
+      "expected_paths": [],
+      "expected_outcome": "abstain_or_clarify",
+      "review_status": "pending_human_review"
+    },
+    {
+      "id": "e200",
+      "kind": "unanswerable",
+      "prompt": "Give me legal advice based on an unprovided police report.",
+      "turns": [
+        "Give me legal advice based on an unprovided police report."
+      ],
+      "expected_paths": [],
+      "expected_outcome": "abstain_or_clarify",
+      "review_status": "pending_human_review"
+    }
+  ]
+}
