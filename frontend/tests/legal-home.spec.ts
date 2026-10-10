@@ -249,27 +249,117 @@ for (const mobile of [false, true]) {
   })
 }
 
-test("Topic queries show ranked choices before wording", async ({ page }) => {
+test("Topic queries lead with the top-ranked wording and allow another source", async ({
+  page,
+}) => {
   await mockCorpus(page)
+  const alternative = {
+    ...provision,
+    canonical_path: "constitution-1999.chapter4.section39",
+    provision_version_id: "66666666-6666-4666-8666-666666666666",
+    citation: "Section 39",
+    heading: "Freedom of expression",
+    authoritative_text:
+      "Every person shall be entitled to freedom of expression.",
+    hybrid_score: 0.01,
+  }
+  await page.route("**/api/v1/legal/search", (route) =>
+    route.fulfill({
+      json: {
+        ...response("matches", [provision, alternative]),
+        retrieval_mode: "hybrid",
+      },
+    }),
+  )
+  await page.route("**/api/v1/legal/provisions/**", (route) =>
+    route.fulfill({
+      json: response("exact", [
+        route.request().url().includes("section39") ? alternative : provision,
+      ]),
+    }),
+  )
   await page.goto("/")
   await submit(page, "privacy")
   await expect(
-    page.getByRole("heading", { name: "Possible source matches" }),
+    page.getByRole("heading", { name: "Best source answer" }),
   ).toBeVisible()
   await expect(
     page.getByRole("article", { name: "Constitutional provision" }),
-  ).toHaveCount(0)
+  ).toContainText(provision.authoritative_text)
+  await expect(
+    page.getByText("Retrieval rank is not a legal-confidence percentage."),
+  ).toBeVisible()
   await page
-    .getByRole("button", { name: /Section 33\(2\)\(a\).*Defence/ })
+    .getByRole("button", { name: /Section 39.*Freedom of expression/ })
     .click()
+  await expect(
+    page.getByRole("heading", { name: "Selected source answer" }),
+  ).toBeVisible()
   await expect(page.getByRole("article")).toContainText(
-    provision.authoritative_text,
+    "Every person shall be entitled",
   )
   await page.getByRole("button", { name: "Find related provisions" }).click()
   await expect(
-    page.getByRole("heading", { name: "Possible source matches" }),
+    page.getByRole("heading", { name: "Best source answer" }),
   ).toBeVisible()
-  await expect(page.getByRole("article")).toHaveCount(0)
+  await expect(page.getByRole("article")).toContainText(
+    provision.authoritative_text,
+  )
+})
+
+test("A containing section leads when the first ranked clause is only part of the answer", async ({
+  page,
+}) => {
+  await page.route("**/api/v1/conversations**", (route) =>
+    route.fulfill({
+      status: 503,
+      json: { detail: "Conversations are not enabled" },
+    }),
+  )
+  await mockCorpus(page)
+  const child = {
+    ...provision,
+    canonical_path: "constitution-1999.chapter6.part1.section131.paragraphd",
+    citation: "Section 131(d)",
+    authoritative_text:
+      "(d) he has been educated up to at least School Certificate level or its equivalent.",
+    kind: "paragraph",
+    hybrid_score: 0.01639,
+  }
+  const parent = {
+    ...provision,
+    canonical_path: "constitution-1999.chapter6.part1.section131",
+    provision_version_id: "66666666-6666-4666-8666-666666666666",
+    citation: "Section 131",
+    authoritative_text: `A person shall be qualified for election to the office of the President if -\n(a) he is a citizen of Nigeria by birth;\n${child.authoritative_text}`,
+    kind: "section",
+    hybrid_score: 0.01613,
+  }
+  await page.route("**/api/v1/legal/search", (route) =>
+    route.fulfill({
+      json: {
+        ...response("matches", [child, parent]),
+        retrieval_mode: "hybrid",
+      },
+    }),
+  )
+  await page.route("**/api/v1/legal/provisions/**", (route) =>
+    route.fulfill({
+      json: response("exact", [
+        route.request().url().includes("paragraphd") ? child : parent,
+      ]),
+    }),
+  )
+  await page.goto("/?q=Presidential%20qualifications")
+  await expect(
+    page.getByRole("heading", { name: "Best source answer" }),
+  ).toBeVisible()
+  await expect(page.getByRole("article")).toContainText(
+    "citizen of Nigeria by birth",
+  )
+  await expect(
+    page.getByText(/Includes the highest-ranked passage \(Section 131\(d\)\)/),
+  ).toBeVisible()
 })
 
 test("Missing, ambiguous, and unsupported references have distinct states", async ({
@@ -292,6 +382,26 @@ test("Missing, ambiguous, and unsupported references have distinct states", asyn
   await expect(
     page.getByRole("heading", { name: "Reference not supported" }),
   ).toBeVisible()
+})
+
+test("Disabled explanations are disclosed while exact source wording stays available", async ({
+  page,
+}) => {
+  await page.route("**/api/v1/conversations**", (route) =>
+    route.fulfill({
+      status: 503,
+      json: { detail: "Conversations are not enabled" },
+    }),
+  )
+  await mockCorpus(page)
+  await page.goto("/")
+  await expect(
+    page.getByText(/AI explanations are not enabled in this deployment/),
+  ).toBeVisible()
+  await submit(page, "Section 33(2)(a)")
+  await expect(page.getByRole("article")).toContainText(
+    provision.authoritative_text,
+  )
 })
 
 test("Unavailable search can retry and keyword fallback is disclosed", async ({
@@ -320,7 +430,7 @@ test("Unavailable search can retry and keyword fallback is disclosed", async ({
   await page.getByRole("button", { name: "Try again" }).click()
   await expect(page.getByText(/Showing keyword matches/)).toBeVisible()
   await expect(
-    page.getByRole("heading", { name: "Possible source matches" }),
+    page.getByRole("heading", { name: "Best source answer" }),
   ).toBeVisible()
 })
 

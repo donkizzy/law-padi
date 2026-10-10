@@ -16,13 +16,20 @@ export function useLegalSearch(
   query: string,
   mode: "auto" | "semantic" = "auto",
   attempt = 0,
+  releaseVersion?: string,
 ) {
   return useQuery({
-    queryKey: ["legal", "search", query, mode, attempt],
+    queryKey: ["legal", "search", query, mode, attempt, releaseVersion],
     queryFn: async ({ signal }) =>
       (
         await LegalService.searchLegal({
-          body: { query, mode, top_k: 10, index_kind: "enacted" },
+          body: {
+            query,
+            mode,
+            top_k: 10,
+            index_kind: "enacted",
+            release_version: releaseVersion,
+          },
           signal,
         })
       ).data,
