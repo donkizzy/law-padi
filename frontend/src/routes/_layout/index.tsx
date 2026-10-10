@@ -5,8 +5,11 @@ import { LawPadiHome } from "@/components/LawPadi/LawPadiHome"
 
 export const Route = createFileRoute("/_layout/")({
   validateSearch: z.object({
+    c: z.uuid().optional(),
     q: z.string().trim().max(2000).optional(),
     mode: z.enum(["auto", "semantic"]).optional(),
+    release: z.string().max(128).optional(),
+    selected: z.uuid().optional(),
   }),
   component: LawPadiHome,
   head: () => ({
