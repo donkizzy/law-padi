@@ -14,6 +14,7 @@ type ChatComposerProps = {
   loading?: boolean
   disabled?: boolean
   className?: string
+  purpose?: "search" | "explanation"
 }
 
 export function ChatComposer({
@@ -26,6 +27,7 @@ export function ChatComposer({
   loading = false,
   disabled = false,
   className,
+  purpose = "search",
 }: ChatComposerProps) {
   const textareaRef = useRef<HTMLTextAreaElement | null>(null)
 
@@ -74,7 +76,9 @@ export function ChatComposer({
       <div className="mt-3 flex flex-wrap items-center justify-between gap-3 border-t border-border pt-3">
         <div className="flex min-w-0 flex-wrap items-center gap-2">
           <span className="sq-sm bg-secondary px-3 py-2 text-xs font-semibold text-muted-foreground">
-            English source search
+            {purpose === "explanation"
+              ? "English AI explanation"
+              : "English source search"}
           </span>
           {contextLabel ? (
             <span className="text-xs text-muted-foreground">

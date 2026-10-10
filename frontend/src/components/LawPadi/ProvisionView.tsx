@@ -10,6 +10,7 @@ import {
   OfficialTextBlock,
   StatusBadge,
 } from "@/components/LawPadi/primitives"
+import { useConversations } from "@/hooks/useConversations"
 import { legalError, useProvisionHistory } from "@/hooks/useLegalCorpus"
 import { useSavedProvisions } from "@/hooks/useSavedProvisions"
 import { copyText, provisionUrl } from "@/lib/legal-provisions"
@@ -56,6 +57,7 @@ export function ProvisionView({
     historyOpen,
   )
   const { isSaved, toggle } = useSavedProvisions()
+  const conversations = useConversations()
   const saved = isSaved(provision.canonical_path, provision.release_version)
   const copy = async (kind: "text" | "share") => {
     try {
@@ -191,6 +193,22 @@ export function ProvisionView({
         </section>
       )}
       <div className="flex flex-wrap gap-2">
+        {conversations.isSuccess && (
+          <InlineAction asChild>
+            <Link
+              to="/"
+              search={{
+                c: undefined,
+                q: provision.citation,
+                mode: "auto",
+                release: provision.release_version,
+                selected: provision.provision_version_id,
+              }}
+            >
+              Explain this provision
+            </Link>
+          </InlineAction>
+        )}
         <InlineAction onClick={onOpenSource} type="button">
           Show official source
         </InlineAction>

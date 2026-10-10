@@ -43,6 +43,7 @@ const useAuth = () => {
       body: data,
     })
     localStorage.setItem("access_token", response.data.access_token)
+    queryClient.removeQueries()
   }
 
   const loginMutation = useMutation({
@@ -55,6 +56,7 @@ const useAuth = () => {
 
   const logout = () => {
     localStorage.removeItem("access_token")
+    queryClient.clear()
     navigate({ to: "/login" })
   }
 
