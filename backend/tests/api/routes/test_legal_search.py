@@ -5,13 +5,17 @@ from uuid import uuid4
 
 import pytest
 from fastapi.testclient import TestClient
-from sqlmodel import Session
+from sqlmodel import Session, select
 
 from app.api.routes import search
 from app.core.config import settings
 from app.core.db import init_db
 from app.ingestion.embedding import EmbeddingBatch, EmbeddingProviderUnavailable
-from app.ingestion.pgvector_repository import write_embeddings, write_segments
+from app.ingestion.pgvector_repository import (
+    PgVectorRetrievalError,
+    write_embeddings,
+    write_segments,
+)
 from app.ingestion.retrieval import build_retrieval_documents
 from app.legal.enums import (
     CorpusReleaseStatus,
@@ -21,6 +25,7 @@ from app.legal.enums import (
     ProvisionKind,
     VectorIndexStatus,
 )
+from app.legal.evidence import evidence_item
 from app.legal.models import (
     ActiveRetrievalTarget,
     CorpusRelease,
@@ -33,6 +38,8 @@ from app.legal.models import (
     RetrievalIndexBuild,
     SourceDocument,
 )
+from app.legal.parser import legal_text_sha256
+from app.legal.public_corpus import load_ranked_corpus
 from tests.conftest import _cleanup_db
 
 
@@ -159,7 +166,7 @@ def corpus(db: Session, tmp_path: Path, monkeypatch: pytest.MonkeyPatch):
                 source_document_id=source.id,
                 source_page_start=10 + index,
                 source_page_end=10 + index,
-                text_sha256=hashlib.sha256(text.encode()).hexdigest(),
+                text_sha256=legal_text_sha256(text),
             )
             db.add(version)
             db.flush()
@@ -221,7 +228,9 @@ def corpus(db: Session, tmp_path: Path, monkeypatch: pytest.MonkeyPatch):
     release.status = CorpusReleaseStatus.PRODUCTION
     db.add(release)
     db.commit()
-    return release, source, nodes, pdf
+    yield release, source, nodes, pdf
+    _cleanup_db(db)
+    init_db(db)
 
 
 def test_exact_lookup_uses_canonical_hierarchy_without_provider(
@@ -284,6 +293,71 @@ def test_duplicate_missing_and_unsupported_references(
     assert client.post("/api/v1/legal/search", json={"query": "   "}).status_code == 422
 
 
+def test_citation_lookup_preserves_outcomes_and_deduplicates_evidence(
+    client: TestClient, corpus, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    release, _source, _nodes, _pdf = corpus
+    monkeypatch.setattr(
+        search,
+        "_query_embedding_provider",
+        lambda _: pytest.fail("Exact lookup must not embed"),
+    )
+    response = client.get(
+        "/api/v1/legal/provisions/by-citation",
+        params={
+            "citation": "Sections 33, 37, 168, 189 and 33",
+            "release_version": release.version,
+        },
+    )
+    assert response.status_code == 200
+    body = response.json()
+    assert body["outcome"] == "partial"
+    assert [row["status"] for row in body["citation_outcomes"]] == [
+        "resolved",
+        "resolved",
+        "missing",
+        "ambiguous",
+        "resolved",
+    ]
+    assert (
+        body["citation_outcomes"][0]["evidence_ids"]
+        == body["citation_outcomes"][4]["evidence_ids"]
+    )
+    assert body["count"] == 4
+    assert len(body["evidence"]) == 4
+    assert all(row["release_version"] == release.version for row in body["evidence"])
+    assert (
+        body["evidence"][0]["text_sha256"]
+        == hashlib.sha256(
+            body["evidence"][0]["authoritative_text"].encode()
+        ).hexdigest()
+    )
+    assert (
+        client.get(
+            "/api/v1/legal/provisions/by-citation",
+            params={"citation": "Section 33 of Evidence Act"},
+        ).json()["citation_outcomes"][0]["status"]
+        == "unsupported"
+    )
+
+
+def test_evidence_rejects_a_canonical_version_with_a_bad_stored_hash(
+    corpus, db: Session
+) -> None:
+    release, _source, nodes, _pdf = corpus
+    version = db.exec(
+        select(ProvisionVersion).where(
+            ProvisionVersion.provision_id == nodes["chapter4.section37"].id
+        )
+    ).one()
+    version.text_sha256 = "0" * 64
+    db.add(version)
+    db.commit()
+    focused = load_ranked_corpus(db, release, [version.id])
+    with pytest.raises(PgVectorRetrievalError, match="legal text hash"):
+        evidence_item(focused, focused.result(nodes["chapter4.section37"]), "E1")
+
+
 def test_tree_history_and_source_are_published_and_release_scoped(
     client: TestClient, corpus, db: Session
 ) -> None:
@@ -340,6 +414,13 @@ def test_semantic_and_fallback_results_are_unique_and_canonical(
     client: TestClient, corpus, monkeypatch: pytest.MonkeyPatch
 ) -> None:
     assert corpus
+    monkeypatch.setattr(
+        search,
+        "load_public_corpus",
+        lambda *_args, **_kwargs: pytest.fail(
+            "Semantic lookup must use targeted canonical reads"
+        ),
+    )
 
     class Provider:
         def embed(self, texts):

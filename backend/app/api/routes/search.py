@@ -2,7 +2,6 @@ import uuid
 from collections.abc import Iterator
 from typing import Annotated
 
-import httpx
 from fastapi import APIRouter, Depends, HTTPException, Query, Response
 from fastapi.responses import RedirectResponse, StreamingResponse
 from sqlalchemy.exc import SQLAlchemyError
@@ -11,27 +10,21 @@ from sqlmodel import Session, col, select
 from app.api.deps import SessionDep
 from app.core.config import settings
 from app.ingestion.blob_store import BlobStoreError
-from app.ingestion.embedding import (
-    DenseEmbeddingProvider,
-    EmbeddingProviderError,
-    HuggingFaceTeiEmbeddingProvider,
-    OpenAIEmbeddingProvider,
-)
+from app.ingestion.embedding import DenseEmbeddingProvider
 from app.ingestion.pgvector_repository import (
     PgVectorRetrievalError,
-    RankedSegment,
     active_target,
-    hybrid_search,
-    lexical_search,
 )
 from app.ingestion.r2_blob_store import R2BlobStore
 from app.ingestion.service import get_blob_store
-from app.legal.enums import EmbeddingProviderKind
-from app.legal.models import CorpusRelease, EmbeddingProfile
+from app.legal.enums import VectorIndexStatus
+from app.legal.evidence import default_embedding_provider, exact_lookup, semantic_lookup
+from app.legal.models import CorpusRelease, EmbeddingProfile, RetrievalIndexBuild
 from app.legal.public_corpus import (
     PUBLIC_RELEASE_STATUSES,
     PublicCorpus,
     load_public_corpus,
+    load_reference_corpus,
     published_release,
 )
 from app.legal.references import parse_section_reference
@@ -74,6 +67,18 @@ def _corpus(
     )
 
 
+def _reference_corpus(
+    session: Session,
+    index_kind: str,
+    release_version: str | None,
+    suffixes: list[str],
+) -> PublicCorpus:
+    release = published_release(
+        session, index_kind=index_kind, release_version=release_version
+    )
+    return load_reference_corpus(session, release, suffixes, index_kind=index_kind)
+
+
 def _response(
     corpus: PublicCorpus,
     data: list[LegalSearchResult],
@@ -104,98 +109,56 @@ def search_legal(
             status_code=503,
             detail="Production legal search is not configured for pgvector",
         )
-    corpus = _corpus(session, body.index_kind)
     parsed = parse_section_reference(body.query) if body.mode == "auto" else None
-    if parsed and parsed.error:
-        return _response(
-            corpus, [], outcome="unsupported_reference", message=parsed.error
+    if parsed and (parsed.references or parsed.error):
+        corpus = _reference_corpus(
+            session,
+            body.index_kind,
+            body.release_version,
+            [reference.suffix for reference in parsed.references],
         )
-    if parsed and parsed.reference:
-        matches = sorted(
-            (
-                p
-                for p in corpus.provisions.values()
-                if p.id in corpus.versions
-                and p.canonical_path.endswith(parsed.reference.suffix)
-            ),
-            key=lambda p: (p.sort_key, p.canonical_path),
-        )
-        data = [corpus.result(p) for p in matches]
-        return _response(
-            corpus,
-            data,
-            outcome="exact" if len(data) == 1 else "ambiguous" if data else "not_found",
-            message="This reference has multiple identities in the source edition. Choose by chapter, part, and page."
-            if len(data) > 1
-            else "This reference is not present in the published source edition."
-            if not data
-            else None,
-        )
-    target = active_target(session, index_kind=body.index_kind)
-    profile = session.get(EmbeddingProfile, target.profile_id)
+        return exact_lookup(corpus, parsed, body.query).response
+    release = published_release(
+        session, index_kind=body.index_kind, release_version=body.release_version
+    )
+    if body.release_version:
+        build = session.exec(
+            select(RetrievalIndexBuild)
+            .where(
+                RetrievalIndexBuild.release_id == release.id,
+                RetrievalIndexBuild.index_kind == body.index_kind,
+                RetrievalIndexBuild.status == VectorIndexStatus.READY,
+            )
+            .order_by(col(RetrievalIndexBuild.created_at).desc())
+        ).first()
+        if build is None:
+            raise PgVectorRetrievalError(
+                "This published edition has no ready retrieval index"
+            )
+        embedding_run_id = build.embedding_run_id
+        profile_id = build.profile_id
+    else:
+        target = active_target(session, index_kind=body.index_kind)
+        if target.release_id != release.id:
+            raise PgVectorRetrievalError(
+                "Active retrieval target changed during search"
+            )
+        embedding_run_id = target.embedding_run_id
+        profile_id = target.profile_id
+    profile = session.get(EmbeddingProfile, profile_id)
     if profile is None:
         raise PgVectorRetrievalError(
             "Active target references a missing embedding profile"
         )
-    retrieval_mode = "hybrid"
-    message = None
-    try:
-        batch = _query_embedding_provider(profile).embed([body.query])
-        if len(batch.vectors) != 1:
-            raise EmbeddingProviderError("Query embedding response is incomplete")
-        ranked = hybrid_search(
-            session,
-            release_id=target.release_id,
-            embedding_run_id=target.embedding_run_id,
-            query_vector=batch.vectors[0],
-            query=body.query,
-            top_k=body.top_k,
-            index_kind=body.index_kind,
-        )
-    except EmbeddingProviderError, httpx.HTTPError:
-        retrieval_mode = "lexical"
-        message = "Semantic search is temporarily unavailable. Showing keyword matches."
-        lexical = lexical_search(
-            session,
-            release_id=target.release_id,
-            query=body.query,
-            index_kind=body.index_kind,
-        )
-        ranked = [
-            RankedSegment(segment=segment, score=score, lexical_rank=rank)
-            for rank, (segment, score) in enumerate(lexical, start=1)
-        ]
-    seen: set[uuid.UUID] = set()
-    data = []
-    for item in ranked:
-        if item.segment.provision_version_id in seen:
-            continue
-        seen.add(item.segment.provision_version_id)
-        provision = corpus.provisions.get(item.segment.provision_id)
-        if (
-            provision is None
-            or provision.id not in corpus.versions
-            or corpus.versions[provision.id].id != item.segment.provision_version_id
-        ):
-            raise PgVectorRetrievalError(
-                "Search result does not belong to the published corpus"
-            )
-        data.append(
-            corpus.result(
-                provision,
-                score=item.score,
-                dense_rank=item.dense_rank,
-                lexical_rank=item.lexical_rank,
-            )
-        )
-        if len(data) == body.top_k:
-            break
-    return _response(
-        corpus,
-        data,
-        outcome="matches" if data else "not_found",
-        retrieval_mode=retrieval_mode,
-        message=message,
+    return semantic_lookup(
+        session,
+        release,
+        profile=profile,
+        embedding_run_id=embedding_run_id,
+        query=body.query,
+        top_k=body.top_k,
+        index_kind=body.index_kind,
+        embedding_provider=_query_embedding_provider,
     )
 
 
@@ -280,6 +243,29 @@ def read_provision_history(
     )
 
 
+@router.get("/provisions/by-citation", response_model=LegalSearchResponse)
+def read_provisions_by_citation(
+    citation: Annotated[str, Query(min_length=1, max_length=2000)],
+    session: LegalSessionDep,
+    release_version: ReleaseVersion = None,
+    index_kind: IndexKind = "enacted",
+) -> LegalSearchResponse:
+    if not settings.CITATION_LOOKUP_ENABLED:
+        raise HTTPException(status_code=503, detail="Citation lookup is disabled")
+    parsed = parse_section_reference(citation)
+    if not parsed.references and not parsed.error:
+        parsed = parse_section_reference(f"Section {citation}")
+    if not parsed.references and not parsed.error:
+        raise HTTPException(status_code=422, detail="Enter a section reference")
+    corpus = _reference_corpus(
+        session,
+        index_kind,
+        release_version,
+        [reference.suffix for reference in parsed.references],
+    )
+    return exact_lookup(corpus, parsed, citation).response
+
+
 @router.get("/sources/{source_document_id}/content", response_model=None)
 def read_source_content(
     source_document_id: uuid.UUID,
@@ -346,24 +332,4 @@ def read_current_provision(
 
 
 def _query_embedding_provider(profile: EmbeddingProfile) -> DenseEmbeddingProvider:
-    if profile.vector_dimensions != settings.RETRIEVAL_VECTOR_DIMENSIONS:
-        raise PgVectorRetrievalError(
-            "Active embedding profile has the wrong dimensions"
-        )
-    if profile.provider == EmbeddingProviderKind.OPENAI:
-        return OpenAIEmbeddingProvider(
-            api_key=settings.OPENAI_API_KEY,
-            model_name=profile.model_name,
-            model_revision=profile.model_revision,
-        )
-    endpoint_url = profile.configuration.get("endpoint_url")
-    return HuggingFaceTeiEmbeddingProvider(
-        endpoint_url=(
-            endpoint_url
-            if isinstance(endpoint_url, str)
-            else settings.HUGGINGFACE_TEI_ENDPOINT_URL
-        ),
-        api_token=settings.HUGGINGFACE_API_TOKEN,
-        model_name=profile.model_name,
-        model_revision=profile.model_revision,
-    )
+    return default_embedding_provider(profile)

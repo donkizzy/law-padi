@@ -5,6 +5,7 @@ from dataclasses import dataclass
 from urllib.parse import urlencode
 
 from fastapi import HTTPException
+from sqlalchemy import or_
 from sqlmodel import Session, col, select
 
 from app.core.config import settings
@@ -197,6 +198,194 @@ def load_public_corpus(
         while child.parent_id:
             parent = all_nodes.get(child.parent_id)
             if not parent or parent.id in seen:
+                raise PgVectorRetrievalError(
+                    "Published provision hierarchy is incomplete"
+                )
+            if (
+                child.kind == ProvisionKind.SUBSECTION
+                and parent.kind != ProvisionKind.SECTION
+            ):
+                raise PgVectorRetrievalError("Subsection is not attached to a section")
+            if child.kind == ProvisionKind.PARAGRAPH and parent.kind not in (
+                ProvisionKind.SECTION,
+                ProvisionKind.SUBSECTION,
+            ):
+                raise PgVectorRetrievalError(
+                    "Paragraph is not attached to a section or subsection"
+                )
+            seen.add(parent.id)
+            provisions[parent.id] = parent
+            child = parent
+    return PublicCorpus(release, provisions, versions, sources, index_kind)
+
+
+def load_reference_corpus(
+    session: Session,
+    release: CorpusRelease,
+    suffixes: list[str],
+    *,
+    index_kind: str = "enacted",
+) -> PublicCorpus:
+    """Load exact matches, their published children, and only needed ancestry."""
+    if not suffixes:
+        return PublicCorpus(release, {}, {}, {}, index_kind)
+    statement = (
+        select(ProvisionVersion, Provision, SourceDocument)
+        .join(Provision, col(Provision.id) == col(ProvisionVersion.provision_id))
+        .join(
+            SourceDocument,
+            col(SourceDocument.id) == col(ProvisionVersion.source_document_id),
+        )
+        .join(
+            CorpusReleaseEntry,
+            col(CorpusReleaseEntry.provision_version_id) == col(ProvisionVersion.id),
+        )
+        .where(
+            CorpusReleaseEntry.release_id == release.id,
+            or_(
+                *[col(Provision.canonical_path).endswith(suffix) for suffix in suffixes]
+            ),
+        )
+    )
+    expected_proposed = index_kind == "proposals"
+    matches = [
+        row
+        for row in session.exec(statement).all()
+        if (str(row[0].legal_status) == "proposed") == expected_proposed
+    ]
+    selected_ids = [provision.id for _version, provision, _source in matches]
+    children = (
+        [
+            row
+            for row in session.exec(
+                select(ProvisionVersion, Provision, SourceDocument)
+                .join(
+                    Provision, col(Provision.id) == col(ProvisionVersion.provision_id)
+                )
+                .join(
+                    SourceDocument,
+                    col(SourceDocument.id) == col(ProvisionVersion.source_document_id),
+                )
+                .join(
+                    CorpusReleaseEntry,
+                    col(CorpusReleaseEntry.provision_version_id)
+                    == col(ProvisionVersion.id),
+                )
+                .where(
+                    CorpusReleaseEntry.release_id == release.id,
+                    col(Provision.parent_id).in_(selected_ids),
+                )
+            ).all()
+            if (str(row[0].legal_status) == "proposed") == expected_proposed
+        ]
+        if selected_ids
+        else []
+    )
+    rows = [*matches, *children]
+    versions = {provision.id: version for version, provision, _source in rows}
+    provisions = {provision.id: provision for _version, provision, _source in rows}
+    sources = {source.id: source for _version, _provision, source in rows}
+    for provision in list(provisions.values()):
+        seen = {provision.id}
+        child = provision
+        while child.parent_id:
+            parent = provisions.get(child.parent_id) or session.get(
+                Provision, child.parent_id
+            )
+            if parent is None or parent.id in seen:
+                raise PgVectorRetrievalError(
+                    "Published provision hierarchy is incomplete"
+                )
+            if (
+                child.kind == ProvisionKind.SUBSECTION
+                and parent.kind != ProvisionKind.SECTION
+            ):
+                raise PgVectorRetrievalError("Subsection is not attached to a section")
+            if child.kind == ProvisionKind.PARAGRAPH and parent.kind not in (
+                ProvisionKind.SECTION,
+                ProvisionKind.SUBSECTION,
+            ):
+                raise PgVectorRetrievalError(
+                    "Paragraph is not attached to a section or subsection"
+                )
+            seen.add(parent.id)
+            provisions[parent.id] = parent
+            child = parent
+    return PublicCorpus(release, provisions, versions, sources, index_kind)
+
+
+def load_ranked_corpus(
+    session: Session,
+    release: CorpusRelease,
+    version_ids: list[uuid.UUID],
+    *,
+    index_kind: str = "enacted",
+) -> PublicCorpus:
+    """Reload only ranked canonical versions, their children, and ancestry."""
+    if not version_ids:
+        return PublicCorpus(release, {}, {}, {}, index_kind)
+    rows = session.exec(
+        select(ProvisionVersion, Provision, SourceDocument)
+        .join(Provision, col(Provision.id) == col(ProvisionVersion.provision_id))
+        .join(
+            SourceDocument,
+            col(SourceDocument.id) == col(ProvisionVersion.source_document_id),
+        )
+        .join(
+            CorpusReleaseEntry,
+            col(CorpusReleaseEntry.provision_version_id) == col(ProvisionVersion.id),
+        )
+        .where(
+            CorpusReleaseEntry.release_id == release.id,
+            col(ProvisionVersion.id).in_(version_ids),
+        )
+    ).all()
+    expected_proposed = index_kind == "proposals"
+    selected = [
+        (version, provision, source)
+        for version, provision, source in rows
+        if (str(version.legal_status) == "proposed") == expected_proposed
+    ]
+    if {version.id for version, _provision, _source in selected} != set(version_ids):
+        raise PgVectorRetrievalError(
+            "Search result does not belong to the published corpus"
+        )
+    selected_ids = [provision.id for _version, provision, _source in selected]
+    children = session.exec(
+        select(ProvisionVersion, Provision, SourceDocument)
+        .join(Provision, col(Provision.id) == col(ProvisionVersion.provision_id))
+        .join(
+            SourceDocument,
+            col(SourceDocument.id) == col(ProvisionVersion.source_document_id),
+        )
+        .join(
+            CorpusReleaseEntry,
+            col(CorpusReleaseEntry.provision_version_id) == col(ProvisionVersion.id),
+        )
+        .where(
+            CorpusReleaseEntry.release_id == release.id,
+            col(Provision.parent_id).in_(selected_ids),
+        )
+    ).all()
+    published_rows = [
+        *selected,
+        *(
+            (version, provision, source)
+            for version, provision, source in children
+            if (str(version.legal_status) == "proposed") == expected_proposed
+        ),
+    ]
+    versions = {provision.id: version for version, provision, _ in published_rows}
+    provisions = {provision.id: provision for _, provision, _ in published_rows}
+    sources = {source.id: source for _, _, source in published_rows}
+    for provision in list(provisions.values()):
+        seen = {provision.id}
+        child = provision
+        while child.parent_id:
+            parent = provisions.get(child.parent_id) or session.get(
+                Provision, child.parent_id
+            )
+            if parent is None or parent.id in seen:
                 raise PgVectorRetrievalError(
                     "Published provision hierarchy is incomplete"
                 )
