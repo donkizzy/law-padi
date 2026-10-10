@@ -1,0 +1,708 @@
+"""Owned, release-pinned conversations and replayable generation events."""
+
+import asyncio
+import hashlib
+import re
+import secrets
+import uuid
+from collections.abc import AsyncIterator
+from dataclasses import dataclass
+from datetime import UTC, datetime, timedelta
+from typing import Annotated
+from zoneinfo import ZoneInfo
+
+import jwt
+from fastapi import APIRouter, Depends, Header, HTTPException, Query, Request, Response
+from fastapi.sse import EventSourceResponse, ServerSentEvent
+from sqlalchemy import and_, or_
+from sqlmodel import Session, col, func, select
+
+from app.api.deps import SessionDep
+from app.chat.events import emit_event, subscribe, unsubscribe
+from app.chat.schemas import (
+    ClaimResult,
+    ConversationCreate,
+    ConversationDetail,
+    ConversationList,
+    ConversationPublic,
+    ConversationUpdate,
+    MessageAccepted,
+    MessageCreate,
+    MessagePublic,
+)
+from app.core import security
+from app.core.config import settings
+from app.core.db import engine
+from app.ingestion.pgvector_repository import PgVectorRetrievalError, active_target
+from app.legal.enums import MessageRole, VectorIndexStatus
+from app.legal.models import (
+    Conversation,
+    ConversationMessage,
+    CorpusRelease,
+    CorpusReleaseEntry,
+    GenerationCapacity,
+    GenerationEvent,
+    GenerationRun,
+    Provision,
+    ProvisionVersion,
+    RetrievalIndexBuild,
+    get_datetime_utc,
+)
+from app.legal.public_corpus import published_release
+from app.legal.references import parse_section_reference
+from app.models import TokenPayload, User
+
+router = APIRouter(prefix="/conversations", tags=["conversations"])
+_COOKIE = "law_padi_guest"
+_COOKIE_RE = re.compile(r"^[A-Za-z0-9_-]{40,64}$")
+_LAGOS = ZoneInfo("Africa/Lagos")
+
+
+@dataclass(frozen=True)
+class Owner:
+    user_id: uuid.UUID | None = None
+    guest_digest: str | None = None
+
+
+def _account(request: Request, session: Session) -> User | None:
+    authorization = request.headers.get("authorization")
+    if not authorization:
+        return None
+    scheme, _, token = authorization.partition(" ")
+    if scheme.lower() != "bearer" or not token:
+        raise HTTPException(status_code=403, detail="Could not validate credentials")
+    try:
+        payload = jwt.decode(
+            token, settings.SECRET_KEY, algorithms=[security.ALGORITHM]
+        )
+        token_data = TokenPayload(**payload)
+        user = session.get(User, token_data.sub)
+    except jwt.InvalidTokenError, ValueError, TypeError:
+        raise HTTPException(status_code=403, detail="Could not validate credentials")
+    if user is None or not user.is_active:
+        raise HTTPException(status_code=403, detail="Could not validate credentials")
+    return user
+
+
+def _owner(request: Request, response: Response, session: Session) -> Owner:
+    user = _account(request, session)
+    if user:
+        return Owner(user_id=user.id)
+    token = request.cookies.get(_COOKIE)
+    if token is None or not _COOKIE_RE.fullmatch(token):
+        token = secrets.token_urlsafe(32)
+        response.set_cookie(
+            _COOKIE,
+            token,
+            max_age=30 * 24 * 60 * 60,
+            httponly=True,
+            secure=settings.FASTAPI_ENV != "development",
+            samesite="lax" if settings.FASTAPI_ENV == "development" else "none",
+            path=f"{settings.API_V1_STR}/conversations",
+        )
+    return Owner(guest_digest=hashlib.sha256(token.encode()).hexdigest())
+
+
+def _owned_conversation(
+    session: Session, conversation_id: uuid.UUID, owner: Owner, *, lock: bool = False
+) -> Conversation:
+    statement = select(Conversation).where(Conversation.id == conversation_id)
+    if lock:
+        statement = statement.with_for_update()
+    conversation = session.exec(statement).first()
+    valid = bool(
+        conversation
+        and (
+            owner.user_id is not None
+            and conversation.user_id == owner.user_id
+            or owner.guest_digest is not None
+            and conversation.user_id is None
+            and conversation.anonymous_session_id == owner.guest_digest
+            and conversation.updated_at >= get_datetime_utc() - timedelta(days=30)
+        )
+    )
+    if not valid:
+        raise HTTPException(status_code=404, detail="Conversation was not found")
+    assert conversation is not None
+    return conversation
+
+
+def _edition_label(release: CorpusRelease) -> str:
+    report = release.validation_report or {}
+    review = report.get("source_edition_review", {})
+    if isinstance(review, dict) and isinstance(review.get("edition"), str):
+        return str(review["edition"])
+    return "Published source edition"
+
+
+def _public(session: Session, conversation: Conversation) -> ConversationPublic:
+    release = session.get(CorpusRelease, conversation.pinned_release_id)
+    if release is None:
+        raise HTTPException(status_code=503, detail="Pinned edition is unavailable")
+    return ConversationPublic(
+        id=conversation.id,
+        title=conversation.title,
+        release_version=release.version,
+        edition_label=_edition_label(release),
+        created_at=conversation.created_at,
+        updated_at=conversation.updated_at,
+    )
+
+
+def _ensure_chat_enabled() -> None:
+    if not settings.CHAT_ENABLED:
+        raise HTTPException(status_code=503, detail="Conversations are not enabled")
+
+
+@router.post("", response_model=ConversationPublic, status_code=201)
+def create_conversation(
+    body: ConversationCreate,
+    request: Request,
+    response: Response,
+    session: SessionDep,
+) -> ConversationPublic:
+    _ensure_chat_enabled()
+    owner = _owner(request, response, session)
+    release = published_release(session, release_version=body.release_version)
+    if body.release_version:
+        build = session.exec(
+            select(RetrievalIndexBuild)
+            .where(
+                RetrievalIndexBuild.release_id == release.id,
+                RetrievalIndexBuild.index_kind == "enacted",
+                RetrievalIndexBuild.status == VectorIndexStatus.READY,
+            )
+            .order_by(col(RetrievalIndexBuild.created_at).desc())
+        ).first()
+        if build is None:
+            raise HTTPException(
+                status_code=503, detail="Pinned edition has no ready search index"
+            )
+        build_id = build.id
+    else:
+        target = active_target(session)
+        if target.release_id != release.id:
+            raise PgVectorRetrievalError(
+                "Active release changed during conversation creation"
+            )
+        build_id = target.retrieval_index_build_id
+    conversation = Conversation(
+        user_id=owner.user_id,
+        anonymous_session_id=owner.guest_digest,
+        title=body.title.strip() if body.title else None,
+        pinned_release_id=release.id,
+        pinned_index_build_id=build_id,
+    )
+    session.add(conversation)
+    public = ConversationPublic(
+        id=conversation.id,
+        title=conversation.title,
+        release_version=release.version,
+        edition_label=_edition_label(release),
+        created_at=conversation.created_at,
+        updated_at=conversation.updated_at,
+    )
+    session.commit()
+    return public
+
+
+@router.get("", response_model=ConversationList)
+def list_conversations(
+    request: Request,
+    response: Response,
+    session: SessionDep,
+    offset: Annotated[int, Query(ge=0)] = 0,
+    limit: Annotated[int, Query(ge=1, le=100)] = 30,
+) -> ConversationList:
+    _ensure_chat_enabled()
+    owner = _owner(request, response, session)
+    if owner.user_id:
+        predicate = col(Conversation.user_id) == owner.user_id
+    else:
+        predicate = and_(
+            col(Conversation.anonymous_session_id) == owner.guest_digest,
+            col(Conversation.user_id).is_(None),
+            col(Conversation.updated_at) >= get_datetime_utc() - timedelta(days=30),
+        )
+    count = session.exec(
+        select(func.count()).select_from(Conversation).where(predicate)
+    ).one()
+    rows = session.exec(
+        select(Conversation)
+        .where(predicate)
+        .order_by(col(Conversation.updated_at).desc(), col(Conversation.id))
+        .offset(offset)
+        .limit(limit)
+    ).all()
+    return ConversationList(data=[_public(session, row) for row in rows], count=count)
+
+
+@router.get("/{conversation_id}", response_model=ConversationDetail)
+def read_conversation(
+    conversation_id: uuid.UUID,
+    request: Request,
+    response: Response,
+    session: SessionDep,
+    before: Annotated[uuid.UUID | None, Query()] = None,
+    limit: Annotated[int, Query(ge=1, le=100)] = 50,
+) -> ConversationDetail:
+    _ensure_chat_enabled()
+    conversation = _owned_conversation(
+        session, conversation_id, _owner(request, response, session)
+    )
+    message_query = select(ConversationMessage).where(
+        ConversationMessage.conversation_id == conversation.id
+    )
+    if before is not None:
+        cursor = session.get(ConversationMessage, before)
+        if cursor is None or cursor.conversation_id != conversation.id:
+            raise HTTPException(status_code=404, detail="Message cursor was not found")
+        message_query = message_query.where(
+            or_(
+                col(ConversationMessage.created_at) < cursor.created_at,
+                and_(
+                    col(ConversationMessage.created_at) == cursor.created_at,
+                    col(ConversationMessage.id) < cursor.id,
+                ),
+            )
+        )
+    descending = session.exec(
+        message_query.order_by(
+            col(ConversationMessage.created_at).desc(),
+            col(ConversationMessage.id).desc(),
+        ).limit(limit + 1)
+    ).all()
+    has_more = len(descending) > limit
+    messages = list(reversed(descending[:limit]))
+    active_run = session.exec(
+        select(GenerationRun.id).where(
+            GenerationRun.conversation_id == conversation.id,
+            col(GenerationRun.status).in_(["pending", "running"]),
+        )
+    ).first()
+    return ConversationDetail(
+        **_public(session, conversation).model_dump(),
+        active_run_id=active_run,
+        has_more_messages=has_more,
+        next_before=messages[0].id if has_more and messages else None,
+        messages=[
+            MessagePublic(
+                id=message.id,
+                role=str(message.role),
+                content=message.content,
+                answer_status=str(message.answer_status)
+                if message.answer_status
+                else None,
+                answer_content=message.answer_content,
+                evidence_snapshot=message.evidence_snapshot,
+                created_at=message.created_at,
+            )
+            for message in messages
+        ],
+    )
+
+
+@router.patch("/{conversation_id}", response_model=ConversationPublic)
+def rename_conversation(
+    conversation_id: uuid.UUID,
+    body: ConversationUpdate,
+    request: Request,
+    response: Response,
+    session: SessionDep,
+) -> ConversationPublic:
+    _ensure_chat_enabled()
+    conversation = _owned_conversation(
+        session, conversation_id, _owner(request, response, session)
+    )
+    title = body.title.strip()
+    if not title:
+        raise HTTPException(status_code=422, detail="Enter a title")
+    conversation.title = title
+    conversation.updated_at = get_datetime_utc()
+    session.add(conversation)
+    public = _public(session, conversation)
+    session.commit()
+    return public
+
+
+@router.delete("/{conversation_id}", status_code=204)
+def delete_conversation(
+    conversation_id: uuid.UUID,
+    request: Request,
+    response: Response,
+    session: SessionDep,
+) -> None:
+    _ensure_chat_enabled()
+    conversation = _owned_conversation(
+        session, conversation_id, _owner(request, response, session), lock=True
+    )
+    active = session.exec(
+        select(GenerationRun).where(
+            GenerationRun.conversation_id == conversation.id,
+            col(GenerationRun.status).in_(["pending", "running"]),
+        )
+    ).first()
+    if active:
+        capacity = session.exec(
+            select(GenerationCapacity)
+            .where(GenerationCapacity.id == 1)
+            .with_for_update()
+        ).one()
+        capacity.active_count = max(0, capacity.active_count - 1)
+        session.add(capacity)
+    session.delete(conversation)
+    session.commit()
+
+
+@router.post("/claim", response_model=ClaimResult)
+def claim_guest_conversations(
+    request: Request, response: Response, session: SessionDep
+) -> ClaimResult:
+    _ensure_chat_enabled()
+    user = _account(request, session)
+    if user is None:
+        raise HTTPException(status_code=401, detail="Sign in to claim conversations")
+    token = request.cookies.get(_COOKIE)
+    if token is None or not _COOKIE_RE.fullmatch(token):
+        return ClaimResult(claimed_count=0)
+    digest = hashlib.sha256(token.encode()).hexdigest()
+    rows = session.exec(
+        select(Conversation)
+        .where(
+            Conversation.anonymous_session_id == digest,
+            col(Conversation.user_id).is_(None),
+            Conversation.updated_at >= get_datetime_utc() - timedelta(days=30),
+        )
+        .with_for_update()
+    ).all()
+    for conversation in rows:
+        conversation.user_id = user.id
+        conversation.anonymous_session_id = None
+        session.add(conversation)
+    session.commit()
+    response.delete_cookie(_COOKIE, path=f"{settings.API_V1_STR}/conversations")
+    return ClaimResult(claimed_count=len(rows))
+
+
+def _daily_count(session: Session, owner: Owner) -> int:
+    today = datetime.now(_LAGOS).date()
+    start = datetime.combine(today, datetime.min.time(), _LAGOS).astimezone(UTC)
+    end = start + timedelta(days=1)
+    statement = (
+        select(func.count())
+        .select_from(GenerationRun)
+        .join(Conversation, col(Conversation.id) == col(GenerationRun.conversation_id))
+        .where(GenerationRun.created_at >= start, GenerationRun.created_at < end)
+    )
+    if owner.user_id:
+        statement = statement.where(Conversation.user_id == owner.user_id)
+    else:
+        statement = statement.where(
+            Conversation.anonymous_session_id == owner.guest_digest
+        )
+    return session.exec(statement).one()
+
+
+def _recent_count(session: Session, owner: Owner) -> int:
+    statement = (
+        select(func.count())
+        .select_from(GenerationRun)
+        .join(Conversation, col(Conversation.id) == col(GenerationRun.conversation_id))
+        .where(GenerationRun.created_at >= get_datetime_utc() - timedelta(minutes=1))
+    )
+    if owner.user_id:
+        statement = statement.where(Conversation.user_id == owner.user_id)
+    else:
+        statement = statement.where(
+            Conversation.anonymous_session_id == owner.guest_digest
+        )
+    return session.exec(statement).one()
+
+
+def _validate_selected_version(
+    session: Session,
+    conversation: Conversation,
+    question: str,
+    version_id: uuid.UUID | None,
+) -> None:
+    if version_id is None:
+        return
+    version = session.get(ProvisionVersion, version_id)
+    provision = session.get(Provision, version.provision_id) if version else None
+    entry = session.exec(
+        select(CorpusReleaseEntry).where(
+            CorpusReleaseEntry.release_id == conversation.pinned_release_id,
+            CorpusReleaseEntry.provision_version_id == version_id,
+        )
+    ).first()
+    if (
+        version is None
+        or provision is None
+        or entry is None
+        or (str(version.legal_status) == "proposed")
+        != (conversation.index_kind == "proposals")
+    ):
+        raise HTTPException(
+            status_code=422, detail="Selected provision is not in this edition"
+        )
+    parsed = parse_section_reference(question)
+    if parsed.error or (
+        parsed.references
+        and not any(
+            provision.canonical_path.endswith(reference.suffix)
+            for reference in parsed.references
+        )
+    ):
+        raise HTTPException(
+            status_code=422, detail="Selected provision does not match the question"
+        )
+
+
+@router.post(
+    "/{conversation_id}/messages", response_model=MessageAccepted, status_code=202
+)
+def submit_message(
+    conversation_id: uuid.UUID,
+    body: MessageCreate,
+    request: Request,
+    response: Response,
+    session: SessionDep,
+) -> MessageAccepted:
+    _ensure_chat_enabled()
+    if not settings.CHAT_GENERATION_ENABLED or settings.CHAT_GENERATION_KILL_SWITCH:
+        raise HTTPException(
+            status_code=503, detail="Explanations are temporarily unavailable"
+        )
+    owner = _owner(request, response, session)
+    conversation = _owned_conversation(session, conversation_id, owner, lock=True)
+    question = body.question.strip()
+    if not question:
+        raise HTTPException(status_code=422, detail="Enter a question")
+    existing = session.exec(
+        select(GenerationRun).where(
+            GenerationRun.conversation_id == conversation.id,
+            GenerationRun.idempotency_key == body.idempotency_key,
+        )
+    ).first()
+    if existing:
+        prior = session.get(ConversationMessage, existing.user_message_id)
+        if (
+            prior is None
+            or prior.content != question
+            or existing.selected_provision_version_id
+            != body.selected_provision_version_id
+        ):
+            raise HTTPException(
+                status_code=409,
+                detail="Submission key was used for a different question",
+            )
+        return MessageAccepted(
+            run_id=existing.id,
+            user_message_id=existing.user_message_id,
+            status=existing.status,
+        )
+    _validate_selected_version(
+        session, conversation, question, body.selected_provision_version_id
+    )
+    active = session.exec(
+        select(GenerationRun).where(
+            GenerationRun.conversation_id == conversation.id,
+            col(GenerationRun.status).in_(["pending", "running"]),
+        )
+    ).first()
+    if active:
+        raise HTTPException(
+            status_code=409,
+            detail="An explanation is already active in this conversation",
+        )
+    capacity = session.exec(
+        select(GenerationCapacity).where(GenerationCapacity.id == 1).with_for_update()
+    ).one()
+    # The shared row lock also serializes daily allowance checks across this
+    # owner's different conversations before a new run is committed.
+    limit = (
+        settings.CHAT_ACCOUNT_DAILY_LIMIT
+        if owner.user_id
+        else settings.CHAT_GUEST_DAILY_LIMIT
+    )
+    if _daily_count(session, owner) >= limit:
+        raise HTTPException(
+            status_code=429, detail="Daily explanation allowance reached"
+        )
+    burst_limit = (
+        settings.CHAT_ACCOUNT_BURST_LIMIT
+        if owner.user_id
+        else settings.CHAT_GUEST_BURST_LIMIT
+    )
+    if _recent_count(session, owner) >= burst_limit:
+        raise HTTPException(
+            status_code=429, detail="Too many explanations in one minute"
+        )
+    if capacity.active_count >= settings.CHAT_MAX_ACTIVE_GENERATIONS:
+        raise HTTPException(status_code=429, detail="Generation capacity is full")
+    capacity.active_count += 1
+    message = ConversationMessage(
+        conversation_id=conversation.id, role=MessageRole.USER, content=question
+    )
+    session.add(message)
+    session.flush()
+    run = GenerationRun(
+        conversation_id=conversation.id,
+        user_message_id=message.id,
+        idempotency_key=body.idempotency_key,
+        selected_provision_version_id=body.selected_provision_version_id,
+    )
+    session.add(run)
+    session.flush()
+    emit_event(
+        session,
+        run,
+        "message.started",
+        {"run_id": str(run.id), "message_id": str(message.id)},
+    )
+    conversation.updated_at = get_datetime_utc()
+    if conversation.title is None:
+        conversation.title = question[:120]
+    session.add(conversation)
+    session.add(capacity)
+    accepted = MessageAccepted(
+        run_id=run.id, user_message_id=message.id, status=run.status
+    )
+    session.commit()
+    return accepted
+
+
+@router.post("/{conversation_id}/runs/{run_id}/cancel", response_model=MessageAccepted)
+def cancel_run(
+    conversation_id: uuid.UUID,
+    run_id: uuid.UUID,
+    request: Request,
+    response: Response,
+    session: SessionDep,
+) -> MessageAccepted:
+    _ensure_chat_enabled()
+    _owned_conversation(
+        session, conversation_id, _owner(request, response, session), lock=True
+    )
+    run = session.exec(
+        select(GenerationRun)
+        .where(
+            GenerationRun.id == run_id, GenerationRun.conversation_id == conversation_id
+        )
+        .with_for_update()
+    ).first()
+    if run is None:
+        raise HTTPException(status_code=404, detail="Generation run was not found")
+    if run.status == "pending":
+        run.status = "cancelled"
+        run.outcome = "cancelled"
+        capacity = session.exec(
+            select(GenerationCapacity)
+            .where(GenerationCapacity.id == 1)
+            .with_for_update()
+        ).one()
+        capacity.active_count = max(0, capacity.active_count - 1)
+        session.add(capacity)
+        emit_event(session, run, "answer.complete", {"outcome": "cancelled"})
+    elif run.status == "running":
+        run.cancellation_requested = True
+    session.add(run)
+    result = MessageAccepted(
+        run_id=run.id, user_message_id=run.user_message_id, status=run.status
+    )
+    session.commit()
+    return result
+
+
+def _read_events(
+    conversation_id: uuid.UUID,
+    owner: Owner,
+    after_id: int,
+    run_id: uuid.UUID | None = None,
+) -> tuple[list[GenerationEvent], bool]:
+    with Session(engine) as session:
+        try:
+            _owned_conversation(session, conversation_id, owner)
+        except HTTPException:
+            return [], False
+        event_query = select(GenerationEvent).where(
+            GenerationEvent.conversation_id == conversation_id,
+            col(GenerationEvent.id) > after_id,
+        )
+        if run_id is not None:
+            event_query = event_query.where(GenerationEvent.run_id == run_id)
+        events = session.exec(
+            event_query.order_by(col(GenerationEvent.id)).limit(100)
+        ).all()
+        active_query = select(GenerationRun.id).where(
+            GenerationRun.conversation_id == conversation_id,
+            col(GenerationRun.status).in_(["pending", "running"]),
+        )
+        if run_id is not None:
+            active_query = active_query.where(GenerationRun.id == run_id)
+        active = session.exec(active_query).first() is not None
+        return list(events), active
+
+
+@dataclass(frozen=True)
+class EventAccess:
+    owner: Owner
+    cursor: int
+
+
+def _event_access(
+    conversation_id: uuid.UUID,
+    request: Request,
+    response: Response,
+    session: SessionDep,
+    last_event_id: Annotated[str | None, Header(alias="Last-Event-ID")] = None,
+    run_id: Annotated[uuid.UUID | None, Query()] = None,
+) -> EventAccess:
+    _ensure_chat_enabled()
+    try:
+        cursor = int(last_event_id) if last_event_id else 0
+        if cursor < 0:
+            raise ValueError
+    except ValueError:
+        raise HTTPException(status_code=422, detail="Invalid Last-Event-ID")
+    # Streaming connections may stay open for minutes. Close the ownership
+    # transaction before yielding, then use short catch-up reads per wakeup.
+    owner = _owner(request, response, session)
+    _owned_conversation(session, conversation_id, owner)
+    if run_id is not None:
+        run = session.get(GenerationRun, run_id)
+        if run is None or run.conversation_id != conversation_id:
+            raise HTTPException(status_code=404, detail="Generation run was not found")
+    return EventAccess(owner=owner, cursor=cursor)
+
+
+@router.get("/{conversation_id}/events", response_class=EventSourceResponse)
+async def conversation_events(
+    conversation_id: uuid.UUID,
+    request: Request,
+    access: Annotated[EventAccess, Depends(_event_access)],
+    run_id: Annotated[uuid.UUID | None, Query()] = None,
+) -> AsyncIterator[ServerSentEvent]:
+    cursor = access.cursor
+    wake = subscribe(conversation_id)
+    try:
+        while not await request.is_disconnected():
+            wake.clear()
+            events, active = await asyncio.to_thread(
+                _read_events, conversation_id, access.owner, cursor, run_id
+            )
+            for event in events:
+                if event.id is None:
+                    continue
+                cursor = event.id
+                yield ServerSentEvent(
+                    data=event.payload, event=event.event_type, id=str(event.id)
+                )
+            if not active:
+                break
+            try:
+                await asyncio.wait_for(wake.wait(), timeout=15)
+            except TimeoutError:
+                pass
+    finally:
+        unsubscribe(conversation_id, wake)

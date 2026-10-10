@@ -50,6 +50,26 @@ class Settings(BaseSettings):
     RETRIEVAL_LEXICAL_CANDIDATE_LIMIT: int = Field(default=50, ge=1)
     RETRIEVAL_RRF_K: int = Field(default=60, ge=1)
     RETRIEVAL_LEXICAL_PROFILE_VERSION: str = "postgres-simple-v1"
+    CITATION_LOOKUP_ENABLED: bool = True
+    CHAT_ENABLED: bool = False
+    CHAT_GENERATION_ENABLED: bool = False
+    CHAT_GENERATION_KILL_SWITCH: bool = False
+    CHAT_MAX_ACTIVE_GENERATIONS: int = Field(default=100, ge=1, le=1000)
+    CHAT_WORKER_CONCURRENCY: int = Field(default=16, ge=1, le=1000)
+    CHAT_PROVIDER_CAPACITY_APPROVED: bool = False
+    CHAT_GUEST_DAILY_LIMIT: int = Field(default=20, ge=0)
+    CHAT_ACCOUNT_DAILY_LIMIT: int = Field(default=200, ge=0)
+    CHAT_GUEST_BURST_LIMIT: int = Field(default=3, ge=0)
+    CHAT_ACCOUNT_BURST_LIMIT: int = Field(default=10, ge=0)
+    DATABASE_POOL_SIZE: int = Field(default=40, ge=1, le=100)
+    CHAT_DAILY_BUDGET_USD: float = Field(default=100.0, ge=0)
+    CHAT_EVIDENCE_MAX_CHARS: int = Field(default=24000, ge=1000)
+    DEEPSEEK_API_KEY: str | None = None
+    DEEPSEEK_BASE_URL: str = "https://api.deepseek.com"
+    DEEPSEEK_MODEL: str = "deepseek-v4-pro"
+    DEEPSEEK_INPUT_USD_PER_MILLION: float = Field(default=1.32, ge=0)
+    DEEPSEEK_OUTPUT_USD_PER_MILLION: float = Field(default=3.96, ge=0)
+    DEEPSEEK_MAX_OUTPUT_TOKENS: int = Field(default=2000, ge=1)
     INGESTION_WORKER_LEASE_SECONDS: int = Field(default=900, ge=1)
     QDRANT_URL: str | None = None
     QDRANT_API_KEY: str | None = None
@@ -117,6 +137,13 @@ class Settings(BaseSettings):
         self._check_default_secret(
             "FIRST_SUPERUSER_PASSWORD", self.FIRST_SUPERUSER_PASSWORD
         )
+        if (
+            self.CHAT_MAX_ACTIVE_GENERATIONS > 500
+            and not self.CHAT_PROVIDER_CAPACITY_APPROVED
+        ):
+            raise ValueError(
+                "CHAT_PROVIDER_CAPACITY_APPROVED is required above the documented DeepSeek Pro limit"
+            )
 
         return self
 
