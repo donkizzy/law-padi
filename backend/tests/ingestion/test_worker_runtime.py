@@ -165,11 +165,12 @@ def test_worker_loop_logs_string_status_results() -> None:
     def fake_run_once(
         _session: object,
         *,
-        _worker_id: str,
-        _task_type: str | None,
-        _lease_seconds: int,
-        _stage_concurrency_limits: dict[str, int],
+        worker_id: str,
+        task_type: str | None,
+        lease_seconds: int,
+        stage_concurrency_limits: dict[str, int],
     ) -> FakeWorkerResult | None:
+        del worker_id, task_type, lease_seconds, stage_concurrency_limits
         return task_results.pop(0)
 
     stats = run_worker(
