@@ -1,4 +1,5 @@
 from collections.abc import Generator
+from urllib.parse import urlsplit
 
 import pytest
 from fastapi.testclient import TestClient
@@ -24,6 +25,11 @@ from app.legal.models import (
     EvaluationDataset,
     EvaluationItem,
     ExtractionCandidate,
+    GenerationBudgetDay,
+    GenerationCapacity,
+    GenerationEvent,
+    GenerationReservation,
+    GenerationRun,
     IngestionArtifact,
     IngestionEvent,
     IngestionRun,
@@ -56,6 +62,12 @@ from tests.utils.utils import get_superuser_token_headers
 
 @pytest.fixture(scope="session", autouse=True)
 def db() -> Generator[Session]:
+    database_name = urlsplit(str(settings.DATABASE_URL)).path.removeprefix("/")
+    if not database_name.endswith("_test"):
+        raise RuntimeError(
+            "Refusing to run destructive tests against a non-test database. "
+            "Set DATABASE_URL to a dedicated database whose name ends in '_test'."
+        )
     with Session(engine) as session:
         init_db(session)
         _cleanup_db(session)
@@ -74,6 +86,13 @@ def _cleanup_db(session: Session) -> None:
     for model in (
         AuditEvent,
         AdminRoleAssignment,
+        GenerationEvent,
+        GenerationReservation,
+        GenerationRun,
+        GenerationBudgetDay,
+        MessageEvidence,
+        ConversationMessage,
+        Conversation,
         ReleasePromotionAttempt,
         ActiveRetrievalTarget,
         RetrievalEmbedding,
@@ -96,9 +115,6 @@ def _cleanup_db(session: Session) -> None:
         IngestionStep,
         IngestionRun,
         SourceUpload,
-        MessageEvidence,
-        ConversationMessage,
-        Conversation,
         LegalConceptAlias,
         LegalConcept,
         LegislativeEvent,
@@ -114,6 +130,7 @@ def _cleanup_db(session: Session) -> None:
     ):
         session.exec(delete(model))
     session.exec(delete(User))
+    session.exec(update(GenerationCapacity).values(active_count=0))
     session.commit()
 
 
