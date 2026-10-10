@@ -710,6 +710,7 @@ class LegalSearchRequest(SQLModel):
     top_k: int = Field(default=10, ge=1, le=50)
     index_kind: Literal["enacted", "proposals"] = "enacted"
     mode: Literal["auto", "semantic"] = "auto"
+    release_version: str | None = Field(default=None, min_length=1, max_length=128)
 
     @field_validator("query")
     @classmethod
@@ -758,16 +759,47 @@ class LegalSearchResult(SQLModel):
     children: list[ProvisionReference]
 
 
+class CitationOutcome(SQLModel):
+    reference: str
+    status: Literal["resolved", "ambiguous", "missing", "unsupported"]
+    evidence_ids: list[str] = Field(default_factory=list)
+    message: str | None = None
+
+
+class EvidenceItem(SQLModel):
+    evidence_id: str
+    provision_id: uuid.UUID
+    provision_version_id: uuid.UUID
+    canonical_path: str
+    citation: str
+    authoritative_text: str
+    text_sha256: str
+    ancestor_citations: list[str]
+    legal_status: str
+    edition_label: str
+    release_id: uuid.UUID
+    release_version: str
+    source_document_id: uuid.UUID
+    source_title: str
+    source_authority: str
+    source_url: str
+    source_content_url: str
+    source_page_start: int | None = None
+    source_page_end: int | None = None
+
+
 class LegalSearchResponse(SQLModel):
     data: list[LegalSearchResult]
     count: int
     outcome: Literal[
-        "exact", "matches", "ambiguous", "not_found", "unsupported_reference"
+        "exact", "matches", "ambiguous", "not_found", "unsupported_reference", "partial"
     ] = "matches"
     retrieval_mode: Literal["exact", "hybrid", "lexical"] = "exact"
     message: str | None = None
     release_version: str
     edition_label: str
+    citation_outcomes: list[CitationOutcome] = Field(default_factory=list)
+    evidence: list[EvidenceItem] = Field(default_factory=list)
 
 
 class LegalReleasePublic(SQLModel):
