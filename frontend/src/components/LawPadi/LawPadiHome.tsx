@@ -1,6 +1,8 @@
 import { useNavigate, useSearch } from "@tanstack/react-router"
+import { AxiosError } from "axios"
 import { useState } from "react"
 import { ChatComposer } from "@/components/LawPadi/ChatComposer"
+import { ChatHome } from "@/components/LawPadi/ChatHome"
 import { ProvisionView } from "@/components/LawPadi/ProvisionView"
 import {
   ErrorState,
@@ -9,12 +11,14 @@ import {
   SkeletonBlock,
 } from "@/components/LawPadi/primitives"
 import { SourcePanel } from "@/components/LawPadi/SourcePanel"
+import { useConversations } from "@/hooks/useConversations"
 import {
   legalError,
   useLegalRelease,
   useLegalSearch,
   useProvision,
 } from "@/hooks/useLegalCorpus"
+import { bestContainingSource } from "@/lib/source-ranking"
 
 const suggestions = [
   "Section 37",
@@ -25,6 +29,21 @@ const suggestions = [
 ]
 
 export function LawPadiHome() {
+  const conversations = useConversations()
+  if (conversations.isSuccess) return <ChatHome />
+  if (conversations.isPending)
+    return (
+      <div className="mx-auto max-w-4xl px-4 py-12">
+        <SkeletonBlock />
+      </div>
+    )
+  const disabled =
+    conversations.error instanceof AxiosError &&
+    conversations.error.response?.status === 503
+  return <SearchHome explanationDisabled={disabled} />
+}
+
+function SearchHome({ explanationDisabled }: { explanationDisabled: boolean }) {
   const search = useSearch({ from: "/_layout/" })
   const navigate = useNavigate({ from: "/" })
   const [question, setQuestion] = useState("")
@@ -46,8 +65,16 @@ export function LawPadiHome() {
           Explore Nigeria&apos;s Constitution.
         </h1>
         <p className="mt-4 text-sm leading-7 text-muted-foreground">
-          Find an exact section, subsection or paragraph, or search a topic and
-          choose a source match. Stored legal wording is shown in English.
+          Find an exact section, subsection or paragraph, or search a topic.
+          Stored legal wording is shown in English.
+        </p>
+        <p
+          className="mt-3 sq-md border border-amber-500/40 bg-amber-500/5 p-3 text-sm"
+          role="status"
+        >
+          {explanationDisabled
+            ? "AI explanations are not enabled in this deployment. Questions currently show published source wording only."
+            : "AI explanations are temporarily unavailable. Questions currently show published source wording only."}
         </p>
         <p className="mt-3 text-xs font-semibold text-muted-foreground">
           {release.data?.edition_label ?? "Published source edition"}
@@ -121,9 +148,16 @@ function SearchResults({
   const [sourceOpen, setSourceOpen] = useState(false)
   const exact =
     search.data?.outcome === "exact" ? search.data.data[0] : undefined
+  const rankedFirst =
+    search.data?.outcome === "matches" ? search.data.data[0] : undefined
+  const bestMatch =
+    search.data?.outcome === "matches"
+      ? bestContainingSource(search.data.data)
+      : undefined
   const selected =
     search.data?.data.find((item) => item.canonical_path === selectedPath) ??
-    exact
+    exact ??
+    bestMatch
   const detail = useProvision(
     selected?.canonical_path ?? "",
     selected?.release_version,
@@ -179,45 +213,25 @@ function SearchResults({
               </ErrorState>
             ) : (
               <>
-                {search.data.outcome !== "exact" && (
-                  <section aria-label="Search matches">
-                    <h2 className="mb-4 font-legal text-xl">
-                      {search.data.outcome === "ambiguous"
-                        ? "Choose the source identity"
-                        : "Possible source matches"}
+                {search.data.outcome === "matches" && selected && (
+                  <div className="sq-md border border-primary/30 bg-primary/5 p-4">
+                    <h2 className="font-legal text-xl">
+                      {selected.canonical_path === bestMatch?.canonical_path
+                        ? "Best source answer"
+                        : "Selected source answer"}
                     </h2>
-                    <div className="grid gap-3 sm:grid-cols-2">
-                      {search.data.data.map((match) => (
-                        <button
-                          key={match.provision_version_id}
-                          type="button"
-                          aria-pressed={
-                            selected?.canonical_path === match.canonical_path
-                          }
-                          onClick={() => {
-                            setSelectedPath(match.canonical_path)
-                            setSourceOpen(false)
-                          }}
-                          className="sq-md border border-border bg-card p-4 text-left hover:border-primary focus-visible:ring-2 focus-visible:ring-ring"
-                        >
-                          <span className="text-sm font-bold text-primary">
-                            {match.citation}
-                          </span>
-                          <span className="mt-2 block text-sm font-semibold">
-                            {match.heading || match.citation}
-                          </span>
-                          <span className="mt-2 block text-xs text-muted-foreground">
-                            {match.ancestors.map((a) => a.citation).join(" · ")}{" "}
-                            · PDF page{" "}
-                            {match.source_page_start ?? "not recorded"}
-                          </span>
-                          <span className="mt-2 block text-xs text-muted-foreground">
-                            {match.legal_status} · {match.edition_label}
-                          </span>
-                        </button>
-                      ))}
-                    </div>
-                  </section>
+                    <p className="mt-1 text-sm text-muted-foreground">
+                      {selected.citation} ·{" "}
+                      {selected.canonical_path === bestMatch?.canonical_path &&
+                      bestMatch?.canonical_path !== rankedFirst?.canonical_path
+                        ? `Includes the highest-ranked passage (${rankedFirst?.citation}) and its section context.`
+                        : selected.canonical_path ===
+                            rankedFirst?.canonical_path
+                          ? "Highest-ranked source passage."
+                          : "Selected source passage."}{" "}
+                      Retrieval rank is not a legal-confidence percentage.
+                    </p>
+                  </div>
                 )}
                 {provision && (
                   <>
@@ -234,6 +248,54 @@ function SearchResults({
                       onRelated={onRelated}
                     />
                   </>
+                )}
+                {search.data.outcome !== "exact" && (
+                  <section aria-label="Search matches">
+                    <h2 className="mb-4 font-legal text-xl">
+                      {search.data.outcome === "ambiguous"
+                        ? "Choose the source identity"
+                        : "Other source matches"}
+                    </h2>
+                    <div className="grid gap-3 sm:grid-cols-2">
+                      {search.data.data
+                        .filter(
+                          (match) =>
+                            search.data.outcome === "ambiguous" ||
+                            match.canonical_path !== selected?.canonical_path,
+                        )
+                        .map((match) => (
+                          <button
+                            key={match.provision_version_id}
+                            type="button"
+                            aria-pressed={
+                              selected?.canonical_path === match.canonical_path
+                            }
+                            onClick={() => {
+                              setSelectedPath(match.canonical_path)
+                              setSourceOpen(false)
+                            }}
+                            className="sq-md border border-border bg-card p-4 text-left hover:border-primary focus-visible:ring-2 focus-visible:ring-ring"
+                          >
+                            <span className="text-sm font-bold text-primary">
+                              {match.citation}
+                            </span>
+                            <span className="mt-2 block text-sm font-semibold">
+                              {match.heading || match.citation}
+                            </span>
+                            <span className="mt-2 block text-xs text-muted-foreground">
+                              {match.ancestors
+                                .map((a) => a.citation)
+                                .join(" · ")}{" "}
+                              · PDF page{" "}
+                              {match.source_page_start ?? "not recorded"}
+                            </span>
+                            <span className="mt-2 block text-xs text-muted-foreground">
+                              {match.legal_status} · {match.edition_label}
+                            </span>
+                          </button>
+                        ))}
+                    </div>
+                  </section>
                 )}
               </>
             )}
