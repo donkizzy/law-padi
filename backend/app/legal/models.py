@@ -4,6 +4,7 @@ from typing import Any
 
 from pgvector.sqlalchemy import Vector
 from sqlalchemy import (
+    BigInteger,
     CheckConstraint,
     Column,
     Computed,
@@ -1058,6 +1059,13 @@ class Conversation(SQLModel, table=True):
     anonymous_session_id: str | None = Field(default=None, max_length=255, index=True)
     title: str | None = Field(default=None, max_length=255)
     preferred_language: str | None = Field(default=None, max_length=16, index=True)
+    pinned_release_id: uuid.UUID | None = Field(
+        default=None, foreign_key="corpus_release.id", index=True
+    )
+    pinned_index_build_id: uuid.UUID | None = Field(
+        default=None, foreign_key="retrieval_index_build.id", index=True
+    )
+    index_kind: str = Field(default="enacted", max_length=32)
     created_at: datetime = Field(
         default_factory=get_datetime_utc,
         sa_type=DateTime(timezone=True),  # type: ignore
@@ -1089,6 +1097,19 @@ class ConversationMessage(SQLModel, table=True):
     model_provider: str | None = Field(default=None, max_length=64)
     model_name: str | None = Field(default=None, max_length=128)
     retrieval_trace_id: uuid.UUID | None = Field(default=None, index=True)
+    answer_content: dict[str, Any] | None = Field(
+        default=None, sa_column=Column(JSONB, nullable=True)
+    )
+    evidence_snapshot: list[dict[str, Any]] | None = Field(
+        default=None, sa_column=Column(JSONB, nullable=True)
+    )
+    prompt_version: str | None = Field(default=None, max_length=64)
+    usage: dict[str, Any] | None = Field(
+        default=None, sa_column=Column(JSONB, nullable=True)
+    )
+    validation_result: dict[str, Any] | None = Field(
+        default=None, sa_column=Column(JSONB, nullable=True)
+    )
     created_at: datetime = Field(
         default_factory=get_datetime_utc,
         sa_type=DateTime(timezone=True),  # type: ignore
@@ -1119,6 +1140,111 @@ class MessageEvidence(SQLModel, table=True):
         sa_column=Column(Float, nullable=True),
     )
     citation_label: str | None = Field(default=None, max_length=255)
+    release_id: uuid.UUID | None = Field(
+        default=None, foreign_key="corpus_release.id", index=True
+    )
+    evidence_snapshot: dict[str, Any] | None = Field(
+        default=None, sa_column=Column(JSONB, nullable=True)
+    )
+
+
+class GenerationRun(SQLModel, table=True):
+    __tablename__ = "generation_run"
+    __table_args__ = (
+        UniqueConstraint(
+            "conversation_id", "idempotency_key", name="uq_generation_run_submission"
+        ),
+        Index(
+            "ix_generation_run_one_active",
+            "conversation_id",
+            unique=True,
+            postgresql_where=text("status IN ('pending', 'running')"),
+        ),
+    )
+
+    id: uuid.UUID = Field(default_factory=uuid.uuid4, primary_key=True)
+    conversation_id: uuid.UUID = Field(
+        foreign_key="conversation.id", index=True, ondelete="CASCADE"
+    )
+    user_message_id: uuid.UUID = Field(
+        foreign_key="conversation_message.id", ondelete="CASCADE"
+    )
+    selected_provision_version_id: uuid.UUID | None = Field(
+        default=None, foreign_key="provision_version.id", index=True
+    )
+    assistant_message_id: uuid.UUID | None = Field(
+        default=None, foreign_key="conversation_message.id", ondelete="SET NULL"
+    )
+    idempotency_key: str = Field(max_length=128)
+    status: str = Field(default="pending", max_length=32, index=True)
+    outcome: str | None = Field(default=None, max_length=64)
+    lease_owner: str | None = Field(default=None, max_length=128)
+    lease_until: datetime | None = Field(default=None, sa_type=DateTime(timezone=True))  # type: ignore
+    provider_started_at: datetime | None = Field(
+        default=None,
+        sa_type=DateTime(timezone=True),  # type: ignore
+    )
+    attempt_count: int = Field(default=0)
+    cancellation_requested: bool = Field(default=False)
+    created_at: datetime = Field(
+        default_factory=get_datetime_utc,
+        sa_type=DateTime(timezone=True),  # type: ignore
+    )
+    updated_at: datetime = Field(
+        default_factory=get_datetime_utc,
+        sa_type=DateTime(timezone=True),  # type: ignore
+    )
+
+
+class GenerationEvent(SQLModel, table=True):
+    __tablename__ = "generation_event"
+
+    id: int | None = Field(default=None, sa_type=BigInteger, primary_key=True)
+    conversation_id: uuid.UUID = Field(
+        foreign_key="conversation.id", index=True, ondelete="CASCADE"
+    )
+    run_id: uuid.UUID = Field(
+        foreign_key="generation_run.id", index=True, ondelete="CASCADE"
+    )
+    event_type: str = Field(max_length=64)
+    payload: dict[str, Any] = Field(sa_column=Column(JSONB, nullable=False))
+    created_at: datetime = Field(
+        default_factory=get_datetime_utc,
+        sa_type=DateTime(timezone=True),  # type: ignore
+    )
+
+
+class GenerationBudgetDay(SQLModel, table=True):
+    __tablename__ = "generation_budget_day"
+
+    day: date = Field(primary_key=True)
+    reserved_micro_usd: int = Field(default=0, sa_type=BigInteger)
+    spent_micro_usd: int = Field(default=0, sa_type=BigInteger)
+
+
+class GenerationReservation(SQLModel, table=True):
+    __tablename__ = "generation_reservation"
+
+    id: uuid.UUID = Field(default_factory=uuid.uuid4, primary_key=True)
+    run_id: uuid.UUID | None = Field(
+        default=None, foreign_key="generation_run.id", index=True, ondelete="SET NULL"
+    )
+    day: date = Field(foreign_key="generation_budget_day.day", index=True)
+    purpose: str = Field(max_length=32)
+    reserved_micro_usd: int = Field(sa_type=BigInteger)
+    actual_micro_usd: int | None = Field(default=None, sa_type=BigInteger)
+    status: str = Field(default="reserved", max_length=32)
+    created_at: datetime = Field(
+        default_factory=get_datetime_utc,
+        sa_type=DateTime(timezone=True),  # type: ignore
+    )
+
+
+class GenerationCapacity(SQLModel, table=True):
+    __tablename__ = "generation_capacity"
+
+    id: int = Field(default=1, primary_key=True)
+    active_count: int = Field(default=0)
 
 
 class LegalConcept(SQLModel, table=True):
