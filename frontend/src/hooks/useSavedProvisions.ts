@@ -56,6 +56,12 @@ function subscribe(listener: () => void) {
   }
 }
 
+export function clearSavedProvisions() {
+  localStorage.removeItem(storageKey)
+  cachedRaw = undefined
+  for (const listener of listeners) listener()
+}
+
 export function useSavedProvisions() {
   const { bookmarks, error } = useSyncExternalStore(
     subscribe,

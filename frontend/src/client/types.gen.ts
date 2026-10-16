@@ -331,6 +331,76 @@ export type CandidateRevisionPublic = {
 };
 
 /**
+ * ChatCapabilities
+ */
+export type ChatCapabilities = {
+    /**
+     * Conversations Enabled
+     */
+    conversations_enabled: boolean;
+    /**
+     * Explanations Enabled
+     */
+    explanations_enabled: boolean;
+    /**
+     * Supported Languages
+     */
+    supported_languages: Array<string>;
+    /**
+     * Question Max Length
+     */
+    question_max_length?: number;
+    /**
+     * Build Revision
+     */
+    build_revision: string;
+    /**
+     * Prompt Version
+     */
+    prompt_version: string;
+};
+
+/**
+ * ChatMetrics
+ */
+export type ChatMetrics = {
+    /**
+     * Window Hours
+     */
+    window_hours?: number;
+    /**
+     * Accepted Questions
+     */
+    accepted_questions: number;
+    /**
+     * Finished Answers
+     */
+    finished_answers: number;
+    /**
+     * Explained Answers
+     */
+    explained_answers: number;
+    /**
+     * Average Finish Ms
+     */
+    average_finish_ms: number | null;
+    /**
+     * Outcomes
+     */
+    outcomes: {
+        [key: string]: number;
+    };
+    /**
+     * Helpful Ratings
+     */
+    helpful_ratings: number;
+    /**
+     * Unhelpful Ratings
+     */
+    unhelpful_ratings: number;
+};
+
+/**
  * CitationOutcome
  */
 export type CitationOutcome = {
@@ -1089,6 +1159,10 @@ export type EvidenceItem = {
      */
     citation: string;
     /**
+     * Title
+     */
+    title?: string | null;
+    /**
      * Authoritative Text
      */
     authoritative_text: string;
@@ -1150,6 +1224,34 @@ export type EvidenceItem = {
  * ExtractionCandidateStatus
  */
 export type ExtractionCandidateStatus = 'provisional' | 'auto_approved' | 'needs_review' | 'needs_correction' | 'approved' | 'rejected' | 'materialized';
+
+/**
+ * FeedbackCreate
+ */
+export type FeedbackCreate = {
+    /**
+     * Helpful
+     */
+    helpful: boolean;
+};
+
+/**
+ * FeedbackPublic
+ */
+export type FeedbackPublic = {
+    /**
+     * Message Id
+     */
+    message_id: string;
+    /**
+     * Helpful
+     */
+    helpful: boolean;
+    /**
+     * Updated At
+     */
+    updated_at: string;
+};
 
 /**
  * HTTPValidationError
@@ -1739,6 +1841,10 @@ export type LegalSearchResult = {
      */
     heading?: string | null;
     /**
+     * Title
+     */
+    title?: string | null;
+    /**
      * Ancestor Headings
      */
     ancestor_headings: Array<string>;
@@ -1899,6 +2005,10 @@ export type MessagePublic = {
     evidence_snapshot: Array<{
         [key: string]: unknown;
     }> | null;
+    /**
+     * Helpful
+     */
+    helpful?: boolean | null;
     /**
      * Created At
      */
@@ -2198,6 +2308,10 @@ export type ProvisionReference = {
      * Heading
      */
     heading?: string | null;
+    /**
+     * Title
+     */
+    title?: string | null;
     /**
      * Citation
      */
@@ -5016,6 +5130,38 @@ export type legalReadCurrentProvisionResponses = {
 
 export type legalReadCurrentProvisionResponse = legalReadCurrentProvisionResponses[keyof legalReadCurrentProvisionResponses];
 
+export type conversationsReadChatCapabilitiesData = {
+    body?: never;
+    path?: never;
+    query?: never;
+    url: '/api/v1/conversations/capabilities';
+};
+
+export type conversationsReadChatCapabilitiesResponses = {
+    /**
+     * Successful Response
+     */
+    200: ChatCapabilities;
+};
+
+export type conversationsReadChatCapabilitiesResponse = conversationsReadChatCapabilitiesResponses[keyof conversationsReadChatCapabilitiesResponses];
+
+export type conversationsReadChatMetricsData = {
+    body?: never;
+    path?: never;
+    query?: never;
+    url: '/api/v1/conversations/metrics';
+};
+
+export type conversationsReadChatMetricsResponses = {
+    /**
+     * Successful Response
+     */
+    200: ChatMetrics;
+};
+
+export type conversationsReadChatMetricsResponse = conversationsReadChatMetricsResponses[keyof conversationsReadChatMetricsResponses];
+
 export type conversationsListConversationsData = {
     body?: never;
     path?: never;
@@ -5028,6 +5174,10 @@ export type conversationsListConversationsData = {
          * Limit
          */
         limit?: number;
+        /**
+         * Q
+         */
+        q?: string | null;
     };
     url: '/api/v1/conversations';
 };
@@ -5173,6 +5323,40 @@ export type conversationsRenameConversationResponses = {
 };
 
 export type conversationsRenameConversationResponse = conversationsRenameConversationResponses[keyof conversationsRenameConversationResponses];
+
+export type conversationsSubmitMessageFeedbackData = {
+    body: FeedbackCreate;
+    path: {
+        /**
+         * Conversation Id
+         */
+        conversation_id: string;
+        /**
+         * Message Id
+         */
+        message_id: string;
+    };
+    query?: never;
+    url: '/api/v1/conversations/{conversation_id}/messages/{message_id}/feedback';
+};
+
+export type conversationsSubmitMessageFeedbackErrors = {
+    /**
+     * Validation Error
+     */
+    422: HTTPValidationError;
+};
+
+export type conversationsSubmitMessageFeedbackError = conversationsSubmitMessageFeedbackErrors[keyof conversationsSubmitMessageFeedbackErrors];
+
+export type conversationsSubmitMessageFeedbackResponses = {
+    /**
+     * Successful Response
+     */
+    200: FeedbackPublic;
+};
+
+export type conversationsSubmitMessageFeedbackResponse = conversationsSubmitMessageFeedbackResponses[keyof conversationsSubmitMessageFeedbackResponses];
 
 export type conversationsClaimGuestConversationsData = {
     body?: never;

@@ -11,7 +11,14 @@ import {
   SheetDescription,
   SheetTitle,
 } from "@/components/ui/sheet"
-import { sourceUrl } from "@/lib/legal-provisions"
+import {
+  provisionTitle,
+  readableText,
+  sourceUrl,
+  statusLabel,
+} from "@/lib/legal-provisions"
+import { EditionNotice } from "./EditionNotice"
+import { SourceActions } from "./SourceActions"
 
 export function SourcePanel({
   open,
@@ -43,8 +50,8 @@ export function SourcePanel({
   if (desktop)
     return open ? (
       <aside
-        aria-label="Legal source inspector"
-        className="max-h-[calc(100svh-4rem)] overflow-y-auto border-l border-border bg-sidebar/70 px-6 py-8"
+        aria-label="Section details"
+        className="sticky top-16 max-h-[calc(100svh-4rem)] self-start overflow-y-auto border-l border-border bg-sidebar/70 px-6 py-6"
       >
         <div className="mb-5 flex justify-end">
           <CloseButton onClick={() => onOpenChange(false)} type="button" />
@@ -68,10 +75,10 @@ export function SourcePanel({
           opener.current?.focus()
         }}
       >
-        <SheetTitle className="sr-only">Legal source inspector</SheetTitle>
+        <SheetTitle className="sr-only">Section details</SheetTitle>
         <SheetDescription className="sr-only">
-          Stored wording, historical edition, citation, and original source
-          document.
+          The text of this section, where it comes from, and a link to the
+          original document.
         </SheetDescription>
         <SourcePanelContent provision={provision} />
       </SheetContent>
@@ -87,28 +94,26 @@ export function SourcePanelContent({
   return (
     <div className="grid gap-5">
       <div>
-        <p className="mb-2 text-xs font-bold uppercase text-primary">
-          Selected provision
-        </p>
-        <h2 className="font-legal text-2xl">{provision.citation}</h2>
+        <p className="mb-2 text-label text-primary">{provision.citation}</p>
+        <h2 className="font-display text-title-3">
+          {provisionTitle(provision)}
+        </h2>
       </div>
       <StatusBadge
         status={provision.legal_status === "current" ? "current" : "historical"}
-        label={
-          provision.legal_status === "historical"
-            ? "Historical source edition"
-            : provision.legal_status
-        }
+        label={statusLabel(provision.legal_status, provision.edition_label)}
       />
-      <p className="text-sm leading-6 text-muted-foreground">
-        {provision.edition_label}
-      </p>
+      <EditionNotice
+        label={provision.edition_label}
+        historical={provision.legal_status === "historical"}
+      />
+      <SourceActions source={provision} />
       <section>
         <h3 className="mb-3 text-xs font-bold uppercase text-muted-foreground">
-          Official source wording
+          What the Constitution says
         </h3>
         <p className="whitespace-pre-wrap font-legal text-sm leading-7">
-          {provision.authoritative_text}
+          {readableText(provision.authoritative_text)}
         </p>
       </section>
       <dl className="grid gap-3 text-sm">
@@ -128,13 +133,9 @@ export function SourcePanelContent({
           <dt className="text-muted-foreground">Location</dt>
           <dd>
             {provision.source_page_start
-              ? `PDF page ${provision.source_page_start}${provision.source_page_end && provision.source_page_end !== provision.source_page_start ? `–${provision.source_page_end}` : ""}`
+              ? `Page ${provision.source_page_start}${provision.source_page_end && provision.source_page_end !== provision.source_page_start ? `–${provision.source_page_end}` : ""}`
               : "Page not recorded"}
           </dd>
-        </div>
-        <div>
-          <dt className="text-muted-foreground">Release</dt>
-          <dd className="break-all">{provision.release_version}</dd>
         </div>
       </dl>
       <InlineAction asChild>
@@ -143,7 +144,7 @@ export function SourcePanelContent({
           target="_blank"
           rel="noopener noreferrer"
         >
-          View source document
+          See it in the original PDF
         </a>
       </InlineAction>
     </div>

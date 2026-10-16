@@ -1,6 +1,5 @@
 import { useNavigate, useSearch } from "@tanstack/react-router"
-import { AxiosError } from "axios"
-import { useState } from "react"
+import { useEffect, useRef, useState } from "react"
 import { ChatComposer } from "@/components/LawPadi/ChatComposer"
 import { ChatHome } from "@/components/LawPadi/ChatHome"
 import { ProvisionView } from "@/components/LawPadi/ProvisionView"
@@ -11,96 +10,182 @@ import {
   SkeletonBlock,
 } from "@/components/LawPadi/primitives"
 import { SourcePanel } from "@/components/LawPadi/SourcePanel"
-import { useConversations } from "@/hooks/useConversations"
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { useChatCapabilities } from "@/hooks/useChatCapabilities"
+import { useChatDraft } from "@/hooks/useChatDraft"
 import {
   legalError,
   useLegalRelease,
   useLegalSearch,
   useProvision,
 } from "@/hooks/useLegalCorpus"
+import { editionName } from "@/lib/legal-provisions"
 import { bestContainingSource } from "@/lib/source-ranking"
+import { EditionNotice } from "./EditionNotice"
 
 const suggestions = [
-  "Section 37",
-  "Section 33(2)(a)",
+  "Can police search my phone?",
+  "Section 35",
   "Freedom of expression",
-  "Presidential qualifications",
-  "Privacy",
+  "Who can run for president?",
+  "Owning land in another state",
 ]
 
 export function LawPadiHome() {
-  const conversations = useConversations()
-  if (conversations.isSuccess) return <ChatHome />
-  if (conversations.isPending)
-    return (
-      <div className="mx-auto max-w-4xl px-4 py-12">
-        <SkeletonBlock />
-      </div>
-    )
-  const disabled =
-    conversations.error instanceof AxiosError &&
-    conversations.error.response?.status === 503
-  return <SearchHome explanationDisabled={disabled} />
-}
-
-function SearchHome({ explanationDisabled }: { explanationDisabled: boolean }) {
   const search = useSearch({ from: "/_layout/" })
   const navigate = useNavigate({ from: "/" })
-  const [question, setQuestion] = useState("")
+  const capabilities = useChatCapabilities()
+  const intent =
+    search.intent ?? (capabilities.data?.conversations_enabled ? "ask" : "find")
+  return (
+    <div>
+      <Tabs
+        value={intent}
+        onValueChange={(value) =>
+          void navigate({
+            to: "/",
+            search: {
+              ...search,
+              intent: value as "ask" | "find",
+              q: undefined,
+              selected: undefined,
+            },
+          })
+        }
+        className="block"
+      >
+        <div className="mx-auto w-full max-w-4xl px-4 pt-5 sm:px-8 lg:px-12">
+          <TabsList aria-label="Choose a task" className="sq-md h-11">
+            <TabsTrigger value="ask" className="sq-sm min-h-9 px-4">
+              Ask a question
+            </TabsTrigger>
+            <TabsTrigger value="find" className="sq-sm min-h-9 px-4">
+              Find a section
+            </TabsTrigger>
+          </TabsList>
+        </div>
+        <TabsContent value={intent}>
+          {capabilities.isPending ? (
+            <div className="mx-auto max-w-4xl px-4 py-8" role="status">
+              <p className="mb-4 text-body text-muted-foreground">
+                Checking available features…
+              </p>
+              <SkeletonBlock />
+            </div>
+          ) : intent === "ask" && capabilities.data?.conversations_enabled ? (
+            <ChatHome
+              key={
+                search.c ??
+                `${search.fresh ?? "new"}:${search.q ?? ""}:${search.selected ?? ""}:${search.release ?? ""}`
+              }
+            />
+          ) : (
+            <SearchHome
+              key={search.fresh ?? "find"}
+              availabilityError={capabilities.isError}
+              explanationsEnabled={
+                capabilities.data?.explanations_enabled === true
+              }
+              retryAvailability={() => void capabilities.refetch()}
+            />
+          )}
+        </TabsContent>
+      </Tabs>
+    </div>
+  )
+}
+
+function SearchHome({
+  availabilityError,
+  explanationsEnabled,
+  retryAvailability,
+}: {
+  availabilityError: boolean
+  explanationsEnabled: boolean
+  retryAvailability: () => void
+}) {
+  const search = useSearch({ from: "/_layout/" })
+  const navigate = useNavigate({ from: "/" })
+  const [question, setQuestion] = useChatDraft("find")
+  const inputRef = useRef<HTMLTextAreaElement | null>(null)
   const [attempt, setAttempt] = useState(0)
   const release = useLegalRelease()
+  useEffect(() => {
+    if (search.q) setQuestion(search.q)
+  }, [search.q, setQuestion])
   const submit = (query = question, mode: "auto" | "semantic" = "auto") => {
-    if (!query.trim()) return
-    setQuestion("")
+    if (!query.trim() || query.length > 2000) return
     setAttempt((current) => current + 1)
-    void navigate({ to: "/", search: { q: query.trim(), mode } })
+    void navigate({
+      to: "/",
+      search: { q: query.trim(), mode, intent: "find" },
+    })
   }
   return (
     <section className="min-w-0">
-      <div className="mx-auto max-w-4xl px-4 py-8 sm:px-8 lg:px-12 lg:py-12">
-        <p className="mb-5 text-xs font-bold uppercase text-primary">
-          The law, made understandable
-        </p>
-        <h1 className="font-legal text-[2.35rem] leading-[1.03] sm:text-[3.35rem]">
-          Explore Nigeria&apos;s Constitution.
-        </h1>
-        <p className="mt-4 text-sm leading-7 text-muted-foreground">
-          Find an exact section, subsection or paragraph, or search a topic.
-          Stored legal wording is shown in English.
-        </p>
-        <p
-          className="mt-3 sq-md border border-amber-500/40 bg-amber-500/5 p-3 text-sm"
-          role="status"
-        >
-          {explanationDisabled
-            ? "AI explanations are not enabled in this deployment. Questions currently show published source wording only."
-            : "AI explanations are temporarily unavailable. Questions currently show published source wording only."}
-        </p>
-        <p className="mt-3 text-xs font-semibold text-muted-foreground">
-          {release.data?.edition_label ?? "Published source edition"}
-        </p>
+      <div className="mx-auto max-w-4xl px-4 py-6 sm:px-8 lg:px-12">
+        {!search.q && (
+          <>
+            <p className="mb-4 text-overline uppercase text-primary">
+              The law, made easy
+            </p>
+            <h1 className="font-display text-title-1 sm:text-display">
+              Explore Nigeria&apos;s Constitution.
+            </h1>
+            <p className="mt-4 max-w-xl text-body-lg text-muted-foreground">
+              Find a section by number or describe the issue in your own words.
+            </p>
+          </>
+        )}
+        {(availabilityError || !explanationsEnabled) && (
+          <div
+            className="mt-4 sq-md border border-border bg-secondary p-3 text-body"
+            role="status"
+          >
+            {availabilityError
+              ? "We couldn't check whether plain-English answers are available. You can still find and read sections."
+              : "Plain-English answers are paused. You can still find and read sections."}
+            <InlineAction
+              className="ml-2"
+              type="button"
+              onClick={retryAvailability}
+            >
+              Check again
+            </InlineAction>
+          </div>
+        )}
         <ChatComposer
-          className="mt-8"
+          autoFocus={Boolean(search.fresh)}
+          className="mt-5"
           value={question}
+          inputRef={inputRef}
           onChange={setQuestion}
           onSubmit={() => submit()}
+          compact={Boolean(search.q)}
+          contextLabel={editionName(release.data?.edition_label)}
+          placeholder="Find a topic or a section, e.g. Section 37…"
         />
-        <fieldset className="mt-5 flex flex-wrap gap-2">
-          <legend className="sr-only">Suggested searches</legend>
-          {suggestions.map((prompt) => (
-            <PromptSuggestion
-              key={prompt}
-              onClick={() => setQuestion(prompt)}
-              type="button"
-            >
-              {prompt}
-            </PromptSuggestion>
-          ))}
-        </fieldset>
+        {!search.q && (
+          <fieldset className="mt-4 flex flex-wrap gap-2">
+            <legend className="sr-only">Suggested searches</legend>
+            {suggestions.map((prompt) => (
+              <PromptSuggestion
+                key={prompt}
+                onClick={() => {
+                  setQuestion(prompt)
+                  inputRef.current?.focus()
+                }}
+                type="button"
+              >
+                {prompt}
+              </PromptSuggestion>
+            ))}
+          </fieldset>
+        )}
         {!search.q && release.isError && (
-          <div className="mt-8">
+          <div className="mt-6">
             <ErrorState
-              title="Corpus unavailable"
+              title="Couldn't load the Constitution"
               action={
                 <InlineAction type="button" onClick={() => release.refetch()}>
                   Try again
@@ -112,11 +197,10 @@ function SearchHome({ explanationDisabled }: { explanationDisabled: boolean }) {
           </div>
         )}
         {!search.q && !release.isError && (
-          <p className="mt-10 border-t border-border pt-7 text-sm text-muted-foreground">
-            Start with a reference such as Section 33(2)(a), or a topic such as
-            privacy. This edition is historical; its publication does not
-            certify current consolidated law.
-          </p>
+          <EditionNotice
+            label={release.data?.edition_label}
+            className="mt-6 border-t border-border pt-5"
+          />
         )}
       </div>
       {search.q && (
@@ -143,7 +227,22 @@ function SearchResults({
   attempt: number
   onRelated: (query: string) => void
 }) {
+  const resultsRef = useRef<HTMLElement | null>(null)
   const search = useLegalSearch(query, mode, attempt)
+  useEffect(() => {
+    if (search.isPending) return
+    const frame = requestAnimationFrame(() => {
+      const active = document.activeElement
+      if (
+        active instanceof HTMLTextAreaElement &&
+        active.value.trim() !== query
+      )
+        return
+      resultsRef.current?.focus({ preventScroll: true })
+      resultsRef.current?.scrollIntoView({ block: "start" })
+    })
+    return () => cancelAnimationFrame(frame)
+  }, [search.isPending, query])
   const [selectedPath, setSelectedPath] = useState<string | null>(null)
   const [sourceOpen, setSourceOpen] = useState(false)
   const exact =
@@ -171,14 +270,19 @@ function SearchResults({
           : "grid"
       }
     >
-      <div className="mx-auto grid w-full max-w-4xl gap-6 px-4 pb-12 sm:px-8 lg:px-12">
-        <p className="border-t border-border pt-7 text-sm font-semibold">
-          Search: {query}
+      <section
+        ref={resultsRef}
+        tabIndex={-1}
+        aria-label="Search results"
+        className="mx-auto grid w-full max-w-4xl scroll-mt-20 gap-6 px-4 pb-12 outline-none sm:px-8 lg:px-12"
+      >
+        <p className="border-t border-border pt-7 text-body font-semibold">
+          Results for &ldquo;{query}&rdquo;
         </p>
         {search.isPending ? (
           <div role="status">
             <p className="mb-4 text-sm text-muted-foreground">
-              Searching the published source…
+              Searching the Constitution…
             </p>
             <SkeletonBlock />
           </div>
@@ -205,31 +309,28 @@ function SearchResults({
                 title={
                   search.data.outcome === "unsupported_reference"
                     ? "Reference not supported"
-                    : "No matching provision found"
+                    : "No matching section found"
                 }
               >
-                Try Section 33(2)(a), another section number, or a broader
-                topic.
+                Try different words, a broader topic, or a section number like
+                Section 35.
               </ErrorState>
             ) : (
               <>
                 {search.data.outcome === "matches" && selected && (
                   <div className="sq-md border border-primary/30 bg-primary/5 p-4">
-                    <h2 className="font-legal text-xl">
+                    <h2 className="font-display text-xl">
                       {selected.canonical_path === bestMatch?.canonical_path
-                        ? "Best source answer"
-                        : "Selected source answer"}
+                        ? "Best match"
+                        : "Selected section"}
                     </h2>
-                    <p className="mt-1 text-sm text-muted-foreground">
-                      {selected.citation} ·{" "}
+                    <p className="mt-1 text-body text-muted-foreground">
+                      {selected.citation}
+                      {selected.title ? ` · ${selected.title}` : ""}
                       {selected.canonical_path === bestMatch?.canonical_path &&
                       bestMatch?.canonical_path !== rankedFirst?.canonical_path
-                        ? `Includes the highest-ranked passage (${rankedFirst?.citation}) and its section context.`
-                        : selected.canonical_path ===
-                            rankedFirst?.canonical_path
-                          ? "Highest-ranked source passage."
-                          : "Selected source passage."}{" "}
-                      Retrieval rank is not a legal-confidence percentage.
+                        ? `. Shown in full so you can read ${rankedFirst?.citation} in context.`
+                        : ""}
                     </p>
                   </div>
                 )}
@@ -237,8 +338,8 @@ function SearchResults({
                   <>
                     {detail.isError && (
                       <p role="alert" className="text-sm">
-                        {legalError(detail.error)} Parent context could not be
-                        loaded.
+                        {legalError(detail.error)} The surrounding section
+                        couldn&apos;t be loaded.
                       </p>
                     )}
                     <ProvisionView
@@ -251,10 +352,10 @@ function SearchResults({
                 )}
                 {search.data.outcome !== "exact" && (
                   <section aria-label="Search matches">
-                    <h2 className="mb-4 font-legal text-xl">
+                    <h2 className="mb-4 font-display text-xl">
                       {search.data.outcome === "ambiguous"
-                        ? "Choose the source identity"
-                        : "Other source matches"}
+                        ? "Which one do you mean?"
+                        : "Other matching sections"}
                     </h2>
                     <div className="grid gap-3 sm:grid-cols-2">
                       {search.data.data
@@ -280,17 +381,17 @@ function SearchResults({
                               {match.citation}
                             </span>
                             <span className="mt-2 block text-sm font-semibold">
-                              {match.heading || match.citation}
+                              {match.title || match.heading || match.citation}
                             </span>
                             <span className="mt-2 block text-xs text-muted-foreground">
-                              {match.ancestors
-                                .map((a) => a.citation)
-                                .join(" · ")}{" "}
-                              · PDF page{" "}
-                              {match.source_page_start ?? "not recorded"}
-                            </span>
-                            <span className="mt-2 block text-xs text-muted-foreground">
-                              {match.legal_status} · {match.edition_label}
+                              {[
+                                ...match.ancestors.map((a) => a.citation),
+                                match.source_page_start
+                                  ? `page ${match.source_page_start}`
+                                  : null,
+                              ]
+                                .filter(Boolean)
+                                .join(" · ")}
                             </span>
                           </button>
                         ))}
@@ -301,7 +402,7 @@ function SearchResults({
             )}
           </>
         )}
-      </div>
+      </section>
       {provision && (
         <SourcePanel
           open={sourceOpen}

@@ -22,6 +22,7 @@ import {
 } from "@/components/ui/tooltip"
 import { cn } from "@/lib/utils"
 import { useIsMobile } from "@/hooks/useMobile"
+import { takeComposerFocusAfterDrawer } from "@/lib/chat-navigation"
 
 const SIDEBAR_COOKIE_NAME = "sidebar_state"
 const SIDEBAR_COOKIE_MAX_AGE = 60 * 60 * 24 * 7
@@ -194,10 +195,15 @@ function Sidebar({
     return (
       <Sheet open={openMobile} onOpenChange={setOpenMobile} {...props}>
         <SheetContent
+          onCloseAutoFocus={(event) => {
+            if (!takeComposerFocusAfterDrawer()) return
+            event.preventDefault()
+            requestAnimationFrame(() => document.querySelector<HTMLTextAreaElement>("[data-chat-composer]")?.focus({ preventScroll: true }))
+          }}
           data-sidebar="sidebar"
           data-slot="sidebar"
           data-mobile="true"
-          className="bg-sidebar text-sidebar-foreground w-(--sidebar-width) p-0 [&>button]:hidden"
+          className="bg-sidebar text-sidebar-foreground w-(--sidebar-width) p-0 [&>button]:top-2 [&>button]:right-2 [&>button]:grid [&>button]:size-11 [&>button]:place-items-center"
           style={
             {
               "--sidebar-width": SIDEBAR_WIDTH_MOBILE,

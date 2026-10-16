@@ -37,7 +37,7 @@ const answer = {
   outcome: "answered",
   blocks: [
     {
-      text: "The stored wording protects privacy in homes and communications.",
+      text: "The Constitution protects privacy in homes and communications.",
       evidence_ids: ["E1"],
       quotation: null,
     },
@@ -45,7 +45,7 @@ const answer = {
   missing_facts: [],
   citation_outcomes: [outcome],
   evidence: [evidence],
-  notice: "This is an AI explanation of a historical source edition.",
+  notice: null,
 }
 const conversation = {
   id: conversationId,
@@ -58,10 +58,23 @@ const conversation = {
 
 test.use({ storageState: { cookies: [], origins: [] } })
 
-async function mockChat(page: Page, deliveredAnswer = answer) {
+async function mockChat(
+  page: Page,
+  deliveredAnswer = answer,
+  options: {
+    acceptance?: Promise<void>
+    events?: Promise<void>
+    failedSubmissions?: number
+    historyFailures?: number
+    interruptStream?: boolean
+  } = {},
+) {
   let created = false
   let submitted = false
   let completed = false
+  let createCount = 0
+  let failureCount = options.failedSubmissions ?? 0
+  let historyFailures = options.historyFailures ?? 0
   const submissions: Array<{
     question: string
     idempotency_key: string
@@ -85,7 +98,19 @@ async function mockChat(page: Page, deliveredAnswer = answer) {
   await page.route("**/api/v1/conversations**", async (route) => {
     const request = route.request()
     const path = new URL(request.url()).pathname
+    if (path.endsWith("/capabilities"))
+      return route.fulfill({
+        json: {
+          conversations_enabled: true,
+          explanations_enabled: true,
+          supported_languages: ["English"],
+          question_max_length: 2000,
+          build_revision: "test",
+          prompt_version: "constitution-english-v8",
+        },
+      })
     if (path.endsWith(`/conversations/${conversationId}/events`)) {
+      if (options.events) await options.events
       expect(new URL(request.url()).searchParams.get("run_id")).toBe(runId)
       completed = true
       const events = [
@@ -94,7 +119,15 @@ async function mockChat(page: Page, deliveredAnswer = answer) {
           event: "retrieval.complete",
           data: { evidence: [evidence], citation_outcomes: [outcome] },
         },
-        { id: 2, event: "answer.complete", data: { answer: deliveredAnswer } },
+        ...(options.interruptStream
+          ? []
+          : [
+              {
+                id: 2,
+                event: "answer.complete",
+                data: { answer: deliveredAnswer },
+              },
+            ]),
       ]
       return route.fulfill({
         contentType: "text/event-stream",
@@ -110,8 +143,15 @@ async function mockChat(page: Page, deliveredAnswer = answer) {
       path.endsWith(`/conversations/${conversationId}/messages`) &&
       request.method() === "POST"
     ) {
-      submitted = true
       submissions.push(request.postDataJSON())
+      if (failureCount-- > 0)
+        return route.fulfill({
+          status: 503,
+          json: { detail: "Explanations are temporarily unavailable" },
+        })
+      if (options.acceptance) await options.acceptance
+      submitted = true
+      completed = false
       return route.fulfill({
         status: 202,
         json: {
@@ -158,18 +198,38 @@ async function mockChat(page: Page, deliveredAnswer = answer) {
     }
     if (path.endsWith("/conversations") && request.method() === "POST") {
       created = true
+      createCount += 1
       return route.fulfill({ status: 201, json: conversation })
     }
-    if (path.endsWith("/conversations") && request.method() === "GET")
+    if (path.endsWith("/conversations") && request.method() === "GET") {
+      if (historyFailures-- > 0)
+        return route.fulfill({
+          status: 503,
+          json: { detail: "History unavailable" },
+        })
       return route.fulfill({
         json: {
           data: created ? [conversation] : [],
           count: created ? 1 : 0,
         },
       })
+    }
+    if (path.endsWith("/feedback"))
+      return route.fulfill({
+        json: {
+          message_id: "88888888-8888-4888-8888-888888888888",
+          helpful: request.postDataJSON().helpful,
+          updated_at: "2026-10-13T12:00:00Z",
+        },
+      })
     return route.fulfill({ status: 404, json: { detail: "Not found" } })
   })
-  return { submissions }
+  return {
+    submissions,
+    get createCount() {
+      return createCount
+    },
+  }
 }
 
 for (const mobile of [false, true]) {
@@ -184,43 +244,48 @@ for (const mobile of [false, true]) {
     await expect(
       page.getByRole("heading", { name: "Ask about Nigeria's Constitution." }),
     ).toBeVisible()
-    await page
-      .getByRole("textbox", { name: "Your constitutional question" })
-      .fill(question)
+    await page.getByRole("textbox", { name: "Your question" }).fill(question)
     await page.getByRole("button", { name: "Send question" }).click()
     await expect(
-      page.getByRole("region", { name: "AI explanation" }),
+      page.getByRole("region", { name: "Answer", exact: true }),
     ).toContainText("protects privacy")
-    const explanation = page.getByRole("region", { name: "AI explanation" })
+    const explanation = page.getByRole("region", {
+      name: "Answer",
+      exact: true,
+    })
+    await expect(explanation).not.toContainText(/\bAI\b|stored wording/i)
+    await expect(explanation).toContainText(
+      "This is the 1999 Constitution as published in 2004.",
+    )
     const answerTop = await explanation
-      .getByText(/stored wording protects privacy/)
+      .getByText(/Constitution protects privacy/)
       .evaluate((element) => element.getBoundingClientRect().top)
     const evidenceTop = await explanation
-      .getByRole("heading", { name: "Stored source wording" })
+      .getByRole("heading", { name: "Sections used" })
       .evaluate((element) => element.getBoundingClientRect().top)
     expect(answerTop).toBeLessThan(evidenceTop)
     expect(mock.submissions).toHaveLength(1)
     expect(mock.submissions[0].idempotency_key).toBeTruthy()
 
     await page
-      .getByRole("region", { name: "AI explanation" })
+      .getByRole("region", { name: "Answer", exact: true })
       .getByRole("button", { name: "Section 37", exact: true })
       .click()
     if (mobile)
       await expect(
-        page.getByRole("dialog", { name: "Legal source inspector" }),
+        page.getByRole("dialog", { name: "Section details" }),
       ).toContainText(evidence.authoritative_text)
     else
       await expect(
-        page.getByRole("complementary", { name: "Legal source inspector" }),
+        page.getByRole("complementary", { name: "Section details" }),
       ).toContainText(evidence.authoritative_text)
     await expect(
-      page.getByRole("link", { name: "Open provision" }),
+      page.getByRole("link", { name: "Open full section" }),
     ).toHaveAttribute(
       "href",
       `/constitution/${evidence.canonical_path}?release=${releaseVersion}`,
     )
-    await page.getByRole("button", { name: "Explain this identity" }).click()
+    await page.getByRole("button", { name: "Explain this section" }).click()
     await expect.poll(() => mock.submissions.length).toBe(2)
     expect(mock.submissions[1]).toMatchObject({
       question: "Section 37",
@@ -228,7 +293,7 @@ for (const mobile of [false, true]) {
     })
     await page.reload()
     await expect(
-      page.getByRole("region", { name: "AI explanation" }),
+      page.getByRole("region", { name: "Answer", exact: true }),
     ).toContainText("protects privacy")
     await expect(
       page.getByText(question, { exact: true }).first(),
@@ -260,20 +325,57 @@ test("A withheld topic explanation leads with complete parent source wording", a
     blocks: [],
     citation_outcomes: [],
     evidence: [child, parent],
-    notice:
-      "The generated explanation could not be validated. The source wording is available.",
+    notice: "We couldn't write an explanation.",
   })
   await page.goto("/")
-  await page
-    .getByRole("textbox", { name: "Your constitutional question" })
-    .fill(question)
+  await page.getByRole("textbox", { name: "Your question" }).fill(question)
   await page.getByRole("button", { name: "Send question" }).click()
-  const region = page.getByRole("region", { name: "AI explanation" })
-  await expect(region).toContainText(
-    "Best published source wording · Section 131",
+  const region = page.getByRole("region", { name: "Answer", exact: true })
+  await expect(region.getByRole("status")).toContainText(
+    "confident matches the Constitution's text",
   )
+  await expect(region).toContainText("Section 131")
   await expect(region).toContainText("citizen of Nigeria by birth")
-  await expect(region).toContainText("could not be validated")
+  await expect(
+    region.getByRole("button", { name: "More about this section" }),
+  ).toBeVisible()
+})
+
+test("An answer leads with plain English, lists items, and offers follow-ups", async ({
+  page,
+}) => {
+  const followUp = "What can I do if my privacy is violated?"
+  const mock = await mockChat(page, {
+    ...answer,
+    blocks: [
+      {
+        text: "Generally, no. The Constitution protects your privacy.",
+        evidence_ids: ["E1"],
+        quotation: null,
+      },
+      {
+        text: "It covers:\n- your home\n- your correspondence\n- your phone conversations",
+        evidence_ids: ["E1"],
+        quotation: null,
+      },
+    ],
+    missing_facts: ["Whether a court order allowed the search"],
+    follow_up_questions: [followUp],
+  })
+  await page.goto("/")
+  await page.getByRole("textbox", { name: "Your question" }).fill(question)
+  await page.getByRole("button", { name: "Send question" }).click()
+  const region = page.getByRole("region", { name: "Answer", exact: true })
+  await expect(region.getByRole("listitem")).toHaveText([
+    "your home",
+    "your correspondence",
+    "your phone conversations",
+    "Whether a court order allowed the search",
+  ])
+  await expect(region).toContainText("What could change this for you")
+  await region.getByRole("button", { name: followUp }).click()
+  await expect.poll(() => mock.submissions.length).toBe(2)
+  expect(mock.submissions[1].question).toBe(followUp)
 })
 
 test("Logout removes account conversation data from the next guest view", async ({
@@ -291,6 +393,17 @@ test("Logout removes account conversation data from the next guest view", async 
     }),
   )
   await page.route("**/api/v1/conversations**", (route) => {
+    if (new URL(route.request().url()).pathname.endsWith("/capabilities"))
+      return route.fulfill({
+        json: {
+          conversations_enabled: true,
+          explanations_enabled: true,
+          supported_languages: ["English"],
+          question_max_length: 2000,
+          build_revision: "test",
+          prompt_version: "constitution-english-v8",
+        },
+      })
     const authenticated =
       route.request().headers().authorization === "Bearer account-token"
     return route.fulfill({
@@ -314,4 +427,204 @@ test("Logout removes account conversation data from the next guest view", async 
   await page.goto("/")
   await expect(page.getByText("Private account conversation")).toHaveCount(0)
   await expect(page.getByText("Your chats will appear here.")).toBeVisible()
+})
+
+async function sendQuestion(page: Page) {
+  await page.getByRole("textbox", { name: "Your question" }).fill(question)
+  await page.getByRole("button", { name: "Send question" }).click()
+}
+
+async function newConversation(page: Page) {
+  const menu = page.getByRole("button", { name: "Open Sidebar", exact: true })
+  if ((page.viewportSize()?.width ?? 1440) < 768) await menu.click()
+  await page
+    .getByRole("button", { name: "New conversation", exact: true })
+    .first()
+    .click()
+}
+
+for (const mobile of [false, true]) {
+  test(`${mobile ? "Mobile" : "Desktop"}: New clears a completed answer and source, closes navigation, and focuses the editor`, async ({
+    page,
+  }) => {
+    await page.setViewportSize(
+      mobile ? { width: 390, height: 844 } : { width: 1440, height: 1000 },
+    )
+    await mockChat(page)
+    await page.goto("/")
+    await sendQuestion(page)
+    await expect(
+      page.getByRole("region", { name: "Answer", exact: true }),
+    ).toBeVisible()
+    await expect(
+      page.getByText(answer.blocks[0].text, { exact: true }),
+    ).toBeInViewport()
+    await page.getByRole("button", { name: "Section 37", exact: true }).click()
+    if (mobile)
+      await page.getByRole("button", { name: "Close", exact: true }).click()
+    await newConversation(page)
+    await expect(page).not.toHaveURL(/(?:[?&])c=/)
+    await expect(
+      page.getByRole("region", { name: "Answer", exact: true }),
+    ).toHaveCount(0)
+    await expect(
+      page.getByRole("complementary", { name: "Section details" }),
+    ).toHaveCount(0)
+    await expect(
+      page.getByRole("dialog", { name: "Sidebar" }),
+    ).not.toBeVisible()
+    const editor = page.getByRole("textbox", { name: "Your question" })
+    await expect(editor).toBeEnabled()
+    await expect(editor).toBeEmpty()
+    await expect(editor).toBeFocused()
+  })
+}
+
+test("New detaches an active answer without disabling the new editor", async ({
+  page,
+}) => {
+  let releaseEvents!: () => void
+  const events = new Promise<void>((resolve) => {
+    releaseEvents = resolve
+  })
+  await mockChat(page, answer, { events })
+  await page.goto("/")
+  await sendQuestion(page)
+  await expect(
+    page.getByRole("button", { name: "Stop answering" }),
+  ).toBeVisible()
+  await newConversation(page)
+  await expect(
+    page.getByRole("textbox", { name: "Your question" }),
+  ).toBeEnabled()
+  releaseEvents()
+  await expect(
+    page.getByRole("region", { name: "Answer", exact: true }),
+  ).toHaveCount(0)
+  await expect(
+    page.getByRole("button", { name: "Stop answering" }),
+  ).toHaveCount(0)
+})
+
+test("A late acceptance cannot navigate away from New", async ({ page }) => {
+  let releaseAcceptance!: () => void
+  const acceptance = new Promise<void>((resolve) => {
+    releaseAcceptance = resolve
+  })
+  const mock = await mockChat(page, answer, { acceptance })
+  await page.goto("/")
+  await sendQuestion(page)
+  await expect.poll(() => mock.submissions.length).toBe(1)
+  await newConversation(page)
+  const freshUrl = page.url()
+  releaseAcceptance()
+  await expect(
+    page.getByRole("textbox", { name: "Your question" }),
+  ).toBeEnabled()
+  await expect(page).toHaveURL(freshUrl)
+  await expect(
+    page.getByRole("region", { name: "Answer", exact: true }),
+  ).toHaveCount(0)
+})
+
+test("Retry preserves the question, created conversation and idempotency key", async ({
+  page,
+}) => {
+  const mock = await mockChat(page, answer, { failedSubmissions: 1 })
+  await page.goto("/")
+  await sendQuestion(page)
+  await expect(page.getByRole("alert")).toContainText("temporarily unavailable")
+  await expect(
+    page.getByRole("textbox", { name: "Your question" }),
+  ).toHaveValue(question)
+  await page.getByRole("button", { name: "Retry question" }).click()
+  await expect(
+    page.getByRole("region", { name: "Answer", exact: true }),
+  ).toBeVisible()
+  expect(mock.createCount).toBe(1)
+  expect(mock.submissions).toHaveLength(2)
+  expect(mock.submissions[0].idempotency_key).toBe(
+    mock.submissions[1].idempotency_key,
+  )
+})
+
+test("Persisted completion recovers when the terminal SSE event is lost", async ({
+  page,
+}) => {
+  await mockChat(page, answer, { interruptStream: true })
+  await page.goto("/")
+  await sendQuestion(page)
+  await expect(
+    page.getByRole("region", { name: "Answer", exact: true }),
+  ).toContainText("protects privacy")
+  await expect(
+    page.getByRole("textbox", { name: "Your question" }),
+  ).toBeEnabled()
+})
+
+test("A history failure does not change Ask into Find", async ({ page }) => {
+  await mockChat(page, answer, { historyFailures: 2 })
+  await page.goto("/")
+  await expect(
+    page.getByRole("heading", { name: "Ask about Nigeria's Constitution." }),
+  ).toBeVisible()
+  await expect(page.getByRole("alert")).toContainText("History couldn't load")
+  await expect(
+    page.getByRole("textbox", { name: "Your question" }),
+  ).toBeEnabled()
+})
+
+test("Draft survives reload and New clears it even when already on an empty chat", async ({
+  page,
+}) => {
+  await mockChat(page)
+  await page.goto("/")
+  await page
+    .getByRole("textbox", { name: "Your question" })
+    .fill("My unfinished question")
+  await page.reload()
+  await expect(
+    page.getByRole("textbox", { name: "Your question" }),
+  ).toHaveValue("My unfinished question")
+  await newConversation(page)
+  await expect(page.getByRole("textbox", { name: "Your question" })).toBeEmpty()
+  const first = page.url()
+  await page
+    .getByRole("textbox", { name: "Your question" })
+    .fill("Another draft")
+  await newConversation(page)
+  await expect(page.getByRole("textbox", { name: "Your question" })).toBeEmpty()
+  expect(page.url()).not.toBe(first)
+})
+
+test("Enter sends, Shift+Enter creates a line, and IME composition does not submit", async ({
+  page,
+}) => {
+  const mock = await mockChat(page)
+  await page.goto("/")
+  const editor = page.getByRole("textbox", { name: "Your question" })
+  await editor.fill(question)
+  await editor.dispatchEvent("keydown", { key: "Enter", isComposing: true })
+  expect(mock.submissions).toHaveLength(0)
+  await editor.press("Shift+Enter")
+  await expect(editor).toHaveValue(`${question}\n`)
+  await editor.press("Enter")
+  await expect.poll(() => mock.submissions.length).toBe(1)
+})
+
+test("A fallback keeps the edition caveat and a source can be saved inside chat", async ({
+  page,
+}) => {
+  await mockChat(page, { ...answer, outcome: "validation_failed", blocks: [] })
+  await page.goto("/")
+  await sendQuestion(page)
+  const region = page.getByRole("region", { name: "Answer", exact: true })
+  await expect(region).toContainText("Later amendments aren't included yet")
+  await region.getByRole("button", { name: "More about this section" }).click()
+  await page.getByRole("button", { name: "Save source", exact: true }).click()
+  await expect(
+    page.getByRole("button", { name: "Remove saved source" }),
+  ).toHaveAttribute("aria-pressed", "true")
+  await page.reload()
+  await expect(region).toContainText("Later amendments aren't included yet")
 })

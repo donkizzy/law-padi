@@ -11,6 +11,9 @@ import {
   SheetDescription,
   SheetTitle,
 } from "@/components/ui/sheet"
+import { readableText, statusLabel } from "@/lib/legal-provisions"
+import { EditionNotice } from "./EditionNotice"
+import { SourceActions } from "./SourceActions"
 
 type Props = {
   evidence: EvidenceItem | null
@@ -35,70 +38,64 @@ function SourceContent({
   return (
     <div className="grid gap-5">
       <div>
-        <p className="mb-2 text-xs font-bold uppercase text-primary">
-          Source context
-        </p>
-        <h2 className="font-legal text-2xl">{evidence.citation}</h2>
-        <p className="mt-2 text-sm text-muted-foreground">
-          {evidence.ancestor_citations.join(" · ")}
-        </p>
+        <p className="mb-2 text-label text-primary">{evidence.citation}</p>
+        <h2 className="font-display text-title-3">
+          {evidence.title ?? evidence.citation}
+        </h2>
+        {evidence.ancestor_citations.length > 0 && (
+          <p className="mt-2 text-label font-normal text-muted-foreground">
+            {evidence.ancestor_citations.join(" · ")}
+          </p>
+        )}
       </div>
-      <StatusBadge
-        status={evidence.legal_status === "current" ? "current" : "historical"}
-        label={
-          evidence.legal_status === "historical"
-            ? "Historical source edition"
-            : evidence.legal_status
-        }
-      />
-      <p className="text-sm text-muted-foreground">{evidence.edition_label}</p>
+      <div className="grid gap-2">
+        <StatusBadge
+          status={
+            evidence.legal_status === "current" ? "current" : "historical"
+          }
+          label={statusLabel(evidence.legal_status, evidence.edition_label)}
+        />
+        <EditionNotice
+          label={evidence.edition_label}
+          historical={evidence.legal_status === "historical"}
+        />
+      </div>
       <section>
-        <h3 className="mb-3 text-xs font-bold uppercase text-muted-foreground">
-          Stored English wording
+        <h3 className="mb-3 text-overline uppercase text-muted-foreground">
+          What the Constitution says
         </h3>
-        <p className="whitespace-pre-wrap font-legal text-sm leading-7">
-          {evidence.authoritative_text}
+        <p className="whitespace-pre-wrap font-legal text-statute-sm">
+          {readableText(evidence.authoritative_text)}
         </p>
       </section>
-      <dl className="grid gap-2 text-sm">
-        <div>
-          <dt className="text-muted-foreground">Document</dt>
-          <dd>{evidence.source_title}</dd>
-        </div>
-        <div>
-          <dt className="text-muted-foreground">Authority</dt>
-          <dd>{evidence.source_authority}</dd>
-        </div>
-        <div>
-          <dt className="text-muted-foreground">Page</dt>
-          <dd>{evidence.source_page_start ?? "Not recorded"}</dd>
-        </div>
-        <div>
-          <dt className="text-muted-foreground">Release</dt>
-          <dd>{evidence.release_version}</dd>
-        </div>
-      </dl>
+      <p className="text-label font-normal text-muted-foreground">
+        {evidence.source_title} · {evidence.source_authority}
+        {evidence.source_page_start
+          ? ` · page ${evidence.source_page_start}`
+          : ""}
+      </p>
       <div className="flex flex-wrap gap-3">
         <InlineAction
           disabled={explainDisabled}
           onClick={() => onExplain(evidence)}
           type="button"
         >
-          Explain this identity
-        </InlineAction>
-        <InlineAction asChild>
-          <a href={source.href} target="_blank" rel="noopener noreferrer">
-            View source document
-          </a>
+          Explain this section
         </InlineAction>
         <InlineAction asChild>
           <a
             href={`/constitution/${encodeURIComponent(evidence.canonical_path)}?release=${encodeURIComponent(evidence.release_version)}`}
           >
-            Open provision
+            Open full section
+          </a>
+        </InlineAction>
+        <InlineAction asChild>
+          <a href={source.href} target="_blank" rel="noopener noreferrer">
+            See it in the original PDF
           </a>
         </InlineAction>
       </div>
+      <SourceActions source={evidence} />
     </div>
   )
 }
@@ -130,8 +127,8 @@ export function ChatEvidencePanel({
   if (desktop)
     return evidence ? (
       <aside
-        aria-label="Legal source inspector"
-        className="max-h-[calc(100svh-4rem)] overflow-y-auto border-l border-border bg-sidebar/70 px-6 py-8"
+        aria-label="Section details"
+        className="sticky top-16 max-h-[calc(100svh-4rem)] self-start overflow-y-auto border-l border-border bg-sidebar/70 px-6 py-6"
       >
         <div className="mb-5 flex justify-end">
           <CloseButton onClick={onClose} type="button" />
@@ -159,9 +156,9 @@ export function ChatEvidencePanel({
           opener.current?.focus()
         }}
       >
-        <SheetTitle className="sr-only">Legal source inspector</SheetTitle>
+        <SheetTitle className="sr-only">Section details</SheetTitle>
         <SheetDescription className="sr-only">
-          Stored wording and original source document.
+          The text of this section and a link to the original document.
         </SheetDescription>
         {evidence && (
           <SourceContent

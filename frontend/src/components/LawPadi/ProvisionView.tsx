@@ -10,10 +10,18 @@ import {
   OfficialTextBlock,
   StatusBadge,
 } from "@/components/LawPadi/primitives"
-import { useConversations } from "@/hooks/useConversations"
+import { useChatCapabilities } from "@/hooks/useChatCapabilities"
 import { legalError, useProvisionHistory } from "@/hooks/useLegalCorpus"
 import { useSavedProvisions } from "@/hooks/useSavedProvisions"
-import { copyText, provisionUrl } from "@/lib/legal-provisions"
+import {
+  copyText,
+  editionName,
+  provisionTitle,
+  provisionUrl,
+  readableText,
+  statusLabel,
+} from "@/lib/legal-provisions"
+import { EditionNotice } from "./EditionNotice"
 
 export function ProvisionLink({
   provision,
@@ -57,7 +65,7 @@ export function ProvisionView({
     historyOpen,
   )
   const { isSaved, toggle } = useSavedProvisions()
-  const conversations = useConversations()
+  const capabilities = useChatCapabilities()
   const saved = isSaved(provision.canonical_path, provision.release_version)
   const copy = async (kind: "text" | "share") => {
     try {
@@ -65,22 +73,20 @@ export function ProvisionView({
         kind === "text" ? copyText(provision) : provisionUrl(provision),
       )
       setCopied(kind)
-      toast.success(
-        kind === "text" ? "Wording copied" : "Provision link copied",
-      )
+      toast.success(kind === "text" ? "Text copied" : "Link copied")
     } catch {
-      toast.error("Clipboard access failed. Please try again.")
+      toast.error("Couldn't copy. Please try again.")
     }
   }
   const save = () => {
     try {
       toast.success(
         toggle(provision.canonical_path, provision.release_version)
-          ? "Provision saved in this browser"
-          : "Provision removed from saved",
+          ? "Saved on this device"
+          : "Removed from saved",
       )
     } catch {
-      toast.error("Your browser could not save this provision.")
+      toast.error("Couldn't save on this device.")
     }
   }
   const enclosing = [...provision.ancestors, provision].find(
@@ -97,15 +103,11 @@ export function ProvisionView({
                 ? "proposed"
                 : "historical"
           }
-          label={
-            provision.legal_status === "historical"
-              ? "Historical source edition"
-              : provision.legal_status.replace(/_/g, " ")
-          }
+          label={statusLabel(provision.legal_status, provision.edition_label)}
         />
         <div className="flex gap-1">
           <IconButton
-            label={copied === "text" ? "Wording copied" : "Copy wording"}
+            label={copied === "text" ? "Text copied" : "Copy text"}
             onClick={() => copy("text")}
             type="button"
           >
@@ -116,14 +118,14 @@ export function ProvisionView({
             )}
           </IconButton>
           <IconButton
-            label="Share provision"
+            label="Copy link"
             onClick={() => copy("share")}
             type="button"
           >
             <FiShare2 aria-hidden />
           </IconButton>
           <IconButton
-            label={saved ? "Unsave provision" : "Save provision"}
+            label={saved ? "Remove from saved" : "Save"}
             aria-pressed={saved}
             onClick={save}
             type="button"
@@ -148,18 +150,23 @@ export function ProvisionView({
         <CitationChip onClick={onOpenSource}>{provision.citation}</CitationChip>
       </nav>
       <div>
-        <h2 className="font-legal text-2xl leading-tight sm:text-3xl">
-          {provision.heading || provision.citation}
+        <h2 className="font-display text-title-3 sm:text-title-2">
+          {provisionTitle(provision)}
         </h2>
-        <p className="mt-3 text-sm text-muted-foreground">
-          {provision.edition_label} · {provision.source_authority}
+        <p className="mt-3 text-body text-muted-foreground">
+          {provision.title ? `${provision.citation} · ` : ""}
+          {editionName(provision.edition_label)}
         </p>
       </div>
-      <OfficialTextBlock
-        title={`Stored English wording — ${provision.citation}`}
-      >
-        <p className="whitespace-pre-wrap">{provision.authoritative_text}</p>
+      <OfficialTextBlock title={`What ${provision.citation} says`}>
+        <p className="whitespace-pre-wrap">
+          {readableText(provision.authoritative_text)}
+        </p>
       </OfficialTextBlock>
+      <EditionNotice
+        label={provision.edition_label}
+        historical={provision.legal_status === "historical"}
+      />
       {provision.ancestors
         .filter((ancestor) => ancestor.authoritative_text)
         .map((ancestor) => (
@@ -168,19 +175,19 @@ export function ProvisionView({
             key={ancestor.id}
           >
             <summary className="cursor-pointer text-sm font-semibold">
-              Context from {ancestor.citation}
+              Read all of {ancestor.citation}
             </summary>
             <p className="mt-4 whitespace-pre-wrap font-legal text-sm leading-7">
-              {ancestor.authoritative_text}
+              {readableText(ancestor.authoritative_text ?? "")}
             </p>
           </details>
         ))}
       {provision.children.length > 0 && (
         <section
-          aria-label="Child provisions"
+          aria-label="Parts of this section"
           className="sq-md border border-border p-4"
         >
-          <h3 className="mb-3 text-sm font-semibold">Within this provision</h3>
+          <h3 className="mb-3 text-sm font-semibold">Parts of this section</h3>
           <div className="flex flex-wrap gap-4">
             {provision.children.map((child) => (
               <ProvisionLink
@@ -193,7 +200,7 @@ export function ProvisionView({
         </section>
       )}
       <div className="flex flex-wrap gap-2">
-        {conversations.isSuccess && (
+        {capabilities.data?.explanations_enabled && (
           <InlineAction asChild>
             <Link
               to="/"
@@ -203,39 +210,41 @@ export function ProvisionView({
                 mode: "auto",
                 release: provision.release_version,
                 selected: provision.provision_version_id,
+                intent: "ask",
+                fresh: crypto.randomUUID(),
               }}
             >
-              Explain this provision
+              Explain in plain English
             </Link>
           </InlineAction>
         )}
         <InlineAction onClick={onOpenSource} type="button">
-          Show official source
+          Original document
         </InlineAction>
         <InlineAction
           onClick={() => setHistoryOpen(!historyOpen)}
           type="button"
           aria-expanded={historyOpen}
         >
-          View stored version history
+          Version history
         </InlineAction>
-        {onRelated && enclosing?.heading && (
+        {onRelated && (enclosing?.title || enclosing?.heading) && (
           <InlineAction
-            onClick={() => onRelated(enclosing.heading!)}
+            onClick={() => onRelated((enclosing.title || enclosing.heading)!)}
             type="button"
           >
-            Find related provisions
+            Find related sections
           </InlineAction>
         )}
       </div>
       {historyOpen && (
         <section
-          aria-label="Stored version history"
+          aria-label="Version history"
           className="sq-md border border-border p-5"
         >
-          <h3 className="mb-3 font-semibold">Stored published versions</h3>
+          <h3 className="mb-3 font-semibold">Versions</h3>
           {history.isPending ? (
-            <p>Loading version history…</p>
+            <p>Loading versions…</p>
           ) : history.isError ? (
             <p role="alert">{legalError(history.error)}</p>
           ) : (
@@ -252,8 +261,8 @@ export function ProvisionView({
                     params={{ sectionId: version.canonical_path }}
                     search={{ release: version.release_version }}
                   >
-                    {version.citation} · {version.edition_label} ·{" "}
-                    {version.legal_status}
+                    {version.citation} ·{" "}
+                    {statusLabel(version.legal_status, version.edition_label)}
                   </Link>
                 ))}
               </div>

@@ -1132,7 +1132,7 @@ function PageBoundaryWorkspace({
             >
               <div>
                 <PageThumbnail page={page} />
-                <p className="font-legal text-2xl">p.{page.page_number}</p>
+                <p className="font-display text-2xl">p.{page.page_number}</p>
                 <p className="text-xs text-muted-foreground">
                   {labelize(page.role)}
                 </p>
@@ -2848,7 +2848,7 @@ function MetricCard({
           <Icon className="size-4" aria-hidden />
         </span>
       </div>
-      <p className="font-legal text-3xl leading-none text-foreground">
+      <p className="font-display text-3xl leading-none text-foreground">
         {value}
       </p>
     </div>
@@ -2928,7 +2928,7 @@ function Panel({
     <section className="sq-lg border border-border bg-card p-5 shadow-[var(--shadow-subtle)]">
       <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
         <div className="flex items-center gap-2">
-          <h2 className="font-legal text-xl text-foreground">{title}</h2>
+          <h2 className="font-display text-xl text-foreground">{title}</h2>
           {typeof count === "number" ? (
             <span className="sq-xs bg-secondary px-2 py-1 text-xs font-bold text-secondary-foreground">
               {count}

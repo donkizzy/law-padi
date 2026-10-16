@@ -1,256 +1,244 @@
-import { expect, test } from "@playwright/test"
-import { firstSuperuser, firstSuperuserPassword } from "./config.ts"
-import { createUser } from "./utils/privateApi.ts"
-import { randomEmail, randomPassword } from "./utils/random"
-import { logInUser, logOutUser } from "./utils/user"
+import { expect, type Page, test } from "@playwright/test"
 
-const tabs = ["My profile", "Password", "Danger zone"]
+const user = {
+  id: "99999999-9999-4999-8999-999999999999",
+  full_name: "Test Reader",
+  email: "reader@example.test",
+  is_active: true,
+  is_superuser: false,
+}
+const capabilities = {
+  conversations_enabled: true,
+  explanations_enabled: true,
+  supported_languages: ["English"],
+  question_max_length: 2000,
+  build_revision: "test",
+  prompt_version: "constitution-english-v8",
+}
 
-test("My profile tab is active by default", async ({ page }) => {
-  await page.goto("/settings")
-  await expect(page.getByRole("tab", { name: "My profile" })).toHaveAttribute(
-    "aria-selected",
-    "true",
-  )
-})
+test.use({ storageState: { cookies: [], origins: [] } })
 
-test("All tabs are visible", async ({ page }) => {
-  await page.goto("/settings")
-  for (const tab of tabs) {
-    await expect(page.getByRole("tab", { name: tab })).toBeVisible()
-  }
-})
-
-test.describe("Edit user profile", () => {
-  test.use({ storageState: { cookies: [], origins: [] } })
-  let email: string
-  let password: string
-
-  test.beforeAll(async () => {
-    email = randomEmail()
-    password = randomPassword()
-    await createUser({ email, password })
-  })
-
-  test.beforeEach(async ({ page }) => {
-    await logInUser(page, email, password)
-    await page.goto("/settings")
-    await page.getByRole("tab", { name: "My profile" }).click()
-  })
-
-  test("Edit user name with a valid name", async ({ page }) => {
-    const updatedName = "Test User 2"
-
-    await page.getByRole("button", { name: "Edit" }).click()
-    await page.getByLabel("Full name").fill(updatedName)
-    await page.getByRole("button", { name: "Save" }).click()
-
-    await expect(page.getByText("User updated successfully")).toBeVisible()
-    await expect(
-      page.locator("form").getByText(updatedName, { exact: true }),
-    ).toBeVisible()
-  })
-
-  test("Edit user email with an invalid email shows error", async ({
-    page,
-  }) => {
-    await page.getByRole("button", { name: "Edit" }).click()
-    await page.getByLabel("Email").fill("")
-    await page.locator("body").click()
-
-    await expect(page.getByText("Invalid email address")).toBeVisible()
-  })
-})
-
-test.describe("Edit user email", () => {
-  test.use({ storageState: { cookies: [], origins: [] } })
-
-  test("Edit user email with a valid email", async ({ page }) => {
-    const email = randomEmail()
-    const password = randomPassword()
-    const updatedEmail = randomEmail()
-
-    await createUser({ email, password })
-    await logInUser(page, email, password)
-    await page.goto("/settings")
-    await page.getByRole("tab", { name: "My profile" }).click()
-
-    await page.getByRole("button", { name: "Edit" }).click()
-    await page.getByLabel("Email").fill(updatedEmail)
-    await page.getByRole("button", { name: "Save" }).click()
-
-    await expect(page.getByText("User updated successfully")).toBeVisible()
-    await expect(
-      page.locator("form").getByText(updatedEmail, { exact: true }),
-    ).toBeVisible()
-  })
-})
-
-test.describe("Cancel edit actions", () => {
-  test.use({ storageState: { cookies: [], origins: [] } })
-
-  test("Cancel edit action restores original name", async ({ page }) => {
-    const email = randomEmail()
-    const password = randomPassword()
-    const user = await createUser({ email, password })
-
-    await logInUser(page, email, password)
-    await page.goto("/settings")
-    await page.getByRole("tab", { name: "My profile" }).click()
-    await page.getByRole("button", { name: "Edit" }).click()
-    await page.getByLabel("Full name").fill("Test User")
-    await page.getByRole("button", { name: "Cancel" }).first().click()
-
-    await expect(
-      page.locator("form").getByText(user.full_name as string, { exact: true }),
-    ).toBeVisible()
-  })
-
-  test("Cancel edit action restores original email", async ({ page }) => {
-    const email = randomEmail()
-    const password = randomPassword()
-    await createUser({ email, password })
-
-    await logInUser(page, email, password)
-    await page.goto("/settings")
-    await page.getByRole("tab", { name: "My profile" }).click()
-    await page.getByRole("button", { name: "Edit" }).click()
-    await page.getByLabel("Email").fill(randomEmail())
-    await page.getByRole("button", { name: "Cancel" }).first().click()
-
-    await expect(
-      page.locator("form").getByText(email, { exact: true }),
-    ).toBeVisible()
-  })
-})
-
-test.describe("Change password", () => {
-  test.use({ storageState: { cookies: [], origins: [] } })
-
-  test("Update password successfully", async ({ page }) => {
-    const email = randomEmail()
-    const password = randomPassword()
-    const newPassword = randomPassword()
-
-    await createUser({ email, password })
-    await logInUser(page, email, password)
-
-    await page.goto("/settings")
-    await page.getByRole("tab", { name: "Password" }).click()
-    await page.getByTestId("current-password-input").fill(password)
-    await page.getByTestId("new-password-input").fill(newPassword)
-    await page.getByTestId("confirm-password-input").fill(newPassword)
-    await page.getByRole("button", { name: "Update Password" }).click()
-
-    await expect(page.getByText("Password updated successfully")).toBeVisible()
-
-    await logOutUser(page)
-    await logInUser(page, email, newPassword)
-  })
-})
-
-test.describe("Change password validation", () => {
-  test.use({ storageState: { cookies: [], origins: [] } })
-  let email: string
-  let password: string
-
-  test.beforeAll(async () => {
-    email = randomEmail()
-    password = randomPassword()
-    await createUser({ email, password })
-  })
-
-  test.beforeEach(async ({ page }) => {
-    await logInUser(page, email, password)
-    await page.goto("/settings")
-    await page.getByRole("tab", { name: "Password" }).click()
-  })
-
-  test("Update password with weak passwords", async ({ page }) => {
-    const weakPassword = "weak"
-
-    await page.getByTestId("current-password-input").fill(password)
-    await page.getByTestId("new-password-input").fill(weakPassword)
-    await page.getByTestId("confirm-password-input").fill(weakPassword)
-    await page.getByRole("button", { name: "Update Password" }).click()
-
-    await expect(
-      page.getByText("Password must be at least 8 characters"),
-    ).toBeVisible()
-  })
-
-  test("New password and confirmation password do not match", async ({
-    page,
-  }) => {
-    await page.getByTestId("current-password-input").fill(password)
-    await page.getByTestId("new-password-input").fill(randomPassword())
-    await page.getByTestId("confirm-password-input").fill(randomPassword())
-    await page.getByRole("button", { name: "Update Password" }).click()
-
-    await expect(page.getByText("The passwords don't match")).toBeVisible()
-  })
-
-  test("Current password and new password are the same", async ({ page }) => {
-    await page.getByTestId("current-password-input").fill(password)
-    await page.getByTestId("new-password-input").fill(password)
-    await page.getByTestId("confirm-password-input").fill(password)
-    await page.getByRole("button", { name: "Update Password" }).click()
-
-    await expect(
-      page.getByText("New password cannot be the same as the current one"),
-    ).toBeVisible()
-  })
-})
-
-test("Appearance button is visible in sidebar", async ({ page }) => {
-  await page.goto("/settings")
-  await expect(page.getByTestId("theme-button")).toBeVisible()
-})
-
-test("User can switch between theme modes", async ({ page }) => {
-  await page.goto("/settings")
-
-  await page.getByTestId("theme-button").click()
-  await page.getByTestId("dark-mode").click()
-  await expect(page.locator("html")).toHaveClass(/dark/)
-
-  await expect(page.getByTestId("dark-mode")).not.toBeVisible()
-
-  await page.getByTestId("theme-button").click()
-  await page.getByTestId("light-mode").click()
-  await expect(page.locator("html")).toHaveClass(/light/)
-})
-
-test("Selected mode is preserved across sessions", async ({ page }) => {
-  await page.goto("/settings")
-
-  await page.getByTestId("theme-button").click()
-  if (
-    await page.evaluate(() =>
-      document.documentElement.classList.contains("dark"),
+async function mockSettings(page: Page, signedIn = false) {
+  let account = { ...user }
+  const profileWrites: unknown[] = []
+  const passwordWrites: unknown[] = []
+  if (signedIn)
+    await page.addInitScript(() =>
+      localStorage.setItem("access_token", "mock-account"),
     )
-  ) {
-    await page.getByTestId("light-mode").click()
-    await page.getByTestId("theme-button").click()
-  }
-
-  const isLightMode = await page.evaluate(() =>
-    document.documentElement.classList.contains("light"),
+  await page.route("**/api/v1/conversations**", (route) =>
+    route.fulfill({
+      json: new URL(route.request().url()).pathname.endsWith("/capabilities")
+        ? capabilities
+        : { data: [], count: 0 },
+    }),
   )
-  expect(isLightMode).toBe(true)
-
-  await page.getByTestId("theme-button").click()
-  await page.getByTestId("dark-mode").click()
-  let isDarkMode = await page.evaluate(() =>
-    document.documentElement.classList.contains("dark"),
+  await page.route("**/api/v1/legal/releases/current", (route) =>
+    route.fulfill({
+      json: {
+        release_version: "published-test",
+        edition_label: "Historical/source Constitution compilation (LFN 2004)",
+        legal_statuses: ["historical"],
+        available: true,
+      },
+    }),
   )
-  expect(isDarkMode).toBe(true)
+  await page.route("**/api/v1/users/me**", (route) => {
+    if (route.request().url().includes("password")) {
+      passwordWrites.push(route.request().postDataJSON())
+      return route.fulfill({
+        json: { message: "Password updated successfully" },
+      })
+    }
+    if (route.request().method() === "PATCH") {
+      const data = route.request().postDataJSON()
+      profileWrites.push(data)
+      account = { ...account, ...data }
+    }
+    return route.fulfill({ json: account })
+  })
+  return { profileWrites, passwordWrites }
+}
 
-  await logOutUser(page)
-  await logInUser(page, firstSuperuser, firstSuperuserPassword)
-
-  isDarkMode = await page.evaluate(() =>
-    document.documentElement.classList.contains("dark"),
+test("Guest settings shows honest identity, supported language, and a sign-in path", async ({
+  page,
+}) => {
+  await mockSettings(page)
+  await page.goto("/settings")
+  await expect(page.getByRole("tabpanel", { name: "Profile" })).toContainText(
+    "browsing as a guest",
   )
-  expect(isDarkMode).toBe(true)
+  await expect(page.getByText("amos@example.com")).toHaveCount(0)
+  await expect(page.getByText("Email verified")).toHaveCount(0)
+  await expect(
+    page
+      .getByRole("tabpanel", { name: "Profile" })
+      .getByRole("link", { name: "Sign in" }),
+  ).toBeVisible()
+  await page.getByRole("tab", { name: "Preferences" }).click()
+  await expect(
+    page.getByText("Answers are currently available in English."),
+  ).toBeVisible()
+  await expect(
+    page.getByRole("combobox", { name: "Default answer language" }),
+  ).toHaveCount(0)
+})
+
+test("Settings tabs support arrows, selected state, and associated panels", async ({
+  page,
+}) => {
+  await mockSettings(page)
+  await page.goto("/settings")
+  const profile = page.getByRole("tab", { name: "Profile", exact: true })
+  await profile.focus()
+  await profile.press("ArrowRight")
+  await expect(page.getByRole("tab", { name: "Preferences" })).toBeFocused()
+  await expect(
+    page.getByRole("tabpanel", { name: "Preferences" }),
+  ).toBeVisible()
+})
+
+test("Preferences persist across reload and change how the composer sends", async ({
+  page,
+}) => {
+  await mockSettings(page)
+  await page.goto("/settings")
+  await page.getByRole("tab", { name: "Preferences" }).click()
+  await page.getByRole("switch", { name: "Enter to send" }).click()
+  await page.getByRole("button", { name: "Save changes" }).click()
+  await expect(page.getByRole("status")).toContainText("Settings saved")
+  await page.reload()
+  await page.getByRole("tab", { name: "Preferences" }).click()
+  await expect(
+    page.getByRole("switch", { name: "Enter to send" }),
+  ).toHaveAttribute("aria-checked", "false")
+  await page.goto("/")
+  const editor = page.getByRole("textbox", { name: "Your question" })
+  await editor.fill("My question")
+  await editor.press("Enter")
+  await expect(editor).toHaveValue("My question\n")
+  await expect(page).not.toHaveURL(/(?:[?&])c=/)
+})
+
+test("Blocked browser storage never displays a successful save", async ({
+  page,
+}) => {
+  await mockSettings(page)
+  await page.addInitScript(() => {
+    Storage.prototype.setItem = () => {
+      throw new Error("Storage blocked")
+    }
+  })
+  await page.goto("/settings")
+  await page.getByRole("tab", { name: "Preferences" }).click()
+  await page.getByRole("switch", { name: "Enter to send" }).click()
+  await page.getByRole("button", { name: "Save changes" }).click()
+  await expect(page.getByRole("alert")).toContainText("couldn't save")
+  await expect(page.getByText("Settings saved", { exact: true })).toHaveCount(0)
+})
+
+test("Profile updates the real account response and survives reload", async ({
+  page,
+}) => {
+  const mock = await mockSettings(page, true)
+  await page.goto("/settings")
+  await page.getByRole("button", { name: "Edit", exact: true }).click()
+  await page.getByLabel("Full name", { exact: true }).fill("Updated Reader")
+  await page.getByRole("button", { name: "Save", exact: true }).click()
+  await expect(page.getByRole("tabpanel", { name: "Profile" })).toContainText(
+    "Updated Reader",
+  )
+  expect(mock.profileWrites).toEqual([{ full_name: "Updated Reader" }])
+  await page.reload()
+  await expect(page.getByRole("tabpanel", { name: "Profile" })).toContainText(
+    "Updated Reader",
+  )
+})
+
+test("Cancel restores the account profile without writing", async ({
+  page,
+}) => {
+  const mock = await mockSettings(page, true)
+  await page.goto("/settings")
+  await page.getByRole("button", { name: "Edit", exact: true }).click()
+  await page.getByLabel("Full name", { exact: true }).fill("Unsaved Reader")
+  await page.getByRole("button", { name: "Cancel", exact: true }).click()
+  await expect(page.getByRole("tabpanel", { name: "Profile" })).toContainText(
+    "Test Reader",
+  )
+  expect(mock.profileWrites).toHaveLength(0)
+})
+
+test("Password control submits to the existing account API", async ({
+  page,
+}) => {
+  const mock = await mockSettings(page, true)
+  await page.goto("/settings")
+  await page.getByRole("tab", { name: "Security" }).click()
+  await page.getByTestId("current-password-input").fill("old-test-password")
+  await page.getByTestId("new-password-input").fill("new-test-password")
+  await page.getByTestId("confirm-password-input").fill("new-test-password")
+  await page.getByRole("button", { name: "Update Password" }).click()
+  await expect.poll(() => mock.passwordWrites.length).toBe(1)
+  expect(mock.passwordWrites[0]).toMatchObject({
+    current_password: "old-test-password",
+    new_password: "new-test-password",
+  })
+})
+
+test("Research export downloads real local bookmarks and source editions", async ({
+  page,
+}) => {
+  await mockSettings(page)
+  await page.addInitScript(() =>
+    localStorage.setItem(
+      "law-padi.saved-provisions.v1",
+      JSON.stringify([
+        {
+          canonical_path: "constitution-1999.chapter4.section37",
+          release_version: "published-test",
+          saved_at: "2026-10-13T12:00:00Z",
+        },
+      ]),
+    ),
+  )
+  await page.goto("/settings")
+  await page.getByRole("tab", { name: "Security" }).click()
+  const downloadPromise = page.waitForEvent("download")
+  await page.getByRole("button", { name: "Export my research" }).click()
+  const download = await downloadPromise
+  expect(download.suggestedFilename()).toBe("constitution-ng-research.json")
+  const stream = await download.createReadStream()
+  const chunks: Buffer[] = []
+  for await (const chunk of stream!) chunks.push(chunk)
+  const data = JSON.parse(Buffer.concat(chunks).toString())
+  expect(data.bookmarks[0].release_version).toBe("published-test")
+  expect(data.conversations).toEqual([])
+})
+
+test("Clearing local research requires confirmation and preserves login", async ({
+  page,
+}) => {
+  await mockSettings(page, true)
+  await page.addInitScript(() => {
+    localStorage.setItem("law-padi.saved-provisions.v1", "[]")
+    sessionStorage.setItem("law-padi.draft.v1.new", "Unfinished question")
+  })
+  await page.goto("/settings")
+  await page.getByRole("tab", { name: "Security" }).click()
+  await page.getByRole("button", { name: "Clear bookmarks and drafts" }).click()
+  await page.getByRole("button", { name: "Keep my research" }).click()
+  expect(
+    await page.evaluate(() => sessionStorage.getItem("law-padi.draft.v1.new")),
+  ).toBe("Unfinished question")
+  await page.getByRole("button", { name: "Clear bookmarks and drafts" }).click()
+  await page
+    .getByRole("button", { name: "Clear local research", exact: true })
+    .click()
+  expect(
+    await page.evaluate(() => sessionStorage.getItem("law-padi.draft.v1.new")),
+  ).toBeNull()
+  expect(await page.evaluate(() => localStorage.getItem("access_token"))).toBe(
+    "mock-account",
+  )
 })

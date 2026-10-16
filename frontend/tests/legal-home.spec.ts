@@ -70,6 +70,18 @@ const response = (
 test.use({ storageState: { cookies: [], origins: [] } })
 
 async function mockCorpus(page: Page) {
+  await page.route("**/api/v1/conversations/capabilities", (route) =>
+    route.fulfill({
+      json: {
+        conversations_enabled: false,
+        explanations_enabled: false,
+        supported_languages: ["English"],
+        question_max_length: 2000,
+        build_revision: "test",
+        prompt_version: "constitution-english-v8",
+      },
+    }),
+  )
   await page.route("**/api/v1/legal/**", async (route) => {
     const url = new URL(route.request().url())
     if (url.pathname.endsWith("/releases/current"))
@@ -90,7 +102,7 @@ async function mockCorpus(page: Page) {
         json: response(
           "exact",
           [provision],
-          "No additional published versions are stored.",
+          "This is the only version of this section available so far.",
         ),
       })
     if (url.pathname.endsWith("/provisions/tree"))
@@ -118,7 +130,7 @@ async function mockCorpus(page: Page) {
           json: response(
             "not_found",
             [],
-            "This reference is not present in the published source edition.",
+            "We couldn't find this section in this edition of the Constitution.",
           ),
         })
       if (query === "Section 189")
@@ -136,7 +148,7 @@ async function mockCorpus(page: Page) {
                 source_page_start: 88,
               },
             ],
-            "Choose by chapter, part, and page.",
+            "This section number appears more than once in this edition. Choose the one you mean.",
           ),
         })
       if (query === "Section 33(2)(a)(i)")
@@ -165,9 +177,7 @@ async function mockCorpus(page: Page) {
 }
 
 async function submit(page: Page, query: string) {
-  await page
-    .getByRole("textbox", { name: "Your constitutional question" })
-    .fill(query)
+  await page.getByRole("textbox", { name: "Your question" }).fill(query)
   await page.getByRole("button", { name: "Send question" }).click()
 }
 
@@ -193,31 +203,30 @@ for (const mobile of [false, true]) {
       name: "Constitutional provision",
     })
     await expect(article).toContainText(provision.authoritative_text)
-    await expect(article).toContainText("Historical source edition")
+    await expect(article).toContainText("2004 edition")
+    await expect(article).not.toContainText(/stored|\bAI\b/i)
     await expect(
       page.getByRole("link", { name: "Chapter 4", exact: true }),
     ).toHaveCount(0)
-    await page.getByRole("button", { name: "Copy wording" }).click()
+    await page.getByRole("button", { name: "Copy text" }).click()
     await expect
       .poll(() => page.evaluate(() => navigator.clipboard.readText()))
       .toContain(provision.authoritative_text)
-    await page.getByRole("button", { name: "Share provision" }).click()
+    await page.getByRole("button", { name: "Copy link" }).click()
     await expect
       .poll(() => page.evaluate(() => navigator.clipboard.readText()))
       .toContain(`?release=${release}`)
-    await page
-      .getByRole("button", { name: "Save provision", exact: true })
-      .click()
+    await page.getByRole("button", { name: "Save", exact: true }).click()
     await expect(
-      page.getByRole("button", { name: "Unsave provision" }),
+      page.getByRole("button", { name: "Remove from saved" }),
     ).toHaveAttribute("aria-pressed", "true")
-    await page.getByRole("button", { name: "Show official source" }).click()
+    await page.getByRole("button", { name: "Original document" }).click()
     const panel = mobile
-      ? page.getByRole("dialog", { name: "Legal source inspector" })
-      : page.getByRole("complementary", { name: "Legal source inspector" })
-    await expect(panel).toContainText("PDF page 34")
+      ? page.getByRole("dialog", { name: "Section details" })
+      : page.getByRole("complementary", { name: "Section details" })
+    await expect(panel).toContainText("Page 34")
     await expect(
-      panel.getByRole("link", { name: "View source document" }),
+      panel.getByRole("link", { name: "See it in the original PDF" }),
     ).toHaveAttribute(
       "href",
       /release_version=published-historical-test#page=34/,
@@ -226,20 +235,20 @@ for (const mobile of [false, true]) {
     await expect(panel).not.toBeVisible()
     if (mobile)
       await expect(
-        page.getByRole("button", { name: "Show official source" }),
+        page.getByRole("button", { name: "Original document" }),
       ).toBeFocused()
-    await page
-      .getByRole("button", { name: "View stored version history" })
-      .click()
+    await page.getByRole("button", { name: "Version history" }).click()
     await expect(
-      page.getByText("No additional published versions are stored."),
+      page.getByText(
+        "This is the only version of this section available so far.",
+      ),
     ).toBeVisible()
     await page.reload()
     await expect(
-      page.getByRole("button", { name: "Unsave provision" }),
+      page.getByRole("button", { name: "Remove from saved" }),
     ).toBeVisible()
     await page.goto("/saved")
-    await page.getByRole("link", { name: "Open provision" }).click()
+    await page.getByRole("link", { name: "Open section" }).click()
     await expect(page).toHaveURL(
       new RegExp(`/constitution/.*release=${release}`),
     )
@@ -280,28 +289,22 @@ test("Topic queries lead with the top-ranked wording and allow another source", 
   )
   await page.goto("/")
   await submit(page, "privacy")
-  await expect(
-    page.getByRole("heading", { name: "Best source answer" }),
-  ).toBeVisible()
+  await expect(page.getByRole("heading", { name: "Best match" })).toBeVisible()
   await expect(
     page.getByRole("article", { name: "Constitutional provision" }),
   ).toContainText(provision.authoritative_text)
-  await expect(
-    page.getByText("Retrieval rank is not a legal-confidence percentage."),
-  ).toBeVisible()
+  await expect(page.getByText(/Retrieval rank|legal-confidence/)).toHaveCount(0)
   await page
     .getByRole("button", { name: /Section 39.*Freedom of expression/ })
     .click()
   await expect(
-    page.getByRole("heading", { name: "Selected source answer" }),
+    page.getByRole("heading", { name: "Selected section" }),
   ).toBeVisible()
   await expect(page.getByRole("article")).toContainText(
     "Every person shall be entitled",
   )
-  await page.getByRole("button", { name: "Find related provisions" }).click()
-  await expect(
-    page.getByRole("heading", { name: "Best source answer" }),
-  ).toBeVisible()
+  await page.getByRole("button", { name: "Find related sections" }).click()
+  await expect(page.getByRole("heading", { name: "Best match" })).toBeVisible()
   await expect(page.getByRole("article")).toContainText(
     provision.authoritative_text,
   )
@@ -351,14 +354,12 @@ test("A containing section leads when the first ranked clause is only part of th
     }),
   )
   await page.goto("/?q=Presidential%20qualifications")
-  await expect(
-    page.getByRole("heading", { name: "Best source answer" }),
-  ).toBeVisible()
+  await expect(page.getByRole("heading", { name: "Best match" })).toBeVisible()
   await expect(page.getByRole("article")).toContainText(
     "citizen of Nigeria by birth",
   )
   await expect(
-    page.getByText(/Includes the highest-ranked passage \(Section 131\(d\)\)/),
+    page.getByText(/Shown in full so you can read Section 131\(d\) in context/),
   ).toBeVisible()
 })
 
@@ -369,14 +370,14 @@ test("Missing, ambiguous, and unsupported references have distinct states", asyn
   await page.goto("/")
   await submit(page, "Section 168")
   await expect(
-    page.getByRole("heading", { name: "No matching provision found" }),
+    page.getByRole("heading", { name: "No matching section found" }),
   ).toBeVisible()
   await submit(page, "Section 189")
   await expect(
-    page.getByRole("heading", { name: "Choose the source identity" }),
+    page.getByRole("heading", { name: "Which one do you mean?" }),
   ).toBeVisible()
   await expect(
-    page.getByRole("button", { name: /Second printed identity.*PDF page 88/ }),
+    page.getByRole("button", { name: /Second printed identity.*page 88/ }),
   ).toBeVisible()
   await submit(page, "Section 33(2)(a)(i)")
   await expect(
@@ -395,9 +396,7 @@ test("Disabled explanations are disclosed while exact source wording stays avail
   )
   await mockCorpus(page)
   await page.goto("/")
-  await expect(
-    page.getByText(/AI explanations are not enabled in this deployment/),
-  ).toBeVisible()
+  await expect(page.getByText(/Plain-English answers are paused/)).toBeVisible()
   await submit(page, "Section 33(2)(a)")
   await expect(page.getByRole("article")).toContainText(
     provision.authoritative_text,
@@ -418,7 +417,7 @@ test("Unavailable search can retry and keyword fallback is disclosed", async ({
             ...response("matches"),
             retrieval_mode: "lexical",
             message:
-              "Semantic search is temporarily unavailable. Showing keyword matches.",
+              "Search is running in a simpler mode right now, so these keyword matches may be less precise.",
           },
         })
   })
@@ -428,10 +427,10 @@ test("Unavailable search can retry and keyword fallback is disclosed", async ({
     page.getByRole("heading", { name: "Search unavailable" }),
   ).toBeVisible()
   await page.getByRole("button", { name: "Try again" }).click()
-  await expect(page.getByText(/Showing keyword matches/)).toBeVisible()
   await expect(
-    page.getByRole("heading", { name: "Best source answer" }),
+    page.getByText(/keyword matches may be less precise/),
   ).toBeVisible()
+  await expect(page.getByRole("heading", { name: "Best match" })).toBeVisible()
 })
 
 test("Obsolete responses cannot replace a newer search; New clears results", async ({
@@ -458,12 +457,15 @@ test("Obsolete responses cannot replace a newer search; New clears results", asy
     return route.fulfill({ json: response() })
   })
   await page.goto("/?q=slow")
-  await expect(page.getByText("Searching the published source…")).toBeVisible()
+  await expect(page.getByText("Searching the Constitution…")).toBeVisible()
   await submit(page, "Section 33(2)(a)")
   await expect(page.getByRole("article")).toBeVisible()
   finish?.()
   await expect(page.getByText("Obsolete answer")).toHaveCount(0)
-  await page.getByRole("link", { name: "New search" }).click()
+  await page
+    .getByRole("button", { name: "New conversation", exact: true })
+    .first()
+    .click()
   await expect(page.getByRole("article")).toHaveCount(0)
 })
 
@@ -484,21 +486,13 @@ test("Clipboard and storage failures never announce success", async ({
     }
   })
   await page.goto("/?q=Section%2033(2)(a)")
-  await page.getByRole("button", { name: "Copy wording" }).click()
+  await page.getByRole("button", { name: "Copy text" }).click()
+  await expect(page.getByText("Couldn't copy. Please try again.")).toBeVisible()
+  await expect(page.getByRole("button", { name: "Text copied" })).toHaveCount(0)
+  await page.getByRole("button", { name: "Save", exact: true }).click()
+  await expect(page.getByText("Couldn't save on this device.")).toBeVisible()
   await expect(
-    page.getByText("Clipboard access failed. Please try again."),
-  ).toBeVisible()
-  await expect(
-    page.getByRole("button", { name: "Wording copied" }),
-  ).toHaveCount(0)
-  await page
-    .getByRole("button", { name: "Save provision", exact: true })
-    .click()
-  await expect(
-    page.getByText("Your browser could not save this provision."),
-  ).toBeVisible()
-  await expect(
-    page.getByRole("button", { name: "Unsave provision" }),
+    page.getByRole("button", { name: "Remove from saved" }),
   ).toHaveCount(0)
 })
 
@@ -527,21 +521,19 @@ test("Saved search has an empty state and unreadable bookmarks are retained", as
 }) => {
   await mockCorpus(page)
   await page.goto("/?q=Section%2033(2)(a)")
-  await page
-    .getByRole("button", { name: "Save provision", exact: true })
-    .click()
+  await page.getByRole("button", { name: "Save", exact: true }).click()
   await page.goto("/saved")
-  await expect(page.getByRole("link", { name: "Open provision" })).toBeVisible()
+  await expect(page.getByRole("link", { name: "Open section" })).toBeVisible()
   await page
-    .getByRole("textbox", { name: "Search saved provisions" })
+    .getByRole("textbox", { name: "Search saved sections" })
     .fill("unrelated-no-match")
   await expect(
-    page.getByRole("heading", { name: "No saved provision matches" }),
+    page.getByRole("heading", { name: "Nothing matches that search" }),
   ).toBeVisible()
   await page
-    .getByRole("textbox", { name: "Search saved provisions" })
+    .getByRole("textbox", { name: "Search saved sections" })
     .fill("defence")
-  await expect(page.getByRole("link", { name: "Open provision" })).toBeVisible()
+  await expect(page.getByRole("link", { name: "Open section" })).toBeVisible()
   await page.evaluate(() =>
     localStorage.setItem("law-padi.saved-provisions.v1", "invalid-json"),
   )
@@ -550,15 +542,77 @@ test("Saved search has an empty state and unreadable bookmarks are retained", as
     "Their browser data has been retained",
   )
   await page.goto("/?q=Section%2033(2)(a)")
-  await page
-    .getByRole("button", { name: "Save provision", exact: true })
-    .click()
-  await expect(
-    page.getByText("Your browser could not save this provision."),
-  ).toBeVisible()
+  await page.getByRole("button", { name: "Save", exact: true }).click()
+  await expect(page.getByText("Couldn't save on this device.")).toBeVisible()
   expect(
     await page.evaluate(() =>
       localStorage.getItem("law-padi.saved-provisions.v1"),
     ),
   ).toBe("invalid-json")
 })
+
+test("Browse search always finds sections even when chat is available", async ({
+  page,
+}) => {
+  await mockCorpus(page)
+  let createdConversations = 0
+  await page.route("**/api/v1/conversations**", (route) => {
+    const request = route.request()
+    if (new URL(request.url()).pathname.endsWith("/capabilities"))
+      return route.fulfill({
+        json: {
+          conversations_enabled: true,
+          explanations_enabled: true,
+          supported_languages: ["English"],
+          question_max_length: 2000,
+          build_revision: "test",
+          prompt_version: "constitution-english-v8",
+        },
+      })
+    if (request.method() === "POST") createdConversations += 1
+    return route.fulfill({ json: { data: [], count: 0 } })
+  })
+  await page.goto("/constitution")
+  await page
+    .getByRole("textbox", { name: "Search the Constitution" })
+    .fill("Section 33(2)(a)")
+  await page.getByRole("button", { name: "Search", exact: true }).click()
+  await expect(
+    page.getByRole("article", { name: "Constitutional provision" }),
+  ).toContainText(provision.authoritative_text)
+  await expect(
+    page.getByText(provision.authoritative_text, { exact: true }),
+  ).toBeInViewport()
+  await expect(page).toHaveURL(/intent=find/)
+  expect(createdConversations).toBe(0)
+})
+
+for (const mobile of [false, true]) {
+  test(`${mobile ? "Mobile" : "Desktop"}: a delayed search brings the loaded section into view`, async ({
+    page,
+  }) => {
+    await page.setViewportSize(
+      mobile ? { width: 390, height: 844 } : { width: 1280, height: 720 },
+    )
+    await mockCorpus(page)
+    let finishSearch!: () => void
+    const loading = new Promise<void>((resolve) => {
+      finishSearch = resolve
+    })
+    await page.route("**/api/v1/legal/search", async (route) => {
+      await loading
+      await route.fulfill({ json: response("exact", [provision]) })
+    })
+    await page.goto("/?q=Section%2033(2)(a)&intent=find")
+    await expect(
+      page.getByText("Searching the Constitution…", { exact: true }),
+    ).toBeVisible()
+    finishSearch()
+    await expect(
+      page.getByText(provision.authoritative_text, { exact: true }),
+    ).toBeInViewport()
+    await expect(
+      page.getByRole("region", { name: "Search results" }),
+    ).toBeFocused()
+  })
+}

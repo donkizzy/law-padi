@@ -4,6 +4,10 @@
 @custom-variant dark (&:is(.dark *));
 
 @theme inline {
+  --font-sans: var(--typeface-ui);
+  --font-display: var(--typeface-display);
+  --font-legal: var(--typeface-legal);
+  --font-mono: var(--typeface-mono);
   --radius-xs: var(--sq-xs);
   --radius-sm: var(--sq-sm);
   --radius-md: var(--sq-md);
@@ -16,6 +20,7 @@
   --color-card-foreground: var(--card-foreground);
   --color-popover: var(--popover);
   --color-popover-foreground: var(--popover-foreground);
+  --color-brand: var(--brand);
   --color-primary: var(--primary);
   --color-primary-foreground: var(--primary-foreground);
   --color-secondary: var(--secondary);
@@ -43,7 +48,46 @@
   --color-sidebar-ring: var(--sidebar-ring);
 }
 
+/* Type scale: text-display, text-title-1 … text-code. Pair legal sizes with font-legal. */
+@theme {
+  --text-display: 3.25rem;
+  --text-display--line-height: 3.5rem;
+  --text-display--letter-spacing: -0.01em;
+  --text-title-1: 2.5rem;
+  --text-title-1--line-height: 2.75rem;
+  --text-title-2: 1.875rem;
+  --text-title-2--line-height: 2.25rem;
+  --text-title-3: 1.5rem;
+  --text-title-3--line-height: 1.875rem;
+  --text-statute: 1.0625rem;
+  --text-statute--line-height: 2rem;
+  --text-statute-sm: 0.875rem;
+  --text-statute-sm--line-height: 1.75rem;
+  --text-body-lg: 1rem;
+  --text-body-lg--line-height: 1.75rem;
+  --text-body: 0.875rem;
+  --text-body--line-height: 1.5rem;
+  --text-label: 0.75rem;
+  --text-label--line-height: 1rem;
+  --text-label--font-weight: 600;
+  --text-overline: 0.72rem;
+  --text-overline--line-height: 0.75rem;
+  --text-overline--font-weight: 700;
+  --text-overline--letter-spacing: 0.08em;
+  --text-code: 0.8125rem;
+  --text-code--line-height: 1.25rem;
+}
+
 :root {
+  /* Fonts: change a family here, then load it in index.html. Noto catches
+     Yorùbá, Igbo and Hausa characters the first family is missing. */
+  --typeface-ui:
+    "Lexend", "Noto Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --typeface-display:
+    "Lexend", "Noto Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --typeface-legal: "Literata", "Noto Serif", Georgia, "Times New Roman", serif;
+  --typeface-mono:
+    "IBM Plex Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
   --sq-xs: 0.5625rem;
   --sq-sm: 0.8125rem;
   --sq-md: 1.125rem;
@@ -58,6 +102,7 @@
   --card-foreground: #18201d;
   --popover: #ffffff;
   --popover-foreground: #18201d;
+  --brand: #0a6b4b;
   --primary: #0a765b;
   --primary-foreground: #f8fffb;
   --secondary: #edf1ed;
@@ -104,6 +149,7 @@
   --card-foreground: #ecf1ed;
   --popover: #202b27;
   --popover-foreground: #ecf1ed;
+  --brand: #6cc79a;
   --primary: #5fb79e;
   --primary-foreground: #09281f;
   --secondary: #293631;
@@ -152,9 +198,7 @@
   }
   body {
     @apply bg-background text-foreground;
-    font-family:
-      "Public Sans", "Noto Sans", system-ui, -apple-system, "Segoe UI",
-      sans-serif;
+    font-family: var(--typeface-ui);
     -webkit-font-smoothing: antialiased;
   }
   button,
@@ -195,10 +239,6 @@
 
   .sq-xxl {
     border-radius: var(--sq-xxl);
-  }
-
-  .font-legal {
-    font-family: "Geist", "Source Serif 4", Georgia, "Times New Roman", serif;
   }
 }
 

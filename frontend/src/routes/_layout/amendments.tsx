@@ -7,7 +7,7 @@ export const Route = createFileRoute("/_layout/amendments")({
   head: () => ({
     meta: [
       {
-        title: "Amendments - Law Padi",
+        title: "Amendments - constitution.ng",
       },
     ],
   }),
