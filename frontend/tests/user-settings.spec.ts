@@ -112,7 +112,7 @@ test("Preferences persist across reload and change how the composer sends", asyn
   await expect(
     page.getByRole("switch", { name: "Enter to send" }),
   ).toHaveAttribute("aria-checked", "false")
-  await page.goto("/")
+  await page.goto("/?intent=ask")
   const editor = page.getByRole("textbox", { name: "Your question" })
   await editor.fill("My question")
   await editor.press("Enter")

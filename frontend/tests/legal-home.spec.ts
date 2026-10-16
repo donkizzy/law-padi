@@ -191,7 +191,7 @@ for (const mobile of [false, true]) {
     )
     await context.grantPermissions(["clipboard-read", "clipboard-write"])
     await mockCorpus(page)
-    await page.goto("/")
+    await page.goto("/?intent=find")
     await expect(
       page.getByRole("article", { name: "Constitutional provision" }),
     ).toHaveCount(0)
@@ -287,7 +287,7 @@ test("Topic queries lead with the top-ranked wording and allow another source", 
       ]),
     }),
   )
-  await page.goto("/")
+  await page.goto("/?intent=find")
   await submit(page, "privacy")
   await expect(page.getByRole("heading", { name: "Best match" })).toBeVisible()
   await expect(
@@ -367,7 +367,7 @@ test("Missing, ambiguous, and unsupported references have distinct states", asyn
   page,
 }) => {
   await mockCorpus(page)
-  await page.goto("/")
+  await page.goto("/?intent=find")
   await submit(page, "Section 168")
   await expect(
     page.getByRole("heading", { name: "No matching section found" }),
@@ -395,7 +395,7 @@ test("Disabled explanations are disclosed while exact source wording stays avail
     }),
   )
   await mockCorpus(page)
-  await page.goto("/")
+  await page.goto("/?intent=find")
   await expect(page.getByText(/Plain-English answers are paused/)).toBeVisible()
   await submit(page, "Section 33(2)(a)")
   await expect(page.getByRole("article")).toContainText(
@@ -421,7 +421,7 @@ test("Unavailable search can retry and keyword fallback is disclosed", async ({
           },
         })
   })
-  await page.goto("/")
+  await page.goto("/?intent=find")
   await submit(page, "privacy")
   await expect(
     page.getByRole("heading", { name: "Search unavailable" }),
@@ -616,3 +616,26 @@ for (const mobile of [false, true]) {
     ).toBeFocused()
   })
 }
+
+test("guests landing on the home URL see the welcome page first", async ({
+  page,
+}) => {
+  await page.goto("/")
+  await expect(page).toHaveURL(/\/welcome$/)
+  await page
+    .locator('a[href="/"]', { hasText: "Ask a question" })
+    .last()
+    .click()
+  await expect(page).toHaveURL(/\/(\?.*)?$/)
+  await expect(page).not.toHaveURL(/\/welcome/)
+})
+
+test("signed-in visitors landing on the home URL go straight to the app", async ({
+  page,
+}) => {
+  await page.addInitScript(() =>
+    localStorage.setItem("access_token", "account-token"),
+  )
+  await page.goto("/")
+  await expect(page).not.toHaveURL(/\/welcome/)
+})
