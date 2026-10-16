@@ -1,15 +1,23 @@
 from datetime import timedelta
 from typing import Annotated, Any
 
-from fastapi import APIRouter, Depends, HTTPException
-from fastapi.responses import HTMLResponse
+from fastapi import APIRouter, Cookie, Depends, HTTPException, Request, Response
+from fastapi.responses import HTMLResponse, JSONResponse
 from fastapi.security import OAuth2PasswordRequestForm
 
 from app import crud
 from app.api.deps import CurrentUser, SessionDep, get_current_active_superuser
-from app.core import security
+from app.core import rate_limit, security, sessions
 from app.core.config import settings
-from app.models import Message, NewPassword, Token, UserPublic, UserUpdate
+from app.models import (
+    Message,
+    NewPassword,
+    Token,
+    User,
+    UserPublic,
+    UserUpdate,
+    get_datetime_utc,
+)
 from app.utils import (
     generate_password_reset_token,
     generate_reset_password_email,
@@ -20,13 +28,34 @@ from app.utils import (
 router = APIRouter(tags=["login"])
 
 
+RefreshCookie = Annotated[str | None, Cookie(alias=sessions.REFRESH_COOKIE)]
+
+
+def _access_token(user: User) -> Token:
+    return Token(
+        access_token=security.create_access_token(
+            user.id,
+            expires_delta=timedelta(minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES),
+        )
+    )
+
+
 @router.post("/login/access-token")
 def login_access_token(
-    session: SessionDep, form_data: Annotated[OAuth2PasswordRequestForm, Depends()]
+    session: SessionDep,
+    request: Request,
+    response: Response,
+    form_data: Annotated[OAuth2PasswordRequestForm, Depends()],
 ) -> Token:
     """
-    OAuth2 compatible token login, get an access token for future requests
+    OAuth2 compatible token login. Returns a short-lived access token and sets
+    the HttpOnly refresh cookie that renews it.
     """
+    ip = rate_limit.client_ip(request)
+    rate_limit.enforce(session, rate_limit.LOGIN_PER_IP, ip)
+    rate_limit.enforce(
+        session, rate_limit.LOGIN_PER_ACCOUNT, f"{ip}|{form_data.username}"
+    )
     user = crud.authenticate(
         session=session, email=form_data.username, password=form_data.password
     )
@@ -34,12 +63,58 @@ def login_access_token(
         raise HTTPException(status_code=400, detail="Incorrect email or password")
     elif not user.is_active:
         raise HTTPException(status_code=400, detail="Inactive user")
-    access_token_expires = timedelta(minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES)
-    return Token(
-        access_token=security.create_access_token(
-            user.id, expires_delta=access_token_expires
-        )
+    sessions.set_refresh_cookie(
+        response, sessions.issue_refresh_token(session=session, user=user)
     )
+    return _access_token(user)
+
+
+@router.post(
+    "/login/refresh",
+    response_model=Token,
+    responses={401: {"model": Message, "description": "No usable session"}},
+)
+def refresh_access_token(
+    session: SessionDep,
+    request: Request,
+    response: Response,
+    refresh_token: RefreshCookie = None,
+) -> Token | JSONResponse:
+    """
+    Exchange the refresh cookie for a new access token, rotating the cookie.
+    """
+    rate_limit.enforce(
+        session, rate_limit.REFRESH_PER_IP, rate_limit.client_ip(request)
+    )
+    rotated = (
+        sessions.rotate_refresh_token(session=session, token=refresh_token)
+        if refresh_token
+        else None
+    )
+    if rotated is None:
+        expired = JSONResponse(
+            {"detail": "Session expired"},
+            status_code=401,
+            headers={"WWW-Authenticate": "Bearer"},
+        )
+        sessions.clear_refresh_cookie(expired)
+        return expired
+    user, new_refresh_token = rotated
+    sessions.set_refresh_cookie(response, new_refresh_token)
+    return _access_token(user)
+
+
+@router.post("/login/logout")
+def logout(
+    session: SessionDep, response: Response, refresh_token: RefreshCookie = None
+) -> Message:
+    """
+    End this browser's session. Safe to call when already signed out.
+    """
+    if refresh_token:
+        sessions.revoke_refresh_token(session=session, token=refresh_token)
+    sessions.clear_refresh_cookie(response)
+    return Message(message="Signed out")
 
 
 @router.post("/login/test-token", response_model=UserPublic)
@@ -51,15 +126,19 @@ def test_token(current_user: CurrentUser) -> Any:
 
 
 @router.post("/password-recovery/{email}")
-def recover_password(email: str, session: SessionDep) -> Message:
+def recover_password(email: str, session: SessionDep, request: Request) -> Message:
     """
     Password Recovery
     """
+    rate_limit.enforce(
+        session, rate_limit.RECOVERY_PER_IP, rate_limit.client_ip(request)
+    )
+    rate_limit.enforce(session, rate_limit.RECOVERY_PER_EMAIL, email)
     user = crud.get_user_by_email(session=session, email=email)
 
     # Always return the same response to prevent email enumeration attacks
     # Only send email if user actually exists
-    if user:
+    if user and settings.emails_enabled:
         password_reset_token = generate_password_reset_token(email=email)
         email_data = generate_reset_password_email(
             email_to=user.email, email=email, token=password_reset_token
@@ -75,10 +154,11 @@ def recover_password(email: str, session: SessionDep) -> Message:
 
 
 @router.post("/reset-password/")
-def reset_password(session: SessionDep, body: NewPassword) -> Message:
+def reset_password(session: SessionDep, request: Request, body: NewPassword) -> Message:
     """
     Reset password
     """
+    rate_limit.enforce(session, rate_limit.RESET_PER_IP, rate_limit.client_ip(request))
     email = verify_password_reset_token(token=body.token)
     if not email:
         raise HTTPException(status_code=400, detail="Invalid token")
@@ -94,6 +174,12 @@ def reset_password(session: SessionDep, body: NewPassword) -> Message:
         db_user=user,
         user_in=user_in_update,
     )
+    if user.email_verified_at is None:
+        # Following the reset link proves the person controls this inbox.
+        user.email_verified_at = get_datetime_utc()
+        session.add(user)
+        session.commit()
+    sessions.revoke_user_sessions(session=session, user_id=user.id)
     return Message(message="Password updated successfully")
 
 

@@ -1,4 +1,5 @@
 from collections.abc import Generator
+from unittest.mock import patch
 from urllib.parse import urlsplit
 
 import pytest
@@ -56,7 +57,7 @@ from app.legal.models import (
     VectorIndex,
 )
 from app.main import app
-from app.models import User
+from app.models import RateLimitCounter, User
 from tests.utils.user import authentication_token_from_email
 from tests.utils.utils import get_superuser_token_headers
 
@@ -131,9 +132,17 @@ def _cleanup_db(session: Session) -> None:
         LegalInstrument,
     ):
         session.exec(delete(model))
+    session.exec(delete(RateLimitCounter))
     session.exec(delete(User))
     session.exec(update(GenerationCapacity).values(active_count=0))
     session.commit()
+
+
+@pytest.fixture(scope="session", autouse=True)
+def disable_rate_limits() -> Generator[None]:
+    """Tests sign in far more often than people do; rate-limit tests opt back in."""
+    with patch.object(settings, "RATE_LIMIT_ENABLED", False):
+        yield
 
 
 @pytest.fixture(scope="module")

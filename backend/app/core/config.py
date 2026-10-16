@@ -23,8 +23,12 @@ class Settings(BaseSettings):
     )
     API_V1_STR: str = "/api/v1"
     SECRET_KEY: str
-    # 60 minutes * 24 hours * 8 days = 8 days
-    ACCESS_TOKEN_EXPIRE_MINUTES: int = 60 * 24 * 8
+    # Access tokens live in browser memory only; the refresh cookie renews them.
+    ACCESS_TOKEN_EXPIRE_MINUTES: int = 15
+    REFRESH_TOKEN_EXPIRE_DAYS: int = 30
+    # A rotated refresh token presented again within this window is treated as a
+    # benign race (two tabs, a lost response) rather than token theft.
+    REFRESH_TOKEN_REUSE_GRACE_SECONDS: int = 10
     FRONTEND_HOST: str = "http://localhost:5173"
     FASTAPI_ENV: Literal["development"] | None = None
 
@@ -134,6 +138,9 @@ class Settings(BaseSettings):
         return self
 
     EMAIL_RESET_TOKEN_EXPIRE_HOURS: int = 48
+    EMAIL_VERIFICATION_TOKEN_EXPIRE_HOURS: int = 48
+    # Postgres-backed request limits on sign-in, sign-up and recovery routes.
+    RATE_LIMIT_ENABLED: bool = True
 
     @computed_field  # type: ignore[prop-decorator]
     @property

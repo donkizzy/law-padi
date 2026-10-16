@@ -8,30 +8,44 @@ import {
   type UserRegister,
   UsersService,
 } from "@/client"
+import { safeRedirect } from "@/lib/redirect"
+import {
+  endSession,
+  isSignedIn,
+  startSession,
+  useSessionStatus,
+} from "@/lib/session"
 import { handleError } from "@/utils"
 import useCustomToast from "./useCustomToast"
 import { clearDrafts } from "./useWorkspacePreferences"
 
-const isLoggedIn = () => {
-  return localStorage.getItem("access_token") !== null
+const isLoggedIn = isSignedIn
+
+type UseAuthOptions = {
+  /** Where to go after signing in, from the page's `?redirect=`. */
+  redirect?: string
 }
 
-const useAuth = () => {
+const useAuth = ({ redirect }: UseAuthOptions = {}) => {
   const navigate = useNavigate()
   const queryClient = useQueryClient()
   const { showErrorToast } = useCustomToast()
+  const status = useSessionStatus()
 
   const { data: user } = useQuery<UserPublic | null, Error>({
     queryKey: ["currentUser"],
     queryFn: async () => (await UsersService.readUserMe()).data,
-    enabled: isLoggedIn(),
+    enabled: status === "signed-in",
   })
 
   const signUpMutation = useMutation({
     mutationFn: (data: UserRegister) =>
       UsersService.registerUser({ body: data }),
     onSuccess: () => {
-      navigate({ to: "/login" })
+      navigate({
+        to: "/login",
+        search: { redirect: safeRedirect(redirect), notice: "check-email" },
+      })
     },
     onError: handleError.bind(showErrorToast),
     onSettled: () => {
@@ -43,20 +57,27 @@ const useAuth = () => {
     const response = await LoginService.loginAccessToken({
       body: data,
     })
-    localStorage.setItem("access_token", response.data.access_token)
     queryClient.removeQueries()
+    startSession(response.data.access_token)
   }
 
   const loginMutation = useMutation({
     mutationFn: login,
     onSuccess: () => {
-      navigate({ to: "/" })
+      const target = safeRedirect(redirect)
+      if (target) navigate({ href: target })
+      else navigate({ to: "/" })
     },
     onError: handleError.bind(showErrorToast),
   })
 
-  const logout = () => {
-    localStorage.removeItem("access_token")
+  const logout = async () => {
+    try {
+      await LoginService.logout()
+    } catch {
+      /* Sign out locally even if the server can't be reached. */
+    }
+    endSession()
     try {
       clearDrafts()
     } catch {

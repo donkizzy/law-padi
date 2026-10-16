@@ -5,9 +5,9 @@ import { AdminWorkspace } from "@/components/LawPadi/AdminWorkspace"
 import { isLoggedIn } from "@/hooks/useAuth"
 
 export const Route = createFileRoute("/_layout/admin")({
-  beforeLoad: async () => {
+  beforeLoad: async ({ location }) => {
     if (!isLoggedIn()) {
-      throw redirect({ to: "/login" })
+      throw redirect({ to: "/login", search: { redirect: location.href } })
     }
     await UsersService.readUserMe()
   },

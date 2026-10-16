@@ -1,7 +1,7 @@
 import uuid
 from typing import Any
 
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Request, Response
 from sqlmodel import col, func, select
 
 from app import crud
@@ -10,9 +10,11 @@ from app.api.deps import (
     SessionDep,
     get_current_active_superuser,
 )
+from app.core import rate_limit, sessions
 from app.core.config import settings
 from app.core.security import get_password_hash, verify_password
 from app.models import (
+    EmailVerification,
     Message,
     UpdatePassword,
     User,
@@ -22,8 +24,33 @@ from app.models import (
     UsersPublic,
     UserUpdate,
     UserUpdateMe,
+    get_datetime_utc,
 )
-from app.utils import generate_new_account_email, send_email
+from app.utils import (
+    generate_account_exists_email,
+    generate_email_verification_token,
+    generate_new_account_email,
+    generate_verify_email_email,
+    send_email,
+    verify_email_verification_token,
+)
+
+SIGNUP_MESSAGE = "Check your email to confirm your address, then log in."
+
+
+def send_verification_email(user: User) -> None:
+    if not settings.emails_enabled:
+        return
+    email_data = generate_verify_email_email(
+        email_to=user.email,
+        token=generate_email_verification_token(user_id=user.id, email=user.email),
+    )
+    send_email(
+        email_to=user.email,
+        subject=email_data.subject,
+        html_content=email_data.html_content,
+    )
+
 
 router = APIRouter(prefix="/users", tags=["users"])
 
@@ -91,17 +118,26 @@ def update_user_me(
             raise HTTPException(
                 status_code=409, detail="User with this email already exists"
             )
+    email_changed = bool(user_in.email) and user_in.email != current_user.email
     user_data = user_in.model_dump(exclude_unset=True)
     current_user.sqlmodel_update(user_data)
+    if email_changed:
+        current_user.email_verified_at = None
     session.add(current_user)
     session.commit()
     session.refresh(current_user)
+    if email_changed:
+        send_verification_email(current_user)
     return current_user
 
 
 @router.patch("/me/password", response_model=Message)
 def update_password_me(
-    *, session: SessionDep, body: UpdatePassword, current_user: CurrentUser
+    *,
+    session: SessionDep,
+    response: Response,
+    body: UpdatePassword,
+    current_user: CurrentUser,
 ) -> Any:
     """
     Update own password.
@@ -117,6 +153,11 @@ def update_password_me(
     current_user.hashed_password = hashed_password
     session.add(current_user)
     session.commit()
+    # Sign out every other device, then keep this browser signed in.
+    sessions.revoke_user_sessions(session=session, user_id=current_user.id)
+    sessions.set_refresh_cookie(
+        response, sessions.issue_refresh_token(session=session, user=current_user)
+    )
     return Message(message="Password updated successfully")
 
 
@@ -142,20 +183,75 @@ def delete_user_me(session: SessionDep, current_user: CurrentUser) -> Any:
     return Message(message="User deleted successfully")
 
 
-@router.post("/signup", response_model=UserPublic)
-def register_user(session: SessionDep, user_in: UserRegister) -> Any:
+@router.post("/signup", response_model=Message)
+def register_user(
+    session: SessionDep, request: Request, user_in: UserRegister
+) -> Message:
     """
-    Create new user without the need to be logged in.
+    Create a new account without signing in.
+
+    The response is the same whether or not the email is already registered,
+    so sign-up can't be used to discover who has an account. The owner of an
+    existing address gets an email instead.
     """
+    rate_limit.enforce(session, rate_limit.SIGNUP_PER_IP, rate_limit.client_ip(request))
     user = crud.get_user_by_email(session=session, email=user_in.email)
     if user:
-        raise HTTPException(
-            status_code=400,
-            detail="The user with this email already exists in the system",
-        )
+        # Spend the same hashing time as a real sign-up.
+        get_password_hash(user_in.password)
+        if settings.emails_enabled:
+            email_data = generate_account_exists_email(email_to=user.email)
+            send_email(
+                email_to=user.email,
+                subject=email_data.subject,
+                html_content=email_data.html_content,
+            )
+        return Message(message=SIGNUP_MESSAGE)
     user_create = UserCreate.model_validate(user_in)
     user = crud.create_user(session=session, user_create=user_create)
-    return user
+    send_verification_email(user)
+    return Message(message=SIGNUP_MESSAGE)
+
+
+@router.post("/verify-email", response_model=Message)
+def verify_email(
+    session: SessionDep, request: Request, body: EmailVerification
+) -> Message:
+    """
+    Confirm an email address with the token from a verification link.
+    """
+    rate_limit.enforce(session, rate_limit.VERIFY_PER_IP, rate_limit.client_ip(request))
+    claims = verify_email_verification_token(body.token)
+    user = session.get(User, claims[0]) if claims else None
+    if claims is None or user is None or user.email != claims[1]:
+        raise HTTPException(
+            status_code=400, detail="This link is invalid or has expired"
+        )
+    if user.email_verified_at is None:
+        user.email_verified_at = get_datetime_utc()
+        session.add(user)
+        session.commit()
+    return Message(message="Email confirmed")
+
+
+@router.post("/me/verification-email", response_model=Message)
+def resend_verification_email(
+    session: SessionDep, current_user: CurrentUser
+) -> Message:
+    """
+    Send the signed-in user a fresh verification link.
+    """
+    if current_user.email_verified_at is not None:
+        return Message(message="Email already confirmed")
+    rate_limit.enforce(
+        session, rate_limit.VERIFICATION_EMAIL_PER_USER, str(current_user.id)
+    )
+    if not settings.emails_enabled:
+        raise HTTPException(
+            status_code=503, detail="Email isn't available right now. Try again later."
+        )
+    send_verification_email(current_user)
+    return Message(message="Verification email sent")
 
 
 @router.get("/{user_id}", response_model=UserPublic)
@@ -207,6 +303,8 @@ def update_user(
             )
 
     db_user = crud.update_user(session=session, db_user=db_user, user_in=user_in)
+    if user_in.password or user_in.is_active is False:
+        sessions.revoke_user_sessions(session=session, user_id=db_user.id)
     return db_user
 
 

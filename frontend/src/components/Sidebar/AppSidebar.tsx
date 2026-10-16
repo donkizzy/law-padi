@@ -1,5 +1,9 @@
 import { useQueryClient } from "@tanstack/react-query"
-import { Link as RouterLink, useSearch } from "@tanstack/react-router"
+import {
+  Link as RouterLink,
+  useLocation,
+  useSearch,
+} from "@tanstack/react-router"
 import { Fragment, useState } from "react"
 import { FiMessageSquare, FiPlus, FiSearch } from "react-icons/fi"
 import { LiaShieldAltSolid } from "react-icons/lia"
@@ -55,6 +59,7 @@ export function AppSidebar() {
   const conversations = useConversations(historyQuery)
   const capabilities = useChatCapabilities()
   const search = useSearch({ strict: false })
+  const here = useLocation({ select: (location) => location.href })
   const queryClient = useQueryClient()
   const { isMobile, setOpenMobile } = useSidebar()
   const chatEnabled = capabilities.data?.conversations_enabled === true
@@ -228,6 +233,7 @@ export function AppSidebar() {
               <RouterLink
                 className="sq-sm min-h-9 px-2 py-2 font-semibold text-primary hover:underline"
                 to="/login"
+                search={{ redirect: here }}
                 onClick={() => setOpenMobile(false)}
               >
                 Sign in
@@ -235,6 +241,7 @@ export function AppSidebar() {
               <RouterLink
                 className="sq-sm min-h-9 px-2 py-2 font-semibold text-primary hover:underline"
                 to="/signup"
+                search={{ redirect: here }}
                 onClick={() => setOpenMobile(false)}
               >
                 Create account

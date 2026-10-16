@@ -1,4 +1,5 @@
 import { expect, type Page, test } from "@playwright/test"
+import { mockSignedIn, SESSION_HINT_KEY } from "./utils/session.ts"
 
 const user = {
   id: "99999999-9999-4999-8999-999999999999",
@@ -22,10 +23,7 @@ async function mockSettings(page: Page, signedIn = false) {
   let account = { ...user }
   const profileWrites: unknown[] = []
   const passwordWrites: unknown[] = []
-  if (signedIn)
-    await page.addInitScript(() =>
-      localStorage.setItem("access_token", "mock-account"),
-    )
+  if (signedIn) await mockSignedIn(page, "mock-account")
   await page.route("**/api/v1/conversations**", (route) =>
     route.fulfill({
       json: new URL(route.request().url()).pathname.endsWith("/capabilities")
@@ -112,7 +110,7 @@ test("Preferences persist across reload and change how the composer sends", asyn
   await expect(
     page.getByRole("switch", { name: "Enter to send" }),
   ).toHaveAttribute("aria-checked", "false")
-  await page.goto("/")
+  await page.goto("/?intent=ask")
   const editor = page.getByRole("textbox", { name: "Your question" })
   await editor.fill("My question")
   await editor.press("Enter")
@@ -238,7 +236,7 @@ test("Clearing local research requires confirmation and preserves login", async 
   expect(
     await page.evaluate(() => sessionStorage.getItem("law-padi.draft.v1.new")),
   ).toBeNull()
-  expect(await page.evaluate(() => localStorage.getItem("access_token"))).toBe(
-    "mock-account",
-  )
+  expect(
+    await page.evaluate((key) => localStorage.getItem(key), SESSION_HINT_KEY),
+  ).toBe("1")
 })

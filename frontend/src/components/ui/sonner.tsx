@@ -8,14 +8,20 @@ import {
   FiLoader as Loader2Icon,
 } from "react-icons/fi"
 import { useTheme } from "@/components/theme-provider"
+import { useIsMobile } from "@/hooks/useMobile"
 import { Toaster as Sonner, type ToasterProps } from "sonner"
 
 const Toaster = ({ ...props }: ToasterProps) => {
   const { theme } = useTheme()
+  // On phones a bottom stack covers the sticky question box and inline
+  // actions, so show one toast at a time over the header instead.
+  const isMobile = useIsMobile()
 
   return (
     <Sonner
       theme={theme}
+      position={isMobile ? "top-center" : "bottom-right"}
+      visibleToasts={isMobile ? 1 : 3}
       className="toaster group"
       icons={{
         success: <CircleCheckIcon className="size-4" />,

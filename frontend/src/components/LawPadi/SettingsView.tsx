@@ -4,6 +4,7 @@ import { FiGlobe, FiLock, FiSettings, FiUser } from "react-icons/fi"
 import { toast } from "sonner"
 import ChangePassword from "@/components/UserSettings/ChangePassword"
 import DeleteAccount from "@/components/UserSettings/DeleteAccount"
+import { EmailVerificationNotice } from "@/components/UserSettings/EmailVerificationNotice"
 import UserInformation from "@/components/UserSettings/UserInformation"
 import {
   Dialog,
@@ -144,7 +145,10 @@ export function SettingsView() {
         >
           <SettingsCard title="Profile">
             {user ? (
-              <UserInformation />
+              <>
+                <EmailVerificationNotice />
+                <UserInformation />
+              </>
             ) : isLoggedIn() ? (
               <p role="status">Loading your account…</p>
             ) : (
@@ -159,10 +163,14 @@ export function SettingsView() {
                 </p>
                 <div className="flex flex-wrap gap-2">
                   <SquircleButton asChild>
-                    <Link to="/login">Sign in</Link>
+                    <Link to="/login" search={{ redirect: "/settings" }}>
+                      Sign in
+                    </Link>
                   </SquircleButton>
                   <SquircleButton asChild variant="outline">
-                    <Link to="/signup">Create account</Link>
+                    <Link to="/signup" search={{ redirect: "/settings" }}>
+                      Create account
+                    </Link>
                   </SquircleButton>
                 </div>
               </div>

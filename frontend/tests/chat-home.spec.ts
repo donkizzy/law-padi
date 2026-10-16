@@ -1,4 +1,5 @@
 import { expect, type Page, test } from "@playwright/test"
+import { mockSignedIn } from "./utils/session.ts"
 
 const conversationId = "11111111-1111-4111-8111-111111111111"
 const runId = "22222222-2222-4222-8222-222222222222"
@@ -240,7 +241,7 @@ for (const mobile of [false, true]) {
       mobile ? { width: 390, height: 844 } : { width: 1440, height: 1000 },
     )
     const mock = await mockChat(page)
-    await page.goto("/")
+    await page.goto("/?intent=ask")
     await expect(
       page.getByRole("heading", { name: "Ask about Nigeria's Constitution." }),
     ).toBeVisible()
@@ -327,7 +328,7 @@ test("A withheld topic explanation leads with complete parent source wording", a
     evidence: [child, parent],
     notice: "We couldn't write an explanation.",
   })
-  await page.goto("/")
+  await page.goto("/?intent=ask")
   await page.getByRole("textbox", { name: "Your question" }).fill(question)
   await page.getByRole("button", { name: "Send question" }).click()
   const region = page.getByRole("region", { name: "Answer", exact: true })
@@ -362,7 +363,7 @@ test("An answer leads with plain English, lists items, and offers follow-ups", a
     missing_facts: ["Whether a court order allowed the search"],
     follow_up_questions: [followUp],
   })
-  await page.goto("/")
+  await page.goto("/?intent=ask")
   await page.getByRole("textbox", { name: "Your question" }).fill(question)
   await page.getByRole("button", { name: "Send question" }).click()
   const region = page.getByRole("region", { name: "Answer", exact: true })
@@ -415,16 +416,13 @@ test("Logout removes account conversation data from the next guest view", async 
       },
     })
   })
-  await page.goto("/login")
-  await page.evaluate(() =>
-    localStorage.setItem("access_token", "account-token"),
-  )
-  await page.goto("/")
+  await mockSignedIn(page)
+  await page.goto("/?intent=ask")
   await expect(page.getByText("Private account conversation")).toBeVisible()
   await page.getByTestId("user-menu").click()
   await page.getByRole("menuitem", { name: "Log Out" }).click()
   await expect(page).toHaveURL(/\/login$/)
-  await page.goto("/")
+  await page.goto("/?intent=ask")
   await expect(page.getByText("Private account conversation")).toHaveCount(0)
   await expect(page.getByText("Your chats will appear here.")).toBeVisible()
 })
@@ -451,7 +449,7 @@ for (const mobile of [false, true]) {
       mobile ? { width: 390, height: 844 } : { width: 1440, height: 1000 },
     )
     await mockChat(page)
-    await page.goto("/")
+    await page.goto("/?intent=ask")
     await sendQuestion(page)
     await expect(
       page.getByRole("region", { name: "Answer", exact: true }),
@@ -488,7 +486,7 @@ test("New detaches an active answer without disabling the new editor", async ({
     releaseEvents = resolve
   })
   await mockChat(page, answer, { events })
-  await page.goto("/")
+  await page.goto("/?intent=ask")
   await sendQuestion(page)
   await expect(
     page.getByRole("button", { name: "Stop answering" }),
@@ -512,7 +510,7 @@ test("A late acceptance cannot navigate away from New", async ({ page }) => {
     releaseAcceptance = resolve
   })
   const mock = await mockChat(page, answer, { acceptance })
-  await page.goto("/")
+  await page.goto("/?intent=ask")
   await sendQuestion(page)
   await expect.poll(() => mock.submissions.length).toBe(1)
   await newConversation(page)
@@ -531,7 +529,7 @@ test("Retry preserves the question, created conversation and idempotency key", a
   page,
 }) => {
   const mock = await mockChat(page, answer, { failedSubmissions: 1 })
-  await page.goto("/")
+  await page.goto("/?intent=ask")
   await sendQuestion(page)
   await expect(page.getByRole("alert")).toContainText("temporarily unavailable")
   await expect(
@@ -552,7 +550,7 @@ test("Persisted completion recovers when the terminal SSE event is lost", async 
   page,
 }) => {
   await mockChat(page, answer, { interruptStream: true })
-  await page.goto("/")
+  await page.goto("/?intent=ask")
   await sendQuestion(page)
   await expect(
     page.getByRole("region", { name: "Answer", exact: true }),
@@ -564,7 +562,7 @@ test("Persisted completion recovers when the terminal SSE event is lost", async 
 
 test("A history failure does not change Ask into Find", async ({ page }) => {
   await mockChat(page, answer, { historyFailures: 2 })
-  await page.goto("/")
+  await page.goto("/?intent=ask")
   await expect(
     page.getByRole("heading", { name: "Ask about Nigeria's Constitution." }),
   ).toBeVisible()
@@ -578,7 +576,7 @@ test("Draft survives reload and New clears it even when already on an empty chat
   page,
 }) => {
   await mockChat(page)
-  await page.goto("/")
+  await page.goto("/?intent=ask")
   await page
     .getByRole("textbox", { name: "Your question" })
     .fill("My unfinished question")
@@ -601,7 +599,7 @@ test("Enter sends, Shift+Enter creates a line, and IME composition does not subm
   page,
 }) => {
   const mock = await mockChat(page)
-  await page.goto("/")
+  await page.goto("/?intent=ask")
   const editor = page.getByRole("textbox", { name: "Your question" })
   await editor.fill(question)
   await editor.dispatchEvent("keydown", { key: "Enter", isComposing: true })
@@ -616,7 +614,7 @@ test("A fallback keeps the edition caveat and a source can be saved inside chat"
   page,
 }) => {
   await mockChat(page, { ...answer, outcome: "validation_failed", blocks: [] })
-  await page.goto("/")
+  await page.goto("/?intent=ask")
   await sendQuestion(page)
   const region = page.getByRole("region", { name: "Answer", exact: true })
   await expect(region).toContainText("Later amendments aren't included yet")

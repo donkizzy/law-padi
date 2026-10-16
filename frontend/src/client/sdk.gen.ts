@@ -2,7 +2,7 @@
 
 import { type Client, type Options as Options2, type TDataShape, urlSearchParamsBodySerializer } from './client';
 import { client } from './client.gen';
-import type { adminCancelRunData, adminCancelRunErrors, adminCancelRunResponses, adminCompleteUploadData, adminCompleteUploadErrors, adminCompleteUploadResponses, adminCreateEmbeddingProfileData, adminCreateEmbeddingProfileErrors, adminCreateEmbeddingProfileResponses, adminCreateMultipartUploadPartsData, adminCreateMultipartUploadPartsErrors, adminCreateMultipartUploadPartsResponses, adminCreateSourceUploadData, adminCreateSourceUploadErrors, adminCreateSourceUploadResponses, adminDecideReviewItemData, adminDecideReviewItemErrors, adminDecideReviewItemResponses, adminEvaluateOcrBenchmarkRouteData, adminEvaluateOcrBenchmarkRouteErrors, adminEvaluateOcrBenchmarkRouteResponses, adminPatchPageSelectionData, adminPatchPageSelectionErrors, adminPatchPageSelectionResponses, adminPatchReviewIssueData, adminPatchReviewIssueErrors, adminPatchReviewIssueResponses, adminPatchReviewItemData, adminPatchReviewItemErrors, adminPatchReviewItemResponses, adminPublishReleaseData, adminPublishReleaseErrors, adminPublishReleaseResponses, adminPutSourceUploadObjectData, adminPutSourceUploadObjectErrors, adminPutSourceUploadObjectResponses, adminReadAdminAlertsData, adminReadAdminAlertsResponses, adminReadAdminMetricsData, adminReadAdminMetricsResponses, adminReadAuditEventsData, adminReadAuditEventsErrors, adminReadAuditEventsResponses, adminReadCorpusReleasesData, adminReadCorpusReleasesErrors, adminReadCorpusReleasesResponses, adminReadEmbeddingBenchmarkData, adminReadEmbeddingBenchmarkErrors, adminReadEmbeddingBenchmarkResponses, adminReadEmbeddingProfilesData, adminReadEmbeddingProfilesResponses, adminReadIngestionArtifactContentData, adminReadIngestionArtifactContentErrors, adminReadIngestionArtifactContentResponses, adminReadIngestionRunData, adminReadIngestionRunErrors, adminReadIngestionRunPagesData, adminReadIngestionRunPagesErrors, adminReadIngestionRunPagesResponses, adminReadIngestionRunResponses, adminReadIngestionRunsData, adminReadIngestionRunsErrors, adminReadIngestionRunsResponses, adminReadMyAdminRolesData, adminReadMyAdminRolesResponses, adminReadOcrBenchmarkData, adminReadOcrBenchmarkErrors, adminReadOcrBenchmarkResponses, adminReadProductionProvisionVersionsData, adminReadProductionProvisionVersionsResponses, adminReadReleaseManifestData, adminReadReleaseManifestErrors, adminReadReleaseManifestResponses, adminReadReleasePublicationEvidenceData, adminReadReleasePublicationEvidenceErrors, adminReadReleasePublicationEvidenceResponses, adminReadReviewItemData, adminReadReviewItemErrors, adminReadReviewItemResponses, adminReadReviewItemsData, adminReadReviewItemsErrors, adminReadReviewItemsResponses, adminResumeRunData, adminResumeRunErrors, adminResumeRunResponses, adminRetryRunData, adminRetryRunErrors, adminRetryRunResponses, adminStartEmbeddingRunData, adminStartEmbeddingRunErrors, adminStartEmbeddingRunResponses, adminStreamIngestionRunEventsData, adminStreamIngestionRunEventsErrors, adminStreamIngestionRunEventsResponses, adminUpdateEmbeddingProfileData, adminUpdateEmbeddingProfileErrors, adminUpdateEmbeddingProfileResponses, adminValidateReleaseData, adminValidateReleaseErrors, adminValidateReleaseResponses, adminVerifyDocumentSourceData, adminVerifyDocumentSourceErrors, adminVerifyDocumentSourceResponses, conversationsCancelRunData, conversationsCancelRunErrors, conversationsCancelRunResponses, conversationsClaimGuestConversationsData, conversationsClaimGuestConversationsResponses, conversationsConversationEventsData, conversationsConversationEventsErrors, conversationsConversationEventsResponses, conversationsCreateConversationData, conversationsCreateConversationErrors, conversationsCreateConversationResponses, conversationsDeleteConversationData, conversationsDeleteConversationErrors, conversationsDeleteConversationResponses, conversationsListConversationsData, conversationsListConversationsErrors, conversationsListConversationsResponses, conversationsReadChatCapabilitiesData, conversationsReadChatCapabilitiesResponses, conversationsReadChatMetricsData, conversationsReadChatMetricsResponses, conversationsReadConversationData, conversationsReadConversationErrors, conversationsReadConversationResponses, conversationsRenameConversationData, conversationsRenameConversationErrors, conversationsRenameConversationResponses, conversationsSubmitMessageData, conversationsSubmitMessageErrors, conversationsSubmitMessageFeedbackData, conversationsSubmitMessageFeedbackErrors, conversationsSubmitMessageFeedbackResponses, conversationsSubmitMessageResponses, legalReadCurrentProvisionData, legalReadCurrentProvisionErrors, legalReadCurrentProvisionResponses, legalReadCurrentReleaseData, legalReadCurrentReleaseErrors, legalReadCurrentReleaseResponses, legalReadProvisionHistoryData, legalReadProvisionHistoryErrors, legalReadProvisionHistoryResponses, legalReadProvisionsByCitationData, legalReadProvisionsByCitationErrors, legalReadProvisionsByCitationResponses, legalReadProvisionTreeData, legalReadProvisionTreeErrors, legalReadProvisionTreeResponses, legalReadSourceContentData, legalReadSourceContentErrors, legalReadSourceContentResponses, legalSearchLegalData, legalSearchLegalErrors, legalSearchLegalResponses, loginLoginAccessTokenData, loginLoginAccessTokenErrors, loginLoginAccessTokenResponses, loginRecoverPasswordData, loginRecoverPasswordErrors, loginRecoverPasswordHtmlContentData, loginRecoverPasswordHtmlContentErrors, loginRecoverPasswordHtmlContentResponses, loginRecoverPasswordResponses, loginResetPasswordData, loginResetPasswordErrors, loginResetPasswordResponses, loginTestTokenData, loginTestTokenResponses, privateCreateUserData, privateCreateUserErrors, privateCreateUserResponses, usersCreateUserData, usersCreateUserErrors, usersCreateUserResponses, usersDeleteUserData, usersDeleteUserErrors, usersDeleteUserMeData, usersDeleteUserMeResponses, usersDeleteUserResponses, usersReadUserByIdData, usersReadUserByIdErrors, usersReadUserByIdResponses, usersReadUserMeData, usersReadUserMeResponses, usersReadUsersData, usersReadUsersErrors, usersReadUsersResponses, usersRegisterUserData, usersRegisterUserErrors, usersRegisterUserResponses, usersUpdatePasswordMeData, usersUpdatePasswordMeErrors, usersUpdatePasswordMeResponses, usersUpdateUserData, usersUpdateUserErrors, usersUpdateUserMeData, usersUpdateUserMeErrors, usersUpdateUserMeResponses, usersUpdateUserResponses, utilsHealthCheckData, utilsHealthCheckResponses, utilsTestEmailData, utilsTestEmailErrors, utilsTestEmailResponses } from './types.gen';
+import type { adminCancelRunData, adminCancelRunErrors, adminCancelRunResponses, adminCompleteUploadData, adminCompleteUploadErrors, adminCompleteUploadResponses, adminCreateEmbeddingProfileData, adminCreateEmbeddingProfileErrors, adminCreateEmbeddingProfileResponses, adminCreateMultipartUploadPartsData, adminCreateMultipartUploadPartsErrors, adminCreateMultipartUploadPartsResponses, adminCreateSourceUploadData, adminCreateSourceUploadErrors, adminCreateSourceUploadResponses, adminDecideReviewItemData, adminDecideReviewItemErrors, adminDecideReviewItemResponses, adminEvaluateOcrBenchmarkRouteData, adminEvaluateOcrBenchmarkRouteErrors, adminEvaluateOcrBenchmarkRouteResponses, adminPatchPageSelectionData, adminPatchPageSelectionErrors, adminPatchPageSelectionResponses, adminPatchReviewIssueData, adminPatchReviewIssueErrors, adminPatchReviewIssueResponses, adminPatchReviewItemData, adminPatchReviewItemErrors, adminPatchReviewItemResponses, adminPublishReleaseData, adminPublishReleaseErrors, adminPublishReleaseResponses, adminPutSourceUploadObjectData, adminPutSourceUploadObjectErrors, adminPutSourceUploadObjectResponses, adminReadAdminAlertsData, adminReadAdminAlertsResponses, adminReadAdminMetricsData, adminReadAdminMetricsResponses, adminReadAuditEventsData, adminReadAuditEventsErrors, adminReadAuditEventsResponses, adminReadCorpusReleasesData, adminReadCorpusReleasesErrors, adminReadCorpusReleasesResponses, adminReadEmbeddingBenchmarkData, adminReadEmbeddingBenchmarkErrors, adminReadEmbeddingBenchmarkResponses, adminReadEmbeddingProfilesData, adminReadEmbeddingProfilesResponses, adminReadIngestionArtifactContentData, adminReadIngestionArtifactContentErrors, adminReadIngestionArtifactContentResponses, adminReadIngestionRunData, adminReadIngestionRunErrors, adminReadIngestionRunPagesData, adminReadIngestionRunPagesErrors, adminReadIngestionRunPagesResponses, adminReadIngestionRunResponses, adminReadIngestionRunsData, adminReadIngestionRunsErrors, adminReadIngestionRunsResponses, adminReadMyAdminRolesData, adminReadMyAdminRolesResponses, adminReadOcrBenchmarkData, adminReadOcrBenchmarkErrors, adminReadOcrBenchmarkResponses, adminReadProductionProvisionVersionsData, adminReadProductionProvisionVersionsResponses, adminReadReleaseManifestData, adminReadReleaseManifestErrors, adminReadReleaseManifestResponses, adminReadReleasePublicationEvidenceData, adminReadReleasePublicationEvidenceErrors, adminReadReleasePublicationEvidenceResponses, adminReadReviewItemData, adminReadReviewItemErrors, adminReadReviewItemResponses, adminReadReviewItemsData, adminReadReviewItemsErrors, adminReadReviewItemsResponses, adminResumeRunData, adminResumeRunErrors, adminResumeRunResponses, adminRetryRunData, adminRetryRunErrors, adminRetryRunResponses, adminStartEmbeddingRunData, adminStartEmbeddingRunErrors, adminStartEmbeddingRunResponses, adminStreamIngestionRunEventsData, adminStreamIngestionRunEventsErrors, adminStreamIngestionRunEventsResponses, adminUpdateEmbeddingProfileData, adminUpdateEmbeddingProfileErrors, adminUpdateEmbeddingProfileResponses, adminValidateReleaseData, adminValidateReleaseErrors, adminValidateReleaseResponses, adminVerifyDocumentSourceData, adminVerifyDocumentSourceErrors, adminVerifyDocumentSourceResponses, conversationsCancelRunData, conversationsCancelRunErrors, conversationsCancelRunResponses, conversationsClaimGuestConversationsData, conversationsClaimGuestConversationsResponses, conversationsConversationEventsData, conversationsConversationEventsErrors, conversationsConversationEventsResponses, conversationsCreateConversationData, conversationsCreateConversationErrors, conversationsCreateConversationResponses, conversationsDeleteConversationData, conversationsDeleteConversationErrors, conversationsDeleteConversationResponses, conversationsListConversationsData, conversationsListConversationsErrors, conversationsListConversationsResponses, conversationsReadChatCapabilitiesData, conversationsReadChatCapabilitiesResponses, conversationsReadChatMetricsData, conversationsReadChatMetricsResponses, conversationsReadConversationData, conversationsReadConversationErrors, conversationsReadConversationResponses, conversationsRenameConversationData, conversationsRenameConversationErrors, conversationsRenameConversationResponses, conversationsSubmitMessageData, conversationsSubmitMessageErrors, conversationsSubmitMessageFeedbackData, conversationsSubmitMessageFeedbackErrors, conversationsSubmitMessageFeedbackResponses, conversationsSubmitMessageResponses, legalReadCurrentProvisionData, legalReadCurrentProvisionErrors, legalReadCurrentProvisionResponses, legalReadCurrentReleaseData, legalReadCurrentReleaseErrors, legalReadCurrentReleaseResponses, legalReadProvisionHistoryData, legalReadProvisionHistoryErrors, legalReadProvisionHistoryResponses, legalReadProvisionsByCitationData, legalReadProvisionsByCitationErrors, legalReadProvisionsByCitationResponses, legalReadProvisionTreeData, legalReadProvisionTreeErrors, legalReadProvisionTreeResponses, legalReadSourceContentData, legalReadSourceContentErrors, legalReadSourceContentResponses, legalSearchLegalData, legalSearchLegalErrors, legalSearchLegalResponses, loginLoginAccessTokenData, loginLoginAccessTokenErrors, loginLoginAccessTokenResponses, loginLogoutData, loginLogoutErrors, loginLogoutResponses, loginRecoverPasswordData, loginRecoverPasswordErrors, loginRecoverPasswordHtmlContentData, loginRecoverPasswordHtmlContentErrors, loginRecoverPasswordHtmlContentResponses, loginRecoverPasswordResponses, loginRefreshAccessTokenData, loginRefreshAccessTokenErrors, loginRefreshAccessTokenResponses, loginResetPasswordData, loginResetPasswordErrors, loginResetPasswordResponses, loginTestTokenData, loginTestTokenResponses, privateCreateUserData, privateCreateUserErrors, privateCreateUserResponses, usersCreateUserData, usersCreateUserErrors, usersCreateUserResponses, usersDeleteUserData, usersDeleteUserErrors, usersDeleteUserMeData, usersDeleteUserMeResponses, usersDeleteUserResponses, usersReadUserByIdData, usersReadUserByIdErrors, usersReadUserByIdResponses, usersReadUserMeData, usersReadUserMeResponses, usersReadUsersData, usersReadUsersErrors, usersReadUsersResponses, usersRegisterUserData, usersRegisterUserErrors, usersRegisterUserResponses, usersResendVerificationEmailData, usersResendVerificationEmailResponses, usersUpdatePasswordMeData, usersUpdatePasswordMeErrors, usersUpdatePasswordMeResponses, usersUpdateUserData, usersUpdateUserErrors, usersUpdateUserMeData, usersUpdateUserMeErrors, usersUpdateUserMeResponses, usersUpdateUserResponses, usersVerifyEmailData, usersVerifyEmailErrors, usersVerifyEmailResponses, utilsHealthCheckData, utilsHealthCheckResponses, utilsTestEmailData, utilsTestEmailErrors, utilsTestEmailResponses } from './types.gen';
 
 export type Options<TData extends TDataShape = TDataShape, ThrowOnError extends boolean = boolean, TResponse = unknown> = Options2<TData, ThrowOnError, TResponse> & {
     /**
@@ -22,7 +22,8 @@ export class LoginService {
     /**
      * Login Access Token
      *
-     * OAuth2 compatible token login, get an access token for future requests
+     * OAuth2 compatible token login. Returns a short-lived access token and sets
+     * the HttpOnly refresh cookie that renews it.
      */
     public static loginAccessToken<ThrowOnError extends boolean = true>(options: Options<loginLoginAccessTokenData, ThrowOnError>) {
         return (options.client ?? client).post<loginLoginAccessTokenResponses, loginLoginAccessTokenErrors, ThrowOnError>({
@@ -34,6 +35,32 @@ export class LoginService {
                 'Content-Type': 'application/x-www-form-urlencoded',
                 ...options.headers
             }
+        });
+    }
+
+    /**
+     * Refresh Access Token
+     *
+     * Exchange the refresh cookie for a new access token, rotating the cookie.
+     */
+    public static refreshAccessToken<ThrowOnError extends boolean = true>(options?: Options<loginRefreshAccessTokenData, ThrowOnError>) {
+        return (options?.client ?? client).post<loginRefreshAccessTokenResponses, loginRefreshAccessTokenErrors, ThrowOnError>({
+            responseType: 'json',
+            url: '/api/v1/login/refresh',
+            ...options
+        });
+    }
+
+    /**
+     * Logout
+     *
+     * End this browser's session. Safe to call when already signed out.
+     */
+    public static logout<ThrowOnError extends boolean = true>(options?: Options<loginLogoutData, ThrowOnError>) {
+        return (options?.client ?? client).post<loginLogoutResponses, loginLogoutErrors, ThrowOnError>({
+            responseType: 'json',
+            url: '/api/v1/login/logout',
+            ...options
         });
     }
 
@@ -196,7 +223,11 @@ export class UsersService {
     /**
      * Register User
      *
-     * Create new user without the need to be logged in.
+     * Create a new account without signing in.
+     *
+     * The response is the same whether or not the email is already registered,
+     * so sign-up can't be used to discover who has an account. The owner of an
+     * existing address gets an email instead.
      */
     public static registerUser<ThrowOnError extends boolean = true>(options: Options<usersRegisterUserData, ThrowOnError>) {
         return (options.client ?? client).post<usersRegisterUserResponses, usersRegisterUserErrors, ThrowOnError>({
@@ -207,6 +238,37 @@ export class UsersService {
                 'Content-Type': 'application/json',
                 ...options.headers
             }
+        });
+    }
+
+    /**
+     * Verify Email
+     *
+     * Confirm an email address with the token from a verification link.
+     */
+    public static verifyEmail<ThrowOnError extends boolean = true>(options: Options<usersVerifyEmailData, ThrowOnError>) {
+        return (options.client ?? client).post<usersVerifyEmailResponses, usersVerifyEmailErrors, ThrowOnError>({
+            responseType: 'json',
+            url: '/api/v1/users/verify-email',
+            ...options,
+            headers: {
+                'Content-Type': 'application/json',
+                ...options.headers
+            }
+        });
+    }
+
+    /**
+     * Resend Verification Email
+     *
+     * Send the signed-in user a fresh verification link.
+     */
+    public static resendVerificationEmail<ThrowOnError extends boolean = true>(options?: Options<usersResendVerificationEmailData, ThrowOnError>) {
+        return (options?.client ?? client).post<usersResendVerificationEmailResponses, unknown, ThrowOnError>({
+            responseType: 'json',
+            security: [{ scheme: 'bearer', type: 'http' }],
+            url: '/api/v1/users/me/verification-email',
+            ...options
         });
     }
 

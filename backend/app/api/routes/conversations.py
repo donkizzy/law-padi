@@ -77,15 +77,20 @@ def _account(request: Request, session: Session) -> User | None:
         return None
     scheme, _, token = authorization.partition(" ")
     if scheme.lower() != "bearer" or not token:
-        raise HTTPException(status_code=403, detail="Could not validate credentials")
-    try:
-        payload = jwt.decode(
-            token, settings.SECRET_KEY, algorithms=[security.ALGORITHM]
+        raise HTTPException(
+            status_code=401,
+            detail="Could not validate credentials",
+            headers={"WWW-Authenticate": "Bearer"},
         )
-        token_data = TokenPayload(**payload)
+    try:
+        token_data = TokenPayload(**security.decode_access_token(token))
         user = session.get(User, token_data.sub)
     except jwt.InvalidTokenError, ValueError, TypeError:
-        raise HTTPException(status_code=403, detail="Could not validate credentials")
+        raise HTTPException(
+            status_code=401,
+            detail="Could not validate credentials",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
     if user is None or not user.is_active:
         raise HTTPException(status_code=403, detail="Could not validate credentials")
     return user
