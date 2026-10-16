@@ -46,8 +46,33 @@ function subscribe(listener: () => void) {
   }
 }
 
-export function savePreferences(value: WorkspacePreferences) {
+let changeListener: ((value: WorkspacePreferences) => void) | null = null
+
+/** Account sync registers here to mirror saved preferences to the server. */
+export function onPreferencesChange(listener: typeof changeListener) {
+  changeListener = listener
+}
+
+export function readPreferences(): WorkspacePreferences {
+  return read().preferences
+}
+
+function writePreferences(value: WorkspacePreferences) {
   localStorage.setItem(preferencesKey, JSON.stringify(schema.parse(value)))
+  rawCache = undefined
+  window.dispatchEvent(new Event(workspaceStorageEvent))
+}
+
+export function savePreferences(value: WorkspacePreferences) {
+  writePreferences(value)
+  changeListener?.(value)
+}
+
+/** Replace this browser's preferences with the account's, without echoing back. */
+export const replacePreferences = writePreferences
+
+export function clearPreferences() {
+  localStorage.removeItem(preferencesKey)
   rawCache = undefined
   window.dispatchEvent(new Event(workspaceStorageEvent))
 }

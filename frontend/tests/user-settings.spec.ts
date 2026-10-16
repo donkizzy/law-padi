@@ -240,3 +240,83 @@ test("Clearing local research requires confirmation and preserves login", async 
     await page.evaluate((key) => localStorage.getItem(key), SESSION_HINT_KEY),
   ).toBe("1")
 })
+
+test("A confirmed account takes in this browser's research and guest chats", async ({
+  page,
+}) => {
+  await mockSettings(page, true)
+  // Registered later, so it wins over mockSettings' unconfirmed user.
+  await page.route("**/api/v1/users/me", (route) =>
+    route.fulfill({
+      json: { ...user, email_verified_at: "2026-10-01T00:00:00Z" },
+    }),
+  )
+  const merged: unknown[] = []
+  const preferenceWrites: unknown[] = []
+  let claims = 0
+  await page.route("**/api/v1/conversations/claim", (route) => {
+    claims += 1
+    return route.fulfill({ json: { claimed_count: 2 } })
+  })
+  await page.route("**/api/v1/account/saved-provisions/merge", (route) => {
+    const body = route.request().postDataJSON() as { items: unknown[] }
+    merged.push(...body.items)
+    return route.fulfill({
+      json: [
+        ...body.items,
+        {
+          canonical_path: "chapter-iv/section-40",
+          release_version: "published-test",
+          saved_at: "2026-09-01T00:00:00Z",
+        },
+      ],
+    })
+  })
+  await page.route("**/api/v1/account/preferences", (route) => {
+    if (route.request().method() === "PUT") {
+      preferenceWrites.push(route.request().postDataJSON())
+      return route.fulfill({ json: route.request().postDataJSON() })
+    }
+    return route.fulfill({ json: null })
+  })
+
+  await page.goto("/login")
+  await page.evaluate(() =>
+    localStorage.setItem(
+      "law-padi.saved-provisions.v1",
+      JSON.stringify([
+        {
+          canonical_path: "chapter-iv/section-35",
+          release_version: "published-test",
+          saved_at: "2026-10-01T00:00:00Z",
+        },
+      ]),
+    ),
+  )
+  await page.goto("/settings")
+
+  await expect(
+    page.getByText("Your 2 chats are now in your account."),
+  ).toBeVisible()
+  expect(claims).toBe(1)
+  expect(merged).toEqual([
+    expect.objectContaining({ canonical_path: "chapter-iv/section-35" }),
+  ])
+  // The browser now mirrors the account, including what was saved elsewhere.
+  await expect
+    .poll(() =>
+      page.evaluate(() =>
+        JSON.parse(
+          localStorage.getItem("law-padi.saved-provisions.v1") ?? "[]",
+        ).map((item: { canonical_path: string }) => item.canonical_path),
+      ),
+    )
+    .toEqual(["chapter-iv/section-35", "chapter-iv/section-40"])
+  // An account with no saved preferences adopts this browser's.
+  await expect
+    .poll(() => preferenceWrites)
+    .toEqual([
+      { enter_to_send: true, follow_latest: true, open_sources: false },
+    ])
+  await expect(page.getByText("Confirm your email address")).toHaveCount(0)
+})

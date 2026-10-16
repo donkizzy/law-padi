@@ -8,6 +8,7 @@ import {
   type UserRegister,
   UsersService,
 } from "@/client"
+import { stopAccountSync } from "@/lib/account-sync"
 import { safeRedirect } from "@/lib/redirect"
 import {
   endSession,
@@ -78,6 +79,7 @@ const useAuth = ({ redirect }: UseAuthOptions = {}) => {
       /* Sign out locally even if the server can't be reached. */
     }
     endSession()
+    stopAccountSync({ clearLocal: true })
     try {
       clearDrafts()
     } catch {
