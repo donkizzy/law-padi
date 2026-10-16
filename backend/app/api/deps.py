@@ -1,7 +1,6 @@
 from collections.abc import Generator
 from typing import Annotated
 
-import jwt
 from fastapi import Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordBearer
 from jwt.exceptions import InvalidTokenError
@@ -29,10 +28,7 @@ TokenDep = Annotated[str, Depends(reusable_oauth2)]
 
 def get_current_user(session: SessionDep, token: TokenDep) -> User:
     try:
-        payload = jwt.decode(
-            token, settings.SECRET_KEY, algorithms=[security.ALGORITHM]
-        )
-        token_data = TokenPayload(**payload)
+        token_data = TokenPayload(**security.decode_access_token(token))
     except InvalidTokenError, ValidationError:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,

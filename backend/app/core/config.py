@@ -138,6 +138,9 @@ class Settings(BaseSettings):
         return self
 
     EMAIL_RESET_TOKEN_EXPIRE_HOURS: int = 48
+    EMAIL_VERIFICATION_TOKEN_EXPIRE_HOURS: int = 48
+    # Postgres-backed request limits on sign-in, sign-up and recovery routes.
+    RATE_LIMIT_ENABLED: bool = True
 
     @computed_field  # type: ignore[prop-decorator]
     @property

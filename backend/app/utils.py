@@ -1,4 +1,5 @@
 import logging
+import uuid
 from dataclasses import dataclass
 from datetime import UTC, datetime, timedelta
 from pathlib import Path
@@ -101,13 +102,49 @@ def generate_new_account_email(
     return EmailData(html_content=html_content, subject=subject)
 
 
+def generate_verify_email_email(*, email_to: str, token: str) -> EmailData:
+    project_name = settings.PROJECT_NAME
+    subject = f"{project_name} - Confirm your email address"
+    link = f"{settings.FRONTEND_HOST}/verify-email?token={token}"
+    html_content = render_email_template(
+        template_name="verify_email.html",
+        context={
+            "project_name": project_name,
+            "email": email_to,
+            "valid_hours": settings.EMAIL_VERIFICATION_TOKEN_EXPIRE_HOURS,
+            "link": link,
+        },
+    )
+    return EmailData(html_content=html_content, subject=subject)
+
+
+def generate_account_exists_email(*, email_to: str) -> EmailData:
+    project_name = settings.PROJECT_NAME
+    subject = f"{project_name} - You already have an account"
+    html_content = render_email_template(
+        template_name="account_exists.html",
+        context={
+            "project_name": project_name,
+            "email": email_to,
+            "login_link": f"{settings.FRONTEND_HOST}/login",
+            "reset_link": f"{settings.FRONTEND_HOST}/recover-password",
+        },
+    )
+    return EmailData(html_content=html_content, subject=subject)
+
+
 def generate_password_reset_token(email: str) -> str:
     delta = timedelta(hours=settings.EMAIL_RESET_TOKEN_EXPIRE_HOURS)
     now = datetime.now(UTC)
     expires = now + delta
     exp = expires.timestamp()
     encoded_jwt = jwt.encode(
-        {"exp": exp, "nbf": now, "sub": email},
+        {
+            "exp": exp,
+            "nbf": now,
+            "sub": email,
+            "type": security.PASSWORD_RESET_TOKEN_TYPE,
+        },
         settings.SECRET_KEY,
         algorithm=security.ALGORITHM,
     )
@@ -116,9 +153,37 @@ def generate_password_reset_token(email: str) -> str:
 
 def verify_password_reset_token(token: str) -> str | None:
     try:
-        decoded_token = jwt.decode(
-            token, settings.SECRET_KEY, algorithms=[security.ALGORITHM]
+        decoded_token = security.decode_token(
+            token, token_type=security.PASSWORD_RESET_TOKEN_TYPE
         )
         return str(decoded_token["sub"])
     except InvalidTokenError:
+        return None
+
+
+def generate_email_verification_token(*, user_id: uuid.UUID, email: str) -> str:
+    now = datetime.now(UTC)
+    expires = now + timedelta(hours=settings.EMAIL_VERIFICATION_TOKEN_EXPIRE_HOURS)
+    return jwt.encode(
+        {
+            "exp": expires.timestamp(),
+            "nbf": now,
+            "sub": str(user_id),
+            # Bind the link to the address it was sent to, so it stops working
+            # if the account's email changes before it is used.
+            "email": email,
+            "type": security.EMAIL_VERIFICATION_TOKEN_TYPE,
+        },
+        settings.SECRET_KEY,
+        algorithm=security.ALGORITHM,
+    )
+
+
+def verify_email_verification_token(token: str) -> tuple[uuid.UUID, str] | None:
+    try:
+        decoded = security.decode_token(
+            token, token_type=security.EMAIL_VERIFICATION_TOKEN_TYPE
+        )
+        return uuid.UUID(str(decoded["sub"])), str(decoded["email"])
+    except InvalidTokenError, KeyError, ValueError:
         return None
