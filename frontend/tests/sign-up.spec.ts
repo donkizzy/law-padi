@@ -67,6 +67,10 @@ test("Sign up returns to the page the visitor came from", async ({ page }) => {
   await fillForm(page, "Test User", email, password, password)
   await page.getByRole("button", { name: "Sign Up" }).click()
   await expect(page).toHaveURL(/\/login\?.*redirect=%2Fsaved/)
+  // Both forms share test IDs; wait for the login page before filling it.
+  await expect(
+    page.getByRole("heading", { name: "Login to your account" }),
+  ).toBeVisible()
   await page.getByTestId("email-input").fill(email)
   await page.getByTestId("password-input").fill(password)
   await page.getByRole("button", { name: "Log In" }).click()
@@ -81,6 +85,9 @@ test("Sign-in ignores redirects to other sites", async ({ page }) => {
   await fillForm(page, "Test User", email, password, password)
   await page.getByRole("button", { name: "Sign Up" }).click()
   await page.goto("/login?redirect=%2F%2Fevil.example")
+  await expect(
+    page.getByRole("heading", { name: "Login to your account" }),
+  ).toBeVisible()
   await page.getByTestId("email-input").fill(email)
   await page.getByTestId("password-input").fill(password)
   await page.getByRole("button", { name: "Log In" }).click()
