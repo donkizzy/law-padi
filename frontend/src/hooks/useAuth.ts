@@ -8,23 +8,28 @@ import {
   type UserRegister,
   UsersService,
 } from "@/client"
+import {
+  endSession,
+  isSignedIn,
+  startSession,
+  useSessionStatus,
+} from "@/lib/session"
 import { handleError } from "@/utils"
 import useCustomToast from "./useCustomToast"
 import { clearDrafts } from "./useWorkspacePreferences"
 
-const isLoggedIn = () => {
-  return localStorage.getItem("access_token") !== null
-}
+const isLoggedIn = isSignedIn
 
 const useAuth = () => {
   const navigate = useNavigate()
   const queryClient = useQueryClient()
   const { showErrorToast } = useCustomToast()
+  const status = useSessionStatus()
 
   const { data: user } = useQuery<UserPublic | null, Error>({
     queryKey: ["currentUser"],
     queryFn: async () => (await UsersService.readUserMe()).data,
-    enabled: isLoggedIn(),
+    enabled: status === "signed-in",
   })
 
   const signUpMutation = useMutation({
@@ -43,8 +48,8 @@ const useAuth = () => {
     const response = await LoginService.loginAccessToken({
       body: data,
     })
-    localStorage.setItem("access_token", response.data.access_token)
     queryClient.removeQueries()
+    startSession(response.data.access_token)
   }
 
   const loginMutation = useMutation({
@@ -55,8 +60,13 @@ const useAuth = () => {
     onError: handleError.bind(showErrorToast),
   })
 
-  const logout = () => {
-    localStorage.removeItem("access_token")
+  const logout = async () => {
+    try {
+      await LoginService.logout()
+    } catch {
+      /* Sign out locally even if the server can't be reached. */
+    }
+    endSession()
     try {
       clearDrafts()
     } catch {

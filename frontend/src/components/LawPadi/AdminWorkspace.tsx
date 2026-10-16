@@ -64,6 +64,7 @@ import {
 } from "@/components/ui/dialog"
 import { Input } from "@/components/ui/input"
 import useCustomToast from "@/hooks/useCustomToast"
+import { getAccessToken } from "@/lib/session"
 import { cn } from "@/lib/utils"
 
 type AdminTab = "runs" | "pages" | "review" | "releases" | "benchmarks"
@@ -1624,7 +1625,7 @@ function PageThumbnail({
     }
     let cancelled = false
     let loadedUrl: string | undefined
-    const token = localStorage.getItem("access_token")
+    const token = getAccessToken()
     fetch(page.thumbnail_url, {
       headers: token ? { Authorization: `Bearer ${token}` } : undefined,
     })
@@ -1775,7 +1776,7 @@ function ProtectedImage({
   useEffect(() => {
     let cancelled = false
     let loadedUrl: string | undefined
-    const token = localStorage.getItem("access_token")
+    const token = getAccessToken()
     fetch(url, {
       headers: token ? { Authorization: `Bearer ${token}` } : undefined,
     })
@@ -3332,7 +3333,7 @@ async function putSourceObject(
   if (upload.multipart_required) {
     return putMultipartSourceObject(upload, file)
   }
-  const token = localStorage.getItem("access_token")
+  const token = getAccessToken()
   const response = await fetch(uploadFetchUrl(upload.upload_url), {
     method: "PUT",
     headers: {

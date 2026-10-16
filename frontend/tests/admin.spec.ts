@@ -1,4 +1,5 @@
 import { expect, type Page, type Route, test } from "@playwright/test"
+import { mockSignedIn } from "./utils/session.ts"
 
 const runId = "11111111-1111-4111-8111-111111111111"
 const failedRunId = "11111111-1111-4111-8111-222222222222"
@@ -625,9 +626,7 @@ async function mockAdminApi(
   let releaseStatus = "validating"
   let revisionText: string | null = null
 
-  await page.addInitScript(() => {
-    localStorage.setItem("access_token", "playwright-admin-token")
-  })
+  await mockSignedIn(page, "playwright-admin-token")
   await page.route("**/api/v1/users/me", async (route) =>
     json(route, {
       id: "99999999-9999-4999-8999-999999999999",

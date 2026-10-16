@@ -1,4 +1,5 @@
 import { expect, type Page, test } from "@playwright/test"
+import { mockSignedIn } from "./utils/session.ts"
 
 const release = "published-historical-test"
 const path = "constitution-1999.chapter4.section33.subsection2.paragrapha"
@@ -633,9 +634,7 @@ test("guests landing on the home URL see the welcome page first", async ({
 test("signed-in visitors landing on the home URL go straight to the app", async ({
   page,
 }) => {
-  await page.addInitScript(() =>
-    localStorage.setItem("access_token", "account-token"),
-  )
+  await mockSignedIn(page)
   await page.goto("/")
   await expect(page).not.toHaveURL(/\/welcome/)
 })

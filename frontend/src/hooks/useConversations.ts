@@ -1,9 +1,10 @@
 import { useInfiniteQuery } from "@tanstack/react-query"
 import { ConversationsService } from "@/client"
+import { getAccessToken } from "@/lib/session"
 import { useChatCapabilities } from "./useChatCapabilities"
 
 export function conversationHeaders(): Record<string, string> {
-  const token = localStorage.getItem("access_token")
+  const token = getAccessToken()
   return token ? { Authorization: `Bearer ${token}` } : {}
 }
 

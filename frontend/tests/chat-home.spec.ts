@@ -1,4 +1,5 @@
 import { expect, type Page, test } from "@playwright/test"
+import { mockSignedIn } from "./utils/session.ts"
 
 const conversationId = "11111111-1111-4111-8111-111111111111"
 const runId = "22222222-2222-4222-8222-222222222222"
@@ -415,10 +416,7 @@ test("Logout removes account conversation data from the next guest view", async 
       },
     })
   })
-  await page.goto("/login")
-  await page.evaluate(() =>
-    localStorage.setItem("access_token", "account-token"),
-  )
+  await mockSignedIn(page)
   await page.goto("/?intent=ask")
   await expect(page.getByText("Private account conversation")).toBeVisible()
   await page.getByTestId("user-menu").click()
