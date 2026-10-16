@@ -10,6 +10,7 @@ import {
 } from "@/client"
 import { handleError } from "@/utils"
 import useCustomToast from "./useCustomToast"
+import { clearDrafts } from "./useWorkspacePreferences"
 
 const isLoggedIn = () => {
   return localStorage.getItem("access_token") !== null
@@ -56,6 +57,11 @@ const useAuth = () => {
 
   const logout = () => {
     localStorage.removeItem("access_token")
+    try {
+      clearDrafts()
+    } catch {
+      /* Signing out must work when browser storage is blocked. */
+    }
     queryClient.clear()
     navigate({ to: "/login" })
   }

@@ -10,12 +10,14 @@ export const Route = createFileRoute("/_layout/")({
     mode: z.enum(["auto", "semantic"]).optional(),
     release: z.string().max(128).optional(),
     selected: z.uuid().optional(),
+    intent: z.enum(["ask", "find"]).optional(),
+    fresh: z.uuid().optional(),
   }),
   component: LawPadiHome,
   head: () => ({
     meta: [
       {
-        title: "Law Padi - Explore Nigeria's Constitution",
+        title: "constitution.ng - Explore Nigeria's Constitution",
       },
     ],
   }),

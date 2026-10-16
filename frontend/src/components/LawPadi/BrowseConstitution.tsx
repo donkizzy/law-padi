@@ -9,6 +9,7 @@ import {
   SquircleButton,
 } from "@/components/LawPadi/primitives"
 import { legalError, useProvisionTree } from "@/hooks/useLegalCorpus"
+import { editionName } from "@/lib/legal-provisions"
 
 export function BrowseConstitution() {
   const root = useProvisionTree()
@@ -16,12 +17,9 @@ export function BrowseConstitution() {
   const navigate = useNavigate()
   return (
     <section className="mx-auto max-w-5xl px-4 py-8 sm:px-8 lg:px-12 lg:py-12">
-      <SectionHeading
-        kicker="Published source navigator"
-        title="Browse the Constitution."
-      >
-        {root.data?.edition_label ??
-          "Explore the published hierarchy and its stored English wording."}
+      <SectionHeading kicker="Browse" title="Browse the Constitution.">
+        Explore the available chapters and sections of the{" "}
+        {editionName(root.data?.edition_label)}.
       </SectionHeading>
       <form
         className="mb-7 flex gap-3"
@@ -30,16 +28,17 @@ export function BrowseConstitution() {
           if (query.trim())
             void navigate({
               to: "/",
-              search: { q: query.trim(), mode: "auto" },
+              search: { q: query.trim(), mode: "auto", intent: "find" },
             })
         }}
       >
         <input
-          aria-label="Search provisions"
+          aria-label="Search the Constitution"
           className="sq-md min-w-0 flex-1 border border-border bg-card px-4 text-sm"
-          placeholder="Section 33(2)(a) or a topic"
+          placeholder="Search a topic or a section number"
           value={query}
           onChange={(event) => setQuery(event.target.value)}
+          maxLength={2000}
         />
         <SquircleButton type="submit" disabled={!query.trim()}>
           Search
@@ -49,7 +48,7 @@ export function BrowseConstitution() {
         <SkeletonBlock />
       ) : root.isError ? (
         <ErrorState
-          title="Corpus unavailable"
+          title="Couldn't load the Constitution"
           action={
             <InlineAction onClick={() => root.refetch()} type="button">
               Try again
@@ -92,7 +91,7 @@ function TreeNode({
         className="sq-md block border border-border bg-card p-4 text-sm hover:border-primary focus-visible:ring-2 focus-visible:ring-ring"
       >
         <span className="font-bold text-primary">{node.citation}</span>
-        <span className="mt-1 block">{node.heading}</span>
+        <span className="mt-1 block">{node.title || node.heading}</span>
       </Link>
     )
   return (
@@ -104,7 +103,9 @@ function TreeNode({
         onClick={() => setExpanded(!expanded)}
       >
         <span className="text-xs font-bold text-primary">{node.citation}</span>
-        <span className="mt-1 block font-legal text-xl">{node.heading}</span>
+        <span className="mt-1 block font-display text-xl">
+          {node.title || node.heading}
+        </span>
       </button>
       {expanded && (
         <TreeChildren parent={node.canonical_path} release={release} />
@@ -124,10 +125,10 @@ function TreeChildren({
   return (
     <div className="mt-4 grid gap-3 border-t border-border pt-4">
       {tree.isPending ? (
-        <p role="status">Loading provisions…</p>
+        <p role="status">Loading…</p>
       ) : tree.isError ? (
         <ErrorState
-          title="Hierarchy unavailable"
+          title="Couldn't load this part"
           action={
             <InlineAction onClick={() => tree.refetch()} type="button">
               Try again
@@ -138,7 +139,7 @@ function TreeChildren({
         </ErrorState>
       ) : tree.data.data.length === 0 ? (
         <p className="text-sm text-muted-foreground">
-          No text provisions are stored here.
+          There's nothing to show in this part yet.
         </p>
       ) : (
         tree.data.data.map((node) => (

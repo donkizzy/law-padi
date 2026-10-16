@@ -2,7 +2,14 @@ import { useQuery, useQueryClient } from "@tanstack/react-query"
 import { useNavigate, useSearch } from "@tanstack/react-router"
 import { AxiosError } from "axios"
 import { useCallback, useEffect, useRef, useState } from "react"
-import type { CitationOutcome, EvidenceItem, MessagePublic } from "@/client"
+import { FiArrowDown } from "react-icons/fi"
+import { toast } from "sonner"
+import type {
+  CitationOutcome,
+  ConversationDetail,
+  EvidenceItem,
+  MessagePublic,
+} from "@/client"
 import { ConversationsService } from "@/client"
 import { ChatComposer } from "@/components/LawPadi/ChatComposer"
 import { ChatEvidencePanel } from "@/components/LawPadi/ChatEvidencePanel"
@@ -11,16 +18,31 @@ import {
   InlineAction,
   PromptSuggestion,
   SkeletonBlock,
+  SquircleButton,
 } from "@/components/LawPadi/primitives"
+import { useChatCapabilities } from "@/hooks/useChatCapabilities"
+import { useChatDraft } from "@/hooks/useChatDraft"
+import { useChatRequestScope } from "@/hooks/useChatRequestScope"
 import { conversationHeaders } from "@/hooks/useConversations"
-import { useLegalSearch } from "@/hooks/useLegalCorpus"
+import { useLegalRelease } from "@/hooks/useLegalCorpus"
+import { useSavedProvisions } from "@/hooks/useSavedProvisions"
+import { useWorkspacePreferences } from "@/hooks/useWorkspacePreferences"
+import { editionName, readableText } from "@/lib/legal-provisions"
+import {
+  downloadResearch,
+  evidenceCopy,
+  readCompleteConversation,
+} from "@/lib/research"
 import { bestContainingSource } from "@/lib/source-ranking"
+import { cn } from "@/lib/utils"
+import { AnswerFeedback } from "./AnswerFeedback"
+import { EditionNotice } from "./EditionNotice"
 
 const suggestions = [
-  "Section 37",
-  "What does the Constitution say about privacy?",
-  "Section 33(2)(a)",
-  "What facts matter if police search my phone?",
+  "Can police search my phone?",
+  "How long can police hold me before court?",
+  "Who can run for president?",
+  "What does Section 37 say?",
 ]
 
 type ExplanationAnswer = {
@@ -31,9 +53,25 @@ type ExplanationAnswer = {
     quotation?: string | null
   }>
   missing_facts: string[]
+  follow_up_questions?: string[]
   citation_outcomes: CitationOutcome[]
   evidence: EvidenceItem[]
   notice?: string | null
+}
+
+// Messages are owned here so earlier conversations read the same way.
+const outcomeMessages: Record<string, string> = {
+  clarification_required:
+    "That question covers a lot of the Constitution at once. Try asking about one section or one issue.",
+  validation_failed:
+    "We couldn't write an explanation we were confident matches the Constitution's text, so here is the section itself.",
+  provider_failure:
+    "Explanations aren't available right now. Here is the relevant text of the Constitution.",
+  budget_exhausted:
+    "We've reached today's limit for explanations. Here is the relevant text of the Constitution.",
+  capacity_exhausted:
+    "A lot of people are asking questions right now. Here is the relevant text; try again in a minute.",
+  cancelled: "You stopped this answer.",
 }
 
 function asAnswer(
@@ -47,41 +85,235 @@ function asAnswer(
 function requestError(error: unknown): string {
   if (error instanceof AxiosError) {
     const detail = error.response?.data?.detail
+    if (error.response?.status === 503)
+      return "Explanations are temporarily unavailable. Your question is still here; try again or find the relevant sections."
+    if (error.response?.status === 429)
+      return typeof detail === "string" &&
+        detail.toLowerCase().includes("daily")
+        ? "You've reached today's explanation allowance. It resets at midnight in Lagos. You can still find and read sections."
+        : "Explanations are busy right now. Try again in a minute, or find the relevant sections."
     if (typeof detail === "string") return detail
   }
-  return "The request could not be completed. Check your connection and try again."
+  return "Something went wrong sending your question. Check your connection and try again."
 }
 
-function EvidenceCards({
+function AnswerActions({ answer }: { answer: ExplanationAnswer }) {
+  const { isSaved, toggle } = useSavedProvisions()
+  const copy = async () => {
+    try {
+      const explanation = answer.blocks
+        .map(
+          (block) =>
+            `${block.text}\n${block.evidence_ids
+              .map(
+                (id) =>
+                  answer.evidence.find((item) => item.evidence_id === id)
+                    ?.citation,
+              )
+              .filter(Boolean)
+              .join("; ")}`,
+        )
+        .join("\n\n")
+      const facts = answer.missing_facts.length
+        ? `\n\nWhat could change this for you:\n${answer.missing_facts.join("\n")}`
+        : ""
+      await navigator.clipboard.writeText(
+        `${explanation || statusMessage(answer)}${facts}\n\nSources:\n${answer.evidence.map(evidenceCopy).join("\n\n")}\n\nThis explanation is not legal advice.`,
+      )
+      toast.success("Answer and citations copied")
+    } catch {
+      toast.error("Couldn't copy. Please try again.")
+    }
+  }
+  const save = () => {
+    try {
+      const items = splitSources(answer).cited
+      const sources = items.length ? items : answer.evidence.slice(0, 4)
+      for (const item of sources)
+        if (!isSaved(item.canonical_path, item.release_version))
+          toggle(item.canonical_path, item.release_version)
+      toast.success("Sources saved on this browser")
+    } catch {
+      toast.error("Couldn't save sources on this browser.")
+    }
+  }
+  return (
+    <fieldset className="flex flex-wrap gap-2" aria-label="Answer actions">
+      <InlineAction type="button" onClick={() => void copy()}>
+        Copy answer with citations
+      </InlineAction>
+      {answer.evidence.length > 0 && (
+        <InlineAction type="button" onClick={save}>
+          Save sources
+        </InlineAction>
+      )}
+      <InlineAction
+        type="button"
+        onClick={() =>
+          downloadResearch("constitution-ng-answer.json", {
+            format_version: 1,
+            exported_at: new Date().toISOString(),
+            answer,
+            sources: answer.evidence.map(evidenceCopy),
+            notice: "Explanations are not legal advice.",
+          })
+        }
+      >
+        Export answer
+      </InlineAction>
+    </fieldset>
+  )
+}
+
+function statusMessage(answer: ExplanationAnswer) {
+  if (answer.outcome === "clarification_required" && answer.notice)
+    return answer.notice
+  const gap = answer.citation_outcomes.find((row) => row.status !== "resolved")
+  if (answer.outcome === "insufficient_evidence") {
+    if (gap?.message) return gap.message
+    return answer.evidence.length
+      ? "The Constitution doesn't seem to answer this directly. Here are the closest sections we found."
+      : "We couldn't find a part of the Constitution that answers this. Try rephrasing, or ask about a specific right, office or section."
+  }
+  return (
+    outcomeMessages[answer.outcome] ??
+    "We couldn't finish this answer. Here is the relevant text of the Constitution."
+  )
+}
+
+/** Drop sources whose text sits inside another listed source (35(3) in 35). */
+function withoutContained(items: EvidenceItem[]) {
+  return items.filter(
+    (item) =>
+      !items.some(
+        (other) =>
+          other !== item &&
+          item.canonical_path.startsWith(`${other.canonical_path}.`),
+      ),
+  )
+}
+
+function splitSources(answer: ExplanationAnswer) {
+  const ids = new Set(answer.blocks.flatMap((block) => block.evidence_ids))
+  const order = [...ids]
+  const cited = withoutContained(
+    answer.evidence
+      .filter((item) => ids.has(item.evidence_id))
+      .sort(
+        (a, b) => order.indexOf(a.evidence_id) - order.indexOf(b.evidence_id),
+      ),
+  )
+  const others = withoutContained(
+    answer.evidence.filter(
+      (item) =>
+        !ids.has(item.evidence_id) &&
+        !cited.some(
+          (source) =>
+            item.canonical_path === source.canonical_path ||
+            item.canonical_path.startsWith(`${source.canonical_path}.`),
+        ),
+    ),
+  )
+  return { cited, others }
+}
+
+/** Paragraphs, with lines starting "- " grouped into a list. */
+function BlockText({ text, lead }: { text: string; lead?: boolean }) {
+  const groups: Array<{ list: boolean; lines: string[] }> = []
+  for (const raw of text.split("\n")) {
+    const line = raw.trim()
+    if (!line) continue
+    const list = /^[-•]\s+/.test(line)
+    const value = line.replace(/^[-•]\s+/, "")
+    const last = groups[groups.length - 1]
+    if (last && last.list === list && list) last.lines.push(value)
+    else groups.push({ list, lines: [value] })
+  }
+  const size = lead ? "text-body-lg text-foreground" : "text-body"
+  return (
+    <div className="grid gap-2">
+      {groups.map((group, index) =>
+        group.list ? (
+          <ul
+            className={cn("ml-5 grid list-disc gap-1", size)}
+            key={`${index}:list`}
+          >
+            {group.lines.map((line) => (
+              <li key={line}>{line}</li>
+            ))}
+          </ul>
+        ) : (
+          <p className={size} key={`${index}:text`}>
+            {group.lines.join(" ")}
+          </p>
+        ),
+      )}
+    </div>
+  )
+}
+
+function SourceChip({
+  item,
+  onSelect,
+}: {
+  item: EvidenceItem
+  onSelect: (item: EvidenceItem) => void
+}) {
+  return (
+    <button
+      className="sq-sm min-h-11 border border-primary/25 px-3 py-2 text-label text-primary hover:bg-primary/5 focus-visible:ring-2 focus-visible:ring-ring"
+      onClick={() => onSelect(item)}
+      title={item.title ?? undefined}
+      type="button"
+    >
+      {item.citation}
+    </button>
+  )
+}
+
+function SourceCard({
+  item,
+  onSelect,
+}: {
+  item: EvidenceItem
+  onSelect: (item: EvidenceItem) => void
+}) {
+  return (
+    <button
+      aria-label={`Open ${item.citation}${item.title ? `: ${item.title}` : " source"}`}
+      className="sq-md grid gap-1 border border-border bg-card p-4 text-left hover:border-primary focus-visible:ring-2 focus-visible:ring-ring"
+      onClick={() => onSelect(item)}
+      type="button"
+    >
+      <span className="text-label text-primary">{item.citation}</span>
+      {item.title && (
+        <span className="text-body font-semibold">{item.title}</span>
+      )}
+      <span className="hidden font-legal text-statute-sm text-muted-foreground sm:line-clamp-2">
+        {item.authoritative_text.replace(/\s+/g, " ")}
+      </span>
+    </button>
+  )
+}
+
+function SourceList({
+  title,
   items,
   onSelect,
 }: {
+  title: string
   items: EvidenceItem[]
   onSelect: (item: EvidenceItem) => void
 }) {
   if (!items.length) return null
   return (
-    <section aria-label="Source evidence" className="grid gap-3">
-      <h3 className="text-sm font-semibold">Results</h3>
-      {items.map((item) => (
-        <button
-          className="sq-md border border-border bg-card p-4 text-left hover:border-primary focus-visible:ring-2 focus-visible:ring-ring"
-          key={item.evidence_id}
-          onClick={() => onSelect(item)}
-          type="button"
-        >
-          <span className="text-sm font-bold text-primary">
-            {item.citation}
-          </span>
-          <span className="mt-2 block max-h-32 overflow-hidden whitespace-pre-wrap font-legal text-sm leading-6">
-            {item.authoritative_text}
-          </span>
-          <span className="mt-2 block text-xs text-muted-foreground">
-            {item.source_authority} · PDF page{" "}
-            {item.source_page_start ?? "not recorded"}
-          </span>
-        </button>
-      ))}
+    <section aria-label={title} className="grid gap-3">
+      <h3 className="text-overline uppercase text-muted-foreground">{title}</h3>
+      <div className="grid gap-3">
+        {items.map((item) => (
+          <SourceCard item={item} key={item.evidence_id} onSelect={onSelect} />
+        ))}
+      </div>
     </section>
   )
 }
@@ -91,14 +323,14 @@ function LookupGaps({ outcomes }: { outcomes: CitationOutcome[] }) {
   if (!gaps.length) return null
   return (
     <section
-      aria-label="Unresolved references"
+      aria-label="Sections we couldn't find"
       className="sq-md border border-amber-500/40 bg-amber-500/5 p-4"
     >
-      <h3 className="text-sm font-semibold">References needing attention</h3>
-      <ul className="mt-2 list-inside list-disc text-sm leading-6">
+      <h3 className="text-body font-semibold">We couldn't find everything</h3>
+      <ul className="mt-2 list-inside list-disc text-body">
         {gaps.map((item, index) => (
           <li key={`${item.reference}:${index}`}>
-            {item.reference}: {item.status}. {item.message}
+            {item.reference}: {item.message}
           </li>
         ))}
       </ul>
@@ -106,82 +338,195 @@ function LookupGaps({ outcomes }: { outcomes: CitationOutcome[] }) {
   )
 }
 
+function FollowUps({
+  questions,
+  onAsk,
+}: {
+  questions: string[]
+  onAsk: (question: string) => void
+}) {
+  if (!questions.length) return null
+  return (
+    <section aria-label="Suggested questions" className="grid gap-3">
+      <h3 className="text-overline uppercase text-muted-foreground">
+        You might also ask
+      </h3>
+      <div className="flex flex-wrap gap-2">
+        {questions.map((question) => (
+          <PromptSuggestion key={question} onClick={() => onAsk(question)}>
+            {question}
+          </PromptSuggestion>
+        ))}
+      </div>
+    </section>
+  )
+}
+
 function AnswerView({
   answer,
   onSelect,
+  onAsk,
 }: {
   answer: ExplanationAnswer
   onSelect: (item: EvidenceItem) => void
+  onAsk?: (question: string) => void
 }) {
-  const bestSource = answer.citation_outcomes.length
-    ? answer.evidence[0]
-    : bestContainingSource(answer.evidence)
-  return (
-    <section aria-label="AI explanation" className="grid gap-4">
-      {answer.blocks.length > 0 && (
-        <div className="sq-lg border border-border bg-card p-5">
-          <p className="mb-4 text-xs font-bold uppercase text-primary">
-            AI explanation · {answer.outcome.replace(/_/g, " ")}
-          </p>
-          <div className="grid gap-5">
-            {answer.blocks.map((block, index) => (
-              <div key={index}>
-                <p className="whitespace-pre-wrap text-sm leading-7">
-                  {block.text}
-                </p>
-                <div className="mt-2 flex flex-wrap gap-2">
-                  {block.evidence_ids.map((id) => {
-                    const item = answer.evidence.find(
-                      (row) => row.evidence_id === id,
-                    )
-                    return item ? (
-                      <button
-                        className="sq-sm border border-primary/30 px-2 py-1 text-xs font-semibold text-primary hover:bg-primary/5 focus-visible:ring-2 focus-visible:ring-ring"
-                        key={id}
-                        onClick={() => onSelect(item)}
-                        type="button"
-                      >
-                        {item.citation}
-                      </button>
-                    ) : null
-                  })}
-                </div>
-              </div>
-            ))}
+  const byId = new Map(answer.evidence.map((item) => [item.evidence_id, item]))
+  const historical = answer.evidence.find(
+    (item) => item.legal_status === "historical",
+  )
+  if (!answer.blocks.length) {
+    const bestSource = answer.citation_outcomes.length
+      ? answer.evidence[0]
+      : bestContainingSource(answer.evidence)
+    const others = withoutContained(
+      answer.evidence.filter(
+        (item) =>
+          item !== bestSource &&
+          !item.canonical_path.startsWith(`${bestSource?.canonical_path}.`),
+      ),
+    )
+    return (
+      <section aria-label="Answer" className="grid gap-5">
+        <p className="sq-md bg-secondary p-4 text-body" role="status">
+          {statusMessage(answer)}
+        </p>
+        <EditionNotice
+          label={historical?.edition_label}
+          historical={Boolean(historical)}
+        />
+        <AnswerActions answer={answer} />
+        <LookupGaps outcomes={answer.citation_outcomes} />
+        {bestSource && (
+          <div className="sq-lg border border-border bg-card p-5">
+            <p className="text-label text-primary">{bestSource.citation}</p>
+            {bestSource.title && (
+              <h3 className="mt-1 font-display text-title-3">
+                {bestSource.title}
+              </h3>
+            )}
+            <p className="mt-3 whitespace-pre-wrap font-legal text-statute-sm">
+              {readableText(bestSource.authoritative_text)}
+            </p>
+            <InlineAction
+              className="mt-4"
+              onClick={() => onSelect(bestSource)}
+              type="button"
+            >
+              More about this section
+            </InlineAction>
           </div>
-          {answer.missing_facts.length > 0 && (
-            <div className="mt-5 border-t border-border pt-4 text-sm">
-              <p className="font-semibold">
-                Facts that could change the explanation
-              </p>
-              <ul className="mt-2 list-inside list-disc">
-                {answer.missing_facts.map((fact) => (
-                  <li key={fact}>{fact}</li>
-                ))}
-              </ul>
+        )}
+        <SourceList
+          items={others.slice(0, 4)}
+          onSelect={onSelect}
+          title="Other sections that may help"
+        />
+        {onAsk && (
+          <FollowUps
+            onAsk={onAsk}
+            questions={answer.follow_up_questions ?? []}
+          />
+        )}
+      </section>
+    )
+  }
+  const { cited, others } = splitSources(answer)
+  return (
+    <section aria-label="Answer" className="grid gap-5">
+      <div className="sq-lg border border-border bg-card p-5 sm:p-6">
+        <div className="grid gap-5">
+          {answer.blocks.map((block, index) => (
+            <div key={`${index}:${block.text.slice(0, 24)}`}>
+              <BlockText lead={index === 0} text={block.text} />
+              <div className="mt-2 flex flex-wrap gap-2">
+                {block.evidence_ids.map((id) => {
+                  const item = byId.get(id)
+                  return item ? (
+                    <SourceChip item={item} key={id} onSelect={onSelect} />
+                  ) : null
+                })}
+              </div>
             </div>
-          )}
+          ))}
         </div>
-      )}
-      {answer.blocks.length === 0 && bestSource && (
-        <div className="sq-lg border border-primary/30 bg-card p-5">
-          <p className="mb-3 text-xs font-bold uppercase text-primary">
-            Best published source wording · {bestSource.citation}
-          </p>
-          <p className="whitespace-pre-wrap font-legal text-sm leading-7">
-            {bestSource.authoritative_text}
-          </p>
-          <InlineAction
-            className="mt-4"
-            onClick={() => onSelect(bestSource)}
-            type="button"
-          >
-            View source details
-          </InlineAction>
-        </div>
-      )}
+        {answer.missing_facts.length > 0 && (
+          <div className="mt-6 border-t border-border pt-4">
+            <h3 className="text-body font-semibold">
+              What could change this for you
+            </h3>
+            <ul className="mt-2 ml-5 grid list-disc gap-1 text-body">
+              {answer.missing_facts.map((fact) => (
+                <li key={fact}>{fact}</li>
+              ))}
+            </ul>
+          </div>
+        )}
+        <EditionNotice
+          label={historical?.edition_label}
+          historical={Boolean(historical)}
+          className="mt-5 border-t border-border pt-4"
+        />
+      </div>
       <LookupGaps outcomes={answer.citation_outcomes} />
-      <EvidenceCards items={answer.evidence} onSelect={onSelect} />
+      <AnswerActions answer={answer} />
+      <SourceList items={cited} onSelect={onSelect} title="Sections used" />
+      {others.length > 0 && (
+        <details className="group">
+          <summary className="cursor-pointer text-body text-muted-foreground hover:text-foreground">
+            {others.length === 1
+              ? "1 other section came up"
+              : `${others.length} other sections came up`}
+          </summary>
+          <div className="mt-3">
+            <SourceList
+              items={others}
+              onSelect={onSelect}
+              title="Also related"
+            />
+          </div>
+        </details>
+      )}
+      {onAsk && (
+        <FollowUps onAsk={onAsk} questions={answer.follow_up_questions ?? []} />
+      )}
+    </section>
+  )
+}
+
+function PendingAnswer({
+  progress,
+  sources,
+  outcomes,
+}: {
+  progress: string | null
+  sources: EvidenceItem[]
+  outcomes: CitationOutcome[]
+}) {
+  const reading = withoutContained(sources).slice(0, 4)
+  return (
+    <section aria-label="Answer in progress" className="grid gap-4">
+      <LookupGaps outcomes={outcomes} />
+      <div className="sq-lg grid gap-3 border border-border bg-card p-5">
+        <p className="text-body text-muted-foreground" role="status">
+          {progress ?? "Finding the relevant sections…"}
+        </p>
+        {reading.length > 0 && (
+          <p className="text-label font-normal text-muted-foreground">
+            Reading{" "}
+            {reading
+              .map((item) =>
+                item.title ? `${item.citation} (${item.title})` : item.citation,
+              )
+              .join(", ")}
+          </p>
+        )}
+        <div aria-hidden className="grid gap-2">
+          <div className="sq-xs h-3 w-11/12 animate-pulse bg-muted" />
+          <div className="sq-xs h-3 w-9/12 animate-pulse bg-muted" />
+          <div className="sq-xs h-3 w-10/12 animate-pulse bg-muted" />
+        </div>
+      </div>
     </section>
   )
 }
@@ -189,35 +534,57 @@ function AnswerView({
 function MessageView({
   message,
   onSelect,
+  onAsk,
+  conversationId,
 }: {
   message: MessagePublic
+  conversationId?: string
   onSelect: (item: EvidenceItem) => void
+  onAsk?: (question: string) => void
 }) {
   if (message.role === "user")
     return (
-      <div className="ml-auto max-w-[90%] sq-lg bg-secondary px-4 py-3 text-sm leading-6">
+      <div className="ml-auto max-w-[90%] sq-lg bg-secondary px-4 py-3 text-body">
         {message.content}
       </div>
     )
   const answer = asAnswer(message.answer_content)
   return answer ? (
-    <AnswerView answer={answer} onSelect={onSelect} />
+    <div data-answer-start="" className="scroll-mt-24">
+      <AnswerView answer={answer} onAsk={onAsk} onSelect={onSelect} />
+      {conversationId && (
+        <AnswerFeedback message={message} conversationId={conversationId} />
+      )}
+    </div>
   ) : (
-    <p className="text-sm text-muted-foreground">Explanation unavailable.</p>
+    <p className="text-body text-muted-foreground">
+      This answer couldn't be loaded.
+    </p>
   )
 }
 
 export function ChatHome() {
-  const localPreview = import.meta.env.VITE_CHAT_PREVIEW === "true"
   const search = useSearch({ from: "/_layout/" })
   const navigate = useNavigate({ from: "/" })
   const queryClient = useQueryClient()
-  const [draft, setDraft] = useState("")
+  const beginRequest = useChatRequestScope()
+  const capabilities = useChatCapabilities()
+  const release = useLegalRelease()
+  const { preferences } = useWorkspacePreferences()
+  const [draft, setDraft] = useChatDraft(search.c ?? "new")
+  const inputRef = useRef<HTMLTextAreaElement | null>(null)
+  const bottomRef = useRef<HTMLDivElement | null>(null)
+  const messageListRef = useRef<HTMLDivElement | null>(null)
+  const nearBottom = useRef(true)
+  const [showJump, setShowJump] = useState(false)
+  const submittingRef = useRef(false)
   const [submitting, setSubmitting] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [pendingQuestion, setPendingQuestion] = useState("")
   const [runId, setRunId] = useState<string | null>(null)
   const [progress, setProgress] = useState<string | null>(null)
+  const [streamError, setStreamError] = useState(false)
+  const [streamAttempt, setStreamAttempt] = useState(0)
   const [sources, setSources] = useState<EvidenceItem[]>([])
   const [outcomes, setOutcomes] = useState<CitationOutcome[]>([])
   const [liveAnswer, setLiveAnswer] = useState<ExplanationAnswer | null>(null)
@@ -230,6 +597,7 @@ export function ChatHome() {
   const [olderBefore, setOlderBefore] = useState<string | null>(null)
   const [olderHasMore, setOlderHasMore] = useState<boolean | null>(null)
   const [loadingOlder, setLoadingOlder] = useState(false)
+  const [exporting, setExporting] = useState(false)
   const autoHandled = useRef<string | null>(null)
   const pendingKey = useRef<{
     question: string
@@ -237,7 +605,6 @@ export function ChatHome() {
     selected?: string
     key: string
   } | null>(null)
-  const submittedConversation = useRef<string | null>(null)
 
   const conversation = useQuery({
     queryKey: ["conversation", search.c],
@@ -251,41 +618,72 @@ export function ChatHome() {
         })
       ).data,
     enabled: Boolean(search.c),
-    retry: false,
+    retry: 1,
+    refetchOnReconnect: true,
+    refetchInterval: (query) =>
+      query.state.data?.active_run_id || runId ? 2500 : false,
   })
-  const previewQuery =
-    pendingQuestion && (!search.c || conversation.data?.release_version)
-      ? pendingQuestion
-      : ""
-  const preview = useLegalSearch(
-    previewQuery,
-    "auto",
-    0,
-    conversation.data?.release_version ?? search.release,
-  )
   const activeRunId = conversation.data?.active_run_id ?? runId
 
   useEffect(() => {
-    setOlderMessages([])
-    setOlderBefore(null)
-    setOlderHasMore(null)
-    if (search.c && submittedConversation.current !== search.c) {
-      setSources([])
-      setOutcomes([])
-      setLiveAnswer(null)
-      setPendingQuestion("")
+    const data = conversation.data
+    if (
+      data &&
+      !data.active_run_id &&
+      data.messages[data.messages.length - 1]?.role === "assistant"
+    ) {
       setRunId(null)
+      setPendingQuestion("")
       setProgress(null)
-      setError(null)
+      setStreamError(false)
+      pendingKey.current = null
     }
-    submittedConversation.current = null
-  }, [search.c])
+  }, [conversation.data])
+
+  useEffect(() => {
+    const onScroll = () => {
+      nearBottom.current =
+        document.documentElement.scrollHeight -
+          window.scrollY -
+          window.innerHeight <
+        200
+      if (nearBottom.current) setShowJump(false)
+    }
+    window.addEventListener("scroll", onScroll, { passive: true })
+    return () => window.removeEventListener("scroll", onScroll)
+  }, [])
+  useEffect(() => {
+    if (
+      !search.c ||
+      !(conversation.data?.messages.length || liveAnswer || pendingQuestion)
+    )
+      return
+    if (preferences.followLatest && nearBottom.current) {
+      const answers = messageListRef.current?.querySelectorAll<HTMLElement>(
+        "[data-answer-start]",
+      )
+      const latestAnswer = answers?.item(answers.length - 1)
+      if (latestAnswer && !pendingQuestion && !activeRunId)
+        latestAnswer.scrollIntoView({ block: "start" })
+      else bottomRef.current?.scrollIntoView({ block: "end" })
+    } else setShowJump(true)
+  }, [
+    conversation.data?.messages.length,
+    liveAnswer,
+    pendingQuestion,
+    activeRunId,
+    preferences.followLatest,
+    search.c,
+  ])
 
   const loadOlder = async () => {
     if (!search.c || loadingOlder) return
     const before = olderBefore ?? conversation.data?.next_before
     if (!before || !(olderHasMore ?? conversation.data?.has_more_messages))
       return
+    const scope = beginRequest()
+    const scrollHeight = document.documentElement.scrollHeight
+    const scrollTop = window.scrollY
     setLoadingOlder(true)
     try {
       const page = await ConversationsService.readConversation({
@@ -293,14 +691,24 @@ export function ChatHome() {
         query: { before, limit: 50 },
         headers: conversationHeaders(),
         withCredentials: true,
+        signal: scope.signal,
       })
+      if (!scope.current()) return
       setOlderMessages((current) => [...page.data.messages, ...current])
       setOlderBefore(page.data.next_before ?? null)
       setOlderHasMore(Boolean(page.data.has_more_messages))
+      requestAnimationFrame(() => {
+        if (scope.current())
+          window.scrollTo({
+            top:
+              scrollTop + document.documentElement.scrollHeight - scrollHeight,
+          })
+        scope.close()
+      })
     } catch (cause) {
-      setError(requestError(cause))
+      if (scope.current()) setError(requestError(cause))
     } finally {
-      setLoadingOlder(false)
+      if (scope.current()) setLoadingOlder(false)
     }
   }
 
@@ -311,25 +719,32 @@ export function ChatHome() {
       selectedVersionId?: string,
     ) => {
       const question = raw.trim()
-      if (!question || submitting) return
+      if (
+        !question ||
+        question.length > 2000 ||
+        submittingRef.current ||
+        activeRunId
+      )
+        return
+      const scope = beginRequest()
+      submittingRef.current = true
       setSubmitting(true)
       setPendingQuestion(question)
-      setDraft("")
       setError(null)
       setSources([])
       setOutcomes([])
       setLiveAnswer(null)
+      setStreamError(false)
       try {
-        let conversationId = search.c
+        let conversationId = search.c ?? pendingKey.current?.conversationId
         if (!conversationId) {
           const created = await ConversationsService.createConversation({
-            body: {
-              release_version: releaseVersion ?? null,
-              title: question.slice(0, 120),
-            },
+            body: { release_version: releaseVersion ?? null, title: null },
             headers: conversationHeaders(),
             withCredentials: true,
+            signal: scope.signal,
           })
+          if (!scope.current()) return
           conversationId = created.data.id
         }
         const key =
@@ -353,10 +768,41 @@ export function ChatHome() {
           },
           headers: conversationHeaders(),
           withCredentials: true,
+          signal: scope.signal,
         })
+        if (!scope.current()) return
+        setDraft("")
         setRunId(accepted.data.run_id)
-        setProgress("Finding published source wording…")
-        submittedConversation.current = conversationId
+        setProgress("Finding the relevant sections…")
+        setSubmitting(false)
+        submittingRef.current = false
+        queryClient.setQueryData<ConversationDetail>(
+          ["conversation", conversationId],
+          (current) =>
+            current
+              ? {
+                  ...current,
+                  active_run_id: accepted.data.run_id,
+                  messages: current.messages.some(
+                    (message) => message.id === accepted.data.user_message_id,
+                  )
+                    ? current.messages
+                    : [
+                        ...current.messages,
+                        {
+                          id: accepted.data.user_message_id,
+                          role: "user",
+                          content: question,
+                          created_at: new Date().toISOString(),
+                          answer_status: null,
+                          answer_content: null,
+                          evidence_snapshot: null,
+                        },
+                      ],
+                }
+              : current,
+        )
+        void queryClient.invalidateQueries({ queryKey: ["conversations"] })
         await navigate({
           to: "/",
           search: {
@@ -365,131 +811,207 @@ export function ChatHome() {
             mode: "auto",
             release: undefined,
             selected: undefined,
+            intent: "ask",
+            fresh: undefined,
           },
         })
         void queryClient.invalidateQueries({
           queryKey: ["conversation", conversationId],
         })
-        void queryClient.invalidateQueries({ queryKey: ["conversations"] })
       } catch (cause) {
-        setError(requestError(cause))
+        if (scope.current()) {
+          setError(requestError(cause))
+          setDraft(question)
+        }
       } finally {
-        setSubmitting(false)
+        if (scope.current()) {
+          setSubmitting(false)
+          submittingRef.current = false
+        }
+        scope.close()
       }
     },
-    [navigate, queryClient, search.c, submitting],
+    [activeRunId, beginRequest, navigate, queryClient, search.c, setDraft],
   )
 
   useEffect(() => {
-    if (!search.q) {
-      autoHandled.current = null
-      return
-    }
+    if (!search.q) return
     const key = `${search.q}:${search.release ?? ""}:${search.selected ?? ""}`
-    if (autoHandled.current === key) return
-    autoHandled.current = key
-    void submit(search.q, search.release, search.selected)
+    let cancelled = false
+    queueMicrotask(() => {
+      if (cancelled || autoHandled.current === key) return
+      autoHandled.current = key
+      void submit(search.q!, search.release, search.selected)
+    })
+    return () => {
+      cancelled = true
+    }
   }, [search.q, search.release, search.selected, submit])
 
   useEffect(() => {
     if (!search.c || !activeRunId) return
-    const controller = new AbortController()
-    let closed = false
-    void ConversationsService.conversationEvents({
-      path: { conversation_id: search.c },
-      query: { run_id: activeRunId },
-      headers: conversationHeaders(),
-      withCredentials: true,
-      signal: controller.signal,
-      sseMaxRetryAttempts: 5,
-      onRequest: async (url, init) =>
-        new Request(url, { ...init, credentials: "include" }),
-      onSseEvent: (event) => {
-        if (closed || !event.data || typeof event.data !== "object") return
-        const data = event.data as Record<string, unknown>
-        if (event.event === "retrieval.started")
-          setProgress("Finding published source wording…")
-        if (event.event === "retrieval.complete") {
-          if (Array.isArray(data.evidence))
-            setSources(data.evidence as EvidenceItem[])
-          if (Array.isArray(data.citation_outcomes))
-            setOutcomes(data.citation_outcomes as CitationOutcome[])
-          setProgress("Preparing an explanation…")
+    const scope = beginRequest()
+    let terminal = false
+    if (streamAttempt > 0) setProgress("Reconnecting to your saved question…")
+    void (async () => {
+      try {
+        const { stream } = await ConversationsService.conversationEvents({
+          path: { conversation_id: search.c! },
+          query: { run_id: activeRunId },
+          headers: conversationHeaders(),
+          withCredentials: true,
+          signal: scope.signal,
+          sseMaxRetryAttempts: 5,
+          onRequest: async (url, init) =>
+            new Request(url, { ...init, credentials: "include" }),
+          onSseEvent: (event) => {
+            if (
+              !scope.current() ||
+              !event.data ||
+              typeof event.data !== "object"
+            )
+              return
+            const data = event.data as Record<string, unknown>
+            if (event.event === "retrieval.started")
+              setProgress("Finding the relevant sections…")
+            if (event.event === "retrieval.complete") {
+              if (Array.isArray(data.evidence))
+                setSources(data.evidence as EvidenceItem[])
+              if (Array.isArray(data.citation_outcomes))
+                setOutcomes(data.citation_outcomes as CitationOutcome[])
+              setProgress("Writing a plain-English answer…")
+            }
+            if (event.event === "generation.started")
+              setProgress("Writing a plain-English answer…")
+            if (event.event === "verification.started")
+              setProgress(
+                "Double-checking the answer against the Constitution…",
+              )
+            if (event.event === "answer.complete") {
+              terminal = true
+              if (data.answer && typeof data.answer === "object") {
+                const answer = data.answer as ExplanationAnswer
+                setLiveAnswer(answer)
+                if (
+                  preferences.openSources &&
+                  window.matchMedia("(min-width: 1280px)").matches
+                )
+                  setSelectedEvidence(answer.evidence[0] ?? null)
+              }
+              setRunId(null)
+              setProgress(null)
+              setPendingQuestion("")
+              setStreamError(false)
+              pendingKey.current = null
+              queryClient.setQueryData<ConversationDetail>(
+                ["conversation", search.c],
+                (current) =>
+                  current ? { ...current, active_run_id: null } : current,
+              )
+              void queryClient.invalidateQueries({
+                queryKey: ["conversation", search.c],
+              })
+              void queryClient.invalidateQueries({
+                queryKey: ["conversations"],
+              })
+            }
+          },
+          onSseError: () => {
+            if (scope.current()) {
+              setProgress("Connection lost. Reconnecting…")
+              setStreamError(true)
+            }
+          },
+        })
+        for await (const _event of stream) {
+          if (!scope.current() || terminal) break
         }
-        if (event.event === "generation.started")
-          setProgress("Preparing an explanation…")
-        if (event.event === "verification.started")
-          setProgress("Checking the explanation against the wording…")
-        if (event.event === "answer.complete") {
-          if (data.answer && typeof data.answer === "object")
-            setLiveAnswer(data.answer as ExplanationAnswer)
-          setRunId(null)
-          setProgress(null)
-          setPendingQuestion("")
-          pendingKey.current = null
+      } catch {
+        if (scope.current()) setStreamError(true)
+      } finally {
+        if (scope.current() && !terminal) {
+          setStreamError(true)
+          setProgress(
+            "The connection was interrupted. We're checking whether your answer finished.",
+          )
           void queryClient.invalidateQueries({
             queryKey: ["conversation", search.c],
           })
-          void queryClient.invalidateQueries({ queryKey: ["conversations"] })
         }
-      },
-      onSseError: () => setProgress("Reconnecting to the explanation…"),
-    }).then(async ({ stream }) => {
-      for await (const _event of stream) {
-        if (closed) break
       }
-    })
-    return () => {
-      closed = true
-      controller.abort()
-    }
-  }, [activeRunId, queryClient, search.c])
+    })()
+    return () => scope.close()
+  }, [
+    activeRunId,
+    beginRequest,
+    preferences.openSources,
+    queryClient,
+    search.c,
+    streamAttempt,
+  ])
 
   const cancel = async () => {
     if (!search.c || !activeRunId) return
+    const scope = beginRequest()
     try {
       await ConversationsService.cancelRun({
         path: { conversation_id: search.c, run_id: activeRunId },
         headers: conversationHeaders(),
         withCredentials: true,
+        signal: scope.signal,
       })
-      setProgress("Cancelling explanation…")
+      if (scope.current()) {
+        setProgress("Stopping…")
+        void conversation.refetch()
+      }
     } catch (cause) {
-      setError(requestError(cause))
+      if (scope.current()) setError(requestError(cause))
+    } finally {
+      scope.close()
     }
   }
 
+  const ask = (question: string) => void submit(question)
+
   const rename = async () => {
     if (!search.c || !title.trim()) return
+    const scope = beginRequest()
     try {
       await ConversationsService.renameConversation({
         path: { conversation_id: search.c },
         body: { title: title.trim() },
         headers: conversationHeaders(),
         withCredentials: true,
+        signal: scope.signal,
       })
+      if (!scope.current()) return
       setEditingTitle(false)
       void queryClient.invalidateQueries({
         queryKey: ["conversation", search.c],
       })
       void queryClient.invalidateQueries({ queryKey: ["conversations"] })
     } catch (cause) {
-      setError(requestError(cause))
+      if (scope.current()) setError(requestError(cause))
+    } finally {
+      scope.close()
     }
   }
 
   const remove = async () => {
     if (
       !search.c ||
-      !window.confirm("Delete this conversation and its saved evidence?")
+      !window.confirm("Delete this conversation? This can't be undone.")
     )
       return
+    const scope = beginRequest()
     try {
       await ConversationsService.deleteConversation({
         path: { conversation_id: search.c },
         headers: conversationHeaders(),
         withCredentials: true,
+        signal: scope.signal,
       })
+      if (!scope.current()) return
       void queryClient.invalidateQueries({ queryKey: ["conversations"] })
       await navigate({
         to: "/",
@@ -498,10 +1020,15 @@ export function ChatHome() {
           q: undefined,
           mode: "auto",
           release: undefined,
+          selected: undefined,
+          intent: "ask",
+          fresh: crypto.randomUUID(),
         },
       })
     } catch (cause) {
-      setError(requestError(cause))
+      if (scope.current()) setError(requestError(cause))
+    } finally {
+      scope.close()
     }
   }
 
@@ -511,16 +1038,8 @@ export function ChatHome() {
   const latestUser = [...(conversation.data?.messages ?? [])]
     .reverse()
     .find((message) => message.role === "user")
-  const visibleSources = sources.length
-    ? sources
-    : pendingQuestion
-      ? (preview.data?.evidence ?? [])
-      : []
-  const visibleOutcomes = outcomes.length
-    ? outcomes
-    : pendingQuestion
-      ? (preview.data?.citation_outcomes ?? [])
-      : []
+  const visibleSources = sources
+  const visibleOutcomes = outcomes
   const showPendingQuestion =
     pendingQuestion && latestUser?.content !== pendingQuestion
   const awaitingAnswer = Boolean(
@@ -551,22 +1070,13 @@ export function ChatHome() {
       }
     >
       <section className="mx-auto flex min-h-[calc(100svh-4rem)] w-full max-w-4xl flex-col px-4 py-7 sm:px-8 lg:px-12">
-        {/*{localPreview && (*/}
-        {/*  <p*/}
-        {/*    className="mb-5 sq-md border border-amber-500/40 bg-amber-500/5 p-3 text-sm"*/}
-        {/*    role="status"*/}
-        {/*  >*/}
-        {/*    Local explanation preview. Answers appear only when source checks*/}
-        {/*    pass; the published edition is historical.*/}
-        {/*  </p>*/}
-        {/*)}*/}
         {search.c ? (
           <div className="mb-6 flex flex-wrap items-center justify-between gap-3 border-b border-border pb-4">
             {editingTitle ? (
-              <div className="flex gap-2">
+              <div className="flex min-w-0 max-w-full flex-wrap gap-2">
                 <input
                   aria-label="Conversation title"
-                  className="sq-sm border border-input bg-card px-3 py-2 text-sm"
+                  className="sq-sm min-w-0 flex-1 border border-input bg-card px-3 py-2 text-sm"
                   maxLength={255}
                   onChange={(event) => setTitle(event.target.value)}
                   value={title}
@@ -583,40 +1093,85 @@ export function ChatHome() {
               </div>
             ) : (
               <div>
-                <h1 className="font-legal text-2xl">
+                <h1 className="font-display text-title-3">
                   {conversation.data?.title || "Conversation"}
                 </h1>
-                <p className="mt-1 text-xs text-muted-foreground">
-                  {conversation.data?.edition_label ?? "Published edition"}
+                <p className="mt-1 text-label font-normal text-muted-foreground">
+                  {editionName(
+                    conversation.data?.edition_label ??
+                      release.data?.edition_label,
+                  )}
                 </p>
               </div>
             )}
-            {/*<div className="flex gap-3 text-xs">*/}
-            {/*  <InlineAction*/}
-            {/*    onClick={() => {*/}
-            {/*      setTitle(conversation.data?.title || "")*/}
-            {/*      setEditingTitle(true)*/}
-            {/*    }}*/}
-            {/*    type="button"*/}
-            {/*  >*/}
-            {/*    Rename*/}
-            {/*  </InlineAction>*/}
-            {/*  <InlineAction onClick={() => void remove()} type="button">*/}
-            {/*    Delete*/}
-            {/*  </InlineAction>*/}
-            {/*</div>*/}
+            <div className="flex gap-1">
+              <SquircleButton
+                disabled={exporting}
+                size="sm"
+                type="button"
+                variant="ghost"
+                onClick={async () => {
+                  if (!search.c) return
+                  const scope = beginRequest()
+                  setExporting(true)
+                  try {
+                    const data = await readCompleteConversation(
+                      search.c,
+                      scope.signal,
+                    )
+                    if (scope.current())
+                      downloadResearch("constitution-ng-conversation.json", {
+                        format_version: 1,
+                        exported_at: new Date().toISOString(),
+                        conversation: data,
+                        notice:
+                          "Preserve source edition details when sharing. Explanations are not legal advice.",
+                      })
+                  } catch {
+                    if (scope.current())
+                      toast.error(
+                        "Conversation could not be fully exported. Try again.",
+                      )
+                  } finally {
+                    if (scope.current()) setExporting(false)
+                    scope.close()
+                  }
+                }}
+              >
+                {exporting ? "Exporting…" : "Export chat"}
+              </SquircleButton>
+              <SquircleButton
+                onClick={() => {
+                  setTitle(conversation.data?.title || "")
+                  setEditingTitle(true)
+                }}
+                size="sm"
+                type="button"
+                variant="ghost"
+              >
+                Rename
+              </SquircleButton>
+              <SquircleButton
+                onClick={() => void remove()}
+                size="sm"
+                type="button"
+                variant="ghost"
+              >
+                Delete
+              </SquircleButton>
+            </div>
           </div>
         ) : (
           <div className="mb-8">
-            <p className="mb-4 text-xs font-bold uppercase text-primary">
+            <p className="mb-4 text-overline uppercase text-primary">
               The law, made easy
             </p>
-            <h1 className="font-legal text-[2.35rem] leading-[1.03] sm:text-[3.35rem]">
+            <h1 className="font-display text-title-1 sm:text-display">
               Ask about Nigeria&apos;s Constitution.
             </h1>
-            <p className="mt-4 text-sm leading-7 text-muted-foreground">
-              Read the actual law text an explanation with
-              links to its source.
+            <p className="mt-4 max-w-xl text-body-lg text-muted-foreground">
+              Ask in your own words. You&apos;ll get a plain-English answer and
+              the exact sections it comes from.
             </p>
           </div>
         )}
@@ -625,9 +1180,15 @@ export function ChatHome() {
         {conversation.isError && (
           <ErrorState title="Conversation unavailable">
             {requestError(conversation.error)}
+            <InlineAction
+              type="button"
+              onClick={() => void conversation.refetch()}
+            >
+              Try again
+            </InlineAction>
           </ErrorState>
         )}
-        <div className="grid flex-1 content-start gap-6">
+        <div ref={messageListRef} className="grid flex-1 content-start gap-6">
           {(olderHasMore ?? conversation.data?.has_more_messages) && (
             <InlineAction
               disabled={loadingOlder}
@@ -641,6 +1202,12 @@ export function ChatHome() {
             <MessageView
               key={message.id}
               message={message}
+              conversationId={search.c}
+              onAsk={
+                message.id === latestAssistant?.id && !activeRunId
+                  ? ask
+                  : undefined
+              }
               onSelect={setSelectedEvidence}
             />
           ))}
@@ -649,52 +1216,169 @@ export function ChatHome() {
               {pendingQuestion}
             </div>
           )}
-          {awaitingAnswer && (
-            <>
-              <LookupGaps outcomes={visibleOutcomes} />
-              <EvidenceCards
-                items={visibleSources}
-                onSelect={setSelectedEvidence}
-              />
-            </>
+          {awaitingAnswer && !showLiveAnswer && (
+            <PendingAnswer
+              outcomes={visibleOutcomes}
+              progress={progress}
+              sources={visibleSources}
+            />
           )}
           {showLiveAnswer && (
-            <AnswerView answer={liveAnswer} onSelect={setSelectedEvidence} />
+            <div data-answer-start="" className="scroll-mt-24">
+              <AnswerView
+                answer={liveAnswer}
+                onAsk={activeRunId ? undefined : ask}
+                onSelect={setSelectedEvidence}
+              />
+            </div>
           )}
-          {progress && (
-            <p role="status" className="text-sm text-muted-foreground">
+          {progress && !awaitingAnswer && (
+            <p role="status" className="text-body text-muted-foreground">
               {progress}
             </p>
           )}
           {activeRunId && (
-            <InlineAction onClick={() => void cancel()} type="button">
-              Cancel explanation
-            </InlineAction>
+            <SquircleButton
+              className="w-fit"
+              onClick={() => void cancel()}
+              size="sm"
+              type="button"
+              variant="outline"
+            >
+              Stop answering
+            </SquircleButton>
+          )}
+          {streamError && (
+            <div
+              className="sq-md border border-border bg-secondary p-4 text-body"
+              role="status"
+            >
+              Your question is saved. Reconnect or check its status to continue.
+              <div className="mt-2 flex flex-wrap gap-2">
+                <InlineAction
+                  type="button"
+                  onClick={() => {
+                    setStreamError(false)
+                    setStreamAttempt((value) => value + 1)
+                  }}
+                >
+                  Reconnect
+                </InlineAction>
+                <InlineAction
+                  type="button"
+                  onClick={() => void conversation.refetch()}
+                >
+                  Check answer status
+                </InlineAction>
+              </div>
+            </div>
           )}
           {error && (
-            <p role="alert" className="sq-md bg-destructive/10 p-4 text-sm">
+            <div role="alert" className="sq-md bg-destructive/10 p-4 text-body">
               {error}
-            </p>
+              <div className="mt-2 flex flex-wrap gap-2">
+                {pendingKey.current && (
+                  <InlineAction
+                    type="button"
+                    disabled={submitting || Boolean(activeRunId)}
+                    onClick={() =>
+                      void submit(
+                        pendingKey.current!.question,
+                        search.release,
+                        pendingKey.current!.selected,
+                      )
+                    }
+                  >
+                    Retry question
+                  </InlineAction>
+                )}
+                <InlineAction
+                  type="button"
+                  onClick={() => {
+                    setError(null)
+                    inputRef.current?.focus()
+                  }}
+                >
+                  Edit question
+                </InlineAction>
+                <InlineAction
+                  type="button"
+                  onClick={() =>
+                    void navigate({
+                      to: "/",
+                      search: {
+                        intent: "find",
+                        q: pendingQuestion || draft,
+                        mode: "auto",
+                      },
+                    })
+                  }
+                >
+                  Find relevant sections
+                </InlineAction>
+              </div>
+            </div>
           )}
         </div>
 
-        <div className="sticky bottom-0 mt-8 bg-background/95 pb-5 pt-3 backdrop-blur">
+        <div
+          ref={bottomRef}
+          className="sticky bottom-0 mt-8 bg-background/95 pb-5 pt-3 backdrop-blur"
+        >
+          {showJump && (
+            <SquircleButton
+              className="mb-3"
+              type="button"
+              size="sm"
+              variant="outline"
+              onClick={() => {
+                nearBottom.current = true
+                setShowJump(false)
+                bottomRef.current?.scrollIntoView({
+                  block: "end",
+                  behavior: window.matchMedia(
+                    "(prefers-reduced-motion: reduce)",
+                  ).matches
+                    ? "auto"
+                    : "smooth",
+                })
+              }}
+            >
+              <FiArrowDown aria-hidden />
+              Jump to latest
+            </SquircleButton>
+          )}
+          {!capabilities.data?.explanations_enabled && (
+            <p role="status" className="mb-3 text-body text-muted-foreground">
+              Explanations are paused. Find a section to keep reading the
+              Constitution.
+            </p>
+          )}
           <ChatComposer
+            inputRef={inputRef}
+            autoFocus={!search.c && Boolean(search.fresh)}
             value={draft}
             onChange={setDraft}
             onSubmit={() => void submit(draft)}
             purpose="explanation"
             loading={submitting}
-            disabled={Boolean(activeRunId)}
+            disabled={
+              Boolean(activeRunId) || !capabilities.data?.explanations_enabled
+            }
             compact={Boolean(search.c)}
-            contextLabel={conversation.data?.edition_label}
+            contextLabel={editionName(
+              conversation.data?.edition_label ?? release.data?.edition_label,
+            )}
           />
           {!search.c && (
             <div className="mt-4 flex flex-wrap gap-2">
               {suggestions.map((prompt) => (
                 <PromptSuggestion
                   key={prompt}
-                  onClick={() => setDraft(prompt)}
+                  onClick={() => {
+                    setDraft(prompt)
+                    inputRef.current?.focus()
+                  }}
                   type="button"
                 >
                   {prompt}
@@ -702,9 +1386,10 @@ export function ChatHome() {
               ))}
             </div>
           )}
-          <p className="mt-3 text-xs text-muted-foreground">
-            AI explanations can be wrong. Check the linked wording. Historical
-            editions do not establish current consolidated law.
+          <p className="mt-3 text-label font-normal text-muted-foreground">
+            Answers explain the Constitution in plain language and can miss
+            details. Check the sections they link to, and talk to a lawyer about
+            your own situation.
           </p>
         </div>
       </section>
@@ -719,7 +1404,10 @@ export function ChatHome() {
             item.provision_version_id,
           )
         }}
-        explainDisabled={Boolean(activeRunId || submitting)}
+        explainDisabled={
+          Boolean(activeRunId || submitting) ||
+          !capabilities.data?.explanations_enabled
+        }
       />
     </div>
   )

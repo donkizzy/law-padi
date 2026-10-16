@@ -78,7 +78,7 @@ export function AmendmentsView() {
                   <FiColumns className="size-4" aria-hidden />
                   Version comparison
                 </div>
-                <h2 className="font-legal text-2xl leading-tight text-foreground">
+                <h2 className="font-display text-2xl leading-tight text-foreground">
                   What changed?
                 </h2>
                 <p className="mt-2 text-sm text-muted-foreground">
@@ -122,7 +122,7 @@ function AmendmentSection({
   return (
     <section className="mb-8">
       <div className="mb-3 flex items-center justify-between gap-3">
-        <h2 className="font-legal text-2xl leading-tight text-foreground">
+        <h2 className="font-display text-2xl leading-tight text-foreground">
           {title}
         </h2>
         <span className="text-xs font-semibold text-muted-foreground">
@@ -141,7 +141,7 @@ function AmendmentSection({
             key={amendment.id}
           >
             <StatusBadge status={amendment.status} />
-            <h3 className="mt-4 font-legal text-xl leading-tight text-foreground">
+            <h3 className="mt-4 font-display text-xl leading-tight text-foreground">
               {amendment.title}
             </h3>
             <p className="mt-2 text-sm leading-6 text-muted-foreground">
@@ -191,7 +191,7 @@ function ProposedBillDetail({ amendment }: { amendment?: Amendment }) {
   return (
     <aside className="sq-lg border border-[color:var(--legal-amber)]/25 bg-card p-5 shadow-[var(--shadow-subtle)]">
       <StatusBadge status="proposed" />
-      <h2 className="mt-4 font-legal text-xl leading-tight text-foreground">
+      <h2 className="mt-4 font-display text-xl leading-tight text-foreground">
         Not currently part of the Constitution
       </h2>
       <p className="mt-2 text-sm leading-6 text-muted-foreground">

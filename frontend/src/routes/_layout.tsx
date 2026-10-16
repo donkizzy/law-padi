@@ -3,10 +3,11 @@ import {
   Outlet,
   Link as RouterLink,
 } from "@tanstack/react-router"
-import { FiMessageSquare, FiSearch, FiSettings } from "react-icons/fi"
+import { FiSearch, FiSettings } from "react-icons/fi"
 
 import { Appearance } from "@/components/Common/Appearance"
 import { Logo } from "@/components/Common/Logo"
+import { NewConversationButton } from "@/components/LawPadi/NewConversationButton"
 import { SquircleButton } from "@/components/LawPadi/primitives"
 import AppSidebar from "@/components/Sidebar/AppSidebar"
 import {
@@ -32,30 +33,20 @@ function Layout() {
           <div className="hidden min-w-0 items-center gap-2 text-xs font-semibold text-muted-foreground sm:flex">
             <span>Explore the Constitution</span>
             <span aria-hidden className="sq-xs size-1.5 bg-primary" />
-            <span>Sources always visible</span>
+            <span>Every answer shows its source</span>
           </div>
 
           <div className="ml-auto flex items-center gap-1.5">
-            <SquircleButton
-              asChild
-              className="hidden sm:inline-flex"
-              size="sm"
-              variant="ghost"
-            >
-              <RouterLink to="/" search={{ q: undefined, mode: "auto" }}>
-                <FiMessageSquare className="size-4" aria-hidden />
-                New
-              </RouterLink>
-            </SquircleButton>
+            <NewConversationButton compact className="hidden sm:inline-flex" />
             <SquircleButton
               asChild
               className="hidden px-3 md:inline-flex"
               size="sm"
               variant="ghost"
             >
-              <RouterLink to="/constitution">
+              <RouterLink to="/" search={{ intent: "find" }}>
                 <FiSearch className="size-4" aria-hidden />
-                Search
+                Find a section
               </RouterLink>
             </SquircleButton>
             <Appearance />

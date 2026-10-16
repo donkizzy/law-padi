@@ -89,10 +89,9 @@ export function useProvisionHistory(
 
 export function legalError(error: unknown): string {
   if (error instanceof AxiosError) {
-    if (error.response?.status === 404)
-      return "This provision or published edition was not found."
+    if (error.response?.status === 404) return "We couldn't find that section."
     if (error.response?.status === 503)
-      return "The published corpus is temporarily unavailable. Please try again."
+      return "The Constitution can't be loaded right now. Please try again in a moment."
   }
-  return "We could not load the source. Check your connection and try again."
+  return "Something went wrong loading this. Check your connection and try again."
 }

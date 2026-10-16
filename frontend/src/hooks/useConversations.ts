@@ -1,19 +1,22 @@
 import { useInfiniteQuery } from "@tanstack/react-query"
 import { ConversationsService } from "@/client"
+import { useChatCapabilities } from "./useChatCapabilities"
 
 export function conversationHeaders(): Record<string, string> {
   const token = localStorage.getItem("access_token")
   return token ? { Authorization: `Bearer ${token}` } : {}
 }
 
-export function useConversations() {
+export function useConversations(query = "") {
+  const capabilities = useChatCapabilities()
   return useInfiniteQuery({
-    queryKey: ["conversations"],
+    queryKey: ["conversations", query],
     initialPageParam: 0,
+    enabled: capabilities.data?.conversations_enabled === true,
     queryFn: async ({ signal, pageParam }) =>
       (
         await ConversationsService.listConversations({
-          query: { offset: pageParam, limit: 30 },
+          query: { offset: pageParam, limit: 30, q: query || undefined },
           headers: conversationHeaders(),
           withCredentials: true,
           signal,
@@ -23,10 +26,10 @@ export function useConversations() {
       const loaded = pages.reduce((total, page) => total + page.data.length, 0)
       return loaded < lastPage.count ? loaded : undefined
     },
-    retry: false,
-    retryOnMount: false,
-    refetchOnWindowFocus: false,
-    refetchOnReconnect: false,
+    retry: 1,
+    retryOnMount: true,
+    refetchOnWindowFocus: true,
+    refetchOnReconnect: true,
     staleTime: 10_000,
   })
 }

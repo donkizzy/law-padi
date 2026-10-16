@@ -185,11 +185,11 @@ export function SectionHeading({
     <div className="mb-7 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
       <div className="max-w-2xl">
         {kicker ? (
-          <div className="mb-3 text-[0.7rem] font-bold uppercase text-primary">
+          <div className="mb-3 text-overline uppercase text-primary">
             {kicker}
           </div>
         ) : null}
-        <h1 className="font-legal text-[2rem] leading-[1.05] text-foreground sm:text-[2.6rem]">
+        <h1 className="font-display text-title-2 text-foreground sm:text-title-1">
           {title}
         </h1>
         {children ? (
@@ -219,10 +219,10 @@ export function OfficialTextBlock({
         className,
       )}
     >
-      <h2 className="mb-3 text-[0.72rem] font-bold uppercase text-muted-foreground">
+      <h2 className="mb-3 text-overline uppercase text-muted-foreground">
         {title}
       </h2>
-      <div className="font-legal border-l-2 border-primary/35 pl-4 text-[1.02rem] leading-8 text-foreground/90">
+      <div className="font-legal text-statute border-l-2 border-primary/35 pl-4 text-foreground/90">
         {children}
       </div>
     </section>
@@ -361,18 +361,18 @@ export function VersionDiff({
     >
       <div className="grid gap-px bg-border md:grid-cols-2">
         <section className="bg-card p-5">
-          <h3 className="mb-3 text-[0.72rem] font-bold uppercase text-muted-foreground">
+          <h3 className="mb-3 text-overline uppercase text-muted-foreground">
             Previous wording
           </h3>
-          <p className="sq-sm bg-[color:var(--legal-red-soft)] p-3 font-legal text-sm leading-7 text-[color:var(--legal-red)] line-through">
+          <p className="sq-sm bg-[color:var(--legal-red-soft)] p-3 font-legal text-statute-sm text-[color:var(--legal-red)] line-through">
             {previous}
           </p>
         </section>
         <section className="bg-card p-5">
-          <h3 className="mb-3 text-[0.72rem] font-bold uppercase text-muted-foreground">
+          <h3 className="mb-3 text-overline uppercase text-muted-foreground">
             Current wording
           </h3>
-          <p className="sq-sm bg-[color:var(--legal-emerald-soft)] p-3 font-legal text-sm leading-7 text-[color:var(--legal-emerald-ink)]">
+          <p className="sq-sm bg-[color:var(--legal-emerald-soft)] p-3 font-legal text-statute-sm text-[color:var(--legal-emerald-ink)]">
             {current}
           </p>
         </section>
@@ -393,9 +393,7 @@ export function EmptyState({
       <div className="sq-lg mb-5 grid size-14 place-items-center bg-accent text-accent-foreground">
         <LiaBalanceScaleSolid className="size-6" aria-hidden />
       </div>
-      <h2 className="font-legal text-3xl leading-tight text-foreground">
-        {title}
-      </h2>
+      <h2 className="font-display text-title-2 text-foreground">{title}</h2>
       <p className="mt-3 max-w-lg text-sm leading-7 text-muted-foreground">
         {children}
       </p>

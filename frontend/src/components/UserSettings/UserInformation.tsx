@@ -1,6 +1,6 @@
 import { zodResolver } from "@hookform/resolvers/zod"
 import { useMutation, useQueryClient } from "@tanstack/react-query"
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import { useForm } from "react-hook-form"
 import { z } from "zod"
 
@@ -22,7 +22,7 @@ import { cn } from "@/lib/utils"
 import { handleError } from "@/utils"
 
 const formSchema = z.object({
-  full_name: z.string().max(30).optional(),
+  full_name: z.string().max(255).optional(),
   email: z.email({ message: "Invalid email address" }),
 })
 
@@ -47,6 +47,13 @@ const UserInformation = () => {
   const toggleEditMode = () => {
     setEditMode(!editMode)
   }
+  useEffect(() => {
+    if (!editMode && currentUser)
+      form.reset({
+        full_name: currentUser.full_name ?? "",
+        email: currentUser.email,
+      })
+  }, [currentUser, editMode, form])
 
   const mutation = useMutation({
     mutationFn: (data: UserUpdateMe) =>
@@ -57,7 +64,7 @@ const UserInformation = () => {
     },
     onError: handleError.bind(showErrorToast),
     onSettled: () => {
-      queryClient.invalidateQueries()
+      queryClient.invalidateQueries({ queryKey: ["currentUser"] })
     },
   })
 

@@ -11,6 +11,9 @@ import {
 } from "@/components/LawPadi/primitives"
 import { legalError, type useProvision } from "@/hooks/useLegalCorpus"
 import { type Bookmark, useSavedProvisions } from "@/hooks/useSavedProvisions"
+import { provisionTitle, statusLabel } from "@/lib/legal-provisions"
+import { downloadResearch } from "@/lib/research"
+import { EditionNotice } from "./EditionNotice"
 
 export function SavedProvisions() {
   const { bookmarks, storageError } = useSavedProvisions()
@@ -39,18 +42,39 @@ export function SavedProvisions() {
     .filter(({ bookmark, detail }) => {
       if (!query.trim() || detail.isPending || detail.isError) return true
       const text =
-        `${detail.data?.citation ?? bookmark.canonical_path} ${detail.data?.heading ?? ""} ${detail.data?.authoritative_text ?? ""}`.toLowerCase()
+        `${detail.data?.citation ?? bookmark.canonical_path} ${detail.data?.title ?? ""} ${detail.data?.heading ?? ""} ${detail.data?.authoritative_text ?? ""}`.toLowerCase()
       return text.includes(query.trim().toLowerCase())
     })
   return (
     <section className="mx-auto max-w-5xl px-4 py-8 sm:px-8 lg:px-12 lg:py-12">
-      <SectionHeading kicker="Saved research" title="Saved provisions.">
-        Bookmarks are kept in this browser and preserve their source edition.
+      <SectionHeading kicker="Saved" title="Saved sections.">
+        Sections you save stay on this device.
       </SectionHeading>
+      <div className="mb-5 flex flex-wrap gap-2">
+        <InlineAction asChild>
+          <Link to="/constitution">Browse sections</Link>
+        </InlineAction>
+        {bookmarks.length > 0 && (
+          <InlineAction
+            type="button"
+            onClick={() =>
+              downloadResearch("constitution-ng-bookmarks.json", {
+                format_version: 1,
+                exported_at: new Date().toISOString(),
+                bookmarks,
+                notice:
+                  "Bookmarks retain their source edition. Full wording is available through the linked public sections.",
+              })
+            }
+          >
+            Export saved sections
+          </InlineAction>
+        )}
+      </div>
       <input
-        aria-label="Search saved provisions"
+        aria-label="Search saved sections"
         className="sq-md mb-6 min-h-12 w-full max-w-lg border border-border bg-card px-4 text-sm"
-        placeholder="Search saved provisions"
+        placeholder="Search saved sections"
         value={query}
         onChange={(event) => setQuery(event.target.value)}
       />
@@ -60,12 +84,19 @@ export function SavedProvisions() {
         </p>
       )}
       {bookmarks.length === 0 ? (
-        <EmptyState title="No saved provisions yet">
-          Use Save on a provision to keep its wording and source close.
+        <EmptyState title="Nothing saved yet">
+          Tap Save on any section to keep it here for later.
+          <div className="mt-4">
+            <InlineAction asChild>
+              <Link to="/" search={{ intent: "find" }}>
+                Find your first section
+              </Link>
+            </InlineAction>
+          </div>
         </EmptyState>
       ) : visible.length === 0 ? (
-        <EmptyState title="No saved provision matches">
-          Try another citation or topic.
+        <EmptyState title="Nothing matches that search">
+          Try a different word or a section number.
         </EmptyState>
       ) : (
         <div className="grid gap-3 md:grid-cols-2">
@@ -101,11 +132,10 @@ function SavedCard({
   return (
     <article className="sq-lg grid gap-3 border border-border bg-card p-5">
       {detail.isPending ? (
-        <p role="status">Loading saved wording…</p>
+        <p role="status">Loading…</p>
       ) : detail.isError || !provision ? (
         <p role="alert">
-          {legalError(detail.error)} Bookmark retained:{" "}
-          {bookmark.canonical_path}
+          {legalError(detail.error)} Your bookmark is still saved.
         </p>
       ) : (
         <>
@@ -113,24 +143,26 @@ function SavedCard({
             status={
               provision.legal_status === "current" ? "current" : "historical"
             }
+            label={statusLabel(provision.legal_status, provision.edition_label)}
           />
-          <h2 className="font-legal text-xl">{provision.citation}</h2>
-          <p className="text-sm">{provision.heading}</p>
-          <p className="text-xs text-muted-foreground">
-            {provision.edition_label}
-          </p>
+          <h2 className="font-display text-xl">{provisionTitle(provision)}</h2>
+          {provision.title && <p className="text-sm">{provision.citation}</p>}
+          <EditionNotice
+            label={provision.edition_label}
+            historical={provision.legal_status === "historical"}
+          />
           <Link
             className="text-sm font-semibold text-primary hover:underline"
             to="/constitution/$sectionId"
             params={{ sectionId: bookmark.canonical_path }}
             search={{ release: bookmark.release_version }}
           >
-            Open provision
+            Open section
           </Link>
         </>
       )}
       <InlineAction onClick={remove} type="button">
-        Remove bookmark
+        Remove
       </InlineAction>
     </article>
   )
