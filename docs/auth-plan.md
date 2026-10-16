@@ -1,6 +1,6 @@
 # Accounts and sign-in plan
 
-Status: approved, 2026-10-16. Phases 0–2 are built; Phases 3 and 5 are next. Google sign-in is deferred.
+Status: approved, 2026-10-16. Phases 0–3 are built; Phase 5 is next. Google sign-in is deferred.
 
 ## Goal
 
@@ -132,7 +132,27 @@ Built, with these specifics:
 - Add a `?redirect=` search param to `/login` and `/signup`. Validate it as an
   internal path only.
 
-### Phase 3: Guest to account continuity
+### Phase 3: Guest to account continuity (done)
+
+Built, with these specifics:
+
+- `saved_provision` and `user_preferences` tables, under `/account/saved-provisions`
+  (list, put, delete, merge) and `/account/preferences`. Every account route,
+  and `/conversations/claim`, needs a confirmed email (403 otherwise). An account
+  can keep up to 2,000 saved sections.
+- `lib/account-sync.ts`: the browser's local stores stay the copy the UI reads.
+  - The first sync for an account on a browser claims guest chats, merges that
+    browser's bookmarks into the account, and takes the account's preferences
+    (or uploads the browser's if the account has none).
+  - After that, each load refreshes the browser from the account, and each
+    change is sent as it happens.
+  - Signing out clears the mirrored copy. Expiry or signing out in another tab
+    stops sync without clearing.
+- The manual "Bring guest chats into this account" button is gone. Claiming
+  happens automatically and shows "Your N chats are now in your account."
+- Copy now says where things live. The Saved page invites guests to sign in and
+  unconfirmed accounts to confirm their email. Toasts no longer say "on this browser".
+
 
 - After sign-in or sign-up, call `POST /conversations/claim` automatically. Then show
   one toast, for example "Your 3 chats are now in your account." This replaces the manual import button.
