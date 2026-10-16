@@ -17,9 +17,10 @@ from app.ingestion.embedding import (
 )
 from app.ingestion.pgvector_repository import (
     PgVectorRetrievalError,
-    RankedSegment,
+    fuse_rankings,
     hybrid_search,
     lexical_search,
+    topic_search,
 )
 from app.legal.enums import EmbeddingProviderKind
 from app.legal.models import CorpusRelease, EmbeddingProfile
@@ -78,6 +79,7 @@ def evidence_item(
         provision_version_id=version.id,
         canonical_path=result.canonical_path,
         citation=result.citation,
+        title=result.title,
         authoritative_text=version.text,
         text_sha256=served_hash,
         ancestor_citations=[ancestor.citation for ancestor in result.ancestors],
@@ -144,9 +146,9 @@ def exact_lookup(
                     reference=reference.citation,
                     status=status,
                     evidence_ids=refs,
-                    message="Choose by chapter, part, and source page."
+                    message="This section number appears more than once in this edition. Choose the one you mean."
                     if status == "ambiguous"
-                    else "This reference is absent from the published source edition."
+                    else "This section isn't in this edition of the Constitution."
                     if status == "missing"
                     else None,
                 )
@@ -157,16 +159,16 @@ def exact_lookup(
         message = None
     elif statuses == {"ambiguous"}:
         outcome = "ambiguous"
-        message = "This reference has multiple identities in the source edition. Choose by chapter, part, and page."
+        message = "This section number appears more than once in this edition. Choose the one you mean."
     elif statuses == {"missing"}:
         outcome = "not_found"
-        message = "This reference is not present in the published source edition."
+        message = "We couldn't find this section in this edition of the Constitution."
     elif statuses == {"unsupported"}:
         outcome = "unsupported_reference"
         message = parsed.error
     else:
         outcome = "partial"
-        message = "Some references could not be resolved. Review the lookup gaps below."
+        message = "We found some of these sections, but not all of them."
     return ExactLookup(
         LegalSearchResponse(
             data=results,
@@ -197,6 +199,8 @@ def semantic_lookup(
     retrieval_mode = "hybrid"
     message = None
     try:
+        if not settings.EMBEDDING_QUERY_ENABLED:
+            raise EmbeddingProviderError("Paid query embeddings are disabled")
         batch = embedding_provider(profile).embed([query])
         if len(batch.vectors) != 1:
             raise EmbeddingProviderError("Query embedding response is incomplete")
@@ -211,17 +215,19 @@ def semantic_lookup(
         )
     except EmbeddingProviderError, httpx.HTTPError:
         retrieval_mode = "lexical"
-        message = "Semantic search is temporarily unavailable. Showing keyword matches."
-        lexical = lexical_search(
-            session,
-            release_id=release.id,
-            query=query,
-            index_kind=index_kind,
+        message = "Search is running in a simpler mode right now, so these keyword matches may be less precise."
+        ranked = fuse_rankings(
+            lexical=lexical_search(
+                session,
+                release_id=release.id,
+                query=query,
+                index_kind=index_kind,
+            ),
+            topics=topic_search(
+                session, release_id=release.id, query=query, index_kind=index_kind
+            ),
+            top_k=top_k,
         )
-        ranked = [
-            RankedSegment(segment=segment, score=score, lexical_rank=rank)
-            for rank, (segment, score) in enumerate(lexical, start=1)
-        ]
     corpus = load_ranked_corpus(
         session,
         release,

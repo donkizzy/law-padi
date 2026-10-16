@@ -10,12 +10,13 @@ from __future__ import annotations
 import hashlib
 import json
 import math
+import re
 import uuid
 from collections.abc import Sequence
 from dataclasses import dataclass
 from typing import Any, cast
 
-from sqlalchemy import func
+from sqlalchemy import func, or_
 from sqlmodel import Session, col, select
 
 from app.core.config import settings
@@ -31,6 +32,13 @@ from app.legal.models import (
     RetrievalIndexBuild,
     RetrievalSegment,
     SourceDocument,
+)
+from app.legal.topics import STOPWORDS, topic_sections
+
+_LEXICAL_WORD = re.compile(r"[a-z0-9]+")
+# Words present in most of the corpus add noise to keyword ranking.
+_LEXICAL_NOISE = frozenset(
+    {"constitution", "section", "sections", "provision", "provisions", "nigeria"}
 )
 
 
@@ -229,6 +237,28 @@ def write_embeddings(
     return rows
 
 
+def lexical_tsquery(query: str) -> str | None:
+    """OR together a question's content words, with prefixes for plurals.
+
+    websearch_to_tsquery requires every word, so a natural question such as
+    "can police search my phone" matched nothing. Ranking by cover density
+    still favours segments that contain more of the words.
+    """
+    words: list[str] = []
+    for word in _LEXICAL_WORD.findall(query.lower()):
+        if (
+            len(word) < 2
+            or word in STOPWORDS
+            or word in _LEXICAL_NOISE
+            or word in words
+        ):
+            continue
+        words.append(word)
+    if not words:
+        return None
+    return " | ".join(f"{word}:*" if len(word) >= 4 else word for word in words[:24])
+
+
 def lexical_search(
     session: Session,
     *,
@@ -238,7 +268,10 @@ def lexical_search(
     index_kind: str = "enacted",
 ) -> list[tuple[RetrievalSegment, float]]:
     candidate_limit = limit or settings.RETRIEVAL_LEXICAL_CANDIDATE_LIMIT
-    ts_query = func.websearch_to_tsquery("simple", query)
+    expression = lexical_tsquery(query)
+    if expression is None:
+        return []
+    ts_query = func.to_tsquery("simple", expression)
     rank = func.ts_rank_cd(RetrievalSegment.search_vector, ts_query).label("rank")
     statement = (
         select(RetrievalSegment, rank)
@@ -251,6 +284,41 @@ def lexical_search(
         .limit(candidate_limit)
     )
     return [(segment, float(score)) for segment, score in session.exec(statement).all()]
+
+
+def topic_search(
+    session: Session,
+    *,
+    release_id: uuid.UUID,
+    query: str,
+    index_kind: str = "enacted",
+) -> list[tuple[RetrievalSegment, float]]:
+    """Whole-provision segments for curated plain-language topics, in topic order."""
+    targets = [
+        (f".section{entry}" if entry[0].isdigit() else f".{entry}", weight)
+        for entry, weight in topic_sections(query)
+    ]
+    if not targets:
+        return []
+    rows = session.exec(
+        select(RetrievalSegment).where(
+            RetrievalSegment.release_id == release_id,
+            RetrievalSegment.index_kind == index_kind,
+            RetrievalSegment.segment_index == 1,
+            or_(
+                *(
+                    col(RetrievalSegment.canonical_path).like(f"%{suffix}")
+                    for suffix, _weight in targets
+                )
+            ),
+        )
+    ).all()
+    ordered: list[tuple[RetrievalSegment, float]] = []
+    for suffix, weight in targets:
+        for segment in sorted(rows, key=lambda row: row.canonical_path):
+            if segment.canonical_path.endswith(suffix):
+                ordered.append((segment, weight))
+    return ordered
 
 
 def dense_search(
@@ -284,27 +352,16 @@ def dense_search(
     return [(segment, float(score)) for segment, score in session.exec(statement).all()]
 
 
-def hybrid_search(
-    session: Session,
+def fuse_rankings(
     *,
-    release_id: uuid.UUID,
-    embedding_run_id: uuid.UUID,
-    query_vector: Sequence[float],
-    query: str,
+    dense: Sequence[tuple[RetrievalSegment, float]] = (),
+    lexical: Sequence[tuple[RetrievalSegment, float]] = (),
+    topics: Sequence[tuple[RetrievalSegment, float]] = (),
     top_k: int,
-    index_kind: str = "enacted",
     rrf_k: int | None = None,
 ) -> list[RankedSegment]:
+    """Reciprocal-rank fusion; topic matches carry their own weight."""
     constant = rrf_k or settings.RETRIEVAL_RRF_K
-    dense = dense_search(
-        session,
-        release_id=release_id,
-        embedding_run_id=embedding_run_id,
-        query_vector=query_vector,
-    )
-    lexical = lexical_search(
-        session, release_id=release_id, query=query, index_kind=index_kind
-    )
     merged: dict[uuid.UUID, dict[str, Any]] = {}
     for rank, (segment, _distance) in enumerate(dense, start=1):
         merged.setdefault(segment.id, {"segment": segment, "score": 0.0})
@@ -314,6 +371,9 @@ def hybrid_search(
         merged.setdefault(segment.id, {"segment": segment, "score": 0.0})
         merged[segment.id]["score"] += 1.0 / (constant + rank)
         merged[segment.id]["lexical_rank"] = rank
+    for rank, (segment, weight) in enumerate(topics, start=1):
+        merged.setdefault(segment.id, {"segment": segment, "score": 0.0})
+        merged[segment.id]["score"] += weight / (constant + rank)
     ranked = [
         RankedSegment(
             segment=item["segment"],
@@ -334,6 +394,34 @@ def hybrid_search(
             seen.add(item.segment.provision_version_id)
             unique.append(item)
     return unique[:top_k]
+
+
+def hybrid_search(
+    session: Session,
+    *,
+    release_id: uuid.UUID,
+    embedding_run_id: uuid.UUID,
+    query_vector: Sequence[float],
+    query: str,
+    top_k: int,
+    index_kind: str = "enacted",
+    rrf_k: int | None = None,
+) -> list[RankedSegment]:
+    dense = dense_search(
+        session,
+        release_id=release_id,
+        embedding_run_id=embedding_run_id,
+        query_vector=query_vector,
+    )
+    lexical = lexical_search(
+        session, release_id=release_id, query=query, index_kind=index_kind
+    )
+    topics = topic_search(
+        session, release_id=release_id, query=query, index_kind=index_kind
+    )
+    return fuse_rankings(
+        dense=dense, lexical=lexical, topics=topics, top_k=top_k, rrf_k=rrf_k
+    )
 
 
 def canonical_results(

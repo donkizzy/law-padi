@@ -9,6 +9,13 @@ engine = create_engine(
     pool_pre_ping=True,
     pool_size=settings.DATABASE_POOL_SIZE,
     max_overflow=0,
+    connect_args={
+        "connect_timeout": settings.DATABASE_CONNECT_TIMEOUT_SECONDS,
+        "options": (
+            f"-c statement_timeout={settings.DATABASE_STATEMENT_TIMEOUT_MS} "
+            f"-c lock_timeout={settings.DATABASE_LOCK_TIMEOUT_MS}"
+        ),
+    },
 )
 
 

@@ -1,3 +1,4 @@
+import os
 import warnings
 from typing import Literal, Self
 
@@ -28,8 +29,16 @@ class Settings(BaseSettings):
     FASTAPI_ENV: Literal["development"] | None = None
 
     PROJECT_NAME: str
+    BUILD_REVISION: str = "development"
+    SERVE_FRONTEND: bool = True
+    ORIGIN_PROXY_SECRET: str | None = None
+    APP_RUNTIME_ROLE: Literal["api", "tasks"] | None = None
     SENTRY_DSN: HttpUrl | None = None
     DATABASE_URL: PostgresDsn
+    DATABASE_LISTENER_URL: PostgresDsn | None = None
+    DATABASE_CONNECT_TIMEOUT_SECONDS: int = Field(default=15, ge=1, le=60)
+    DATABASE_STATEMENT_TIMEOUT_MS: int = Field(default=0, ge=0)
+    DATABASE_LOCK_TIMEOUT_MS: int = Field(default=0, ge=0)
     INGESTION_STORAGE_BACKEND: Literal["local", "r2"] = "local"
     INGESTION_STORAGE_DIR: str = "storage/source-documents"
     INGESTION_STAGE_CONCURRENCY_LIMITS: dict[str, int] = Field(default_factory=dict)
@@ -44,6 +53,7 @@ class Settings(BaseSettings):
     OPENAI_API_KEY: str | None = None
     HUGGINGFACE_TEI_ENDPOINT_URL: str | None = None
     HUGGINGFACE_API_TOKEN: str | None = None
+    EMBEDDING_QUERY_ENABLED: bool = True
     RETRIEVAL_INDEX_BACKEND: Literal["pgvector", "qdrant"] = "pgvector"
     RETRIEVAL_VECTOR_DIMENSIONS: int = Field(default=1024, ge=1)
     RETRIEVAL_DENSE_CANDIDATE_LIMIT: int = Field(default=50, ge=1)
@@ -63,6 +73,22 @@ class Settings(BaseSettings):
     CHAT_ACCOUNT_BURST_LIMIT: int = Field(default=10, ge=0)
     DATABASE_POOL_SIZE: int = Field(default=40, ge=1, le=100)
     CHAT_DAILY_BUDGET_USD: float = Field(default=100.0, ge=0)
+    CHAT_MONTHLY_BUDGET_USD: float = Field(default=4.0, ge=0)
+    AI_MONTHLY_BUDGET_USD: float = Field(default=5.0, ge=0)
+    CHAT_DISPATCH_MODE: Literal["poll", "cloud_tasks"] = "poll"
+    GCP_PROJECT_ID: str = ""
+    GCP_TASKS_LOCATION: str = "us-east1"
+    GCP_CHAT_QUEUE: str = "law-padi-chat"
+    CHAT_TASK_HANDLER_URL: str = ""
+    CHAT_TASK_SERVICE_ACCOUNT: str = ""
+    CHAT_TASK_AUDIENCE: str = ""
+    CHAT_TASK_DISPATCH_DEADLINE_SECONDS: int = Field(default=300, ge=150, le=1800)
+    CHAT_TASK_REDISPATCH_SECONDS: int = Field(default=600, ge=300)
+    CHAT_TASK_RECONCILE_LIMIT: int = Field(default=20, ge=1, le=100)
+    GCS_BACKUP_BUCKET: str = ""
+    GCS_BACKUP_PREFIX: str = "database-backups"
+    BACKUP_MAX_BYTES: int = Field(default=100_000_000, ge=1, le=500_000_000)
+    BACKUP_TIMEOUT_SECONDS: int = Field(default=120, ge=1, le=180)
     CHAT_EVIDENCE_MAX_CHARS: int = Field(default=24000, ge=1000)
     DEEPSEEK_API_KEY: str | None = None
     DEEPSEEK_BASE_URL: str = "https://api.deepseek.com"
@@ -137,6 +163,12 @@ class Settings(BaseSettings):
         self._check_default_secret(
             "FIRST_SUPERUSER_PASSWORD", self.FIRST_SUPERUSER_PASSWORD
         )
+        if self.APP_RUNTIME_ROLE == "api" and len(self.ORIGIN_PROXY_SECRET or "") < 32:
+            raise ValueError(
+                "The cloud API requires an ORIGIN_PROXY_SECRET of at least 32 characters"
+            )
+        if self.APP_RUNTIME_ROLE is not None and self.FASTAPI_ENV == "development":
+            raise ValueError("Cloud runtimes cannot use FASTAPI_ENV=development")
         if (
             self.CHAT_MAX_ACTIVE_GENERATIONS > 500
             and not self.CHAT_PROVIDER_CAPACITY_APPROVED
@@ -144,8 +176,21 @@ class Settings(BaseSettings):
             raise ValueError(
                 "CHAT_PROVIDER_CAPACITY_APPROVED is required above the documented DeepSeek Pro limit"
             )
+        if self.CHAT_DISPATCH_MODE == "cloud_tasks":
+            required = {
+                "GCP_PROJECT_ID": self.GCP_PROJECT_ID,
+                "CHAT_TASK_HANDLER_URL": self.CHAT_TASK_HANDLER_URL,
+                "CHAT_TASK_SERVICE_ACCOUNT": self.CHAT_TASK_SERVICE_ACCOUNT,
+            }
+            missing = [name for name, value in required.items() if not value]
+            if missing:
+                raise ValueError(
+                    f"Cloud Tasks configuration requires {', '.join(missing)}"
+                )
+            if not self.CHAT_TASK_HANDLER_URL.startswith("https://"):
+                raise ValueError("CHAT_TASK_HANDLER_URL must use HTTPS")
 
         return self
 
 
-settings = Settings()  # type: ignore
+settings = Settings(_env_file=os.environ.get("APP_RUNTIME_ENV_FILE", "../.env"))  # type: ignore

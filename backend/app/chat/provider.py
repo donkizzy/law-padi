@@ -80,16 +80,22 @@ class DeepSeekClient:
                 data = response.json()
                 choice = data["choices"][0]
                 if choice["finish_reason"] != "stop":
-                    raise ProviderError("DeepSeek response was incomplete")
+                    raise ProviderError(
+                        "DeepSeek response was incomplete", uncertain_charge=True
+                    )
                 content = choice["message"]["content"]
                 value = json.loads(content)
                 if not isinstance(value, dict):
                     raise ValueError("Expected JSON object")
                 usage = data["usage"]
+                prompt_tokens = int(usage["prompt_tokens"])
+                completion_tokens = int(usage["completion_tokens"])
+                if prompt_tokens < 0 or completion_tokens < 0:
+                    raise ValueError("Provider usage cannot be negative")
                 return ProviderResult(
                     value=value,
-                    prompt_tokens=int(usage["prompt_tokens"]),
-                    completion_tokens=int(usage["completion_tokens"]),
+                    prompt_tokens=prompt_tokens,
+                    completion_tokens=completion_tokens,
                     model=str(data.get("model") or settings.DEEPSEEK_MODEL),
                 )
             except (
@@ -100,7 +106,7 @@ class DeepSeekClient:
                 json.JSONDecodeError,
             ) as exc:
                 raise ProviderError(
-                    "DeepSeek returned an invalid JSON response"
+                    "DeepSeek returned an invalid JSON response", uncertain_charge=True
                 ) from exc
         finally:
             if owns_client:

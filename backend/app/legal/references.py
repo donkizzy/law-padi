@@ -137,7 +137,7 @@ def _expand(
 
 def _unsupported() -> ReferenceParse:
     return ReferenceParse(
-        error="Use section, subsection, or paragraph references within one parent; lists and ranges may contain at most 20 references."
+        error="Try a reference like Section 35, Section 35(1) or Section 35(1)(c). Lists and ranges can include up to 20 sections."
     )
 
 
@@ -167,7 +167,7 @@ def parse_section_reference(query: str, *, prose: bool = False) -> ReferencePars
             other_instrument = bool(_OTHER_INSTRUMENT.search(fragment))
         if other_instrument:
             return ReferenceParse(
-                error="This lookup supports Constitution references only."
+                error="Law Padi covers Nigeria's Constitution only, so it can't look up sections of other laws."
             )
         if not match:
             if len(starts) == 1 and not re.search(r"\d|[()]", fragment):
