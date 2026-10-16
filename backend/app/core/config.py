@@ -139,6 +139,8 @@ class Settings(BaseSettings):
 
     EMAIL_RESET_TOKEN_EXPIRE_HOURS: int = 48
     EMAIL_VERIFICATION_TOKEN_EXPIRE_HOURS: int = 48
+    # Guest conversations idle this long are hidden, then deleted.
+    GUEST_CONVERSATION_RETENTION_DAYS: int = 30
     # Postgres-backed request limits on sign-in, sign-up and recovery routes.
     RATE_LIMIT_ENABLED: bool = True
 

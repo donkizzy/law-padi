@@ -4,13 +4,16 @@ Every route needs a confirmed email address: syncing is what verification
 unlocks.
 """
 
-from typing import Annotated
+from datetime import datetime
+from typing import Annotated, Any
 
 from fastapi import APIRouter, HTTPException, Query
+from fastapi.responses import JSONResponse
 from sqlalchemy.dialects.postgresql import insert
 from sqlmodel import Session, col, delete, func, select
 
-from app.api.deps import SessionDep, VerifiedUser
+from app.api.deps import CurrentUser, SessionDep, VerifiedUser
+from app.legal.models import Conversation, ConversationMessage
 from app.models import (
     Message,
     PreferencesBase,
@@ -116,6 +119,71 @@ def merge_saved_provisions(
     """
     _add(session, user, body.items)
     return _saved(session, user)
+
+
+def _iso(value: datetime | None) -> str | None:
+    return value.isoformat() if value else None
+
+
+@router.get("/export")
+def export_account_data(session: SessionDep, user: CurrentUser) -> JSONResponse:
+    """
+    Everything this account holds, as a JSON download: profile, saved sections,
+    preferences and conversations with their messages.
+    """
+    conversations: list[dict[str, Any]] = []
+    for conversation in session.exec(
+        select(Conversation)
+        .where(Conversation.user_id == user.id)
+        .order_by(col(Conversation.created_at))
+    ).all():
+        messages = session.exec(
+            select(ConversationMessage)
+            .where(ConversationMessage.conversation_id == conversation.id)
+            .order_by(col(ConversationMessage.created_at))
+        ).all()
+        conversations.append(
+            {
+                "id": str(conversation.id),
+                "title": conversation.title,
+                "created_at": _iso(conversation.created_at),
+                "updated_at": _iso(conversation.updated_at),
+                "messages": [
+                    {
+                        "role": str(message.role),
+                        "content": message.content,
+                        "created_at": _iso(message.created_at),
+                    }
+                    for message in messages
+                ],
+            }
+        )
+    preferences = session.get(UserPreferences, user.id)
+    data = {
+        "exported_at": _iso(get_datetime_utc()),
+        "account": {
+            "email": user.email,
+            "full_name": user.full_name,
+            "created_at": _iso(user.created_at),
+            "email_verified_at": _iso(user.email_verified_at),
+        },
+        "preferences": (
+            PreferencesPublic.model_validate(preferences).model_dump()
+            if preferences
+            else None
+        ),
+        "saved_sections": [
+            item.model_dump(mode="json") for item in _saved(session, user)
+        ],
+        "conversations": conversations,
+    }
+    return JSONResponse(
+        data,
+        headers={
+            "Content-Disposition": 'attachment; filename="constitution-ng-account.json"',
+            "Cache-Control": "no-store",
+        },
+    )
 
 
 @router.get("/preferences", response_model=PreferencesPublic | None)

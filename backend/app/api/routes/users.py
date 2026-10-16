@@ -1,7 +1,14 @@
 import uuid
 from typing import Any
 
-from fastapi import APIRouter, Depends, HTTPException, Request, Response
+from fastapi import (
+    APIRouter,
+    BackgroundTasks,
+    Depends,
+    HTTPException,
+    Request,
+    Response,
+)
 from sqlmodel import col, func, select
 
 from app import crud
@@ -38,14 +45,16 @@ from app.utils import (
 SIGNUP_MESSAGE = "Check your email to confirm your address, then log in."
 
 
-def send_verification_email(user: User) -> None:
+def send_verification_email(user: User, background: BackgroundTasks) -> None:
+    """Queue a verification link, sent after the response so SMTP never slows it."""
     if not settings.emails_enabled:
         return
     email_data = generate_verify_email_email(
         email_to=user.email,
         token=generate_email_verification_token(user_id=user.id, email=user.email),
     )
-    send_email(
+    background.add_task(
+        send_email,
         email_to=user.email,
         subject=email_data.subject,
         html_content=email_data.html_content,
@@ -106,7 +115,11 @@ def create_user(*, session: SessionDep, user_in: UserCreate) -> Any:
 
 @router.patch("/me", response_model=UserPublic)
 def update_user_me(
-    *, session: SessionDep, user_in: UserUpdateMe, current_user: CurrentUser
+    *,
+    session: SessionDep,
+    background: BackgroundTasks,
+    user_in: UserUpdateMe,
+    current_user: CurrentUser,
 ) -> Any:
     """
     Update own user.
@@ -127,7 +140,7 @@ def update_user_me(
     session.commit()
     session.refresh(current_user)
     if email_changed:
-        send_verification_email(current_user)
+        send_verification_email(current_user, background)
     return current_user
 
 
@@ -185,7 +198,10 @@ def delete_user_me(session: SessionDep, current_user: CurrentUser) -> Any:
 
 @router.post("/signup", response_model=Message)
 def register_user(
-    session: SessionDep, request: Request, user_in: UserRegister
+    session: SessionDep,
+    request: Request,
+    background: BackgroundTasks,
+    user_in: UserRegister,
 ) -> Message:
     """
     Create a new account without signing in.
@@ -201,7 +217,8 @@ def register_user(
         get_password_hash(user_in.password)
         if settings.emails_enabled:
             email_data = generate_account_exists_email(email_to=user.email)
-            send_email(
+            background.add_task(
+                send_email,
                 email_to=user.email,
                 subject=email_data.subject,
                 html_content=email_data.html_content,
@@ -209,7 +226,7 @@ def register_user(
         return Message(message=SIGNUP_MESSAGE)
     user_create = UserCreate.model_validate(user_in)
     user = crud.create_user(session=session, user_create=user_create)
-    send_verification_email(user)
+    send_verification_email(user, background)
     return Message(message=SIGNUP_MESSAGE)
 
 
@@ -236,7 +253,7 @@ def verify_email(
 
 @router.post("/me/verification-email", response_model=Message)
 def resend_verification_email(
-    session: SessionDep, current_user: CurrentUser
+    session: SessionDep, background: BackgroundTasks, current_user: CurrentUser
 ) -> Message:
     """
     Send the signed-in user a fresh verification link.
@@ -250,7 +267,7 @@ def resend_verification_email(
         raise HTTPException(
             status_code=503, detail="Email isn't available right now. Try again later."
         )
-    send_verification_email(current_user)
+    send_verification_email(current_user, background)
     return Message(message="Verification email sent")
 
 

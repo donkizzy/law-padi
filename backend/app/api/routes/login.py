@@ -1,7 +1,15 @@
 from datetime import timedelta
 from typing import Annotated, Any
 
-from fastapi import APIRouter, Cookie, Depends, HTTPException, Request, Response
+from fastapi import (
+    APIRouter,
+    BackgroundTasks,
+    Cookie,
+    Depends,
+    HTTPException,
+    Request,
+    Response,
+)
 from fastapi.responses import HTMLResponse, JSONResponse
 from fastapi.security import OAuth2PasswordRequestForm
 
@@ -126,7 +134,9 @@ def test_token(current_user: CurrentUser) -> Any:
 
 
 @router.post("/password-recovery/{email}")
-def recover_password(email: str, session: SessionDep, request: Request) -> Message:
+def recover_password(
+    email: str, session: SessionDep, request: Request, background: BackgroundTasks
+) -> Message:
     """
     Password Recovery
     """
@@ -143,7 +153,9 @@ def recover_password(email: str, session: SessionDep, request: Request) -> Messa
         email_data = generate_reset_password_email(
             email_to=user.email, email=email, token=password_reset_token
         )
-        send_email(
+        # Sent after the response, so timing doesn't reveal registered emails.
+        background.add_task(
+            send_email,
             email_to=user.email,
             subject=email_data.subject,
             html_content=email_data.html_content,

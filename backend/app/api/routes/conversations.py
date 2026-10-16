@@ -58,6 +58,7 @@ from app.legal.models import (
 from app.legal.public_corpus import published_release
 from app.legal.references import parse_section_reference
 from app.models import TokenPayload, User
+from app.retention import maybe_purge_idle_guest_conversations
 
 router = APIRouter(prefix="/conversations", tags=["conversations"])
 _COOKIE = "law_padi_guest"
@@ -106,7 +107,7 @@ def _owner(request: Request, response: Response, session: Session) -> Owner:
         response.set_cookie(
             _COOKIE,
             token,
-            max_age=30 * 24 * 60 * 60,
+            max_age=settings.GUEST_CONVERSATION_RETENTION_DAYS * 24 * 60 * 60,
             httponly=True,
             secure=settings.FASTAPI_ENV != "development",
             samesite="lax" if settings.FASTAPI_ENV == "development" else "none",
@@ -130,7 +131,9 @@ def _owned_conversation(
             or owner.guest_digest is not None
             and conversation.user_id is None
             and conversation.anonymous_session_id == owner.guest_digest
-            and conversation.updated_at >= get_datetime_utc() - timedelta(days=30)
+            and conversation.updated_at
+            >= get_datetime_utc()
+            - timedelta(days=settings.GUEST_CONVERSATION_RETENTION_DAYS)
         )
     )
     if not valid:
@@ -234,6 +237,7 @@ def create_conversation(
     session: SessionDep,
 ) -> ConversationPublic:
     _ensure_chat_enabled()
+    maybe_purge_idle_guest_conversations(session)
     owner = _owner(request, response, session)
     release = published_release(session, release_version=body.release_version)
     if body.release_version:
@@ -295,7 +299,9 @@ def list_conversations(
         predicate = and_(
             col(Conversation.anonymous_session_id) == owner.guest_digest,
             col(Conversation.user_id).is_(None),
-            col(Conversation.updated_at) >= get_datetime_utc() - timedelta(days=30),
+            col(Conversation.updated_at)
+            >= get_datetime_utc()
+            - timedelta(days=settings.GUEST_CONVERSATION_RETENTION_DAYS),
         )
     if q and q.strip():
         escaped = (
@@ -508,7 +514,9 @@ def claim_guest_conversations(
         .where(
             Conversation.anonymous_session_id == digest,
             col(Conversation.user_id).is_(None),
-            Conversation.updated_at >= get_datetime_utc() - timedelta(days=30),
+            Conversation.updated_at
+            >= get_datetime_utc()
+            - timedelta(days=settings.GUEST_CONVERSATION_RETENTION_DAYS),
         )
         .with_for_update()
     ).all()
