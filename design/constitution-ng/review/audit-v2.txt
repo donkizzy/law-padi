@@ -1,0 +1,48 @@
+
+=== a-open-clause-v2-symbol.svg  (533 bytes)
+viewBox 0 0 256 256 · aspect 1.0 (square)
+colours 1: #000000 · gradients 0 · anchors 15
+margins L34.0 R44.5 T25.2 B25.2 · bbox fill 0.557
+· INFO [off-centre-x] Horizontal margins differ (left 34.0, right 44.5). Intentional optical centring? Otherwise centre it.
+production-readiness score: 99/100 (heuristic)
+
+=== b-peoples-quote-v2-symbol.svg  (334 bytes)
+viewBox 0 0 256 256 · aspect 1.0 (square)
+colours 1: #000000 · gradients 0 · anchors 14
+margins L32.0 R32.0 T40.0 B48.0 · bbox fill 0.492
+· INFO [off-centre-y] Vertical margins differ (top 40.0, bottom 48.0). Remember the optical centre sits slightly above the geometric centre.
+production-readiness score: 99/100 (heuristic)
+
+=== c-shared-initials-v2-symbol.svg  (616 bytes)
+viewBox 0 0 256 256 · aspect 1.0 (square)
+colours 1: #000000 · gradients 0 · anchors 27
+margins L24.0 R20.0 T50.0 B32.0 · bbox fill 0.563
+· INFO [off-centre-y] Vertical margins differ (top 50.0, bottom 32.0). Remember the optical centre sits slightly above the geometric centre.
+production-readiness score: 99/100 (heuristic)
+
+=== a-open-clause-v2-lockup.svg  (7162 bytes)
+viewBox 0 0 1241.3 256 · aspect 4.849 (extra-wide)
+colours 1: #000000 · gradients 0 · anchors 333
+margins L33.5 R30.8 T50.9 B50.9 · bbox fill 0.571
+· INFO [fractional-viewbox] viewBox has fractional values; integer canvases are easier to grid.
+· INFO [complexity] 333 anchor points (library median 75.0, p75 155.0). Check every point earns its place.
+· INFO [extra-wide] Extra-wide lockup (>4.5:1) shrinks badly; provide a stacked lockup and a standalone symbol.
+production-readiness score: 97/100 (heuristic)
+
+=== b-peoples-quote-v2-lockup.svg  (6963 bytes)
+viewBox 0 0 1241.3 256 · aspect 4.849 (extra-wide)
+colours 1: #000000 · gradients 0 · anchors 332
+margins L32.0 R30.8 T62.0 B63.7 · bbox fill 0.483
+· INFO [fractional-viewbox] viewBox has fractional values; integer canvases are easier to grid.
+· INFO [complexity] 332 anchor points (library median 75.0, p75 155.0). Check every point earns its place.
+· INFO [extra-wide] Extra-wide lockup (>4.5:1) shrinks badly; provide a stacked lockup and a standalone symbol.
+production-readiness score: 97/100 (heuristic)
+
+=== c-shared-initials-v2-lockup.svg  (8925 bytes)
+viewBox 0 0 1212.68 256 · aspect 4.737 (extra-wide)
+colours 1: #000000 · gradients 0 · anchors 434
+margins L26.0 R29.0 T65.3 B54.8 · bbox fill 0.507
+▲ WARN [complex] 434 anchor points — more than 95% of comparable reference logos (median 75.0). Simplify: fewer points, merged shapes, less detail.
+· INFO [fractional-viewbox] viewBox has fractional values; integer canvases are easier to grid.
+· INFO [extra-wide] Extra-wide lockup (>4.5:1) shrinks badly; provide a stacked lockup and a standalone symbol.
+production-readiness score: 90/100 (heuristic)

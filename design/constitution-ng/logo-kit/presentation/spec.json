@@ -1,0 +1,59 @@
+{
+  "brand": "constitution.ng",
+  "date": "2026-10-12",
+  "deck_title": "Open Clause identity",
+  "tagline": "Your Constitution, within reach.",
+  "brief": "A welcoming identity for everyday Nigerians seeking clear explanations and traceable constitutional sources.",
+  "adjectives": [
+    "Calm",
+    "Credible",
+    "Approachable",
+    "Nigerian"
+  ],
+  "criteria": "An open C, a clear white passage and a green-and-white palette. A compact symbol for small screens; the full name for first encounters.",
+  "industry": "consumer-app",
+  "nav": [
+    "Ask",
+    "Browse",
+    "Saved"
+  ],
+  "mockups": [
+    "website",
+    "favicon-tab",
+    "app-icon",
+    "social",
+    "sticker",
+    "readme"
+  ],
+  "brand_color": "#008751",
+  "greyscale": false,
+  "final": true,
+  "concepts": [
+    {
+      "name": "Open Clause",
+      "symbol": "../svg/constitution-ng-symbol-green.svg",
+      "lockup": "../svg/constitution-ng-horizontal-green.svg",
+      "stacked": "../svg/constitution-ng-stacked-green.svg",
+      "avatar": "../svg/constitution-ng-symbol-small-green.svg",
+      "symbol_on_tile": "../svg/constitution-ng-symbol-white.svg",
+      "symbol_on_dark": "../svg/constitution-ng-symbol-white.svg",
+      "lockup_on_dark": "../svg/constitution-ng-horizontal-white.svg",
+      "stacked_on_tile": "../svg/constitution-ng-stacked-white.svg",
+      "stacked_on_dark": "../svg/constitution-ng-stacked-white.svg",
+      "idea": "A C opens around a white passage: constitutional knowledge made accessible, with a Nigerian flag reference.",
+      "rationale": [
+        "Circular geometry feels calm and approachable.",
+        "The white split remains a real opening in every variant.",
+        "Green and white establish the Nigerian identity.",
+        "Outlined lettering works without installed fonts."
+      ]
+    }
+  ],
+  "recommendation": "Use the green horizontal logo on white for the main identity, white on green or dark ink, and the dedicated tile for browser tabs.",
+  "next_steps": [
+    "SVG and transparent PNG artwork supplied.",
+    "Web icons and a ready-to-copy manifest supplied.",
+    "See the usage guide for clear space and minimum sizes.",
+    "Application mockups illustrate the identity; they are not implemented product screens."
+  ]
+}

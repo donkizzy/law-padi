@@ -1,0 +1,40 @@
+{
+  "brand": "constitution.ng",
+  "tagline": "Your Constitution, in plain words",
+  "brief": "A free, plain-language guide to the Constitution of the Federal Republic of Nigeria. Ask a question in your own words and get the exact section, explained the way a knowledgeable friend would. It must feel friendly, proudly Nigerian and precise, and never like an official government seal.",
+  "adjectives": ["friendly", "plain-spoken", "proudly Nigerian", "modern", "precise"],
+  "criteria": "Success: reads at 16 px in a browser tab, works in one colour, avoids the category's scales, gavels, pillars and coat-of-arms imagery, and stays clearly independent of government branding.",
+  "industry": "education",
+  "mockups": ["website", "favicon-tab", "app-icon", "social", "business-card", "sticker"],
+  "nav": ["Ask", "Browse", "Saved"],
+  "brand_color": "#0A6B4B",
+  "greyscale": false,
+  "final": true,
+  "designer": "constitution.ng",
+  "round": 2,
+  "concepts": [
+    {
+      "name": "Open Book",
+      "symbol": "../logo/constitution-ng-symbol.svg",
+      "lockup": "../logo/constitution-ng-horizontal.svg",
+      "stacked": "../logo/constitution-ng-stacked.svg",
+      "avatar": "../icons/constitution-ng-app-icon.svg",
+      "lockup_on_dark": "../logo/constitution-ng-horizontal-reversed.svg",
+      "stacked_on_dark": "../logo/constitution-ng-stacked-reversed.svg",
+      "symbol_on_dark": "../logo/constitution-ng-symbol-reversed.svg",
+      "idea": "The Constitution as an open book that talks back: its green pages and white gutter echo the flag, and the gap above the gutter forms the Niger–Benue Y.",
+      "rationale": [
+        "Says what the product does in one glance: read the law, and ask it questions",
+        "Green–white–green without drawing a flag; the confluence Y rewards a second look",
+        "Custom lowercase wordmark: round, open letters with hooked t's, so it reads warm rather than official",
+        "A dedicated small-size cut keeps the gutter and tail visible at 16 px"
+      ]
+    }
+  ],
+  "recommendation": "Open Book is approved as the constitution.ng identity: green symbol with an ink wordmark, a light-green reversed version for dark screens, and a simplified cut for favicons.",
+  "next_steps": [
+    "Swap the app's Àṣẹ mark, favicon and page title for constitution.ng",
+    "Run a trademark search before public launch",
+    "Proof the green on press before printing anything"
+  ]
+}
