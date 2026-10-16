@@ -1,6 +1,6 @@
 # Accounts and sign-in plan
 
-Status: approved, 2026-10-16. Phases 0 and 1 are built; Phases 2, 3 and 5 are next. Google sign-in is deferred.
+Status: approved, 2026-10-16. Phases 0–2 are built; Phases 3 and 5 are next. Google sign-in is deferred.
 
 ## Goal
 
@@ -84,7 +84,42 @@ Built as planned, with these specifics:
   - refresh rotation and reuse detection (pytest);
   - an expired session falls back to guest (Playwright).
 
-### Phase 2: Sign-up and recovery that work in production
+### Phase 2: Sign-up and recovery that work in production (built; email delivery pending)
+
+Built, with these specifics:
+
+- Every signed token carries a `type` claim (`access`, `password-reset`,
+  `email-verification`), so a link token can never be used to sign in.
+  Reset links sent before this change stop working.
+- `User.email_verified_at`. Accounts that existed before this change are marked
+  verified by the migration. Changing your email clears it and sends a new link.
+  Completing a password reset sets it.
+- `POST /users/verify-email` and `POST /users/me/verification-email` (resend). Links
+  are tied to the address they were sent to and last 48 hours. The `/verify-email`
+  page confirms the address, and Settings shows a notice with a resend button until it's confirmed.
+- Sign-up always answers "Check your email to confirm your address, then log in."
+  If the address already has an account, its owner gets an "account exists" email instead.
+- Postgres fixed-window rate limits (`rate_limit_counter`), keyed by hashed IP, email or user:
+
+  | Action | Limit |
+  | --- | --- |
+  | Login | 50 per IP and 10 per IP+email, per 15 minutes |
+  | Refresh | 120 per IP per 15 minutes |
+  | Sign-up | 10 per IP per hour |
+  | Recovery | 10 per IP and 3 per email, per hour |
+  | Reset | 10 per IP per hour |
+  | Verify | 20 per IP per hour |
+  | Resend | 3 per user per hour |
+
+  Over the limit returns 429 with `Retry-After`. The client IP comes from
+  `X-Forwarded-For` only when `ORIGIN_PROXY_SECRET` is set, because only the
+  Cloudflare worker can reach the API then.
+- `?redirect=` on `/login` and `/signup`. It's resolved like a browser would and
+  only followed when it stays on this origin and isn't an auth page.
+- **Still to do:** pick an email provider and set `SMTP_HOST`, `SMTP_PORT`, `SMTP_USER`,
+  `SMTP_PASSWORD`, `EMAILS_FROM_EMAIL` and `PROJECT_NAME=constitution.ng` on Render.
+  Until then, sign-up works but no email is sent, and resend answers 503.
+
 
 - Configure SMTP (or a transactional provider) on Render and set `EMAILS_FROM_EMAIL`.
 - Email verification:
