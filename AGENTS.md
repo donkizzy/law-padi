@@ -24,6 +24,8 @@ Run frontend commands from the repository root and backend commands from `backen
 
 Python uses four-space indentation, type annotations, `snake_case` functions/modules, and `PascalCase` classes. Ruff handles formatting/import order; mypy is strict. TypeScript uses Biome with spaces, double quotes, and semicolons only when needed. Name React components/files in `PascalCase`, hooks as `useThing`, and routes in lowercase kebab case. Do not edit `frontend/src/client/` or `frontend/src/routeTree.gen.ts`; regenerate them with `bash scripts/generate-client.sh`.
 
+The project's design system (tokens in `frontend/src/index.css`, the constitution.ng brand kit, and the design system canvas) takes priority over any external design skill, including `landing-page-design`. Use those skills for structure and copy guidance only; never override project fonts, type sizes, spacing, radii, or colors with their values.
+
 ## Testing Guidelines
 
 Name backend tests `test_*.py` and Playwright cases `*.spec.ts`. Add regression coverage for behavior changes and keep helpers in existing `tests/utils/` locations. Backend tests produce `htmlcov/index.html`; no minimum threshold is configured. Playwright requires the backend and Compose services.

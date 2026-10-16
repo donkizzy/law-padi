@@ -1,0 +1,348 @@
+{
+  "version": "plain-language-retrieval-v1",
+  "description": "Everyday and Pidgin-style questions with the section a non-lawyer expects first. Measure top-1 and top-5 section hits through /api/v1/legal/search.",
+  "baseline_2026_10_12": {
+    "before_topic_guide": {
+      "hit_at_1": 0.82,
+      "hit_at_5": 0.89
+    },
+    "after_topic_guide": {
+      "hit_at_1": 0.98,
+      "hit_at_5": 1.0
+    }
+  },
+  "cases": [
+    {
+      "query": "can police search my phone",
+      "expected_sections": [
+        "37"
+      ]
+    },
+    {
+      "query": "can the police randomly search my phone",
+      "expected_sections": [
+        "37"
+      ]
+    },
+    {
+      "query": "can the government read my messages",
+      "expected_sections": [
+        "37"
+      ]
+    },
+    {
+      "query": "is it legal to tap my phone",
+      "expected_sections": [
+        "37"
+      ]
+    },
+    {
+      "query": "privacy",
+      "expected_sections": [
+        "37"
+      ]
+    },
+    {
+      "query": "can I be arrested without being told why",
+      "expected_sections": [
+        "35"
+      ]
+    },
+    {
+      "query": "how long can police detain me before court",
+      "expected_sections": [
+        "35"
+      ]
+    },
+    {
+      "query": "police detained me for 3 days without charge",
+      "expected_sections": [
+        "35"
+      ]
+    },
+    {
+      "query": "right to bail",
+      "expected_sections": [
+        "35"
+      ]
+    },
+    {
+      "query": "do I have the right to remain silent",
+      "expected_sections": [
+        "35"
+      ]
+    },
+    {
+      "query": "do I have a right to a lawyer",
+      "expected_sections": [
+        "35",
+        "36"
+      ]
+    },
+    {
+      "query": "fair trial",
+      "expected_sections": [
+        "36"
+      ]
+    },
+    {
+      "query": "presumed innocent until proven guilty",
+      "expected_sections": [
+        "36"
+      ]
+    },
+    {
+      "query": "can police torture a suspect",
+      "expected_sections": [
+        "34"
+      ]
+    },
+    {
+      "query": "is slavery or forced labour allowed",
+      "expected_sections": [
+        "34"
+      ]
+    },
+    {
+      "query": "can police kill someone during arrest",
+      "expected_sections": [
+        "33"
+      ]
+    },
+    {
+      "query": "right to life",
+      "expected_sections": [
+        "33"
+      ]
+    },
+    {
+      "query": "freedom of speech",
+      "expected_sections": [
+        "39"
+      ]
+    },
+    {
+      "query": "can I criticise the government on social media",
+      "expected_sections": [
+        "39"
+      ]
+    },
+    {
+      "query": "can I start a newspaper or TV station",
+      "expected_sections": [
+        "39"
+      ]
+    },
+    {
+      "query": "can I change my religion",
+      "expected_sections": [
+        "38"
+      ]
+    },
+    {
+      "query": "can a school force my child to attend religious instruction",
+      "expected_sections": [
+        "38"
+      ]
+    },
+    {
+      "query": "is it legal to protest",
+      "expected_sections": [
+        "40"
+      ]
+    },
+    {
+      "query": "can I join a trade union",
+      "expected_sections": [
+        "40"
+      ]
+    },
+    {
+      "query": "can I live in any state in Nigeria",
+      "expected_sections": [
+        "41"
+      ]
+    },
+    {
+      "query": "can the government stop me from leaving Nigeria",
+      "expected_sections": [
+        "41"
+      ]
+    },
+    {
+      "query": "discrimination because of my tribe",
+      "expected_sections": [
+        "42"
+      ]
+    },
+    {
+      "query": "can a woman be discriminated against because of her sex",
+      "expected_sections": [
+        "42"
+      ]
+    },
+    {
+      "query": "can I buy land in another state",
+      "expected_sections": [
+        "43"
+      ]
+    },
+    {
+      "query": "can government take my land without paying",
+      "expected_sections": [
+        "44"
+      ]
+    },
+    {
+      "query": "where do I go if my rights are violated",
+      "expected_sections": [
+        "46"
+      ]
+    },
+    {
+      "query": "how old must you be to become president",
+      "expected_sections": [
+        "131"
+      ]
+    },
+    {
+      "query": "who can run for president",
+      "expected_sections": [
+        "131"
+      ]
+    },
+    {
+      "query": "how long is the president's term",
+      "expected_sections": [
+        "135"
+      ]
+    },
+    {
+      "query": "how can a president be impeached",
+      "expected_sections": [
+        "143"
+      ]
+    },
+    {
+      "query": "requirements to become governor",
+      "expected_sections": [
+        "177"
+      ]
+    },
+    {
+      "query": "how can a governor be removed",
+      "expected_sections": [
+        "188"
+      ]
+    },
+    {
+      "query": "who qualifies as a Nigerian citizen",
+      "expected_sections": [
+        "25"
+      ]
+    },
+    {
+      "query": "can I hold dual citizenship",
+      "expected_sections": [
+        "28"
+      ]
+    },
+    {
+      "query": "can I give up my Nigerian citizenship",
+      "expected_sections": [
+        "29"
+      ]
+    },
+    {
+      "query": "can a state have its own police",
+      "expected_sections": [
+        "214"
+      ]
+    },
+    {
+      "query": "who controls the police",
+      "expected_sections": [
+        "214",
+        "215"
+      ]
+    },
+    {
+      "query": "can the governor be sued while in office",
+      "expected_sections": [
+        "308"
+      ]
+    },
+    {
+      "query": "when can the president declare a state of emergency",
+      "expected_sections": [
+        "305"
+      ]
+    },
+    {
+      "query": "is Nigeria a secular state",
+      "expected_sections": [
+        "10"
+      ]
+    },
+    {
+      "query": "how is the constitution amended",
+      "expected_sections": [
+        "9"
+      ]
+    },
+    {
+      "query": "how many states are in Nigeria",
+      "expected_sections": [
+        "3"
+      ]
+    },
+    {
+      "query": "can the constitution be overridden by another law",
+      "expected_sections": [
+        "1"
+      ]
+    },
+    {
+      "query": "right to free education",
+      "expected_sections": [
+        "18"
+      ]
+    },
+    {
+      "query": "duties of a citizen",
+      "expected_sections": [
+        "24"
+      ]
+    },
+    {
+      "query": "how can I recall my senator",
+      "expected_sections": [
+        "69"
+      ]
+    },
+    {
+      "query": "who appoints ministers",
+      "expected_sections": [
+        "147"
+      ]
+    },
+    {
+      "query": "who appoints the chief justice",
+      "expected_sections": [
+        "231"
+      ]
+    },
+    {
+      "query": "wetin constitution talk about police checking my phone",
+      "expected_sections": [
+        "37"
+      ]
+    },
+    {
+      "query": "section thirty something about privacy",
+      "expected_sections": [
+        "37"
+      ]
+    }
+  ]
+}
