@@ -1,5 +1,12 @@
 # Law Padi: deployment plan for a free hosting beta
 
+## Current deployment
+
+The initial backend now runs on Render Free because GCP billing activation
+required an upfront payment. See [deployment status](deployment-status.md) and
+[the Render runbook](../deployment/render/README.md). The GCP design below remains
+an optional later migration path.
+
 Prepared 14 October 2026. This is a deployment design, not an executed deployment. Provider limits were checked against official documentation on this date.
 
 ## Decision and agreed constraints
