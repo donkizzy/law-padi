@@ -85,6 +85,30 @@ class TokenPayload(SQLModel):
     sub: str | None = None
 
 
+class RefreshToken(SQLModel, table=True):
+    """One rotating refresh token. Only a SHA-256 digest of the token is stored.
+
+    Tokens issued from the same sign-in share a ``family_id``; presenting a
+    token that was already rotated revokes the whole family.
+    """
+
+    __tablename__ = "refresh_token"
+
+    id: uuid.UUID = Field(default_factory=uuid.uuid4, primary_key=True)
+    user_id: uuid.UUID = Field(foreign_key="user.id", index=True, ondelete="CASCADE")
+    family_id: uuid.UUID = Field(index=True)
+    token_hash: str = Field(unique=True, max_length=64)
+    created_at: datetime = Field(
+        default_factory=get_datetime_utc,
+        sa_type=DateTime(timezone=True),  # type: ignore
+    )
+    expires_at: datetime = Field(sa_type=DateTime(timezone=True))  # type: ignore
+    revoked_at: datetime | None = Field(
+        default=None,
+        sa_type=DateTime(timezone=True),  # type: ignore
+    )
+
+
 class NewPassword(SQLModel):
     token: str
     new_password: str = Field(min_length=8, max_length=128)

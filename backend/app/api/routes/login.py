@@ -1,15 +1,15 @@
 from datetime import timedelta
 from typing import Annotated, Any
 
-from fastapi import APIRouter, Depends, HTTPException
-from fastapi.responses import HTMLResponse
+from fastapi import APIRouter, Cookie, Depends, HTTPException, Response
+from fastapi.responses import HTMLResponse, JSONResponse
 from fastapi.security import OAuth2PasswordRequestForm
 
 from app import crud
 from app.api.deps import CurrentUser, SessionDep, get_current_active_superuser
-from app.core import security
+from app.core import security, sessions
 from app.core.config import settings
-from app.models import Message, NewPassword, Token, UserPublic, UserUpdate
+from app.models import Message, NewPassword, Token, User, UserPublic, UserUpdate
 from app.utils import (
     generate_password_reset_token,
     generate_reset_password_email,
@@ -20,12 +20,27 @@ from app.utils import (
 router = APIRouter(tags=["login"])
 
 
+RefreshCookie = Annotated[str | None, Cookie(alias=sessions.REFRESH_COOKIE)]
+
+
+def _access_token(user: User) -> Token:
+    return Token(
+        access_token=security.create_access_token(
+            user.id,
+            expires_delta=timedelta(minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES),
+        )
+    )
+
+
 @router.post("/login/access-token")
 def login_access_token(
-    session: SessionDep, form_data: Annotated[OAuth2PasswordRequestForm, Depends()]
+    session: SessionDep,
+    response: Response,
+    form_data: Annotated[OAuth2PasswordRequestForm, Depends()],
 ) -> Token:
     """
-    OAuth2 compatible token login, get an access token for future requests
+    OAuth2 compatible token login. Returns a short-lived access token and sets
+    the HttpOnly refresh cookie that renews it.
     """
     user = crud.authenticate(
         session=session, email=form_data.username, password=form_data.password
@@ -34,12 +49,52 @@ def login_access_token(
         raise HTTPException(status_code=400, detail="Incorrect email or password")
     elif not user.is_active:
         raise HTTPException(status_code=400, detail="Inactive user")
-    access_token_expires = timedelta(minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES)
-    return Token(
-        access_token=security.create_access_token(
-            user.id, expires_delta=access_token_expires
-        )
+    sessions.set_refresh_cookie(
+        response, sessions.issue_refresh_token(session=session, user=user)
     )
+    return _access_token(user)
+
+
+@router.post(
+    "/login/refresh",
+    response_model=Token,
+    responses={401: {"model": Message, "description": "No usable session"}},
+)
+def refresh_access_token(
+    session: SessionDep, response: Response, refresh_token: RefreshCookie = None
+) -> Token | JSONResponse:
+    """
+    Exchange the refresh cookie for a new access token, rotating the cookie.
+    """
+    rotated = (
+        sessions.rotate_refresh_token(session=session, token=refresh_token)
+        if refresh_token
+        else None
+    )
+    if rotated is None:
+        expired = JSONResponse(
+            {"detail": "Session expired"},
+            status_code=401,
+            headers={"WWW-Authenticate": "Bearer"},
+        )
+        sessions.clear_refresh_cookie(expired)
+        return expired
+    user, new_refresh_token = rotated
+    sessions.set_refresh_cookie(response, new_refresh_token)
+    return _access_token(user)
+
+
+@router.post("/login/logout")
+def logout(
+    session: SessionDep, response: Response, refresh_token: RefreshCookie = None
+) -> Message:
+    """
+    End this browser's session. Safe to call when already signed out.
+    """
+    if refresh_token:
+        sessions.revoke_refresh_token(session=session, token=refresh_token)
+    sessions.clear_refresh_cookie(response)
+    return Message(message="Signed out")
 
 
 @router.post("/login/test-token", response_model=UserPublic)
@@ -94,6 +149,7 @@ def reset_password(session: SessionDep, body: NewPassword) -> Message:
         db_user=user,
         user_in=user_in_update,
     )
+    sessions.revoke_user_sessions(session=session, user_id=user.id)
     return Message(message="Password updated successfully")
 
 
