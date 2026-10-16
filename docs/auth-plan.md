@@ -1,6 +1,6 @@
 # Accounts and sign-in plan
 
-Status: approved, 2026-10-16. Phases 0–3 are built; Phase 5 is next. Google sign-in is deferred.
+Status: approved, 2026-10-16. Phases 0–3 and 5 are built. Google sign-in is deferred.
 
 ## Goal
 
@@ -173,7 +173,34 @@ Built, with these specifics:
 - Add a `user_identity` table: provider, subject, user.
 - Put a "Continue with Google" button on `/login`, `/signup` and the welcome page.
 
-### Phase 5: Privacy and account management
+### Phase 5: Privacy and account management (done)
+
+Built, with these specifics:
+
+- `GET /account/export` downloads profile, preferences, saved sections and every
+  conversation with its messages. It's available to any signed-in account,
+  confirmed or not. Settings → Security has a "Your account data" card with
+  "Download my data" and "Delete my account" (with a confirmation step; this
+  replaces the template's delete dialog). Deleting cascades to conversations,
+  saved sections, preferences and sessions.
+- `/privacy` covers:
+  - what's kept and why;
+  - who else handles it (Cloudflare, Render, Neon, DeepSeek, the email provider);
+  - how long things are kept;
+  - rights under the NDPA 2023, with a link to the NDPC.
+
+  It's linked from the welcome footer, the sign-up form and Settings. A contact
+  address appears only if `VITE_PRIVACY_CONTACT_EMAIL` is set.
+- `GUEST_CONVERSATION_RETENTION_DAYS` (30) drives the guest cookie, the
+  visibility cutoff and claiming. `app/retention.py` deletes idle guest
+  conversations in batches, skipping any with a run in progress. With no cron
+  on the free plan, about 2% of new conversations trigger a batch.
+  `python -m app.retention` runs it on demand.
+- All emails are now sent after the response (FastAPI background tasks), so SMTP
+  never slows or reveals anything about sign-up or recovery.
+- **Still to do:** set `VITE_PRIVACY_CONTACT_EMAIL`, and have the privacy notice
+  reviewed before public launch.
+
 
 - Settings: download my data (JSON of conversations and saved provisions) and
   delete my account, with a confirmation step.
