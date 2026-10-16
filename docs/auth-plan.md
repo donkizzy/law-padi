@@ -1,6 +1,6 @@
 # Accounts and sign-in plan
 
-Status: approved, 2026-10-16. Phase 0 is built; Phases 1–3 and 5 are next. Google sign-in is deferred.
+Status: approved, 2026-10-16. Phases 0 and 1 are built; Phases 2, 3 and 5 are next. Google sign-in is deferred.
 
 ## Goal
 
@@ -49,7 +49,23 @@ The FastAPI template auth is wired end to end, but only at template quality:
   inside the app go straight to the app.
 - Code: `frontend/src/lib/landing.ts`, the `beforeLoad` in `frontend/src/routes/_layout/index.tsx`.
 
-### Phase 1: Session hardening
+### Phase 1: Session hardening (done)
+
+Built as planned, with these specifics:
+
+- Access tokens last 15 minutes and refresh cookies 30 days (sliding).
+  The cookie is named `constitution_session`.
+- A rotated token presented again within 10 seconds is refused without revoking
+  the family, so two tabs refreshing at once don't sign each other out.
+- Tabs share one refresh through `navigator.locks`. Signing out in one tab ends
+  the session in the others through a `BroadcastChannel`.
+- Changing your password signs out every other device. An admin resetting a
+  password or deactivating an account signs out all of that user's devices.
+- Invalid or expired access tokens now get 401 instead of 403, so 403 only means
+  "not allowed".
+- Old `localStorage` tokens are deleted on load rather than honoured for a release,
+  so existing accounts sign in once more.
+
 
 - Replace the long-lived bearer token with:
   - a short-lived access token (about 15 minutes) kept in memory;
