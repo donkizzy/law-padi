@@ -30,7 +30,7 @@ export function SourceActions({ source }: { source: CopySource }) {
           try {
             toast.success(
               toggle(source.canonical_path, source.release_version)
-                ? "Source saved on this browser"
+                ? "Source saved"
                 : "Source removed from saved",
             )
           } catch {

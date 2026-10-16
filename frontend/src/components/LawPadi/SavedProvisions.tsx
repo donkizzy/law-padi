@@ -9,11 +9,44 @@ import {
   SectionHeading,
   StatusBadge,
 } from "@/components/LawPadi/primitives"
+import useAuth from "@/hooks/useAuth"
 import { legalError, type useProvision } from "@/hooks/useLegalCorpus"
 import { type Bookmark, useSavedProvisions } from "@/hooks/useSavedProvisions"
 import { provisionTitle, statusLabel } from "@/lib/legal-provisions"
 import { downloadResearch } from "@/lib/research"
+import { useSessionStatus } from "@/lib/session"
 import { EditionNotice } from "./EditionNotice"
+
+/** Where saved sections live, with a gentle nudge when an account would help. */
+function SavedWhere() {
+  const { user } = useAuth()
+  const status = useSessionStatus()
+  if (user?.email_verified_at)
+    return <>Sections you save follow your account to any device.</>
+  if (status === "signed-in")
+    return (
+      <>
+        Sections you save stay on this device until you{" "}
+        <Link className="font-semibold text-primary underline" to="/settings">
+          confirm your email
+        </Link>
+        .
+      </>
+    )
+  return (
+    <>
+      Sections you save stay on this device.{" "}
+      <Link
+        className="font-semibold text-primary underline"
+        search={{ redirect: "/saved" }}
+        to="/login"
+      >
+        Sign in
+      </Link>{" "}
+      to keep them on all your devices.
+    </>
+  )
+}
 
 export function SavedProvisions() {
   const { bookmarks, storageError } = useSavedProvisions()
@@ -48,7 +81,7 @@ export function SavedProvisions() {
   return (
     <section className="mx-auto max-w-5xl px-4 py-8 sm:px-8 lg:px-12 lg:py-12">
       <SectionHeading kicker="Saved" title="Saved sections.">
-        Sections you save stay on this device.
+        <SavedWhere />
       </SectionHeading>
       <div className="mb-5 flex flex-wrap gap-2">
         <InlineAction asChild>

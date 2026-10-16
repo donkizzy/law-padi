@@ -15,12 +15,14 @@ import {
   SidebarProvider,
   SidebarTrigger,
 } from "@/components/ui/sidebar"
+import { useAccountSync } from "@/hooks/useAccountSync"
 
 export const Route = createFileRoute("/_layout")({
   component: Layout,
 })
 
 function Layout() {
+  useAccountSync()
   return (
     <SidebarProvider>
       <AppSidebar />

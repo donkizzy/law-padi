@@ -12,6 +12,7 @@ import { client } from "./client/client.gen"
 import { ThemeProvider } from "./components/theme-provider"
 import { Toaster } from "./components/ui/sonner"
 import "./index.css"
+import { stopAccountSync } from "./lib/account-sync"
 import {
   endSession,
   getAccessToken,
@@ -84,6 +85,8 @@ let signedIn = isSignedIn()
 subscribeSession(() => {
   if (signedIn === isSignedIn()) return
   signedIn = isSignedIn()
+  // Expired or signed out in another tab: stop sending changes to the account.
+  if (!signedIn) stopAccountSync({ clearLocal: false })
   queryClient.removeQueries({ queryKey: ["currentUser"] })
   void router.invalidate()
 })

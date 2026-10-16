@@ -2271,6 +2271,42 @@ export type PageSelectionUpdate = {
 };
 
 /**
+ * PreferencesBase
+ */
+export type PreferencesBase = {
+    /**
+     * Enter To Send
+     */
+    enter_to_send?: boolean;
+    /**
+     * Follow Latest
+     */
+    follow_latest?: boolean;
+    /**
+     * Open Sources
+     */
+    open_sources?: boolean;
+};
+
+/**
+ * PreferencesPublic
+ */
+export type PreferencesPublic = {
+    /**
+     * Enter To Send
+     */
+    enter_to_send?: boolean;
+    /**
+     * Follow Latest
+     */
+    follow_latest?: boolean;
+    /**
+     * Open Sources
+     */
+    open_sources?: boolean;
+};
+
+/**
  * PrivateUserCreate
  */
 export type PrivateUserCreate = {
@@ -2753,6 +2789,52 @@ export type ReviewItemsPublic = {
      * Count
      */
     count: number;
+};
+
+/**
+ * SavedProvisionIn
+ */
+export type SavedProvisionIn = {
+    /**
+     * Canonical Path
+     */
+    canonical_path: string;
+    /**
+     * Release Version
+     */
+    release_version: string;
+    /**
+     * Saved At
+     */
+    saved_at?: string | null;
+};
+
+/**
+ * SavedProvisionPublic
+ */
+export type SavedProvisionPublic = {
+    /**
+     * Canonical Path
+     */
+    canonical_path: string;
+    /**
+     * Release Version
+     */
+    release_version: string;
+    /**
+     * Saved At
+     */
+    saved_at: string;
+};
+
+/**
+ * SavedProvisionsMerge
+ */
+export type SavedProvisionsMerge = {
+    /**
+     * Items
+     */
+    items: Array<SavedProvisionIn>;
 };
 
 /**
@@ -3882,6 +3964,153 @@ export type usersUpdateUserResponses = {
 };
 
 export type usersUpdateUserResponse = usersUpdateUserResponses[keyof usersUpdateUserResponses];
+
+export type accountRemoveSavedProvisionData = {
+    body?: never;
+    path?: never;
+    query: {
+        /**
+         * Canonical Path
+         */
+        canonical_path: string;
+        /**
+         * Release Version
+         */
+        release_version: string;
+    };
+    url: '/api/v1/account/saved-provisions';
+};
+
+export type accountRemoveSavedProvisionErrors = {
+    /**
+     * Validation Error
+     */
+    422: HTTPValidationError;
+};
+
+export type accountRemoveSavedProvisionError = accountRemoveSavedProvisionErrors[keyof accountRemoveSavedProvisionErrors];
+
+export type accountRemoveSavedProvisionResponses = {
+    /**
+     * Successful Response
+     */
+    200: Message;
+};
+
+export type accountRemoveSavedProvisionResponse = accountRemoveSavedProvisionResponses[keyof accountRemoveSavedProvisionResponses];
+
+export type accountReadSavedProvisionsData = {
+    body?: never;
+    path?: never;
+    query?: never;
+    url: '/api/v1/account/saved-provisions';
+};
+
+export type accountReadSavedProvisionsResponses = {
+    /**
+     * Response Account-Read Saved Provisions
+     *
+     * Successful Response
+     */
+    200: Array<SavedProvisionPublic>;
+};
+
+export type accountReadSavedProvisionsResponse = accountReadSavedProvisionsResponses[keyof accountReadSavedProvisionsResponses];
+
+export type accountSaveProvisionData = {
+    body: SavedProvisionIn;
+    path?: never;
+    query?: never;
+    url: '/api/v1/account/saved-provisions';
+};
+
+export type accountSaveProvisionErrors = {
+    /**
+     * Validation Error
+     */
+    422: HTTPValidationError;
+};
+
+export type accountSaveProvisionError = accountSaveProvisionErrors[keyof accountSaveProvisionErrors];
+
+export type accountSaveProvisionResponses = {
+    /**
+     * Successful Response
+     */
+    200: Message;
+};
+
+export type accountSaveProvisionResponse = accountSaveProvisionResponses[keyof accountSaveProvisionResponses];
+
+export type accountMergeSavedProvisionsData = {
+    body: SavedProvisionsMerge;
+    path?: never;
+    query?: never;
+    url: '/api/v1/account/saved-provisions/merge';
+};
+
+export type accountMergeSavedProvisionsErrors = {
+    /**
+     * Validation Error
+     */
+    422: HTTPValidationError;
+};
+
+export type accountMergeSavedProvisionsError = accountMergeSavedProvisionsErrors[keyof accountMergeSavedProvisionsErrors];
+
+export type accountMergeSavedProvisionsResponses = {
+    /**
+     * Response Account-Merge Saved Provisions
+     *
+     * Successful Response
+     */
+    200: Array<SavedProvisionPublic>;
+};
+
+export type accountMergeSavedProvisionsResponse = accountMergeSavedProvisionsResponses[keyof accountMergeSavedProvisionsResponses];
+
+export type accountReadPreferencesData = {
+    body?: never;
+    path?: never;
+    query?: never;
+    url: '/api/v1/account/preferences';
+};
+
+export type accountReadPreferencesResponses = {
+    /**
+     * Response Account-Read Preferences
+     *
+     * Successful Response
+     */
+    200: PreferencesPublic | null;
+};
+
+export type accountReadPreferencesResponse = accountReadPreferencesResponses[keyof accountReadPreferencesResponses];
+
+export type accountSavePreferencesData = {
+    body: PreferencesBase;
+    path?: never;
+    query?: never;
+    url: '/api/v1/account/preferences';
+};
+
+export type accountSavePreferencesErrors = {
+    /**
+     * Validation Error
+     */
+    422: HTTPValidationError;
+};
+
+export type accountSavePreferencesError = accountSavePreferencesErrors[keyof accountSavePreferencesErrors];
+
+export type accountSavePreferencesResponses = {
+    /**
+     * Successful Response
+     */
+    200: PreferencesPublic;
+};
+
+export type accountSavePreferencesResponse = accountSavePreferencesResponses[keyof accountSavePreferencesResponses];
 
 export type utilsTestEmailData = {
     body?: never;
