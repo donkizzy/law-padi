@@ -1,6 +1,7 @@
 import { expect, type Page, test } from "@playwright/test"
 import { firstSuperuser, firstSuperuserPassword } from "./config.ts"
 import { randomPassword } from "./utils/random.ts"
+import { SESSION_HINT_KEY } from "./utils/session.ts"
 
 test.use({ storageState: { cookies: [], origins: [] } })
 
@@ -106,12 +107,36 @@ test("Logged-out user cannot access protected routes", async ({ page }) => {
   await page.waitForURL("/login")
 })
 
-test("Redirects to /login when token is wrong", async ({ page }) => {
+test("An expired session falls back to browsing as a guest", async ({
+  page,
+}) => {
+  // The hint says this browser signed in before, but there is no live
+  // refresh cookie, so the refresh is refused.
+  await page.addInitScript(
+    (key) => localStorage.setItem(key, "1"),
+    SESSION_HINT_KEY,
+  )
   await page.goto("/settings")
-  await page.evaluate(() => {
-    localStorage.setItem("access_token", "invalid_token")
-  })
-  await page.goto("/settings")
-  await page.waitForURL("/login")
-  await expect(page).toHaveURL("/login")
+  await expect(page.getByText("You're browsing as a guest.")).toBeVisible()
+  expect(
+    await page.evaluate((key) => localStorage.getItem(key), SESSION_HINT_KEY),
+  ).toBeNull()
+})
+
+test("Signing in keeps the access token out of browser storage", async ({
+  page,
+}) => {
+  await page.goto("/login")
+  await fillForm(page, firstSuperuser, firstSuperuserPassword)
+  await page.getByRole("button", { name: "Log In" }).click()
+  await page.waitForURL("/")
+  const stored = await page.evaluate(() => JSON.stringify(localStorage))
+  expect(stored).not.toContain("eyJ")
+  const cookies = await page.context().cookies()
+  const session = cookies.find(({ name }) => name === "constitution_session")
+  expect(session?.httpOnly).toBe(true)
+
+  // Reloading restores the session from the cookie.
+  await page.reload()
+  await expect(page.getByText("You're browsing as a guest.")).toHaveCount(0)
 })

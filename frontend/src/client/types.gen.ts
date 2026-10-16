@@ -3417,6 +3417,60 @@ export type loginLoginAccessTokenResponses = {
 
 export type loginLoginAccessTokenResponse = loginLoginAccessTokenResponses[keyof loginLoginAccessTokenResponses];
 
+export type loginRefreshAccessTokenData = {
+    body?: never;
+    path?: never;
+    query?: never;
+    url: '/api/v1/login/refresh';
+};
+
+export type loginRefreshAccessTokenErrors = {
+    /**
+     * No usable session
+     */
+    401: Message;
+    /**
+     * Validation Error
+     */
+    422: HTTPValidationError;
+};
+
+export type loginRefreshAccessTokenError = loginRefreshAccessTokenErrors[keyof loginRefreshAccessTokenErrors];
+
+export type loginRefreshAccessTokenResponses = {
+    /**
+     * Successful Response
+     */
+    200: Token;
+};
+
+export type loginRefreshAccessTokenResponse = loginRefreshAccessTokenResponses[keyof loginRefreshAccessTokenResponses];
+
+export type loginLogoutData = {
+    body?: never;
+    path?: never;
+    query?: never;
+    url: '/api/v1/login/logout';
+};
+
+export type loginLogoutErrors = {
+    /**
+     * Validation Error
+     */
+    422: HTTPValidationError;
+};
+
+export type loginLogoutError = loginLogoutErrors[keyof loginLogoutErrors];
+
+export type loginLogoutResponses = {
+    /**
+     * Successful Response
+     */
+    200: Message;
+};
+
+export type loginLogoutResponse = loginLogoutResponses[keyof loginLogoutResponses];
+
 export type loginTestTokenData = {
     body?: never;
     path?: never;
