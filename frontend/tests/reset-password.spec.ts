@@ -48,7 +48,7 @@ test("User can reset password successfully using the link", async ({
 
   const emailHtml = await waitForEmailHtml({
     request,
-    query: `to:${email}`,
+    query: `to:${email} subject:"Password recovery"`,
   })
 
   expect(emailHtml).toContain(resetPath)
@@ -95,7 +95,7 @@ test("Weak new password validation", async ({ page, request }) => {
 
   const emailHtml = await waitForEmailHtml({
     request,
-    query: `to:${email}`,
+    query: `to:${email} subject:"Password recovery"`,
   })
 
   expect(emailHtml).toContain(resetPath)
