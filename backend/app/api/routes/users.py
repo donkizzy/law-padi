@@ -1,7 +1,7 @@
 import uuid
 from typing import Any
 
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Response
 from sqlmodel import col, func, select
 
 from app import crud
@@ -10,6 +10,7 @@ from app.api.deps import (
     SessionDep,
     get_current_active_superuser,
 )
+from app.core import sessions
 from app.core.config import settings
 from app.core.security import get_password_hash, verify_password
 from app.models import (
@@ -101,7 +102,11 @@ def update_user_me(
 
 @router.patch("/me/password", response_model=Message)
 def update_password_me(
-    *, session: SessionDep, body: UpdatePassword, current_user: CurrentUser
+    *,
+    session: SessionDep,
+    response: Response,
+    body: UpdatePassword,
+    current_user: CurrentUser,
 ) -> Any:
     """
     Update own password.
@@ -117,6 +122,11 @@ def update_password_me(
     current_user.hashed_password = hashed_password
     session.add(current_user)
     session.commit()
+    # Sign out every other device, then keep this browser signed in.
+    sessions.revoke_user_sessions(session=session, user_id=current_user.id)
+    sessions.set_refresh_cookie(
+        response, sessions.issue_refresh_token(session=session, user=current_user)
+    )
     return Message(message="Password updated successfully")
 
 
@@ -207,6 +217,8 @@ def update_user(
             )
 
     db_user = crud.update_user(session=session, db_user=db_user, user_in=user_in)
+    if user_in.password or user_in.is_active is False:
+        sessions.revoke_user_sessions(session=session, user_id=db_user.id)
     return db_user
 
 
