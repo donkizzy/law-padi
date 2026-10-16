@@ -26,7 +26,7 @@ therefore live outside Render. See [Render's free-service conditions](https://re
 ## Prepare the exact source version
 
 The root `render.yaml` explicitly selects Free, Virginia, one Docker instance,
-the repository-root build context, `/healthz`, deployment after CI checks pass and a 30-second
+the repository-root build context, `/healthz`, deployment on commit and a 30-second
 shutdown delay. Never omit `plan: free`: Render's default for a new Docker web
 service is paid. Its field definitions are in the [Blueprint reference](https://render.com/docs/blueprint-spec).
 
@@ -101,13 +101,16 @@ current prices and one-call capacity without purchasing credits automatically.
 
 Connect the private `donkizzy/law-padi` repository and its `master` branch. Inspect
 the creation preview and confirm one Free web service in Virginia with no other
-new resources. Import the private environment and set Auto-Deploy to **After CI
-Checks Pass**, matching `autoDeployTrigger: checksPass` in `render.yaml`.
-The initial service creation deploys once; subsequent pushes wait for GitHub
-checks. Record the exact assigned HTTPS
+new resources. Import the private environment and set Auto-Deploy to **On Commit**,
+matching `autoDeployTrigger: commit` in `render.yaml`. This temporary mode was
+approved while GitHub Actions is blocked by the account billing restriction.
+Pushes to `master` trigger Render's Docker build without waiting for GitHub tests.
+Run relevant tests locally before pushing. Once hosted CI works again, restore
+**After CI Checks Pass** in Render and `autoDeployTrigger: checksPass` here.
+Record the exact assigned HTTPS
 `onrender.com` URL rather than guessing it from the service name.
 
-GitHub runs backend types/lint, migrations and tests against a disposable
+The GitHub workflows are configured for backend types/lint, migrations and tests against a disposable
 `app_test` database, deployment helper tests, frontend formatting/type checking
 and build, Cloudflare proxy tests, a production Render image build, Docker Compose
 smoke checks, and Playwright browser tests. Coverage is uploaded and enforces the

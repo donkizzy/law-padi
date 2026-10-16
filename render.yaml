@@ -9,7 +9,8 @@ services:
     branch: master
     dockerfilePath: ./deployment/render/Dockerfile
     dockerContext: .
-    autoDeployTrigger: checksPass
+    # Temporary while GitHub Actions is blocked by the account billing restriction.
+    autoDeployTrigger: commit
     healthCheckPath: /healthz
     maxShutdownDelaySeconds: 30
     numInstances: 1

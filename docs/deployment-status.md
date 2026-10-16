@@ -6,7 +6,7 @@ The backend is live on **Render Free** in Virginia:
 - Health endpoint: <https://constitution-ng-api.onrender.com/healthz>.
 - Initial deployed commit: `f6512e505d733744b57f4985b6b569f24bb25850`.
 - Packaged revision: `source-f294f6a729619518`; prompt `constitution-english-v8`.
-- Repository branch: `master`; automatic deployment: **After CI Checks Pass**.
+- Repository branch: `master`; automatic deployment: **On Commit** (temporary).
 - Database: Neon Free PostgreSQL 18; source PDFs: private Cloudflare R2.
 
 Live checks passed for health, protected runtime metadata, corpus release reads,
@@ -22,8 +22,13 @@ GitHub accepted the grouped commits, but Actions did not start any jobs.
 reports: “The job was not started because recent account payments have failed or
 your spending limit needs to be increased.” The account owner must resolve this
 with GitHub before hosted CI can run. No payment method, spending limit or
-repository visibility was changed. Render remains configured to wait for checks
-on future pushes. Its first deployment was created manually after local checks.
+repository visibility was changed. The user approved temporarily deploying each
+push through Render's Docker build instead. Render and `render.yaml` now use
+**On Commit** / `autoDeployTrigger: commit`; automatic backend and browser tests
+are not part of this temporary deployment path. Run relevant checks locally
+before pushing. Restore **After CI Checks Pass** / `checksPass` in both places
+once the GitHub restriction is resolved. The first deployment was created
+manually after local checks.
 
 ## Public launch remains pending
 
