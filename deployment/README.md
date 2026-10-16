@@ -1,7 +1,8 @@
 # Free-tier deployment runbook
 
 The user selected **Render Free** after GCP required an unaffordable upfront
-payment. Follow [the active Render beta runbook](render/README.md). The GCP
+payment. Follow [the active Render beta runbook](render/README.md) and
+[the Cloudflare frontend runbook](cloudflare/README.md). The GCP
 procedure below is retained for a future migration and has not been deployed;
 do not execute its resource or scheduling commands for the current beta.
 

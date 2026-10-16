@@ -5,7 +5,8 @@ The backend is live on **Render Free** in Virginia:
 - Service: `constitution-ng-api` (`srv-db8u1gavcj2c73b7h75g`).
 - Health endpoint: <https://constitution-ng-api.onrender.com/healthz>.
 - Initial deployed commit: `f6512e505d733744b57f4985b6b569f24bb25850`.
-- Packaged revision: `source-f294f6a729619518`; prompt `constitution-english-v8`.
+- Packaged revision: `source-f8ca3da5355d3760`; prompt `constitution-english-v8`.
+- Verified frontend integration commit: `e486912` (automatically deployed by Render).
 - Repository branch: `master`; automatic deployment: **On Commit** (temporary).
 - Database: Neon Free PostgreSQL 18; source PDFs: private Cloudflare R2.
 
@@ -29,6 +30,30 @@ are not part of this temporary deployment path. Run relevant checks locally
 before pushing. Restore **After CI Checks Pass** / `checksPass` in both places
 once the GitHub restriction is resolved. The first deployment was created
 manually after local checks.
+
+## Cloudflare frontend
+
+The existing Worker `constitition-ng` now contains the built frontend, the
+Render API proxy and the approved encrypted `ORIGIN_PROXY_SECRET`. No database,
+AI or R2 credentials were copied to it. Its eventual free hostname is
+`https://constitition-ng.amosgodwin500.workers.dev`; this preserves the spelling
+of the Worker already created in the account. Render's saved `FRONTEND_HOST`
+now matches that address. Both workers.dev and version preview URLs are disabled.
+
+Native Cloudflare builds are connected to `donkizzy/law-padi`, production branch
+`master`, using the locked frontend build and generated Wrangler configuration.
+The push of `e486912` successfully completed native build `155a9a42` and
+deployed Worker version `4ff2867b` with status Ready. Non-production branch
+builds are disabled. See the
+[Cloudflare runbook](../deployment/cloudflare/README.md). The Free plan uses its
+default CPU limit; a custom CPU override was rejected and removed.
+
+A local Workers runtime against the live Render API passed frontend assets, SPA
+deep links, authenticated runtime metadata, Section 37 lookup, ten-result lexical
+search and an external signed PDF redirect. Responses use private/no-store API
+caching. Direct-origin requests without the credential still return 403;
+capabilities report explanations disabled. No production conversation was created
+and no paid AI was called. Deployment helper tests (11) and proxy tests (9) pass.
 
 ## Public launch remains pending
 
