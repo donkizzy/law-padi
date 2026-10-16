@@ -56,6 +56,24 @@ function subscribe(listener: () => void) {
   }
 }
 
+export type BookmarkChange = { bookmark: Bookmark; saved: boolean }
+let changeListener: ((change: BookmarkChange) => void) | null = null
+
+/** Account sync registers here to mirror each local change to the server. */
+export function onBookmarkChange(listener: typeof changeListener) {
+  changeListener = listener
+}
+
+export function readSavedProvisions(): Bookmark[] {
+  return read().bookmarks
+}
+
+/** Replace this browser's bookmarks with the account's, without echoing back. */
+export function replaceSavedProvisions(next: Bookmark[]) {
+  localStorage.setItem(storageKey, JSON.stringify(bookmarkSchema.parse(next)))
+  for (const listener of listeners) listener()
+}
+
 export function clearSavedProvisions() {
   localStorage.removeItem(storageKey)
   cachedRaw = undefined
@@ -81,22 +99,21 @@ export function useSavedProvisions() {
       (item) =>
         item.canonical_path === path && item.release_version === release,
     )
+    const bookmark = {
+      canonical_path: path,
+      release_version: release,
+      saved_at: new Date().toISOString(),
+    }
     const next = saved
       ? existing.filter(
           (item) =>
             item.canonical_path !== path || item.release_version !== release,
         )
-      : [
-          ...existing,
-          {
-            canonical_path: path,
-            release_version: release,
-            saved_at: new Date().toISOString(),
-          },
-        ]
+      : [...existing, bookmark]
     // Only notify after durable browser storage succeeds.
     localStorage.setItem(storageKey, JSON.stringify(next))
     for (const listener of listeners) listener()
+    changeListener?.({ bookmark, saved: !saved })
     return !saved
   }
   return { bookmarks, isSaved, toggle, storageError: error }

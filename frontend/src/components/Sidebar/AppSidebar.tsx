@@ -1,14 +1,11 @@
-import { useQueryClient } from "@tanstack/react-query"
 import {
   Link as RouterLink,
   useLocation,
   useSearch,
 } from "@tanstack/react-router"
 import { Fragment, useState } from "react"
-import { FiMessageSquare, FiPlus, FiSearch } from "react-icons/fi"
+import { FiMessageSquare, FiSearch } from "react-icons/fi"
 import { LiaShieldAltSolid } from "react-icons/lia"
-import { toast } from "sonner"
-import { ConversationsService } from "@/client"
 import { SidebarAppearance } from "@/components/Common/Appearance"
 import { Logo } from "@/components/Common/Logo"
 import { NewConversationButton } from "@/components/LawPadi/NewConversationButton"
@@ -27,7 +24,7 @@ import {
 } from "@/components/ui/sidebar"
 import useAuth from "@/hooks/useAuth"
 import { useChatCapabilities } from "@/hooks/useChatCapabilities"
-import { conversationHeaders, useConversations } from "@/hooks/useConversations"
+import { useConversations } from "@/hooks/useConversations"
 import { sidebarSections } from "@/lib/law-padi-data"
 import { type Item, Main } from "./Main"
 import { User } from "./User"
@@ -60,7 +57,6 @@ export function AppSidebar() {
   const capabilities = useChatCapabilities()
   const search = useSearch({ strict: false })
   const here = useLocation({ select: (location) => location.href })
-  const queryClient = useQueryClient()
   const { isMobile, setOpenMobile } = useSidebar()
   const chatEnabled = capabilities.data?.conversations_enabled === true
   const history = conversations.data?.pages.flatMap((page) => page.data) ?? []
@@ -81,21 +77,6 @@ export function AppSidebar() {
         { icon: LiaShieldAltSolid, title: "Legal admin", path: "/admin" },
       ]
     : navigation
-
-  const claim = async () => {
-    try {
-      const result = await ConversationsService.claimGuestConversations({
-        headers: conversationHeaders(),
-        withCredentials: true,
-      })
-      toast.success(
-        `${result.data.claimed_count} guest conversation(s) imported`,
-      )
-      void queryClient.invalidateQueries({ queryKey: ["conversations"] })
-    } catch {
-      toast.error("Guest conversations could not be imported.")
-    }
-  }
 
   return (
     <Sidebar collapsible="icon">
@@ -215,15 +196,6 @@ export function AppSidebar() {
       </SidebarContent>
 
       <SidebarFooter className="border-t border-sidebar-border/80 px-3 py-4">
-        {chatEnabled && currentUser && (
-          <button
-            className="sq-sm flex items-center gap-2 px-2 py-2 text-left text-xs text-muted-foreground hover:bg-sidebar-accent"
-            onClick={() => void claim()}
-            type="button"
-          >
-            <FiPlus aria-hidden /> Bring guest chats into this account
-          </button>
-        )}
         {!currentUser && (
           <div className="grid gap-2 px-1 text-xs group-data-[collapsible=icon]:hidden">
             <p className="text-muted-foreground">

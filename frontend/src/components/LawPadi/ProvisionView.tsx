@@ -82,7 +82,7 @@ export function ProvisionView({
     try {
       toast.success(
         toggle(provision.canonical_path, provision.release_version)
-          ? "Saved on this device"
+          ? "Saved"
           : "Removed from saved",
       )
     } catch {

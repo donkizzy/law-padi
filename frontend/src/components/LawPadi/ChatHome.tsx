@@ -132,7 +132,7 @@ function AnswerActions({ answer }: { answer: ExplanationAnswer }) {
       for (const item of sources)
         if (!isSaved(item.canonical_path, item.release_version))
           toggle(item.canonical_path, item.release_version)
-      toast.success("Sources saved on this browser")
+      toast.success("Sources saved")
     } catch {
       toast.error("Couldn't save sources on this browser.")
     }

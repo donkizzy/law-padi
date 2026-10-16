@@ -158,8 +158,8 @@ export function SettingsView() {
                   sections without an account.
                 </p>
                 <p className="text-sm text-muted-foreground">
-                  Sign in to keep conversations in your account. Guest chats can
-                  be imported when you choose. Bookmarks stay on this browser.
+                  Sign in to keep your conversations and saved sections on every
+                  device. Anything you've saved here comes with you.
                 </p>
                 <div className="flex flex-wrap gap-2">
                   <SquircleButton asChild>
@@ -240,7 +240,9 @@ export function SettingsView() {
               onChange={() => update("openSources")}
             />
             <p className="mt-3 text-sm text-muted-foreground">
-              These preferences are saved on this browser.
+              {user?.email_verified_at
+                ? "These preferences follow your account to any device."
+                : "These preferences are saved on this browser."}
             </p>
             <div className="mt-4 flex flex-wrap items-center gap-3">
               <SquircleButton type="button" disabled={!dirty} onClick={save}>
