@@ -1,6 +1,7 @@
 import hashlib
 import json
 
+from app.chat import EXPLANATION_PROMPT_VERSION
 from scripts.evaluate_explanations import _check_captures, _check_judgments
 from scripts.render_explanation_review import _case_html
 
@@ -22,9 +23,14 @@ def _capture() -> dict:
     return {
         "id": "e001",
         "release_version": "release-1",
+        "prompt_version": EXPLANATION_PROMPT_VERSION,
+        "build_revision": "source-test",
+        "retrieval_mode": "lexical",
+        "retrieval_mode_source": "inline_worker_settings",
         "turns": [
             {
                 "question": "Section 37",
+                "retrieval_mode": "exact",
                 "answer": {
                     "outcome": "completed",
                     "evidence": [evidence],
@@ -56,11 +62,24 @@ def test_review_capture_checks_provenance_and_block_references(tmp_path):
     path = tmp_path / "captures.jsonl"
     capture = _capture()
     path.write_text(json.dumps(capture) + "\n")
-    assert _check_captures(dataset, path) == []
+    assert (
+        _check_captures(
+            dataset,
+            path,
+            expected_build_revision="source-test",
+            expected_retrieval_mode="lexical",
+        )
+        == []
+    )
 
     capture["turns"][0]["answer"]["evidence"][0]["authoritative_text"] = "Altered"
     path.write_text(json.dumps(capture) + "\n")
-    assert "e001: evidence provenance mismatch" in _check_captures(dataset, path)
+    assert "e001: evidence provenance mismatch" in _check_captures(
+        dataset,
+        path,
+        expected_build_revision="source-test",
+        expected_retrieval_mode="lexical",
+    )
 
 
 def test_review_requires_explicit_human_judgments(tmp_path):
@@ -82,6 +101,30 @@ def test_review_requires_explicit_human_judgments(tmp_path):
     )
     assert "e001: judgment does not match captured answer" in _check_judgments(
         dataset, path, captures
+    )
+
+
+def test_review_rejects_answer_to_a_different_question(tmp_path):
+    dataset = {
+        "release_version": "release-1",
+        "cases": [
+            {
+                "id": "e001",
+                "kind": "exact",
+                "turns": ["Section 37"],
+                "expected_paths": ["constitution.section37"],
+            }
+        ],
+    }
+    capture = _capture()
+    capture["turns"][0]["question"] = "What does section 38 say?"
+    path = tmp_path / "captures.jsonl"
+    path.write_text(json.dumps(capture) + "\n")
+    assert "e001: captured questions differ from dataset" in _check_captures(
+        dataset,
+        path,
+        expected_build_revision="source-test",
+        expected_retrieval_mode="lexical",
     )
 
 

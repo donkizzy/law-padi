@@ -18,7 +18,7 @@ BACKEND_DIR = Path(__file__).resolve().parents[1]
 ROOT_DIR = BACKEND_DIR.parent
 
 
-def preview_environment(database: str) -> dict[str, str]:
+def preview_environment(database: str, frontend_port: int = 5173) -> dict[str, str]:
     if not database.startswith("app_live_validation_"):
         raise ValueError("Use an existing app_live_validation_ database")
     if not settings.DEEPSEEK_API_KEY:
@@ -48,7 +48,7 @@ def preview_environment(database: str) -> dict[str, str]:
         CHAT_DAILY_BUDGET_USD="2",
         CHAT_GUEST_DAILY_LIMIT="10",
         CHAT_ACCOUNT_DAILY_LIMIT="10",
-        FRONTEND_HOST="http://127.0.0.1:5173",
+        FRONTEND_HOST=f"http://127.0.0.1:{frontend_port}",
         FASTAPI_ENV="development",
     )
     return environment
@@ -57,12 +57,29 @@ def preview_environment(database: str) -> dict[str, str]:
 def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--database", required=True)
+    parser.add_argument("--frontend-port", type=int, default=5173)
     args = parser.parse_args()
-    environment = preview_environment(args.database)
+    if not 1 <= args.frontend_port <= 65535:
+        parser.error("--frontend-port must be between 1 and 65535")
+    environment = preview_environment(args.database, args.frontend_port)
+    revision = subprocess.run(
+        [sys.executable, str(ROOT_DIR / "scripts/build_revision.py")],
+        check=True,
+        capture_output=True,
+        text=True,
+    ).stdout.strip()
+    environment["BUILD_REVISION"] = revision
+    subprocess.run(
+        ["alembic", "upgrade", "head"],
+        cwd=BACKEND_DIR,
+        env=environment,
+        check=True,
+    )
     frontend_environment = {
         **os.environ,
         "VITE_API_URL": "http://127.0.0.1:18000",
         "VITE_CHAT_PREVIEW": "true",
+        "VITE_BUILD_REVISION": revision,
     }
     services = [
         (
@@ -83,7 +100,17 @@ def main() -> None:
         ("worker", [sys.executable, "-m", "app.chat.worker"], BACKEND_DIR, environment),
         (
             "frontend",
-            ["bun", "run", "dev", "--", "--host", "127.0.0.1"],
+            [
+                "bun",
+                "run",
+                "dev",
+                "--",
+                "--host",
+                "127.0.0.1",
+                "--port",
+                str(args.frontend_port),
+                "--strictPort",
+            ],
             ROOT_DIR,
             frontend_environment,
         ),
@@ -96,7 +123,7 @@ def main() -> None:
             )
             processes.append((name, process))
         sys.stdout.write(
-            "Local explanation preview: http://127.0.0.1:5173/\n"
+            f"Local explanation preview: http://127.0.0.1:{args.frontend_port}/\n"
             "Press Ctrl+C to stop all preview services.\n"
         )
         sys.stdout.flush()

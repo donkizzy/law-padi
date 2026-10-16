@@ -13,6 +13,8 @@ from typing import Any
 
 from sqlmodel import Session, select
 
+from app.chat import EXPLANATION_PROMPT_VERSION
+from app.core.config import settings
 from app.core.db import engine
 from app.legal.evidence import exact_lookup
 from app.legal.models import CorpusRelease
@@ -62,7 +64,14 @@ def _check_cases(dataset: dict[str, Any]) -> tuple[int, list[str]]:
     return checked, failures
 
 
-def _check_captures(dataset: dict[str, Any], path: Path) -> list[str]:
+def _check_captures(
+    dataset: dict[str, Any],
+    path: Path,
+    *,
+    expected_prompt_version: str = EXPLANATION_PROMPT_VERSION,
+    expected_build_revision: str | None = None,
+    expected_retrieval_mode: str | None = None,
+) -> list[str]:
     cases = {row["id"]: row for row in dataset["cases"]}
     captures = [
         json.loads(line) for line in path.read_text().splitlines() if line.strip()
@@ -71,14 +80,44 @@ def _check_captures(dataset: dict[str, Any], path: Path) -> list[str]:
     failures: list[str] = []
     if len(captures) != len(by_id) or set(by_id) != set(cases):
         return ["Every evaluation case requires one unique captured answer"]
+    build_revision = expected_build_revision or settings.BUILD_REVISION
+    retrieval_mode = expected_retrieval_mode or (
+        "hybrid" if settings.EMBEDDING_QUERY_ENABLED else "lexical"
+    )
+    if build_revision == "development":
+        failures.append("Expected packaged build revision is required for live review")
+    if retrieval_mode not in {"lexical", "hybrid"}:
+        failures.append("Expected query retrieval policy must be lexical or hybrid")
     for case_id, case in cases.items():
         capture = by_id[case_id]
+        if capture.get("prompt_version") != expected_prompt_version:
+            failures.append(f"{case_id}: captured prompt differs from current prompt")
+        if capture.get("build_revision") != build_revision:
+            failures.append(f"{case_id}: captured build differs from expected build")
+        source = capture.get("retrieval_mode_source")
+        confirmed_policy = source == "inline_worker_settings" or (
+            source == "render_worker_settings"
+            and capture.get("worker_dispatch") == "request_woken"
+        )
+        if capture.get("retrieval_mode") != retrieval_mode or not confirmed_policy:
+            failures.append(
+                f"{case_id}: captured query retrieval policy is not confirmed"
+            )
         if "error" in capture or len(capture.get("turns", [])) != len(case["turns"]):
             failures.append(f"{case_id}: live answer capture is incomplete")
             continue
+        if [turn.get("question") for turn in capture["turns"]] != case["turns"]:
+            failures.append(f"{case_id}: captured questions differ from dataset")
         if capture.get("release_version") != dataset["release_version"]:
             failures.append(f"{case_id}: captured release differs from dataset")
         for turn in capture["turns"]:
+            actual_mode = turn.get("retrieval_mode")
+            if actual_mode not in {"exact", "lexical", "hybrid"} or (
+                retrieval_mode == "lexical" and actual_mode == "hybrid"
+            ):
+                failures.append(
+                    f"{case_id}: actual retrieval mode conflicts with captured policy"
+                )
             answer = turn.get("answer") or {}
             evidence = answer.get("evidence") or []
             by_evidence_id = {item.get("evidence_id"): item for item in evidence}
@@ -189,6 +228,8 @@ def main() -> int:
     parser.add_argument("dataset", type=Path)
     parser.add_argument("--judgments", type=Path)
     parser.add_argument("--captures", type=Path)
+    parser.add_argument("--expected-build-revision")
+    parser.add_argument("--expected-retrieval-mode", choices=("lexical", "hybrid"))
     args = parser.parse_args()
     dataset = json.loads(args.dataset.read_text())
     if len(dataset["cases"]) < 200:
@@ -197,7 +238,14 @@ def main() -> int:
     if args.judgments and not args.captures:
         parser.error("--judgments requires --captures from live validation")
     if args.captures:
-        failures.extend(_check_captures(dataset, args.captures))
+        failures.extend(
+            _check_captures(
+                dataset,
+                args.captures,
+                expected_build_revision=args.expected_build_revision,
+                expected_retrieval_mode=args.expected_retrieval_mode,
+            )
+        )
     if args.judgments:
         failures.extend(_check_judgments(dataset, args.judgments, args.captures))
     print(f"Checked {checked} deterministic cases; failures: {len(failures)}")  # noqa: T201
