@@ -28,11 +28,11 @@ The project's design system (tokens in `frontend/src/index.css`, the constitutio
 
 ## Testing Guidelines
 
-Name backend tests `test_*.py` and Playwright cases `*.spec.ts`. Add regression coverage for behavior changes and keep helpers in existing `tests/utils/` locations. Backend tests produce `htmlcov/index.html`; no minimum threshold is configured. Playwright requires the backend and Compose services.
+Name backend tests `test_*.py` and Playwright cases `*.spec.ts`. Add regression coverage for behavior changes and keep helpers in existing `tests/utils/` locations. Backend tests produce `htmlcov/index.html`; CI enforces the measured 88% coverage baseline. Playwright requires the backend and Compose services.
 
 ## Commit & Pull Request Guidelines
 
-History currently contains only an initial commit, so no mature commit convention exists. Use short, imperative subjects, optionally scoped (for example, `backend: validate reset tokens`). Keep pull requests focused, explain user-visible impact, link related issues, and include screenshots for UI changes. Confirm relevant tests and linters pass. Discuss architectural changes or new dependencies before opening a PR; contributors should not modify dependency lockfiles casually.
+Use short, imperative subjects, optionally scoped (for example, `backend: validate reset tokens`). Group significant related changes into focused commits. Keep pull requests focused, explain user-visible impact, link related issues, and include screenshots for UI changes. Confirm relevant tests and linters pass. Discuss architectural changes or new dependencies before opening a PR; contributors should not modify dependency lockfiles casually.
 
 ## Security & Configuration
 
