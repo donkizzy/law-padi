@@ -975,6 +975,16 @@ export type CorpusReleasesPublic = {
 };
 
 /**
+ * EmailVerification
+ */
+export type EmailVerification = {
+    /**
+     * Token
+     */
+    token: string;
+};
+
+/**
  * EmbeddingBenchmarkPublic
  */
 export type EmbeddingBenchmarkPublic = {
@@ -3280,6 +3290,10 @@ export type UserPublic = {
      * Created At
      */
     created_at?: string | null;
+    /**
+     * Email Verified At
+     */
+    email_verified_at?: string | null;
 };
 
 /**
@@ -3733,10 +3747,51 @@ export type usersRegisterUserResponses = {
     /**
      * Successful Response
      */
-    200: UserPublic;
+    200: Message;
 };
 
 export type usersRegisterUserResponse = usersRegisterUserResponses[keyof usersRegisterUserResponses];
+
+export type usersVerifyEmailData = {
+    body: EmailVerification;
+    path?: never;
+    query?: never;
+    url: '/api/v1/users/verify-email';
+};
+
+export type usersVerifyEmailErrors = {
+    /**
+     * Validation Error
+     */
+    422: HTTPValidationError;
+};
+
+export type usersVerifyEmailError = usersVerifyEmailErrors[keyof usersVerifyEmailErrors];
+
+export type usersVerifyEmailResponses = {
+    /**
+     * Successful Response
+     */
+    200: Message;
+};
+
+export type usersVerifyEmailResponse = usersVerifyEmailResponses[keyof usersVerifyEmailResponses];
+
+export type usersResendVerificationEmailData = {
+    body?: never;
+    path?: never;
+    query?: never;
+    url: '/api/v1/users/me/verification-email';
+};
+
+export type usersResendVerificationEmailResponses = {
+    /**
+     * Successful Response
+     */
+    200: Message;
+};
+
+export type usersResendVerificationEmailResponse = usersResendVerificationEmailResponses[keyof usersResendVerificationEmailResponses];
 
 export type usersDeleteUserData = {
     body?: never;
