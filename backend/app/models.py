@@ -56,12 +56,19 @@ class User(UserBase, table=True):
         default_factory=get_datetime_utc,
         sa_type=DateTime(timezone=True),  # type: ignore
     )
+    # Set once the person follows the link sent to ``email``. Cleared when the
+    # address changes. Account syncing waits for it.
+    email_verified_at: datetime | None = Field(
+        default=None,
+        sa_type=DateTime(timezone=True),  # type: ignore
+    )
 
 
 # Properties to return via API, id is always required
 class UserPublic(UserBase):
     id: uuid.UUID
     created_at: datetime | None = None
+    email_verified_at: datetime | None = None
 
 
 class UsersPublic(SQLModel):
@@ -107,6 +114,23 @@ class RefreshToken(SQLModel, table=True):
         default=None,
         sa_type=DateTime(timezone=True),  # type: ignore
     )
+
+
+class EmailVerification(SQLModel):
+    token: str = Field(max_length=2048)
+
+
+class RateLimitCounter(SQLModel, table=True):
+    """Requests seen for one rate-limit key in one fixed time window."""
+
+    __tablename__ = "rate_limit_counter"
+
+    key: str = Field(primary_key=True, max_length=255)
+    window_start: datetime = Field(
+        primary_key=True,
+        sa_type=DateTime(timezone=True),  # type: ignore
+    )
+    count: int = 0
 
 
 class NewPassword(SQLModel):

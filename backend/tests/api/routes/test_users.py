@@ -5,6 +5,7 @@ from fastapi.testclient import TestClient
 from sqlmodel import Session, select
 
 from app import crud
+from app.api.routes.users import SIGNUP_MESSAGE
 from app.core.config import settings
 from app.core.security import verify_password
 from app.models import User, UserCreate
@@ -326,9 +327,7 @@ def test_register_user(client: TestClient, db: Session) -> None:
         json=data,
     )
     assert r.status_code == 200
-    created_user = r.json()
-    assert created_user["email"] == username
-    assert created_user["full_name"] == full_name
+    assert r.json() == {"message": SIGNUP_MESSAGE}
 
     user_query = select(User).where(User.email == username)
     user_db = db.exec(user_query).first()
@@ -337,9 +336,12 @@ def test_register_user(client: TestClient, db: Session) -> None:
     assert user_db.full_name == full_name
     verified, _ = verify_password(password, user_db.hashed_password)
     assert verified
+    assert user_db.email_verified_at is None
 
 
-def test_register_user_already_exists_error(client: TestClient) -> None:
+def test_register_existing_email_looks_like_a_new_sign_up(
+    client: TestClient, db: Session
+) -> None:
     password = random_lower_string()
     full_name = random_lower_string()
     data = {
@@ -347,12 +349,25 @@ def test_register_user_already_exists_error(client: TestClient) -> None:
         "password": password,
         "full_name": full_name,
     }
-    r = client.post(
-        f"{settings.API_V1_STR}/users/signup",
-        json=data,
-    )
-    assert r.status_code == 400
-    assert r.json()["detail"] == "The user with this email already exists in the system"
+    existing = db.exec(select(User).where(User.email == settings.FIRST_SUPERUSER)).one()
+    hashed_before = existing.hashed_password
+    with (
+        patch("app.core.config.settings.SMTP_HOST", "smtp.example.com"),
+        patch("app.core.config.settings.EMAILS_FROM_EMAIL", "info@example.com"),
+        patch("app.api.routes.users.send_email") as send_email,
+    ):
+        r = client.post(
+            f"{settings.API_V1_STR}/users/signup",
+            json=data,
+        )
+    assert r.status_code == 200
+    assert r.json() == {"message": SIGNUP_MESSAGE}
+    # The owner hears about it; the account itself is untouched.
+    send_email.assert_called_once()
+    assert send_email.call_args.kwargs["email_to"] == settings.FIRST_SUPERUSER
+    assert "already have an account" in send_email.call_args.kwargs["subject"]
+    db.refresh(existing)
+    assert existing.hashed_password == hashed_before
 
 
 def test_update_user(

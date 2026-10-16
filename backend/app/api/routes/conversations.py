@@ -83,10 +83,7 @@ def _account(request: Request, session: Session) -> User | None:
             headers={"WWW-Authenticate": "Bearer"},
         )
     try:
-        payload = jwt.decode(
-            token, settings.SECRET_KEY, algorithms=[security.ALGORITHM]
-        )
-        token_data = TokenPayload(**payload)
+        token_data = TokenPayload(**security.decode_access_token(token))
         user = session.get(User, token_data.sub)
     except jwt.InvalidTokenError, ValueError, TypeError:
         raise HTTPException(
