@@ -8,6 +8,7 @@ import {
   type UserRegister,
   UsersService,
 } from "@/client"
+import { safeRedirect } from "@/lib/redirect"
 import {
   endSession,
   isSignedIn,
@@ -20,7 +21,12 @@ import { clearDrafts } from "./useWorkspacePreferences"
 
 const isLoggedIn = isSignedIn
 
-const useAuth = () => {
+type UseAuthOptions = {
+  /** Where to go after signing in, from the page's `?redirect=`. */
+  redirect?: string
+}
+
+const useAuth = ({ redirect }: UseAuthOptions = {}) => {
   const navigate = useNavigate()
   const queryClient = useQueryClient()
   const { showErrorToast } = useCustomToast()
@@ -36,7 +42,10 @@ const useAuth = () => {
     mutationFn: (data: UserRegister) =>
       UsersService.registerUser({ body: data }),
     onSuccess: () => {
-      navigate({ to: "/login" })
+      navigate({
+        to: "/login",
+        search: { redirect: safeRedirect(redirect), notice: "check-email" },
+      })
     },
     onError: handleError.bind(showErrorToast),
     onSettled: () => {
@@ -55,7 +64,9 @@ const useAuth = () => {
   const loginMutation = useMutation({
     mutationFn: login,
     onSuccess: () => {
-      navigate({ to: "/" })
+      const target = safeRedirect(redirect)
+      if (target) navigate({ href: target })
+      else navigate({ to: "/" })
     },
     onError: handleError.bind(showErrorToast),
   })

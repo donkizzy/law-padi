@@ -21,6 +21,7 @@ import { Input } from "@/components/ui/input"
 import { LoadingButton } from "@/components/ui/loading-button"
 import { PasswordInput } from "@/components/ui/password-input"
 import useAuth, { isLoggedIn } from "@/hooks/useAuth"
+import { redirectSearchSchema, safeRedirect } from "@/lib/redirect"
 
 const formSchema = z.object({
   username: z.email({ message: "Invalid email address" }),
@@ -34,11 +35,13 @@ type FormData = z.infer<typeof formSchema>
 
 export const Route = createFileRoute("/login")({
   component: Login,
-  beforeLoad: async () => {
+  validateSearch: redirectSearchSchema.extend({
+    notice: z.enum(["check-email"]).optional().catch(undefined),
+  }),
+  beforeLoad: async ({ search }) => {
     if (isLoggedIn()) {
-      throw redirect({
-        to: "/",
-      })
+      const target = safeRedirect(search.redirect)
+      throw target ? redirect({ href: target }) : redirect({ to: "/" })
     }
   },
   head: () => ({
@@ -51,7 +54,8 @@ export const Route = createFileRoute("/login")({
 })
 
 function Login() {
-  const { loginMutation } = useAuth()
+  const { redirect: redirectTo, notice } = Route.useSearch()
+  const { loginMutation } = useAuth({ redirect: redirectTo })
   const form = useForm<FormData>({
     resolver: zodResolver(formSchema),
     mode: "onBlur",
@@ -77,6 +81,16 @@ function Login() {
           <div className="flex flex-col items-center gap-2 text-center">
             <h1 className="text-2xl font-bold">Login to your account</h1>
           </div>
+
+          {notice === "check-email" && (
+            <p
+              className="sq-md border border-primary/30 bg-primary/5 p-3 text-sm"
+              role="status"
+            >
+              Check your email to confirm your address. You can log in now and
+              confirm it later.
+            </p>
+          )}
 
           <div className="grid gap-4">
             <FormField
@@ -131,7 +145,11 @@ function Login() {
 
           <div className="text-center text-sm">
             Don't have an account yet?{" "}
-            <RouterLink to="/signup" className="underline underline-offset-4">
+            <RouterLink
+              to="/signup"
+              search={{ redirect: redirectTo }}
+              className="underline underline-offset-4"
+            >
               Sign up
             </RouterLink>
           </div>

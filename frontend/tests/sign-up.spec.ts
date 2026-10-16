@@ -53,6 +53,38 @@ test("Sign up with valid name, email, and password", async ({ page }) => {
   await page.goto("/signup")
   await fillForm(page, full_name, email, password, password)
   await page.getByRole("button", { name: "Sign Up" }).click()
+  await expect(page).toHaveURL(/\/login\?notice=check-email$/)
+  await expect(
+    page.getByText("Check your email to confirm your address."),
+  ).toBeVisible()
+})
+
+test("Sign up returns to the page the visitor came from", async ({ page }) => {
+  const email = randomEmail()
+  const password = randomPassword()
+
+  await page.goto("/signup?redirect=%2Fsaved")
+  await fillForm(page, "Test User", email, password, password)
+  await page.getByRole("button", { name: "Sign Up" }).click()
+  await expect(page).toHaveURL(/\/login\?.*redirect=%2Fsaved/)
+  await page.getByTestId("email-input").fill(email)
+  await page.getByTestId("password-input").fill(password)
+  await page.getByRole("button", { name: "Log In" }).click()
+  await expect(page).toHaveURL(/\/saved$/)
+})
+
+test("Sign-in ignores redirects to other sites", async ({ page }) => {
+  const email = randomEmail()
+  const password = randomPassword()
+
+  await page.goto("/signup")
+  await fillForm(page, "Test User", email, password, password)
+  await page.getByRole("button", { name: "Sign Up" }).click()
+  await page.goto("/login?redirect=%2F%2Fevil.example")
+  await page.getByTestId("email-input").fill(email)
+  await page.getByTestId("password-input").fill(password)
+  await page.getByRole("button", { name: "Log In" }).click()
+  await expect(page).toHaveURL(/^http:\/\/localhost:\d+\/$/)
 })
 
 test("Sign up with invalid email", async ({ page }) => {
@@ -70,7 +102,9 @@ test("Sign up with invalid email", async ({ page }) => {
   await expect(page.getByText("Invalid email address")).toBeVisible()
 })
 
-test("Sign up with existing email", async ({ page }) => {
+test("Sign up with an existing email looks the same as a new one", async ({
+  page,
+}) => {
   const fullName = "Test User"
   const email = randomEmail()
   const password = randomPassword()
@@ -79,16 +113,16 @@ test("Sign up with existing email", async ({ page }) => {
 
   await fillForm(page, fullName, email, password, password)
   await page.getByRole("button", { name: "Sign Up" }).click()
-  await expect(page).toHaveURL(/\/login$/)
+  await expect(page).toHaveURL(/\/login\?notice=check-email$/)
 
   await page.goto("/signup")
 
   await fillForm(page, fullName, email, password, password)
   await page.getByRole("button", { name: "Sign Up" }).click()
 
-  await expect(
-    page.getByText("The user with this email already exists in the system"),
-  ).toBeVisible()
+  // No hint that the address is taken; its owner gets an email instead.
+  await expect(page).toHaveURL(/\/login\?notice=check-email$/)
+  await expect(page.getByText("already exists")).toHaveCount(0)
 })
 
 test("Sign up with weak password", async ({ page }) => {
