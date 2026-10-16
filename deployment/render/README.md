@@ -88,9 +88,9 @@ Do not rerun the seed against the populated database. Future migrations must be
 run locally with deployment credentials before manually releasing a compatible
 image; Render Free has no pre-deploy shell available for that operation.
 
-The imported ledger carries **$1.385829** already spent in October 2026, including
-verification calls, as 590 detached settled reservations and zero outstanding
-holds. Do not reset the ledger when switching hosts. New generation is bounded
+The imported ledger carries **$3.249977** already spent in October 2026 and
+**$0.069612** held across four unresolved reservations. All 1,212 reservation
+identities are preserved, including the earlier seed history. Do not reset the ledger when switching hosts. New generation is bounded
 by $0.12 per Lagos day, $4 per Lagos month and a $5 overall monthly AI limit.
 Paid query embeddings remain disabled; keyword/topic retrieval continues to work.
 Additional evaluation spending must be carried from its isolated ledger before
@@ -127,6 +127,11 @@ keyword/topic search, guest cookies, history, replay and source downloads. Confi
 the returned API revision matches the frozen source and that idle database
 listeners stop. After one real sleep/wake cycle, verify durable recovery and the
 first request's behavior. Check Render memory/CPU and Neon connection usage.
+
+The existing Cloudflare Worker is `constitition-ng`, with eventual address
+`https://constitition-ng.amosgodwin500.workers.dev`. The saved Render
+`FRONTEND_HOST` must match it. Follow the [Cloudflare runbook](../cloudflare/README.md)
+for native GitHub builds and private staging before launch.
 
 Set the Cloudflare Worker's `API_ORIGIN` to that exact HTTPS origin and use the
 matching `ORIGIN_PROXY_SECRET`. Build the frontend with an empty `VITE_API_URL`
