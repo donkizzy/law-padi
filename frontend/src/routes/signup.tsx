@@ -174,6 +174,16 @@ function SignUp() {
             >
               Sign Up
             </LoadingButton>
+            <p className="text-center text-xs text-muted-foreground">
+              Read{" "}
+              <RouterLink
+                to="/privacy"
+                className="underline underline-offset-4"
+              >
+                how we handle your data
+              </RouterLink>{" "}
+              before you sign up.
+            </p>
           </div>
 
           <div className="text-center text-sm">

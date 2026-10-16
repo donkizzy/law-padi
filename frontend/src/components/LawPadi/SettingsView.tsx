@@ -2,8 +2,8 @@ import { Link } from "@tanstack/react-router"
 import { type ReactNode, useEffect, useState } from "react"
 import { FiGlobe, FiLock, FiSettings, FiUser } from "react-icons/fi"
 import { toast } from "sonner"
+import { AccountData } from "@/components/UserSettings/AccountData"
 import ChangePassword from "@/components/UserSettings/ChangePassword"
-import DeleteAccount from "@/components/UserSettings/DeleteAccount"
 import { EmailVerificationNotice } from "@/components/UserSettings/EmailVerificationNotice"
 import UserInformation from "@/components/UserSettings/UserInformation"
 import {
@@ -270,9 +270,12 @@ export function SettingsView() {
           <SettingsCard title="Privacy and research">
             <div className="grid gap-3 text-body text-muted-foreground">
               <p>
-                Bookmarks stay on this browser. Drafts stay in this tab until it
-                closes. Conversations are stored by the service and attached to
-                your account or guest browser session.
+                {user?.email_verified_at
+                  ? "Saved sections and preferences are kept in your account."
+                  : "Saved sections and preferences stay on this browser."}{" "}
+                Drafts stay in this tab until it closes. Conversations are kept
+                with your account, or with this browser for 30 days if you're a
+                guest.
               </p>
               <p>
                 When explanations are enabled, your question and relevant
@@ -284,6 +287,14 @@ export function SettingsView() {
                 Export your bookmarks, preferences and available conversations
                 before clearing local research. Source editions and citations
                 are kept in the export.
+              </p>
+              <p>
+                <Link
+                  className="font-semibold text-primary underline"
+                  to="/privacy"
+                >
+                  Read how we handle your data
+                </Link>
               </p>
             </div>
             <div className="mt-5 flex flex-wrap gap-3">
@@ -324,7 +335,11 @@ export function SettingsView() {
           {user && (
             <SettingsCard title="Sign-in security">
               <ChangePassword />
-              <DeleteAccount />
+            </SettingsCard>
+          )}
+          {user && (
+            <SettingsCard title="Your account data">
+              <AccountData />
             </SettingsCard>
           )}
           {user?.is_superuser && (

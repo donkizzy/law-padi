@@ -638,3 +638,23 @@ test("signed-in visitors landing on the home URL go straight to the app", async 
   await page.goto("/")
   await expect(page).not.toHaveURL(/\/welcome/)
 })
+
+test("the privacy notice is linked from the welcome page and sign-up", async ({
+  page,
+}) => {
+  await page.goto("/welcome")
+  await page
+    .getByRole("navigation", { name: "Footer" })
+    .getByRole("link", { name: "Privacy" })
+    .click()
+  await expect(
+    page.getByRole("heading", { name: "How we handle your data." }),
+  ).toBeVisible()
+  await expect(
+    page.getByText("deleted after 30 days without use"),
+  ).toBeVisible()
+
+  await page.goto("/signup")
+  await page.getByRole("link", { name: "how we handle your data" }).click()
+  await expect(page).toHaveURL(/\/privacy$/)
+})

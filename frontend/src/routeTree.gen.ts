@@ -20,6 +20,7 @@ import { Route as LayoutIndexRouteImport } from './routes/_layout/index'
 import { Route as LayoutAdminRouteImport } from './routes/_layout/admin'
 import { Route as LayoutAmendmentsRouteImport } from './routes/_layout/amendments'
 import { Route as LayoutConstitutionRouteImport } from './routes/_layout/constitution'
+import { Route as LayoutPrivacyRouteImport } from './routes/_layout/privacy'
 import { Route as LayoutSavedRouteImport } from './routes/_layout/saved'
 import { Route as LayoutSettingsRouteImport } from './routes/_layout/settings'
 import { Route as LayoutConstitutionIndexRouteImport } from './routes/_layout/constitution.index'
@@ -79,6 +80,11 @@ const LayoutConstitutionRoute = LayoutConstitutionRouteImport.update({
   path: '/constitution',
   getParentRoute: () => LayoutRoute,
 } as any)
+const LayoutPrivacyRoute = LayoutPrivacyRouteImport.update({
+  id: '/privacy',
+  path: '/privacy',
+  getParentRoute: () => LayoutRoute,
+} as any)
 const LayoutSavedRoute = LayoutSavedRouteImport.update({
   id: '/saved',
   path: '/saved',
@@ -112,6 +118,7 @@ export interface FileRoutesByFullPath {
   '/admin': typeof LayoutAdminRoute
   '/amendments': typeof LayoutAmendmentsRoute
   '/constitution': typeof LayoutConstitutionRouteWithChildren
+  '/privacy': typeof LayoutPrivacyRoute
   '/saved': typeof LayoutSavedRoute
   '/settings': typeof LayoutSettingsRoute
   '/constitution/$sectionId': typeof LayoutConstitutionSectionIdRoute
@@ -126,6 +133,7 @@ export interface FileRoutesByTo {
   '/welcome': typeof WelcomeRoute
   '/admin': typeof LayoutAdminRoute
   '/amendments': typeof LayoutAmendmentsRoute
+  '/privacy': typeof LayoutPrivacyRoute
   '/saved': typeof LayoutSavedRoute
   '/settings': typeof LayoutSettingsRoute
   '/': typeof LayoutIndexRoute
@@ -144,6 +152,7 @@ export interface FileRoutesById {
   '/_layout/admin': typeof LayoutAdminRoute
   '/_layout/amendments': typeof LayoutAmendmentsRoute
   '/_layout/constitution': typeof LayoutConstitutionRouteWithChildren
+  '/_layout/privacy': typeof LayoutPrivacyRoute
   '/_layout/saved': typeof LayoutSavedRoute
   '/_layout/settings': typeof LayoutSettingsRoute
   '/_layout/': typeof LayoutIndexRoute
@@ -163,6 +172,7 @@ export interface FileRouteTypes {
     | '/admin'
     | '/amendments'
     | '/constitution'
+    | '/privacy'
     | '/saved'
     | '/settings'
     | '/constitution/$sectionId'
@@ -177,6 +187,7 @@ export interface FileRouteTypes {
     | '/welcome'
     | '/admin'
     | '/amendments'
+    | '/privacy'
     | '/saved'
     | '/settings'
     | '/'
@@ -194,6 +205,7 @@ export interface FileRouteTypes {
     | '/_layout/admin'
     | '/_layout/amendments'
     | '/_layout/constitution'
+    | '/_layout/privacy'
     | '/_layout/saved'
     | '/_layout/settings'
     | '/_layout/'
@@ -290,6 +302,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof LayoutConstitutionRouteImport
       parentRoute: typeof LayoutRoute
     }
+    '/_layout/privacy': {
+      id: '/_layout/privacy'
+      path: '/privacy'
+      fullPath: '/privacy'
+      preLoaderRoute: typeof LayoutPrivacyRouteImport
+      parentRoute: typeof LayoutRoute
+    }
     '/_layout/saved': {
       id: '/_layout/saved'
       path: '/saved'
@@ -338,6 +357,7 @@ interface LayoutRouteChildren {
   LayoutAdminRoute: typeof LayoutAdminRoute
   LayoutAmendmentsRoute: typeof LayoutAmendmentsRoute
   LayoutConstitutionRoute: typeof LayoutConstitutionRouteWithChildren
+  LayoutPrivacyRoute: typeof LayoutPrivacyRoute
   LayoutSavedRoute: typeof LayoutSavedRoute
   LayoutSettingsRoute: typeof LayoutSettingsRoute
   LayoutIndexRoute: typeof LayoutIndexRoute
@@ -347,6 +367,7 @@ const LayoutRouteChildren: LayoutRouteChildren = {
   LayoutAdminRoute: LayoutAdminRoute,
   LayoutAmendmentsRoute: LayoutAmendmentsRoute,
   LayoutConstitutionRoute: LayoutConstitutionRouteWithChildren,
+  LayoutPrivacyRoute: LayoutPrivacyRoute,
   LayoutSavedRoute: LayoutSavedRoute,
   LayoutSettingsRoute: LayoutSettingsRoute,
   LayoutIndexRoute: LayoutIndexRoute,

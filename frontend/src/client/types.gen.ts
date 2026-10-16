@@ -4069,6 +4069,20 @@ export type accountMergeSavedProvisionsResponses = {
 
 export type accountMergeSavedProvisionsResponse = accountMergeSavedProvisionsResponses[keyof accountMergeSavedProvisionsResponses];
 
+export type accountExportAccountDataData = {
+    body?: never;
+    path?: never;
+    query?: never;
+    url: '/api/v1/account/export';
+};
+
+export type accountExportAccountDataResponses = {
+    /**
+     * Successful Response
+     */
+    200: unknown;
+};
+
 export type accountReadPreferencesData = {
     body?: never;
     path?: never;

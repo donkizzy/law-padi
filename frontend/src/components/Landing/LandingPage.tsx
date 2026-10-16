@@ -940,6 +940,7 @@ const footerLinks = [
   { label: "Browse the Constitution", to: "/constitution" },
   { label: "Saved sections", to: "/saved" },
   { label: "Sign in", to: "/login" },
+  { label: "Privacy", to: "/privacy" },
 ] as const
 
 function SiteFooter() {
