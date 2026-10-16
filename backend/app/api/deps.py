@@ -46,6 +46,19 @@ def get_current_user(session: SessionDep, token: TokenDep) -> User:
 CurrentUser = Annotated[User, Depends(get_current_user)]
 
 
+def get_verified_user(current_user: CurrentUser) -> User:
+    """A signed-in user whose email is confirmed; account syncing needs one."""
+    if current_user.email_verified_at is None:
+        raise HTTPException(
+            status_code=403,
+            detail="Confirm your email address to keep your research in your account.",
+        )
+    return current_user
+
+
+VerifiedUser = Annotated[User, Depends(get_verified_user)]
+
+
 def get_current_active_superuser(current_user: CurrentUser) -> User:
     if not current_user.is_superuser:
         raise HTTPException(
