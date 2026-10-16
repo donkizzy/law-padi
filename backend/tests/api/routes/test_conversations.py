@@ -89,6 +89,11 @@ def test_guest_ownership_idempotency_and_claim(
         token = security.create_access_token(user.id, timedelta(hours=1))
         headers = {"Authorization": f"Bearer {token}"}
         assert guest.get("/api/v1/conversations", headers=headers).json()["count"] == 0
+        unverified = guest.post("/api/v1/conversations/claim", headers=headers)
+        assert unverified.status_code == 403
+        user.email_verified_at = get_datetime_utc()
+        db.add(user)
+        db.commit()
         claimed = guest.post("/api/v1/conversations/claim", headers=headers)
         assert claimed.status_code == 200
         assert claimed.json()["claimed_count"] == 1

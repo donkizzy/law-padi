@@ -494,6 +494,11 @@ def claim_guest_conversations(
     user = _account(request, session)
     if user is None:
         raise HTTPException(status_code=401, detail="Sign in to claim conversations")
+    if user.email_verified_at is None:
+        raise HTTPException(
+            status_code=403,
+            detail="Confirm your email address to keep your research in your account.",
+        )
     token = request.cookies.get(_COOKIE)
     if token is None or not _COOKIE_RE.fullmatch(token):
         return ClaimResult(claimed_count=0)

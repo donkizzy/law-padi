@@ -2,7 +2,7 @@ import uuid
 from datetime import UTC, datetime
 
 from pydantic import EmailStr
-from sqlalchemy import DateTime
+from sqlalchemy import DateTime, UniqueConstraint
 from sqlmodel import Field, SQLModel
 
 
@@ -112,6 +112,61 @@ class RefreshToken(SQLModel, table=True):
     expires_at: datetime = Field(sa_type=DateTime(timezone=True))  # type: ignore
     revoked_at: datetime | None = Field(
         default=None,
+        sa_type=DateTime(timezone=True),  # type: ignore
+    )
+
+
+class SavedProvisionBase(SQLModel):
+    canonical_path: str = Field(min_length=1, max_length=512)
+    release_version: str = Field(min_length=1, max_length=128)
+
+
+class SavedProvisionIn(SavedProvisionBase):
+    saved_at: datetime | None = None
+
+
+class SavedProvisionPublic(SavedProvisionBase):
+    saved_at: datetime
+
+
+class SavedProvisionsMerge(SQLModel):
+    items: list[SavedProvisionIn] = Field(max_length=500)
+
+
+class SavedProvision(SavedProvisionBase, table=True):
+    """A section a signed-in person saved, kept in their account."""
+
+    __tablename__ = "saved_provision"
+    __table_args__ = (UniqueConstraint("user_id", "canonical_path", "release_version"),)
+
+    id: uuid.UUID = Field(default_factory=uuid.uuid4, primary_key=True)
+    user_id: uuid.UUID = Field(foreign_key="user.id", index=True, ondelete="CASCADE")
+    saved_at: datetime = Field(
+        default_factory=get_datetime_utc,
+        sa_type=DateTime(timezone=True),  # type: ignore
+    )
+
+
+class PreferencesBase(SQLModel):
+    enter_to_send: bool = True
+    follow_latest: bool = True
+    open_sources: bool = False
+
+
+class PreferencesPublic(PreferencesBase):
+    pass
+
+
+class UserPreferences(PreferencesBase, table=True):
+    """Reading and composing preferences that follow a person between devices."""
+
+    __tablename__ = "user_preferences"
+
+    user_id: uuid.UUID = Field(
+        foreign_key="user.id", primary_key=True, ondelete="CASCADE"
+    )
+    updated_at: datetime = Field(
+        default_factory=get_datetime_utc,
         sa_type=DateTime(timezone=True),  # type: ignore
     )
 
