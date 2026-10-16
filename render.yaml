@@ -1,0 +1,88 @@
+# Explicit free compute; no Render database, disk, paid worker or cron service.
+services:
+  - type: web
+    name: constitution-ng-api
+    runtime: docker
+    plan: free
+    region: virginia
+    repo: https://github.com/donkizzy/law-padi
+    branch: master
+    dockerfilePath: ./deployment/render/Dockerfile
+    dockerContext: .
+    autoDeployTrigger: checksPass
+    healthCheckPath: /healthz
+    maxShutdownDelaySeconds: 30
+    numInstances: 1
+    envVars:
+      - key: PROJECT_NAME
+        value: constitution.ng
+      - key: APP_RUNTIME_ROLE
+        value: api
+      - key: SERVE_FRONTEND
+        value: "false"
+      - key: FRONTEND_HOST
+        value: https://constitution-ng.amosgodwin500.workers.dev
+      - key: CHAT_ENABLED
+        value: "true"
+      - key: CHAT_GENERATION_ENABLED
+        value: "false"
+      - key: CHAT_GENERATION_KILL_SWITCH
+        value: "true"
+      - key: CHAT_PROVIDER_CAPACITY_APPROVED
+        value: "false"
+      - key: CHAT_DISPATCH_MODE
+        value: poll
+      - key: CHAT_MAX_ACTIVE_GENERATIONS
+        value: "1"
+      - key: CHAT_WORKER_CONCURRENCY
+        value: "1"
+      - key: CHAT_DAILY_BUDGET_USD
+        value: "0.12"
+      - key: CHAT_MONTHLY_BUDGET_USD
+        value: "4"
+      - key: AI_MONTHLY_BUDGET_USD
+        value: "5"
+      - key: EMBEDDING_QUERY_ENABLED
+        value: "false"
+      - key: CHAT_GUEST_DAILY_LIMIT
+        value: "3"
+      - key: CHAT_ACCOUNT_DAILY_LIMIT
+        value: "10"
+      - key: CHAT_GUEST_BURST_LIMIT
+        value: "1"
+      - key: CHAT_ACCOUNT_BURST_LIMIT
+        value: "2"
+      - key: DATABASE_POOL_SIZE
+        value: "5"
+      - key: DATABASE_CONNECT_TIMEOUT_SECONDS
+        value: "15"
+      - key: DATABASE_STATEMENT_TIMEOUT_MS
+        value: "30000"
+      - key: DATABASE_LOCK_TIMEOUT_MS
+        value: "5000"
+      - key: INGESTION_STORAGE_BACKEND
+        value: r2
+      - key: R2_BUCKET_NAME
+        value: lawpadi
+      - key: BUILD_REVISION
+        sync: false
+      - key: SECRET_KEY
+        sync: false
+      - key: DATABASE_URL
+        sync: false
+      - key: DATABASE_LISTENER_URL
+        sync: false
+      - key: FIRST_SUPERUSER
+        sync: false
+      - key: FIRST_SUPERUSER_PASSWORD
+        sync: false
+      - key: ORIGIN_PROXY_SECRET
+        sync: false
+      - key: DEEPSEEK_API_KEY
+        sync: false
+      - key: R2_ENDPOINT_URL
+        sync: false
+      - key: R2_ACCESS_KEY_ID
+        sync: false
+      - key: R2_SECRET_ACCESS_KEY
+        sync: false

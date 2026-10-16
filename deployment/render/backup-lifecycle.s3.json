@@ -1,0 +1,11 @@
+{
+  "Rules": [
+    {
+      "ID": "expire-private-database-backups-after-seven-days",
+      "Status": "Enabled",
+      "Filter": { "Prefix": "postgres/app/" },
+      "Expiration": { "Days": 7 },
+      "AbortIncompleteMultipartUpload": { "DaysAfterInitiation": 1 }
+    }
+  ]
+}
