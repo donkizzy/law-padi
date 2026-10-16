@@ -1,15 +1,15 @@
 {
-  "name": "constitution-ng",
+  "name": "constitition-ng",
   "main": "worker.ts",
   "compatibility_date": "2026-10-14",
-  "workers_dev": true,
+  "workers_dev": false,
+  "preview_urls": false,
   "assets": {
     "directory": "../../backend/app/frontend",
     "binding": "ASSETS",
     "not_found_handling": "single-page-application",
     "run_worker_first": ["/api/*"]
   },
-  "limits": { "cpu_ms": 10 },
   "observability": { "enabled": false },
-  "vars": { "API_ORIGIN": "https://configure-your-api-origin.run.app" }
+  "vars": { "API_ORIGIN": "https://constitution-ng-api.onrender.com" }
 }

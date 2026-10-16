@@ -22,7 +22,7 @@ services:
       - key: SERVE_FRONTEND
         value: "false"
       - key: FRONTEND_HOST
-        value: https://constitution-ng.amosgodwin500.workers.dev
+        value: https://constitition-ng.amosgodwin500.workers.dev
       - key: CHAT_ENABLED
         value: "true"
       - key: CHAT_GENERATION_ENABLED
