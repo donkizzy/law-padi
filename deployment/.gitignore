@@ -1,0 +1,10 @@
+project.json
+*.env
+!*.env.example
+*.report.json
+wrangler.generated.json
+.wrangler/
+*.sql.gz
+*.dump
+*.tar
+.gcloud/

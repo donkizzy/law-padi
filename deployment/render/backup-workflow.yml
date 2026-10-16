@@ -1,0 +1,59 @@
+# Draft for PRIVATE donkizzy/constitution-ng-backups, default branch only.
+name: Private Neon backup
+
+on:
+  schedule:
+    - cron: "30 23 * * *" # 00:30 Africa/Lagos; GitHub scheduling can be delayed.
+  workflow_dispatch:
+    inputs:
+      operation:
+        type: choice
+        options: [backup, verify_restore]
+        default: backup
+        required: true
+      backup_key:
+        description: Exact postgres/app/...dump key for isolated restore verification
+        type: string
+        required: false
+
+permissions:
+  contents: read
+
+concurrency:
+  group: constitution-ng-private-backup
+  cancel-in-progress: false
+
+env:
+  R2_BACKUP_BUCKET: constitution-ng-backups
+  R2_BACKUP_ENDPOINT_URL: ${{ secrets.R2_BACKUP_ENDPOINT_URL }}
+  R2_BACKUP_ACCESS_KEY_ID: ${{ secrets.R2_BACKUP_ACCESS_KEY_ID }}
+  R2_BACKUP_SECRET_ACCESS_KEY: ${{ secrets.R2_BACKUP_SECRET_ACCESS_KEY }}
+
+jobs:
+  backup:
+    if: github.event_name == 'schedule' || inputs.operation == 'backup'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    env:
+      NEON_BACKUP_DATABASE_URL: ${{ secrets.NEON_BACKUP_DATABASE_URL }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: Export privately and verify the R2 copy
+        shell: bash
+        run: bash scripts/backup-nightly.sh
+
+  verify_restore:
+    if: github.event_name == 'workflow_dispatch' && inputs.operation == 'verify_restore'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    env:
+      RESTORE_BACKUP_KEY: ${{ inputs.backup_key }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: Restore into a disposable, network-isolated PostgreSQL 18 instance
+        shell: bash
+        run: bash scripts/backup-restore.sh
