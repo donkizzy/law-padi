@@ -377,7 +377,10 @@ def test_tree_history_and_source_are_published_and_release_scoped(
         params={"canonical_path": nodes["chapter4.section37"].canonical_path},
     ).json()
     assert history["count"] == 1
-    assert history["message"] == "No additional published versions are stored."
+    assert (
+        history["message"]
+        == "This is the only version of this section available so far."
+    )
     content = client.get(f"/api/v1/legal/sources/{source.id}/content")
     assert content.status_code == 200 and content.content == pdf
     assert client.get(f"/api/v1/legal/sources/{uuid4()}/content").status_code == 404
@@ -453,6 +456,31 @@ def test_semantic_and_fallback_results_are_unique_and_canonical(
     assert fallback["retrieval_mode"] == "lexical"
     assert fallback["count"] == 1
     assert "keyword matches" in fallback["message"]
+
+    # Everyday wording reaches the right section through the topic guide,
+    # in both keyword-only and hybrid modes.
+    topical = client.post(
+        "/api/v1/legal/search", json={"query": "Can police search my phone?"}
+    ).json()
+    assert topical["retrieval_mode"] == "lexical"
+    assert topical["data"][0]["citation"] == "Section 37"
+    assert topical["data"][0]["title"] == "Right to private and family life"
+
+    class AnyQuery:
+        def embed(self, _texts):
+            return EmbeddingBatch(
+                provider="test",
+                model_name="test",
+                model_revision="pinned",
+                vectors=[[1.0] + [0.0] * 1023],
+            )
+
+    monkeypatch.setattr(search, "_query_embedding_provider", lambda _: AnyQuery())
+    topical = client.post(
+        "/api/v1/legal/search", json={"query": "Can police search my phone?"}
+    ).json()
+    assert topical["retrieval_mode"] == "hybrid"
+    assert topical["data"][0]["citation"] == "Section 37"
 
 
 def test_missing_target_and_database_failure_have_unavailable_state(

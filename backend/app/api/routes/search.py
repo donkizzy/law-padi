@@ -237,7 +237,7 @@ def read_provision_history(
     return _response(
         corpus,
         data,
-        message="No additional published versions are stored."
+        message="This is the only version of this section available so far."
         if len(data) <= 1
         else None,
     )

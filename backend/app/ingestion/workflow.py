@@ -421,7 +421,10 @@ def drain_outbox_batch(
     pending = list(
         session.exec(
             select(TransactionalOutbox)
-            .where(col(TransactionalOutbox.published_at).is_(None))
+            .where(
+                col(TransactionalOutbox.published_at).is_(None),
+                col(TransactionalOutbox.event_type).startswith("ingestion_"),
+            )
             .order_by(col(TransactionalOutbox.created_at))
             .limit(limit)
             .with_for_update(skip_locked=True)

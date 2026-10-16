@@ -30,7 +30,7 @@ def emit_event(
 
 
 async def _listen() -> None:
-    dsn = str(settings.DATABASE_URL).replace(
+    dsn = str(settings.DATABASE_LISTENER_URL or settings.DATABASE_URL).replace(
         "postgresql+psycopg://", "postgresql://", 1
     )
     while True:
@@ -60,6 +60,10 @@ def subscribe(conversation_id: uuid.UUID) -> asyncio.Event:
 
 
 def unsubscribe(conversation_id: uuid.UUID, event: asyncio.Event) -> None:
+    global _listener_task
     _listeners[conversation_id].discard(event)
     if not _listeners[conversation_id]:
         _listeners.pop(conversation_id, None)
+    if not _listeners and _listener_task is not None:
+        _listener_task.cancel()
+        _listener_task = None

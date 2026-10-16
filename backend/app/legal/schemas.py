@@ -727,6 +727,7 @@ class ProvisionReference(SQLModel):
     kind: ProvisionKind
     number: str | None = None
     heading: str | None = None
+    title: str | None = None
     citation: str
     has_text: bool
     authoritative_text: str | None = None
@@ -736,6 +737,7 @@ class LegalSearchResult(SQLModel):
     canonical_path: str
     citation: str
     heading: str | None = None
+    title: str | None = None
     ancestor_headings: list[str]
     authoritative_text: str
     source_document_id: uuid.UUID
@@ -772,6 +774,7 @@ class EvidenceItem(SQLModel):
     provision_version_id: uuid.UUID
     canonical_path: str
     citation: str
+    title: str | None = None
     authoritative_text: str
     text_sha256: str
     ancestor_citations: list[str]

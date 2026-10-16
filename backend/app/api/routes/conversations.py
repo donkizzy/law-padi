@@ -17,15 +17,20 @@ from fastapi.sse import EventSourceResponse, ServerSentEvent
 from sqlalchemy import and_, or_
 from sqlmodel import Session, col, func, select
 
-from app.api.deps import SessionDep
+from app.api.deps import SessionDep, get_current_active_superuser
+from app.chat import EXPLANATION_PROMPT_VERSION
 from app.chat.events import emit_event, subscribe, unsubscribe
 from app.chat.schemas import (
+    ChatCapabilities,
+    ChatMetrics,
     ClaimResult,
     ConversationCreate,
     ConversationDetail,
     ConversationList,
     ConversationPublic,
     ConversationUpdate,
+    FeedbackCreate,
+    FeedbackPublic,
     MessageAccepted,
     MessageCreate,
     MessagePublic,
@@ -33,6 +38,7 @@ from app.chat.schemas import (
 from app.core import security
 from app.core.config import settings
 from app.core.db import engine
+from app.deployment.chat_dispatch import dispatch_run, stage_dispatch
 from app.ingestion.pgvector_repository import PgVectorRetrievalError, active_target
 from app.legal.enums import MessageRole, VectorIndexStatus
 from app.legal.models import (
@@ -43,6 +49,7 @@ from app.legal.models import (
     GenerationCapacity,
     GenerationEvent,
     GenerationRun,
+    MessageFeedback,
     Provision,
     ProvisionVersion,
     RetrievalIndexBuild,
@@ -154,6 +161,66 @@ def _ensure_chat_enabled() -> None:
         raise HTTPException(status_code=503, detail="Conversations are not enabled")
 
 
+@router.get("/capabilities")
+def read_chat_capabilities() -> ChatCapabilities:
+    """Report product availability independently of conversation history."""
+    return ChatCapabilities(
+        conversations_enabled=settings.CHAT_ENABLED,
+        explanations_enabled=(
+            settings.CHAT_ENABLED
+            and settings.CHAT_GENERATION_ENABLED
+            and not settings.CHAT_GENERATION_KILL_SWITCH
+        ),
+        supported_languages=["English"],
+        build_revision=settings.BUILD_REVISION,
+        prompt_version=EXPLANATION_PROMPT_VERSION,
+    )
+
+
+@router.get("/metrics", dependencies=[Depends(get_current_active_superuser)])
+def read_chat_metrics(session: SessionDep) -> ChatMetrics:
+    """Aggregate quality signals without exposing questions or answer text."""
+    since = get_datetime_utc() - timedelta(hours=24)
+    rows = session.exec(
+        select(GenerationRun.outcome, func.count())
+        .where(GenerationRun.created_at >= since)
+        .group_by(GenerationRun.outcome)
+    ).all()
+    outcomes = {outcome or "in_progress": count for outcome, count in rows}
+    average = session.exec(
+        select(
+            func.avg(
+                func.extract(
+                    "epoch",
+                    col(GenerationRun.updated_at) - col(GenerationRun.created_at),
+                )
+                * 1000
+            )
+        ).where(
+            GenerationRun.created_at >= since, col(GenerationRun.outcome).is_not(None)
+        )
+    ).one()
+    ratings = dict(
+        session.exec(
+            select(MessageFeedback.helpful, func.count())
+            .where(MessageFeedback.updated_at >= since)
+            .group_by(col(MessageFeedback.helpful))
+        ).all()
+    )
+    return ChatMetrics(
+        accepted_questions=sum(outcomes.values()),
+        finished_answers=sum(
+            count for outcome, count in outcomes.items() if outcome != "in_progress"
+        ),
+        explained_answers=outcomes.get("completed", 0)
+        + outcomes.get("partial_evidence", 0),
+        average_finish_ms=float(average) if average is not None else None,
+        outcomes=outcomes,
+        helpful_ratings=ratings.get(True, 0),
+        unhelpful_ratings=ratings.get(False, 0),
+    )
+
+
 @router.post("", response_model=ConversationPublic, status_code=201)
 def create_conversation(
     body: ConversationCreate,
@@ -213,6 +280,7 @@ def list_conversations(
     session: SessionDep,
     offset: Annotated[int, Query(ge=0)] = 0,
     limit: Annotated[int, Query(ge=1, le=100)] = 30,
+    q: Annotated[str | None, Query(max_length=200)] = None,
 ) -> ConversationList:
     _ensure_chat_enabled()
     owner = _owner(request, response, session)
@@ -223,6 +291,13 @@ def list_conversations(
             col(Conversation.anonymous_session_id) == owner.guest_digest,
             col(Conversation.user_id).is_(None),
             col(Conversation.updated_at) >= get_datetime_utc() - timedelta(days=30),
+        )
+    if q and q.strip():
+        escaped = (
+            q.strip().replace("\\", "\\\\").replace("%", "\\%").replace("_", "\\_")
+        )
+        predicate = and_(
+            predicate, col(Conversation.title).ilike(f"%{escaped}%", escape="\\")
         )
     count = session.exec(
         select(func.count()).select_from(Conversation).where(predicate)
@@ -274,13 +349,27 @@ def read_conversation(
     ).all()
     has_more = len(descending) > limit
     messages = list(reversed(descending[:limit]))
+    feedback = (
+        {
+            row.message_id: row.helpful
+            for row in session.exec(
+                select(MessageFeedback).where(
+                    col(MessageFeedback.message_id).in_(
+                        [message.id for message in messages]
+                    )
+                )
+            ).all()
+        }
+        if messages
+        else {}
+    )
     active_run = session.exec(
         select(GenerationRun.id).where(
             GenerationRun.conversation_id == conversation.id,
             col(GenerationRun.status).in_(["pending", "running"]),
         )
     ).first()
-    return ConversationDetail(
+    detail = ConversationDetail(
         **_public(session, conversation).model_dump(),
         active_run_id=active_run,
         has_more_messages=has_more,
@@ -296,10 +385,17 @@ def read_conversation(
                 answer_content=message.answer_content,
                 evidence_snapshot=message.evidence_snapshot,
                 created_at=message.created_at,
+                helpful=feedback.get(message.id),
             )
             for message in messages
         ],
     )
+    # A user returning after a lost enqueue should not wait for the hourly scan.
+    # Release the read transaction before Cloud Tasks publication.
+    session.commit()
+    if active_run is not None:
+        dispatch_run(active_run)
+    return detail
 
 
 @router.patch("/{conversation_id}", response_model=ConversationPublic)
@@ -352,6 +448,37 @@ def delete_conversation(
         session.add(capacity)
     session.delete(conversation)
     session.commit()
+
+
+@router.post("/{conversation_id}/messages/{message_id}/feedback")
+def submit_message_feedback(
+    conversation_id: uuid.UUID,
+    message_id: uuid.UUID,
+    body: FeedbackCreate,
+    request: Request,
+    response: Response,
+    session: SessionDep,
+) -> FeedbackPublic:
+    _ensure_chat_enabled()
+    owner = _owner(request, response, session)
+    _owned_conversation(session, conversation_id, owner, lock=True)
+    message = session.get(ConversationMessage, message_id)
+    if (
+        message is None
+        or message.conversation_id != conversation_id
+        or message.role != MessageRole.ASSISTANT
+    ):
+        raise HTTPException(status_code=404, detail="Answer was not found")
+    feedback = session.get(MessageFeedback, message_id)
+    if feedback is None:
+        feedback = MessageFeedback(message_id=message_id, helpful=body.helpful)
+    else:
+        feedback.helpful = body.helpful
+        feedback.updated_at = get_datetime_utc()
+    session.add(feedback)
+    session.commit()
+    session.refresh(feedback)
+    return FeedbackPublic.model_validate(feedback)
 
 
 @router.post("/claim", response_model=ClaimResult)
@@ -496,11 +623,14 @@ def submit_message(
                 status_code=409,
                 detail="Submission key was used for a different question",
             )
-        return MessageAccepted(
+        accepted = MessageAccepted(
             run_id=existing.id,
             user_message_id=existing.user_message_id,
             status=existing.status,
         )
+        session.commit()
+        dispatch_run(accepted.run_id)
+        return accepted
     _validate_selected_version(
         session, conversation, question, body.selected_provision_version_id
     )
@@ -554,6 +684,7 @@ def submit_message(
     )
     session.add(run)
     session.flush()
+    stage_dispatch(session, run)
     emit_event(
         session,
         run,
@@ -569,6 +700,7 @@ def submit_message(
         run_id=run.id, user_message_id=message.id, status=run.status
     )
     session.commit()
+    dispatch_run(accepted.run_id)
     return accepted
 
 
@@ -673,6 +805,16 @@ def _event_access(
         run = session.get(GenerationRun, run_id)
         if run is None or run.conversation_id != conversation_id:
             raise HTTPException(status_code=404, detail="Generation run was not found")
+    else:
+        run_id = session.exec(
+            select(GenerationRun.id).where(
+                GenerationRun.conversation_id == conversation_id,
+                col(GenerationRun.status).in_(["pending", "running"]),
+            )
+        ).first()
+    session.commit()
+    if run_id is not None:
+        dispatch_run(run_id)
     return EventAccess(owner=owner, cursor=cursor)
 
 

@@ -19,6 +19,7 @@ from app.legal.models import (
     SourceDocument,
 )
 from app.legal.schemas import LegalSearchResult, ProvisionReference
+from app.legal.topics import section_title
 
 PUBLIC_RELEASE_STATUSES = (CorpusReleaseStatus.PRODUCTION, CorpusReleaseStatus.RETIRED)
 
@@ -104,6 +105,7 @@ class PublicCorpus:
             kind=provision.kind,
             number=provision.number,
             heading=provision.heading,
+            title=section_title(provision.canonical_path),
             citation=self.citation(provision),
             has_text=version is not None,
             authoritative_text=version.text if context and version else None,
@@ -131,6 +133,7 @@ class PublicCorpus:
             canonical_path=provision.canonical_path,
             citation=self.citation(provision),
             heading=provision.heading,
+            title=section_title(provision.canonical_path),
             ancestor_headings=[p.heading for p in ancestors if p.heading],
             authoritative_text=version.text,
             source_document_id=source.id,

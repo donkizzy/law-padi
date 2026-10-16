@@ -1116,6 +1116,20 @@ class ConversationMessage(SQLModel, table=True):
     )
 
 
+class MessageFeedback(SQLModel, table=True):
+    __tablename__ = "message_feedback"
+
+    message_id: uuid.UUID = Field(
+        primary_key=True, foreign_key="conversation_message.id", ondelete="CASCADE"
+    )
+    helpful: bool
+    updated_at: datetime = Field(
+        default_factory=get_datetime_utc,
+        sa_type=DateTime(timezone=True),  # type: ignore
+        index=True,
+    )
+
+
 class MessageEvidence(SQLModel, table=True):
     __tablename__ = "message_evidence"
 
@@ -1218,6 +1232,16 @@ class GenerationBudgetDay(SQLModel, table=True):
     __tablename__ = "generation_budget_day"
 
     day: date = Field(primary_key=True)
+    reserved_micro_usd: int = Field(default=0, sa_type=BigInteger)
+    spent_micro_usd: int = Field(default=0, sa_type=BigInteger)
+
+
+class GenerationBudgetMonth(SQLModel, table=True):
+    __tablename__ = "generation_budget_month"
+
+    # First date of the Lagos calendar month. Only paid DeepSeek calls use this
+    # ledger; query embeddings must have their own provider-enforced allowance.
+    month: date = Field(primary_key=True)
     reserved_micro_usd: int = Field(default=0, sa_type=BigInteger)
     spent_micro_usd: int = Field(default=0, sa_type=BigInteger)
 

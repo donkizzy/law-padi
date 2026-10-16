@@ -12,6 +12,15 @@ class ConversationCreate(SQLModel):
     release_version: str | None = Field(default=None, min_length=1, max_length=128)
 
 
+class ChatCapabilities(SQLModel):
+    conversations_enabled: bool
+    explanations_enabled: bool
+    supported_languages: list[str]
+    question_max_length: int = 2000
+    build_revision: str
+    prompt_version: str
+
+
 class ConversationUpdate(SQLModel):
     title: str = Field(min_length=1, max_length=255)
 
@@ -32,6 +41,7 @@ class MessagePublic(SQLModel):
     answer_status: str | None
     answer_content: dict[str, Any] | None
     evidence_snapshot: list[dict[str, Any]] | None
+    helpful: bool | None = None
     created_at: datetime
 
 
@@ -63,6 +73,27 @@ class ClaimResult(SQLModel):
     claimed_count: int
 
 
+class FeedbackCreate(SQLModel):
+    helpful: bool
+
+
+class FeedbackPublic(SQLModel):
+    message_id: uuid.UUID
+    helpful: bool
+    updated_at: datetime
+
+
+class ChatMetrics(SQLModel):
+    window_hours: int = 24
+    accepted_questions: int
+    finished_answers: int
+    explained_answers: int
+    average_finish_ms: float | None
+    outcomes: dict[str, int]
+    helpful_ratings: int
+    unhelpful_ratings: int
+
+
 class ExplanationBlock(SQLModel):
     text: str = Field(min_length=1, max_length=4000)
     evidence_ids: list[str] = Field(min_length=1)
@@ -72,6 +103,7 @@ class ExplanationBlock(SQLModel):
 class ExplanationDraft(SQLModel):
     blocks: list[ExplanationBlock] = Field(default_factory=list)
     missing_facts: list[str] = Field(default_factory=list)
+    follow_up_questions: list[str] = Field(default_factory=list)
 
 
 class ExplanationAnswer(SQLModel):
@@ -86,9 +118,10 @@ class ExplanationAnswer(SQLModel):
         "budget_exhausted",
         "validation_failed",
     ]
-    label: str = "AI explanation"
+    label: str = "Plain-language explanation"
     blocks: list[ExplanationBlock] = Field(default_factory=list)
     missing_facts: list[str] = Field(default_factory=list)
+    follow_up_questions: list[str] = Field(default_factory=list)
     citation_outcomes: list[CitationOutcome] = Field(default_factory=list)
     evidence: list[EvidenceItem] = Field(default_factory=list)
     notice: str | None = None
