@@ -368,7 +368,7 @@ def fuse_rankings(
     rrf_k: int | None = None,
     lexical_weight: float = 1.0,
 ) -> list[RankedSegment]:
-    """Weighted reciprocal-rank fusion; topic matches carry their own weight."""
+    """Weighted reciprocal-rank fusion; topic matches add a flat boost."""
     constant = rrf_k or settings.RETRIEVAL_RRF_K
     merged: dict[uuid.UUID, dict[str, Any]] = {}
     for rank, (segment, _distance) in enumerate(dense, start=1):
@@ -379,13 +379,20 @@ def fuse_rankings(
         merged.setdefault(segment.id, {"segment": segment, "score": 0.0})
         merged[segment.id]["score"] += lexical_weight / (constant + rank)
         merged[segment.id]["lexical_rank"] = rank
-    for rank, (segment, weight) in enumerate(topics, start=1):
+    # A topic names candidate sections, not an order among them: each gets
+    # its boost at first rank, so dense and keyword ranking break the tie.
+    # The boost applies to every row of the section, because dense search
+    # often matches a subsection rather than the whole-section row.
+    boosts: dict[str, float] = {}
+    for segment, weight in topics:
         merged.setdefault(segment.id, {"segment": segment, "score": 0.0})
-        merged[segment.id]["score"] += weight / (constant + rank)
+        key = section_key(segment.canonical_path)
+        boosts[key] = boosts.get(key, 0.0) + weight / (constant + 1)
     ranked = [
         RankedSegment(
             segment=item["segment"],
-            score=float(item["score"]),
+            score=float(item["score"])
+            + boosts.get(section_key(item["segment"].canonical_path), 0.0),
             dense_rank=item.get("dense_rank"),
             lexical_rank=item.get("lexical_rank"),
         )

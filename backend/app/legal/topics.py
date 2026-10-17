@@ -21,6 +21,10 @@ _TITLES_PATH = Path(__file__).parent / "data" / "constitution-1999-section-title
 _SECTION_IN_PATH = re.compile(r"\.section(\d+[a-z]?)(?=\.|$)")
 _CHAPTER_IN_PATH = re.compile(r"\.chapter(\d+)(?=\.|$)")
 _TOKEN = re.compile(r"[a-z0-9]+")
+# A question naming a section's title outranks a broad topic match.
+_TITLE_WEIGHT = 3.5
+_TITLE_MIN_COVERAGE = 0.75
+_TITLE_MAX_SECTIONS = 4
 # Asking what to do about a wrong is asking about enforcement (Section 46),
 # even though the words themselves are all filler.
 _REMEDY_INTENT = re.compile(
@@ -1624,23 +1628,60 @@ def match_topics(query: str, *, limit: int = 3) -> list[TopicMatch]:
     return matches[:limit]
 
 
+@cache
+def _title_tokens() -> tuple[tuple[str, frozenset[str]], ...]:
+    return tuple(
+        (number, frozenset(tokens(title)))
+        for number, title in _titles()["sections"].items()
+    )
+
+
+def title_sections(query: str) -> list[str]:
+    """Sections whose own title covers the question, such as "grand kadi".
+
+    Titles are not in the search index, so a question phrased in the
+    Constitution's own words could lose to a broad topic. Only the best
+    coverage counts, and a phrase shared by many titles is ignored.
+    """
+    query_tokens = list(dict.fromkeys(tokens(query)))
+    if len(query_tokens) < 2:
+        return []
+    best = 0.0
+    found: list[str] = []
+    for number, title_tokens in _title_tokens():
+        matched = sum(
+            1
+            for token in query_tokens
+            if any(_same(word, token) for word in title_tokens)
+        )
+        coverage = matched / len(query_tokens)
+        if matched < 2 or coverage < _TITLE_MIN_COVERAGE:
+            continue
+        if coverage > best:
+            best, found = coverage, [number]
+        elif coverage == best:
+            found.append(number)
+    return found if len(found) <= _TITLE_MAX_SECTIONS else []
+
+
 def topic_sections(query: str) -> list[tuple[str, float]]:
-    """Ordered section numbers for a query with a fusion weight for each.
+    """Section numbers for a query with a fusion weight for each.
 
     Multi-word matches are specific enough to lead the ranking; single-word
-    matches only nudge it, so dense and keyword search can still win.
+    matches only nudge it, so dense and keyword search can still win. A
+    section named by several topics, or by its own title, collects each boost.
     """
-    ordered: list[tuple[str, float]] = []
-    seen: set[str] = set()
+    weights: dict[str, float] = {}
     for match in match_topics(query):
         weight = 2.5 if match.score >= 2 else 1.5
         for number in match.sections:
-            if number not in seen:
-                seen.add(number)
-                ordered.append((number, weight))
-    if _REMEDY_INTENT.search(query) and "46" not in seen:
-        ordered.append(("46", 1.5))
-    return ordered
+            weights[number] = weights.get(number, 0.0) + weight
+    for number in title_sections(query):
+        weights[number] = weights.get(number, 0.0) + _TITLE_WEIGHT
+    if _REMEDY_INTENT.search(query) and "46" not in weights:
+        weights["46"] = 1.5
+    # Stable sort keeps the curated order for equal weights.
+    return sorted(weights.items(), key=lambda item: -item[1])
 
 
 def companion_sections(number: str) -> tuple[str, ...]:

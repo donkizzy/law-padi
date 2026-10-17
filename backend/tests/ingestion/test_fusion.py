@@ -80,3 +80,22 @@ def test_lexical_only_fallback_keeps_full_weight() -> None:
     ranked = fuse_rankings(lexical=[(keyword, 0.5)], topics=[(topic, 0.5)], top_k=2)
 
     assert [item.segment for item in ranked] == [keyword, topic]
+
+
+def test_topic_boost_lets_dense_order_pick_among_topic_sections() -> None:
+    establishment = _segment("constitution-1999.chapter6.part3.section214")
+    control = _segment("constitution-1999.chapter6.part3.section215")
+    establishment_detail = _segment(
+        "constitution-1999.chapter6.part3.section214.subsection2"
+    )
+
+    ranked = fuse_rankings(
+        dense=[(establishment_detail, 0.1), (control, 0.2)],
+        # Curated order lists control first; dense ranking should decide.
+        topics=[(control, 2.5), (establishment, 2.5)],
+        top_k=2,
+    )
+
+    # The boost reaches the subsection dense search matched, not only the
+    # whole-section row the topic names.
+    assert [item.segment for item in ranked] == [establishment_detail, control]
