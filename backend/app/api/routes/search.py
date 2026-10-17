@@ -185,7 +185,10 @@ def read_provision_tree(
     parent_path: Annotated[str | None, Query(max_length=512)] = None,
     release_version: ReleaseVersion = None,
     index_kind: IndexKind = "enacted",
+    all_nodes: bool = False,
 ) -> ProvisionTreePublic:
+    if all_nodes and parent_path:
+        raise HTTPException(status_code=422, detail="Choose a parent or the full index")
     corpus = _corpus(session, index_kind, release_version)
     parent = (
         next(
@@ -197,12 +200,19 @@ def read_provision_tree(
     )
     if parent_path and not parent:
         raise HTTPException(status_code=404, detail="Provision was not found")
-    data = [corpus.reference(p) for p in corpus.children(parent.id if parent else None)]
+    nodes = (
+        sorted(corpus.provisions.values(), key=lambda p: (p.sort_key, p.canonical_path))
+        if all_nodes
+        else corpus.children(parent.id if parent else None)
+    )
+    data = [corpus.reference(p) for p in nodes]
     return ProvisionTreePublic(
         data=data,
         count=len(data),
         release_version=corpus.release.version,
         edition_label=corpus.edition_label,
+        parent=corpus.reference(parent) if parent else None,
+        scope="all" if all_nodes else "children",
     )
 
 

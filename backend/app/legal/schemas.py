@@ -821,6 +821,8 @@ class ProvisionTreePublic(SQLModel):
     count: int
     release_version: str
     edition_label: str
+    parent: ProvisionReference | None = None
+    scope: Literal["children", "all"] = "children"
 
 
 class MyAdminRolesPublic(SQLModel):

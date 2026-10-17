@@ -498,3 +498,42 @@ def test_missing_target_and_database_failure_have_unavailable_state(
     response = client.get("/api/v1/legal/releases/current")
     assert response.status_code == 503
     assert response.json()["detail"] == "Legal corpus database is unavailable"
+
+
+def test_full_public_index_is_release_scoped_and_contains_hub_metadata(
+    client: TestClient, corpus, db: Session
+) -> None:
+    release, _source, nodes, _pdf = corpus
+    index = client.get("/api/v1/legal/provisions/tree", params={"all_nodes": True})
+    assert index.status_code == 200
+    body = index.json()
+    assert body["scope"] == "all"
+    assert body["release_version"] == release.version
+    assert {item["canonical_path"] for item in body["data"]} == {
+        node.canonical_path for node in nodes.values()
+    }
+    # Discovery must not publish document text or unpublished releases.
+    assert all(item["authoritative_text"] is None for item in body["data"])
+    parent_path = nodes["chapter4"].canonical_path
+    hub = client.get(
+        "/api/v1/legal/provisions/tree", params={"parent_path": parent_path}
+    ).json()
+    assert hub["parent"]["canonical_path"] == parent_path
+    assert hub["scope"] == "children"
+    assert (
+        client.get(
+            "/api/v1/legal/provisions/tree",
+            params={"parent_path": parent_path, "all_nodes": True},
+        ).status_code
+        == 422
+    )
+    draft = CorpusRelease(version="private-discovery-draft")
+    db.add(draft)
+    db.commit()
+    assert (
+        client.get(
+            "/api/v1/legal/provisions/tree",
+            params={"release_version": draft.version, "all_nodes": True},
+        ).status_code
+        == 404
+    )
