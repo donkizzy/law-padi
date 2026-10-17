@@ -32,9 +32,13 @@ export function ProvisionLink({
 }) {
   if (!provision.has_text)
     return (
-      <span className="text-sm font-semibold text-muted-foreground">
+      <Link
+        className="text-sm font-semibold text-primary hover:underline"
+        to="/constitution"
+        search={{ parent: provision.canonical_path, release }}
+      >
         {provision.citation}
-      </span>
+      </Link>
     )
   return (
     <Link
@@ -52,11 +56,14 @@ export function ProvisionView({
   provision,
   onOpenSource,
   onRelated,
+  primary = false,
 }: {
   provision: LegalSearchResult
   onOpenSource: () => void
+  primary?: boolean
   onRelated?: (query: string) => void
 }) {
+  const Heading = primary ? "h1" : "h2"
   const [copied, setCopied] = useState<"text" | "share" | null>(null)
   const [historyOpen, setHistoryOpen] = useState(false)
   const history = useProvisionHistory(
@@ -150,9 +157,9 @@ export function ProvisionView({
         <CitationChip onClick={onOpenSource}>{provision.citation}</CitationChip>
       </nav>
       <div>
-        <h2 className="font-display text-title-3 sm:text-title-2">
+        <Heading className="font-display text-title-3 sm:text-title-2">
           {provisionTitle(provision)}
-        </h2>
+        </Heading>
         <p className="mt-3 text-body text-muted-foreground">
           {provision.title ? `${provision.citation} · ` : ""}
           {editionName(provision.edition_label)}
@@ -167,6 +174,16 @@ export function ProvisionView({
         label={provision.edition_label}
         historical={provision.legal_status === "historical"}
       />
+      <p className="text-sm text-muted-foreground">
+        Source: {provision.source_authority}, {provision.source_title}
+        {provision.source_page_start
+          ? `, printed page ${provision.source_page_start}`
+          : ""}
+        .{" "}
+        <Link className="text-primary underline" to="/about">
+          Source scope and corrections
+        </Link>
+      </p>
       {provision.ancestors
         .filter((ancestor) => ancestor.authoritative_text)
         .map((ancestor) => (

@@ -11,16 +11,39 @@ import {
 import { legalError, useProvisionTree } from "@/hooks/useLegalCorpus"
 import { editionName } from "@/lib/legal-provisions"
 
-export function BrowseConstitution() {
-  const root = useProvisionTree()
+export function BrowseConstitution({
+  parent,
+  release,
+}: {
+  parent?: string
+  release?: string
+}) {
+  const root = useProvisionTree(parent, release)
   const [query, setQuery] = useState("")
   const navigate = useNavigate()
   return (
     <section className="mx-auto max-w-5xl px-4 py-8 sm:px-8 lg:px-12 lg:py-12">
-      <SectionHeading kicker="Browse" title="Browse the Constitution.">
+      <SectionHeading
+        kicker="Browse"
+        title={
+          root.data?.parent
+            ? `${root.data.parent.citation}: ${root.data.parent.title || root.data.parent.heading || "Published provisions"}`
+            : "Browse the Constitution."
+        }
+      >
         Explore the available chapters and sections of the{" "}
-        {editionName(root.data?.edition_label)}.
+        {editionName(root.data?.edition_label)}. Later amendments are not
+        included.
       </SectionHeading>
+      {parent && (
+        <Link
+          className="mb-5 inline-block text-primary underline"
+          to="/constitution"
+          search={{ release: root.data?.release_version ?? release }}
+        >
+          All chapters and schedules
+        </Link>
+      )}
       <form
         className="mb-7 flex gap-3"
         onSubmit={(event) => {
@@ -58,94 +81,58 @@ export function BrowseConstitution() {
           {legalError(root.error)}
         </ErrorState>
       ) : (
-        <div className="grid gap-3">
+        <ul className="grid gap-3">
           {root.data.data.map((node) => (
-            <TreeNode
-              key={node.id}
-              node={node}
-              release={root.data.release_version}
-            />
+            <li key={node.id}>
+              <ReadingLink node={node} release={root.data.release_version} />
+            </li>
           ))}
-        </div>
+        </ul>
       )}
+      <Link
+        className="mt-8 inline-block text-sm text-primary underline"
+        to="/about"
+      >
+        Sources, edition limits and corrections
+      </Link>
     </section>
   )
 }
 
-function TreeNode({
+function ReadingLink({
   node,
   release,
 }: {
   node: ProvisionReference
   release: string
 }) {
-  const [expanded, setExpanded] = useState(false)
-  if (
-    ["section", "subsection", "paragraph", "schedule_item"].includes(node.kind)
+  const document = node.has_text
+  const contents = (
+    <>
+      <span className="font-bold text-primary">{node.citation}</span>
+      <span className="mt-1 block">
+        {node.title || node.heading || "Read published provisions"}
+      </span>
+    </>
   )
-    return (
-      <Link
-        to="/constitution/$sectionId"
-        params={{ sectionId: node.canonical_path }}
-        search={{ release }}
-        className="sq-md block border border-border bg-card p-4 text-sm hover:border-primary focus-visible:ring-2 focus-visible:ring-ring"
-      >
-        <span className="font-bold text-primary">{node.citation}</span>
-        <span className="mt-1 block">{node.title || node.heading}</span>
-      </Link>
-    )
-  return (
-    <section className="sq-lg border border-border bg-card p-4">
-      <button
-        className="w-full text-left focus-visible:ring-2 focus-visible:ring-ring"
-        type="button"
-        aria-expanded={expanded}
-        onClick={() => setExpanded(!expanded)}
-      >
-        <span className="text-xs font-bold text-primary">{node.citation}</span>
-        <span className="mt-1 block font-display text-xl">
-          {node.title || node.heading}
-        </span>
-      </button>
-      {expanded && (
-        <TreeChildren parent={node.canonical_path} release={release} />
-      )}
-    </section>
-  )
-}
-
-function TreeChildren({
-  parent,
-  release,
-}: {
-  parent: string
-  release: string
-}) {
-  const tree = useProvisionTree(parent, release)
-  return (
-    <div className="mt-4 grid gap-3 border-t border-border pt-4">
-      {tree.isPending ? (
-        <p role="status">Loading…</p>
-      ) : tree.isError ? (
-        <ErrorState
-          title="Couldn't load this part"
-          action={
-            <InlineAction onClick={() => tree.refetch()} type="button">
-              Try again
-            </InlineAction>
-          }
-        >
-          {legalError(tree.error)}
-        </ErrorState>
-      ) : tree.data.data.length === 0 ? (
-        <p className="text-sm text-muted-foreground">
-          There's nothing to show in this part yet.
-        </p>
-      ) : (
-        tree.data.data.map((node) => (
-          <TreeNode key={node.id} node={node} release={release} />
-        ))
-      )}
-    </div>
+  const className =
+    "sq-md block border border-border bg-card p-4 text-sm hover:border-primary focus-visible:ring-2 focus-visible:ring-ring"
+  return document ? (
+    <Link
+      to="/constitution/$sectionId"
+      params={{ sectionId: node.canonical_path }}
+      search={{ release }}
+      className={className}
+    >
+      {contents}
+    </Link>
+  ) : (
+    <Link
+      to="/constitution"
+      search={{ parent: node.canonical_path, release }}
+      className={className}
+    >
+      {contents}
+    </Link>
   )
 }

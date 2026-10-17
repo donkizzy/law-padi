@@ -17,9 +17,11 @@ import { Route as SignupRouteImport } from './routes/signup'
 import { Route as VerifyEmailRouteImport } from './routes/verify-email'
 import { Route as WelcomeRouteImport } from './routes/welcome'
 import { Route as LayoutIndexRouteImport } from './routes/_layout/index'
+import { Route as LayoutAboutRouteImport } from './routes/_layout/about'
 import { Route as LayoutAdminRouteImport } from './routes/_layout/admin'
 import { Route as LayoutAmendmentsRouteImport } from './routes/_layout/amendments'
 import { Route as LayoutConstitutionRouteImport } from './routes/_layout/constitution'
+import { Route as LayoutMethodologyRouteImport } from './routes/_layout/methodology'
 import { Route as LayoutPrivacyRouteImport } from './routes/_layout/privacy'
 import { Route as LayoutSavedRouteImport } from './routes/_layout/saved'
 import { Route as LayoutSettingsRouteImport } from './routes/_layout/settings'
@@ -65,6 +67,11 @@ const LayoutIndexRoute = LayoutIndexRouteImport.update({
   path: '/',
   getParentRoute: () => LayoutRoute,
 } as any)
+const LayoutAboutRoute = LayoutAboutRouteImport.update({
+  id: '/about',
+  path: '/about',
+  getParentRoute: () => LayoutRoute,
+} as any)
 const LayoutAdminRoute = LayoutAdminRouteImport.update({
   id: '/admin',
   path: '/admin',
@@ -78,6 +85,11 @@ const LayoutAmendmentsRoute = LayoutAmendmentsRouteImport.update({
 const LayoutConstitutionRoute = LayoutConstitutionRouteImport.update({
   id: '/constitution',
   path: '/constitution',
+  getParentRoute: () => LayoutRoute,
+} as any)
+const LayoutMethodologyRoute = LayoutMethodologyRouteImport.update({
+  id: '/methodology',
+  path: '/methodology',
   getParentRoute: () => LayoutRoute,
 } as any)
 const LayoutPrivacyRoute = LayoutPrivacyRouteImport.update({
@@ -115,9 +127,11 @@ export interface FileRoutesByFullPath {
   '/signup': typeof SignupRoute
   '/verify-email': typeof VerifyEmailRoute
   '/welcome': typeof WelcomeRoute
+  '/about': typeof LayoutAboutRoute
   '/admin': typeof LayoutAdminRoute
   '/amendments': typeof LayoutAmendmentsRoute
   '/constitution': typeof LayoutConstitutionRouteWithChildren
+  '/methodology': typeof LayoutMethodologyRoute
   '/privacy': typeof LayoutPrivacyRoute
   '/saved': typeof LayoutSavedRoute
   '/settings': typeof LayoutSettingsRoute
@@ -131,8 +145,10 @@ export interface FileRoutesByTo {
   '/signup': typeof SignupRoute
   '/verify-email': typeof VerifyEmailRoute
   '/welcome': typeof WelcomeRoute
+  '/about': typeof LayoutAboutRoute
   '/admin': typeof LayoutAdminRoute
   '/amendments': typeof LayoutAmendmentsRoute
+  '/methodology': typeof LayoutMethodologyRoute
   '/privacy': typeof LayoutPrivacyRoute
   '/saved': typeof LayoutSavedRoute
   '/settings': typeof LayoutSettingsRoute
@@ -149,9 +165,11 @@ export interface FileRoutesById {
   '/signup': typeof SignupRoute
   '/verify-email': typeof VerifyEmailRoute
   '/welcome': typeof WelcomeRoute
+  '/_layout/about': typeof LayoutAboutRoute
   '/_layout/admin': typeof LayoutAdminRoute
   '/_layout/amendments': typeof LayoutAmendmentsRoute
   '/_layout/constitution': typeof LayoutConstitutionRouteWithChildren
+  '/_layout/methodology': typeof LayoutMethodologyRoute
   '/_layout/privacy': typeof LayoutPrivacyRoute
   '/_layout/saved': typeof LayoutSavedRoute
   '/_layout/settings': typeof LayoutSettingsRoute
@@ -169,9 +187,11 @@ export interface FileRouteTypes {
     | '/signup'
     | '/verify-email'
     | '/welcome'
+    | '/about'
     | '/admin'
     | '/amendments'
     | '/constitution'
+    | '/methodology'
     | '/privacy'
     | '/saved'
     | '/settings'
@@ -185,8 +205,10 @@ export interface FileRouteTypes {
     | '/signup'
     | '/verify-email'
     | '/welcome'
+    | '/about'
     | '/admin'
     | '/amendments'
+    | '/methodology'
     | '/privacy'
     | '/saved'
     | '/settings'
@@ -202,9 +224,11 @@ export interface FileRouteTypes {
     | '/signup'
     | '/verify-email'
     | '/welcome'
+    | '/_layout/about'
     | '/_layout/admin'
     | '/_layout/amendments'
     | '/_layout/constitution'
+    | '/_layout/methodology'
     | '/_layout/privacy'
     | '/_layout/saved'
     | '/_layout/settings'
@@ -281,6 +305,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof LayoutIndexRouteImport
       parentRoute: typeof LayoutRoute
     }
+    '/_layout/about': {
+      id: '/_layout/about'
+      path: '/about'
+      fullPath: '/about'
+      preLoaderRoute: typeof LayoutAboutRouteImport
+      parentRoute: typeof LayoutRoute
+    }
     '/_layout/admin': {
       id: '/_layout/admin'
       path: '/admin'
@@ -300,6 +331,13 @@ declare module '@tanstack/react-router' {
       path: '/constitution'
       fullPath: '/constitution'
       preLoaderRoute: typeof LayoutConstitutionRouteImport
+      parentRoute: typeof LayoutRoute
+    }
+    '/_layout/methodology': {
+      id: '/_layout/methodology'
+      path: '/methodology'
+      fullPath: '/methodology'
+      preLoaderRoute: typeof LayoutMethodologyRouteImport
       parentRoute: typeof LayoutRoute
     }
     '/_layout/privacy': {
@@ -354,9 +392,11 @@ const LayoutConstitutionRouteWithChildren =
   LayoutConstitutionRoute._addFileChildren(LayoutConstitutionRouteChildren)
 
 interface LayoutRouteChildren {
+  LayoutAboutRoute: typeof LayoutAboutRoute
   LayoutAdminRoute: typeof LayoutAdminRoute
   LayoutAmendmentsRoute: typeof LayoutAmendmentsRoute
   LayoutConstitutionRoute: typeof LayoutConstitutionRouteWithChildren
+  LayoutMethodologyRoute: typeof LayoutMethodologyRoute
   LayoutPrivacyRoute: typeof LayoutPrivacyRoute
   LayoutSavedRoute: typeof LayoutSavedRoute
   LayoutSettingsRoute: typeof LayoutSettingsRoute
@@ -364,9 +404,11 @@ interface LayoutRouteChildren {
 }
 
 const LayoutRouteChildren: LayoutRouteChildren = {
+  LayoutAboutRoute: LayoutAboutRoute,
   LayoutAdminRoute: LayoutAdminRoute,
   LayoutAmendmentsRoute: LayoutAmendmentsRoute,
   LayoutConstitutionRoute: LayoutConstitutionRouteWithChildren,
+  LayoutMethodologyRoute: LayoutMethodologyRoute,
   LayoutPrivacyRoute: LayoutPrivacyRoute,
   LayoutSavedRoute: LayoutSavedRoute,
   LayoutSettingsRoute: LayoutSettingsRoute,

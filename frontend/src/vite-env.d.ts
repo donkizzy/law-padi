@@ -2,6 +2,7 @@
 
 interface ImportMetaEnv {
   readonly VITE_API_URL?: string
+  readonly VITE_PUBLIC_SITE_URL?: string
   /** Shown on the privacy page when set. */
   readonly VITE_PRIVACY_CONTACT_EMAIL?: string
 }

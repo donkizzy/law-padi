@@ -47,6 +47,7 @@ export function ProvisionDetail({
           </ErrorState>
         ) : (
           <ProvisionView
+            primary
             key={detail.data.provision_version_id}
             provision={detail.data}
             onOpenSource={() => setSourceOpen(true)}

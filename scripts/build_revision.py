@@ -16,6 +16,7 @@ def main() -> None:
         for path in folder.rglob("*")
         if path.is_file()
         and "__pycache__" not in path.parts
+        and not path.name.endswith(".test.ts")
         and root / "backend/app/frontend" not in path.parents
         and (
             root / "frontend/public" in path.parents
@@ -44,9 +45,12 @@ def main() -> None:
             "frontend/package.json",
             "frontend/vite.config.ts",
             "frontend/index.html",
+            "docs/plain-language-retrieval-benchmark-v1.json",
             "backend/scripts/start-cloud-run.sh",
             "deployment/cloudflare/worker.ts",
+            "deployment/cloudflare/public-pages.ts",
             "deployment/cloudflare/wrangler.json",
+            "deployment/cloudflare/tsconfig.json",
             "deployment/render/Dockerfile",
             "deployment/render/start.sh",
             ".dockerignore",

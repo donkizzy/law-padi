@@ -120,6 +120,15 @@ async function mockCorpus(page: Page) {
                 ),
               ],
           count: 1,
+          parent: url.searchParams.has("parent_path")
+            ? reference(
+                "constitution-1999.chapter4",
+                "chapter",
+                "Chapter 4",
+                false,
+              )
+            : null,
+          scope: "children",
           release_version: release,
           edition_label: edition,
         },
@@ -208,7 +217,10 @@ for (const mobile of [false, true]) {
     await expect(article).not.toContainText(/stored|\bAI\b/i)
     await expect(
       page.getByRole("link", { name: "Chapter 4", exact: true }),
-    ).toHaveCount(0)
+    ).toHaveAttribute(
+      "href",
+      `/constitution?parent=constitution-1999.chapter4&release=${release}`,
+    )
     await page.getByRole("button", { name: "Copy text" }).click()
     await expect
       .poll(() => page.evaluate(() => navigator.clipboard.readText()))
@@ -502,7 +514,7 @@ test("Browse uses the published tree and invalid detail never falls back", async
 }) => {
   await mockCorpus(page)
   await page.goto("/constitution")
-  await page.getByRole("button", { name: /Chapter 4/ }).click()
+  await page.getByRole("link", { name: /Chapter 4/ }).click()
   await page.getByRole("link", { name: /Section 33\(2\)\(a\)/ }).click()
   await expect(page.getByRole("article")).toContainText(
     provision.authoritative_text,
@@ -657,4 +669,57 @@ test("the privacy notice is linked from the welcome page and sign-up", async ({
   await page.goto("/signup")
   await page.getByRole("link", { name: "how we handle your data" }).click()
   await expect(page).toHaveURL(/\/privacy$/)
+})
+
+test("Public provision metadata stays unique after browser rendering", async ({
+  page,
+}) => {
+  await mockCorpus(page)
+  await page.goto(`/constitution/${path}?release=${release}`)
+  await expect(
+    page.getByRole("article", { name: "Constitutional provision" }),
+  ).toContainText(provision.authoritative_text)
+  await expect(page.locator("title")).toHaveCount(1)
+  await expect(page.locator('meta[name="description"]')).toHaveCount(1)
+  await expect(page.locator('link[rel="canonical"]')).toHaveCount(1)
+  await expect(page.locator("h1")).toHaveCount(1)
+  await expect(page).toHaveTitle(/Section 33\(2\)\(a\).*2004 source edition/)
+  await expect(page.locator('link[rel="canonical"]')).toHaveAttribute(
+    "href",
+    new RegExp(`release=${release}`),
+  )
+  const types = await page
+    .locator('script[type="application/ld+json"]')
+    .allTextContents()
+  expect(
+    types.some((item) => JSON.parse(item)["@type"] === "BreadcrumbList"),
+  ).toBe(true)
+})
+
+test("Amendments and publisher pages disclose their actual public scope", async ({
+  page,
+}) => {
+  await mockCorpus(page)
+  await page.goto("/amendments")
+  await expect(page.getByRole("heading", { level: 1 })).toHaveText(
+    "Amendments are not published here yet",
+  )
+  await expect(page.getByText("First Alteration Act, 2010")).toHaveCount(0)
+  await expect(page.locator('meta[name="robots"]')).toHaveAttribute(
+    "content",
+    /noindex/,
+  )
+  await page.goto("/about")
+  await expect(
+    page.getByRole("heading", { name: "About constitution.ng", exact: true }),
+  ).toBeVisible()
+  await expect(
+    page.getByRole("link", {
+      name: "Corrections on GitHub (repository access required)",
+    }),
+  ).toHaveAttribute("href", "https://github.com/donkizzy/law-padi/issues")
+  await page.screenshot({
+    path: "../output/playwright/seo-about.png",
+    fullPage: true,
+  })
 })

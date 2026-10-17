@@ -2392,6 +2392,11 @@ export type ProvisionTreePublic = {
      * Edition Label
      */
     edition_label: string;
+    parent?: ProvisionReference | null;
+    /**
+     * Scope
+     */
+    scope?: 'children' | 'all';
 };
 
 /**
@@ -5308,6 +5313,10 @@ export type legalReadProvisionTreeData = {
          * Index Kind
          */
         index_kind?: string;
+        /**
+         * All Nodes
+         */
+        all_nodes?: boolean;
     };
     url: '/api/v1/legal/provisions/tree';
 };

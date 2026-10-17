@@ -46,3 +46,13 @@ To test the prepared Worker locally against Render without publishing a route,
 use `wrangler dev --local` with the generated config and the private proxy
 credential. Do not set paid generation flags or use a production chat session
 for load or destructive tests.
+
+## Public document rendering and discovery
+
+See [the SEO/AI discovery rollout](../../docs/seo-and-ai-discovery.md). The Worker
+now runs before static assets and serves real public HTML, robots, sitemap and
+LLM directory responses. Deploy the backend's release-scoped full-tree support
+before this Worker; the sitemap intentionally rejects an incomplete old response.
+`PUBLIC_SITE_URL` is an optional build variable for a bare canonical HTTPS origin;
+it defaults to the confirmed Workers address and is passed to both Vite and the
+Worker configuration. Changing it does not configure DNS, TLS or public routing.

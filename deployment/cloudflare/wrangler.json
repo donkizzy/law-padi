@@ -7,9 +7,12 @@
   "assets": {
     "directory": "../../backend/app/frontend",
     "binding": "ASSETS",
-    "not_found_handling": "single-page-application",
-    "run_worker_first": ["/api/*"]
+    "not_found_handling": "none",
+    "run_worker_first": true
   },
   "observability": { "enabled": false },
-  "vars": { "API_ORIGIN": "https://constitution-ng-api.onrender.com" }
+  "vars": {
+    "API_ORIGIN": "https://constitution-ng-api.onrender.com",
+    "PUBLIC_SITE_URL": "https://constitition-ng.amosgodwin500.workers.dev"
+  }
 }

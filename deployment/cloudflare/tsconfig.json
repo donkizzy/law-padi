@@ -1,0 +1,5 @@
+{
+  "extends": "../../frontend/tsconfig.json",
+  "include": ["worker.ts", "public-pages.ts", "../../frontend/src/vite-env.d.ts"],
+  "exclude": ["**/*.test.ts"]
+}

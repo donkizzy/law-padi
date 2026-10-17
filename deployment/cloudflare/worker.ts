@@ -1,7 +1,10 @@
+import { publicRequest } from "./public-pages";
+
 interface Env {
 	ASSETS: { fetch(request: Request): Promise<Response> };
 	API_ORIGIN: string;
 	ORIGIN_PROXY_SECRET: string;
+	PUBLIC_SITE_URL?: string;
 }
 
 type OriginFetch = (request: Request) => Promise<Response>;
@@ -52,7 +55,21 @@ export async function handleRequest(
 	originFetch: OriginFetch = fetch,
 ): Promise<Response> {
 	const url = new URL(request.url);
-	if (!url.pathname.startsWith("/api/")) return env.ASSETS.fetch(request);
+	if (!url.pathname.startsWith("/api/")) {
+		return publicRequest(request, env, (path) =>
+			handleRequest(
+				new Request(new URL(path, url.origin), {
+					headers: { accept: "application/json" },
+					signal: AbortSignal.any([
+						request.signal,
+						AbortSignal.timeout(15_000),
+					]),
+				}),
+				env,
+				originFetch,
+			),
+		);
+	}
 	// Only the public API namespace may reach the backend. In particular, the
 	// private task endpoints never have a route through the public Worker.
 	if (
@@ -93,6 +110,7 @@ export async function handleRequest(
 	}
 	const responseHeaders = new Headers(response.headers);
 	responseHeaders.set("cache-control", "private, no-store");
+	responseHeaders.set("x-robots-tag", "noindex");
 	responseHeaders.delete(PROXY_HEADER);
 	const location = responseHeaders.get("location");
 	if (location) {

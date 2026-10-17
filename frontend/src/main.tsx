@@ -1,9 +1,4 @@
-import {
-  MutationCache,
-  QueryCache,
-  QueryClient,
-  QueryClientProvider,
-} from "@tanstack/react-query"
+import { QueryClientProvider } from "@tanstack/react-query"
 import { createRouter, RouterProvider } from "@tanstack/react-router"
 import { AxiosError, type InternalAxiosRequestConfig } from "axios"
 import { StrictMode } from "react"
@@ -13,8 +8,8 @@ import { ThemeProvider } from "./components/theme-provider"
 import { Toaster } from "./components/ui/sonner"
 import "./index.css"
 import { stopAccountSync } from "./lib/account-sync"
+import { queryClient } from "./lib/query-client"
 import {
-  endSession,
   getAccessToken,
   initSession,
   isSignedIn,
@@ -53,27 +48,26 @@ client.instance.interceptors.response.use(undefined, async (error) => {
   throw error
 })
 
-const handleApiError = (error: Error) => {
-  // 401 here means the refresh failed too: continue as a guest. Route guards
-  // re-run below and send protected pages to /login. 403 is a permission
-  // answer, not a sign-out.
-  if (
-    error instanceof AxiosError &&
-    error.response?.status === 401 &&
-    isSignedIn()
-  ) {
-    endSession()
+// Public-only server data avoids fetching the same release again at startup.
+const initial = document.getElementById("public-corpus-data")
+if (initial?.textContent) {
+  try {
+    const data = JSON.parse(initial.textContent)
+    if (data.kind === "provision" && typeof data.path === "string")
+      queryClient.setQueryData(
+        ["legal", "provision", data.path, data.release],
+        data.data,
+      )
+    if (data.kind === "tree")
+      queryClient.setQueryData(
+        ["legal", "tree", data.parent ?? undefined, data.release],
+        data.data,
+      )
+  } catch {
+    /* A failed bootstrap must not prevent the app from loading. */
   }
+  initial.remove()
 }
-const queryClient = new QueryClient({
-  queryCache: new QueryCache({
-    onError: handleApiError,
-  }),
-  mutationCache: new MutationCache({
-    onError: handleApiError,
-  }),
-})
-
 const router = createRouter({ routeTree })
 declare module "@tanstack/react-router" {
   interface Register {
@@ -92,6 +86,9 @@ subscribeSession(() => {
 })
 
 void initSession().finally(() => {
+  document.querySelectorAll("[data-public-head]").forEach((node) => {
+    node.remove()
+  })
   ReactDOM.createRoot(document.getElementById("root")!).render(
     <StrictMode>
       <ThemeProvider defaultTheme="light" storageKey="law-padi-theme">

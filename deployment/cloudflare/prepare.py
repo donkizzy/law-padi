@@ -17,7 +17,12 @@ ROOT = Path(__file__).resolve().parents[2]
 API_ORIGIN = "https://constitution-ng-api.onrender.com"
 
 
-def configuration(api_origin: str, *, public: bool) -> dict:
+def configuration(
+    api_origin: str,
+    *,
+    public: bool,
+    site_url: str = "https://constitition-ng.amosgodwin500.workers.dev",
+) -> dict:
     origin = urlsplit(api_origin)
     if (
         origin.scheme != "https"
@@ -30,10 +35,23 @@ def configuration(api_origin: str, *, public: bool) -> dict:
         or origin.fragment
     ):
         raise ValueError("Use the verified constitution-ng-api HTTPS origin")
+    site = urlsplit(site_url)
+    if (
+        site.scheme != "https"
+        or not site.hostname
+        or site.username
+        or site.password
+        or site.port
+        or site.path not in {"", "/"}
+        or site.query
+        or site.fragment
+    ):
+        raise ValueError("Public site URL must be a bare HTTPS origin")
     config = json.loads((ROOT / "deployment/cloudflare/wrangler.json").read_text())
     config["main"] = "cloudflare/worker.ts"
     config["assets"]["directory"] = "../backend/app/frontend"
     config["vars"]["API_ORIGIN"] = API_ORIGIN
+    config["vars"]["PUBLIC_SITE_URL"] = f"https://{site.netloc}"
     config["workers_dev"] = public
     # Version URLs otherwise permit access before the main hostname is enabled.
     config["preview_urls"] = False
@@ -45,6 +63,9 @@ def main() -> None:
     parser.add_argument("--api-origin", default=API_ORIGIN)
     parser.add_argument("--revision", required=True)
     parser.add_argument("--public", action="store_true")
+    parser.add_argument(
+        "--site-url", default="https://constitition-ng.amosgodwin500.workers.dev"
+    )
     args = parser.parse_args()
     actual = subprocess.check_output(
         [sys.executable, str(ROOT / "scripts/build_revision.py")], text=True
@@ -56,7 +77,7 @@ def main() -> None:
         parser.error("Revision must match the current packaged sources")
     if not (ROOT / "backend/app/frontend/index.html").is_file():
         parser.error("Build the frontend before preparing the Worker")
-    config = configuration(args.api_origin, public=args.public)
+    config = configuration(args.api_origin, public=args.public, site_url=args.site_url)
     output = ROOT / "deployment/wrangler.generated.json"
     output.write_text(json.dumps(config, indent=2) + "\n")
     print(  # noqa: T201

@@ -11,11 +11,13 @@ function env(overrides = {}) {
 }
 
 describe("same-origin API proxy", () => {
-	test("serves deep links through assets without invoking the API", async () => {
+	test("serves utility routes without invoking the API", async () => {
 		const response = await handleRequest(
-			new Request("https://constitution.workers.dev/constitution/37"),
+			new Request("https://constitution.workers.dev/saved"),
 			env({ API_ORIGIN: "" }),
 		);
+		expect(response.status).toBe(200);
+		expect(response.headers.get("x-robots-tag")).toContain("noindex");
 		expect(await response.text()).toBe("SPA");
 	});
 

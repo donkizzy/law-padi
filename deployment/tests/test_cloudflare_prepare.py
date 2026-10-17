@@ -24,6 +24,22 @@ class CloudflarePreparationTests(unittest.TestCase):
         self.assertTrue(config["workers_dev"])
         self.assertFalse(config["preview_urls"])
 
+    def test_canonical_origin_and_document_routing_are_explicit(self):
+        config = prepare.configuration(
+            prepare.API_ORIGIN, public=True, site_url="https://constitution.ng"
+        )
+        self.assertEqual(config["vars"]["PUBLIC_SITE_URL"], "https://constitution.ng")
+        self.assertTrue(config["assets"]["run_worker_first"])
+        self.assertEqual(config["assets"]["not_found_handling"], "none")
+        for site in (
+            "http://constitution.ng",
+            "https://constitution.ng/path",
+            "https://user:password@constitution.ng",
+            "https://constitution.ng?token=x",
+        ):
+            with self.subTest(site=site), self.assertRaises(ValueError):
+                prepare.configuration(prepare.API_ORIGIN, public=True, site_url=site)
+
     def test_rejects_accidental_or_credential_bearing_origins(self):
         for origin in (
             "http://constitution-ng-api.onrender.com",

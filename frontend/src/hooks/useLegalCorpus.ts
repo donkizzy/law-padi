@@ -38,10 +38,10 @@ export function useLegalSearch(
   })
 }
 
-export function useProvision(path: string, release?: string) {
-  return useQuery({
+export function provisionQueryOptions(path: string, release?: string) {
+  return {
     queryKey: ["legal", "provision", path, release],
-    queryFn: async ({ signal }) =>
+    queryFn: async ({ signal }: { signal: AbortSignal }) =>
       (
         await LegalService.readCurrentProvision({
           path: { canonical_path: path },
@@ -49,23 +49,35 @@ export function useProvision(path: string, release?: string) {
           signal,
         })
       ).data.data[0],
+    staleTime: 30_000,
+    retry: false as const,
+  }
+}
+
+export function useProvision(path: string, release?: string) {
+  return useQuery({
+    ...provisionQueryOptions(path, release),
     enabled: Boolean(path),
-    retry: false,
   })
 }
 
-export function useProvisionTree(parent?: string, release?: string) {
-  return useQuery({
+export function treeQueryOptions(parent?: string, release?: string) {
+  return {
     queryKey: ["legal", "tree", parent, release],
-    queryFn: async ({ signal }) =>
+    queryFn: async ({ signal }: { signal: AbortSignal }) =>
       (
         await LegalService.readProvisionTree({
           query: { parent_path: parent, release_version: release },
           signal,
         })
       ).data,
-    retry: false,
-  })
+    staleTime: 30_000,
+    retry: false as const,
+  }
+}
+
+export function useProvisionTree(parent?: string, release?: string) {
+  return useQuery(treeQueryOptions(parent, release))
 }
 
 export function useProvisionHistory(

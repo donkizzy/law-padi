@@ -10,6 +10,7 @@ WORKDIR /app/frontend
 RUN bun install --frozen-lockfile
 
 COPY ./frontend /app/frontend
+COPY docs/plain-language-retrieval-benchmark-v1.json /app/docs/
 
 ARG VITE_API_URL=
 ARG BUILD_REVISION=development

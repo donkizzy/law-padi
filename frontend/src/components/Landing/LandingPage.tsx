@@ -23,6 +23,7 @@ import { Appearance } from "@/components/Common/Appearance"
 import { Logo } from "@/components/Common/Logo"
 import { SquircleButton } from "@/components/LawPadi/primitives"
 import { useInView } from "@/hooks/useInView"
+import { faqs } from "@/lib/public-content"
 import { cn } from "@/lib/utils"
 
 // Heavy, springy motion used by every landing transition.
@@ -41,41 +42,6 @@ export const exampleQuestions = [
   "Can I own land in another state?",
   "wetin constitution talk about freedom of religion?",
   "What does Section 33 say?",
-]
-
-export const faqs = [
-  {
-    q: "Is this legal advice?",
-    a: "No. constitution.ng explains what the Constitution says and shows you the exact section. If you are facing a court case, an arrest or a dispute, speak to a lawyer or the Legal Aid Council. Bring the sections you found here with you.",
-  },
-  {
-    q: "Is it free?",
-    a: "Yes. Asking questions, finding sections and reading the full Constitution are free. There is no paid plan.",
-  },
-  {
-    q: "Do I need an account?",
-    a: "No. You can ask and read as a guest. Create an account only if you want your conversations to follow you to another device.",
-  },
-  {
-    q: "Is this the current Constitution?",
-    a: "It is the 1999 Constitution as published in 2004. Amendments passed after that are not included yet, so a section may have changed since. Every answer tells you this so you can check before you rely on it.",
-  },
-  {
-    q: "Can I ask in Pidgin?",
-    a: "Yes. Ask the way you would say it, in English or Pidgin, and we will find the section. Answers are written in plain English, and the official wording is always the English text.",
-  },
-  {
-    q: "How do you choose the section?",
-    a: "Your question is matched against every section, using both the words you typed and what you mean. Citations come from the text itself, never guessed, and every answer lists the sections it used so you can read them yourself.",
-  },
-  {
-    q: "Can I quote an answer?",
-    a: "Yes. Copy any answer with its citations, or save the sections you need. Quote the official wording, not the explanation, when accuracy matters.",
-  },
-  {
-    q: "Is this a government website?",
-    a: "No. constitution.ng is independent. It is not published by, or connected to, the National Assembly or any government body.",
-  },
 ]
 
 export function LandingPage() {
@@ -733,7 +699,7 @@ const steps = [
   },
   {
     title: "We find the sections",
-    body: "Your question is matched against all 320 sections and 7 schedules, including the ones that limit a right.",
+    body: "Your question is matched against the published source edition, including provisions that limit a right.",
   },
   {
     title: "Read the answer and the source",
@@ -752,7 +718,7 @@ function HowItWorks() {
         <SectionIntro
           id="how-it-works-title"
           kicker="How it works"
-          title="Three steps, about ten seconds"
+          title="Three steps, with sources beside you"
         />
         <ol className="mt-12 grid gap-4 md:grid-cols-3">
           {steps.map((step, position) => (
@@ -785,15 +751,16 @@ const stats = [
   {
     value: "54 of 55",
     label:
-      "everyday questions, in English and Pidgin, put the right section first in our latest test",
+      "everyday questions, in English and Pidgin, put an expected section first in the retained 12 October 2026 retrieval test",
   },
   {
     value: "1,811",
-    label: "passages of the Constitution, each linked to its printed page",
+    label:
+      "source passages in the retained 2004 edition, linked to printed pages",
   },
   {
-    value: "320",
-    label: "sections and 7 schedules you can read, search and save",
+    value: "2004",
+    label: "source edition; later amendments are not included",
   },
 ]
 
@@ -809,8 +776,8 @@ function Proof() {
         kicker="Built to be checked"
         title="Tested on the questions people really ask"
       >
-        We measure every change against real phrasing, not legal phrasing. Here
-        is where it stands today.
+        We test section retrieval with everyday phrasing. Here is the scope of
+        the retained source-edition test.
       </SectionIntro>
       <dl className="mt-12 grid gap-4 md:grid-cols-3">
         {stats.map((stat, position) => (
@@ -831,6 +798,14 @@ function Proof() {
           </Reveal>
         ))}
       </dl>
+      <p className="mt-6 text-body text-muted-foreground">
+        Retrieval hits do not measure explanation accuracy or current-law
+        coverage.{" "}
+        <RouterLink className="text-primary underline" to="/methodology">
+          Read the dated test and its limits
+        </RouterLink>
+        .
+      </p>
       <Reveal className="mt-16">
         <h3 className="text-overline uppercase text-muted-foreground">
           Try one of these
@@ -925,7 +900,7 @@ function FinalCta() {
           className="sq-sm mt-6 inline-flex items-center gap-1.5 px-2 py-1 text-sm font-semibold text-[color:var(--legal-blue)] hover:underline focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-ring/25"
           to="/constitution"
         >
-          Or browse all 320 sections
+          Or browse the published sections
           <FiArrowRight aria-hidden className="size-3.5" />
         </RouterLink>
       </Reveal>
@@ -937,6 +912,8 @@ function FinalCta() {
 
 const footerLinks = [
   { label: "Ask a question", to: "/" },
+  { label: "About and corrections", to: "/about" },
+  { label: "Retrieval methodology", to: "/methodology" },
   { label: "Browse the Constitution", to: "/constitution" },
   { label: "Saved sections", to: "/saved" },
   { label: "Sign in", to: "/login" },
