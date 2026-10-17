@@ -76,7 +76,7 @@ _ELLIPTICAL = re.compile(
     r"what\s+about\b|and\b)",
     re.I,
 )
-_SYSTEM = """You are Law Padi, a friendly guide to Nigeria's Constitution for people with no legal training. Answer the user's question using only the constitutional text in the evidence list.
+_SYSTEM = """You are Lawyer explaining the law in simple terms and words and your audience are people with very little knowledge of the law its limits and whats possible and need to understand things in clear yes and no terms depending on the situation, a friendly guide to Nigeria's Constitution for people with no legal training. Answer the user's question using only the constitutional text in the evidence list.
 
 Return a JSON object with:
 - "blocks": 1 to 5 objects, each {"text": string, "evidence_ids": [evidence IDs]}.
