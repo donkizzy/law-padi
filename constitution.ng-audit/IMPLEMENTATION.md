@@ -1,6 +1,6 @@
 # SEO action-plan implementation
 
-16 October 2026. Implemented and verified in the local checkout; not deployed.
+Implemented 16 October 2026; deployed and verified on Cloudflare and Render on 17 October 2026. Implementation commit: `4b071ac`; backend projection: `306d7c8`. Source revision: `source-ae38247178f9bdd8`.
 
 | Plan item | Status |
 |---|---|
@@ -26,8 +26,7 @@ these changes do not guarantee citation or model-training inclusion.
 Validation: frontend production build/Biome, Worker TypeScript and Wrangler dry-run,
 20 Worker/proxy tests, 19 mocked browser tests, eight dedicated-test-database legal
 API tests, four deployment-preparation tests, backend mypy/ty/Ruff, source-revision
-staging parity and local HTTP/XML/browser smoke checks. No paid generation,
-production write, DNS change or repository visibility change occurred.
+staging parity and local HTTP/XML/browser smoke checks. The full backend suite passed: 479 tests, two skipped, 88% coverage. No paid generation,
+chat write, DNS change or repository visibility change occurred.
 
-Roll out backend first, then matching Worker/frontend, preserving existing release
-controls. See [the detailed rollout](../docs/seo-and-ai-discovery.md).
+Backend deployed first, followed by the matching Worker/frontend, preserving existing public routing and AI settings. Live checks passed for 16 endpoints, including a 550-URL sitemap and 1,850-node published index. Browser metadata and Section 37 source text verified without console errors. See [the deployment record and remaining indexing work](../docs/seo-and-ai-discovery.md).

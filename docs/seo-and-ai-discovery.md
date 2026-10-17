@@ -2,7 +2,7 @@
 
 Implemented 16 October 2026. The confirmed public origin is
 `https://constitition-ng.amosgodwin500.workers.dev` (preserve the Worker spelling).
-This document describes the code in this checkout, not a completed production rollout.
+Deployed to Cloudflare and Render on 17 October 2026. See the verified rollout below.
 
 ## Rendering and URL policy
 
@@ -79,9 +79,32 @@ Primary references: [OpenAI crawler controls](https://developers.openai.com/api/
 
 Smoke evidence: `constitution.ng-audit/implementation-smoke.json`. The source
 corpus and browser checks did not generate a paid answer or write a chat.
-The focused backend run's aggregate coverage is not the full-suite coverage baseline.
+The full backend suite subsequently passed: 479 passed, two skipped, with 88% measured coverage.
 
-## Rollout order and remaining external work
+## Verified production rollout — 17 October 2026
+
+- Backend projection commit `306d7c8` deployed before the public renderer.
+- Implementation commit `4b071ac` is pushed to `master`; Render reports it Live
+  (`dep-db9ksmdg1s2s73ahe9ng`). Its source revision is `source-ae38247178f9bdd8`.
+- Direct Wrangler deployment succeeded with version
+  `494d14ba-5939-432a-9d92-29b0cbff5dbe`. The subsequent GitHub-connected build
+  succeeded and deployed the same source as version
+  `97060d2f-baf9-4cd5-a314-fb61505a0503` at 100% traffic.
+- Live checks: all 16 endpoints passed; sitemap contains 550 unique URLs;
+  published tree returns 1,850 nodes and `scope=all`; benchmark contains 55 cases.
+  Raw HTML is readable and indexable on the canonical host. Unknown URLs return
+  404 and amendment fixtures return 410. API responses remain noindex/no-store.
+- Browser About and Section 37 checks found one title, description and canonical,
+  the primary H1, preserved BreadcrumbList and no console errors. Backend health
+  returns OK; direct origin API access without the proxy credential returns 403.
+- Existing public routing and AI settings were preserved. No migrations, paid
+  generation, chat writes, DNS changes or repository-visibility changes were made.
+  Unrelated local budget edits were excluded from these commits.
+- Evidence: `constitution.ng-audit/deployment-smoke.json`. A generic Python HTTP
+  client received Cloudflare 1010; curl and browser checks succeeded. Search-bot
+  rules are present, but actual verified crawler/WAF traffic remains unmeasured.
+
+## Release procedure and remaining external work
 
 1. Deploy the backend projection first. Verify `GET /api/v1/legal/provisions/tree?all_nodes=true`
    returns `scope=all` for the published edition and rejects private releases.
