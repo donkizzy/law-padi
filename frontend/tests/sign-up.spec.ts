@@ -84,6 +84,8 @@ test("Sign-in ignores redirects to other sites", async ({ page }) => {
   await page.goto("/signup")
   await fillForm(page, "Test User", email, password, password)
   await page.getByRole("button", { name: "Sign Up" }).click()
+  // Let sign-up finish first, or the navigation can cancel the request.
+  await page.waitForURL(/\/login\?notice=check-email/)
   await page.goto("/login?redirect=%2F%2Fevil.example")
   await expect(
     page.getByRole("heading", { name: "Login to your account" }),
