@@ -11,6 +11,63 @@
       "hit_at_5": 1.0
     }
   },
+  "results_2026_10_17": {
+    "note": "Section-level hits from backend/scripts/retrieval_benchmark.py on release 1999 edition, bge-m3, rrf k 60. 'fused' is production ranking; 'fallback' is keyword + topic guide when query embeddings fail.",
+    "lexical_weight_1_0": {
+      "dense": {
+        "hit_at_1": 0.82,
+        "hit_at_5": 0.93,
+        "mrr_at_10": 0.87
+      },
+      "lexical": {
+        "hit_at_1": 0.29,
+        "hit_at_5": 0.49,
+        "mrr_at_10": 0.36
+      },
+      "topic": {
+        "hit_at_1": 1.0,
+        "hit_at_5": 1.0,
+        "mrr_at_10": 1.0
+      },
+      "fallback": {
+        "hit_at_1": 0.98,
+        "hit_at_5": 1.0,
+        "mrr_at_10": 0.99
+      },
+      "fused": {
+        "hit_at_1": 0.98,
+        "hit_at_5": 1.0,
+        "mrr_at_10": 0.99
+      }
+    },
+    "lexical_weight_0_15": {
+      "dense": {
+        "hit_at_1": 0.82,
+        "hit_at_5": 0.93,
+        "mrr_at_10": 0.87
+      },
+      "lexical": {
+        "hit_at_1": 0.29,
+        "hit_at_5": 0.49,
+        "mrr_at_10": 0.36
+      },
+      "topic": {
+        "hit_at_1": 1.0,
+        "hit_at_5": 1.0,
+        "mrr_at_10": 1.0
+      },
+      "fallback": {
+        "hit_at_1": 0.98,
+        "hit_at_5": 1.0,
+        "mrr_at_10": 0.99
+      },
+      "fused": {
+        "hit_at_1": 1.0,
+        "hit_at_5": 1.0,
+        "mrr_at_10": 1.0
+      }
+    }
+  },
   "cases": [
     {
       "query": "can police search my phone",

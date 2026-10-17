@@ -1,0 +1,348 @@
+{
+  "version": "plain-language-retrieval-heldout-v1",
+  "description": "Questions the topic guide was not tuned on: everyday phrasing plus keyword-style queries that use the Constitution's own terms. Do not add topic-guide phrases from these cases; keep them for measuring. Run with backend/scripts/retrieval_benchmark.py.",
+  "results_2026_10_17": {
+    "note": "Section-level hits from backend/scripts/retrieval_benchmark.py on release 1999 edition, bge-m3, rrf k 60. 'fused' is production ranking; 'fallback' is keyword + topic guide when query embeddings fail.",
+    "lexical_weight_1_0": {
+      "dense": {
+        "hit_at_1": 0.8,
+        "hit_at_5": 0.9,
+        "mrr_at_10": 0.84
+      },
+      "lexical": {
+        "hit_at_1": 0.3,
+        "hit_at_5": 0.47,
+        "mrr_at_10": 0.38
+      },
+      "topic": {
+        "hit_at_1": 0.75,
+        "hit_at_5": 0.85,
+        "mrr_at_10": 0.8
+      },
+      "fallback": {
+        "hit_at_1": 0.78,
+        "hit_at_5": 0.9,
+        "mrr_at_10": 0.84
+      },
+      "fused": {
+        "hit_at_1": 0.82,
+        "hit_at_5": 0.9,
+        "mrr_at_10": 0.87
+      }
+    },
+    "lexical_weight_0_15": {
+      "dense": {
+        "hit_at_1": 0.8,
+        "hit_at_5": 0.9,
+        "mrr_at_10": 0.84
+      },
+      "lexical": {
+        "hit_at_1": 0.3,
+        "hit_at_5": 0.47,
+        "mrr_at_10": 0.38
+      },
+      "topic": {
+        "hit_at_1": 0.75,
+        "hit_at_5": 0.85,
+        "mrr_at_10": 0.8
+      },
+      "fallback": {
+        "hit_at_1": 0.78,
+        "hit_at_5": 0.9,
+        "mrr_at_10": 0.84
+      },
+      "fused": {
+        "hit_at_1": 0.82,
+        "hit_at_5": 0.95,
+        "mrr_at_10": 0.88
+      }
+    }
+  },
+  "cases": [
+    {
+      "query": "is the governor immune from being sued while in office",
+      "expected_sections": [
+        "308"
+      ],
+      "kind": "everyday"
+    },
+    {
+      "query": "how many years can a president stay in power",
+      "expected_sections": [
+        "135",
+        "137"
+      ],
+      "kind": "everyday"
+    },
+    {
+      "query": "how long is a governor's term",
+      "expected_sections": [
+        "180"
+      ],
+      "kind": "everyday"
+    },
+    {
+      "query": "can the government take my land for a road",
+      "expected_sections": [
+        "44"
+      ],
+      "kind": "everyday"
+    },
+    {
+      "query": "can i be a citizen of nigeria and america at the same time",
+      "expected_sections": [
+        "28"
+      ],
+      "kind": "everyday"
+    },
+    {
+      "query": "my father is nigerian but i was born abroad, am i nigerian",
+      "expected_sections": [
+        "25"
+      ],
+      "kind": "everyday"
+    },
+    {
+      "query": "can a foreign woman married to a nigerian become a citizen",
+      "expected_sections": [
+        "26"
+      ],
+      "kind": "everyday"
+    },
+    {
+      "query": "is there an official religion in nigeria",
+      "expected_sections": [
+        "10"
+      ],
+      "kind": "everyday"
+    },
+    {
+      "query": "can the president pardon a convicted person",
+      "expected_sections": [
+        "175"
+      ],
+      "kind": "everyday"
+    },
+    {
+      "query": "how do you impeach the president",
+      "expected_sections": [
+        "143"
+      ],
+      "kind": "everyday"
+    },
+    {
+      "query": "how is a governor removed from office",
+      "expected_sections": [
+        "188"
+      ],
+      "kind": "everyday"
+    },
+    {
+      "query": "who appoints the chief justice",
+      "expected_sections": [
+        "231"
+      ],
+      "kind": "everyday"
+    },
+    {
+      "query": "can a judge be sacked",
+      "expected_sections": [
+        "292"
+      ],
+      "kind": "everyday"
+    },
+    {
+      "query": "do i need a lawyer before the court can try me",
+      "expected_sections": [
+        "36"
+      ],
+      "kind": "everyday"
+    },
+    {
+      "query": "can they torture a suspect to confess",
+      "expected_sections": [
+        "34"
+      ],
+      "kind": "everyday"
+    },
+    {
+      "query": "can i be forced to work without pay",
+      "expected_sections": [
+        "34"
+      ],
+      "kind": "everyday"
+    },
+    {
+      "query": "can i be denied a job because of my tribe",
+      "expected_sections": [
+        "42"
+      ],
+      "kind": "everyday"
+    },
+    {
+      "query": "can i live in any state i want",
+      "expected_sections": [
+        "41"
+      ],
+      "kind": "everyday"
+    },
+    {
+      "query": "can i own a house in lagos if i am from kano",
+      "expected_sections": [
+        "43"
+      ],
+      "kind": "everyday"
+    },
+    {
+      "query": "can i start a newspaper",
+      "expected_sections": [
+        "39"
+      ],
+      "kind": "everyday"
+    },
+    {
+      "query": "do i need a permit to protest",
+      "expected_sections": [
+        "40"
+      ],
+      "kind": "everyday"
+    },
+    {
+      "query": "can i change my religion",
+      "expected_sections": [
+        "38"
+      ],
+      "kind": "everyday"
+    },
+    {
+      "query": "when can a state of emergency suspend my rights",
+      "expected_sections": [
+        "45",
+        "305"
+      ],
+      "kind": "everyday"
+    },
+    {
+      "query": "what age must you be to run for president",
+      "expected_sections": [
+        "131"
+      ],
+      "kind": "everyday"
+    },
+    {
+      "query": "how is the constitution amended",
+      "expected_sections": [
+        "9"
+      ],
+      "kind": "everyday"
+    },
+    {
+      "query": "does a treaty become law automatically",
+      "expected_sections": [
+        "12"
+      ],
+      "kind": "everyday"
+    },
+    {
+      "query": "who makes laws for the whole country",
+      "expected_sections": [
+        "4"
+      ],
+      "kind": "everyday"
+    },
+    {
+      "query": "what are my duties as a citizen",
+      "expected_sections": [
+        "24"
+      ],
+      "kind": "everyday"
+    },
+    {
+      "query": "how is federation account money shared to states",
+      "expected_sections": [
+        "162"
+      ],
+      "kind": "everyday"
+    },
+    {
+      "query": "can the army kill someone during a riot",
+      "expected_sections": [
+        "33"
+      ],
+      "kind": "everyday"
+    },
+    {
+      "query": "consolidated revenue fund of the federation",
+      "expected_sections": [
+        "80"
+      ],
+      "kind": "keyword"
+    },
+    {
+      "query": "contingencies fund",
+      "expected_sections": [
+        "83",
+        "123"
+      ],
+      "kind": "keyword"
+    },
+    {
+      "query": "inspector-general of police",
+      "expected_sections": [
+        "215"
+      ],
+      "kind": "keyword"
+    },
+    {
+      "query": "attorney-general of the federation",
+      "expected_sections": [
+        "150"
+      ],
+      "kind": "keyword"
+    },
+    {
+      "query": "appointment of the auditor-general",
+      "expected_sections": [
+        "86",
+        "126"
+      ],
+      "kind": "keyword"
+    },
+    {
+      "query": "ownership of lands in the federal capital territory",
+      "expected_sections": [
+        "297"
+      ],
+      "kind": "keyword"
+    },
+    {
+      "query": "grand kadi of the sharia court of appeal",
+      "expected_sections": [
+        "261",
+        "276"
+      ],
+      "kind": "keyword"
+    },
+    {
+      "query": "appeal from the code of conduct tribunal",
+      "expected_sections": [
+        "246"
+      ],
+      "kind": "keyword"
+    },
+    {
+      "query": "federal character of the armed forces",
+      "expected_sections": [
+        "219"
+      ],
+      "kind": "keyword"
+    },
+    {
+      "query": "supremacy of the constitution",
+      "expected_sections": [
+        "1"
+      ],
+      "kind": "keyword"
+    }
+  ]
+}

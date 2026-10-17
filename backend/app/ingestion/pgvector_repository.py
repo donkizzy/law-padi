@@ -36,6 +36,7 @@ from app.legal.models import (
 from app.legal.topics import STOPWORDS, topic_sections
 
 _LEXICAL_WORD = re.compile(r"[a-z0-9]+")
+_SECTION_PREFIX = re.compile(r"^(.*?\.section\d+[a-z]?)(?=\.|$)")
 # Words present in most of the corpus add noise to keyword ranking.
 _LEXICAL_NOISE = frozenset(
     {"constitution", "section", "sections", "provision", "provisions", "nigeria"}
@@ -352,6 +353,12 @@ def dense_search(
     return [(segment, float(score)) for segment, score in session.exec(statement).all()]
 
 
+def section_key(canonical_path: str) -> str:
+    """The section a provision belongs to, or the provision itself outside sections."""
+    match = _SECTION_PREFIX.match(canonical_path)
+    return match.group(1) if match else canonical_path
+
+
 def fuse_rankings(
     *,
     dense: Sequence[tuple[RetrievalSegment, float]] = (),
@@ -359,8 +366,9 @@ def fuse_rankings(
     topics: Sequence[tuple[RetrievalSegment, float]] = (),
     top_k: int,
     rrf_k: int | None = None,
+    lexical_weight: float = 1.0,
 ) -> list[RankedSegment]:
-    """Reciprocal-rank fusion; topic matches carry their own weight."""
+    """Weighted reciprocal-rank fusion; topic matches carry their own weight."""
     constant = rrf_k or settings.RETRIEVAL_RRF_K
     merged: dict[uuid.UUID, dict[str, Any]] = {}
     for rank, (segment, _distance) in enumerate(dense, start=1):
@@ -369,7 +377,7 @@ def fuse_rankings(
         merged[segment.id]["dense_rank"] = rank
     for rank, (segment, _lexical_score) in enumerate(lexical, start=1):
         merged.setdefault(segment.id, {"segment": segment, "score": 0.0})
-        merged[segment.id]["score"] += 1.0 / (constant + rank)
+        merged[segment.id]["score"] += lexical_weight / (constant + rank)
         merged[segment.id]["lexical_rank"] = rank
     for rank, (segment, weight) in enumerate(topics, start=1):
         merged.setdefault(segment.id, {"segment": segment, "score": 0.0})
@@ -384,14 +392,15 @@ def fuse_rankings(
         for item in merged.values()
     ]
     ranked.sort(key=lambda item: (-item.score, str(item.segment.id)))
-    # Several derived segments may represent one provision version. Apply the
-    # public limit to identities, rather than allowing one long section to
-    # occupy all result slots.
-    seen: set[uuid.UUID] = set()
+    # A section, its subsections and its paragraphs are all indexed. Keep the
+    # best-scoring row per section so the public limit returns distinct
+    # sections, rather than one section filling every slot.
+    seen: set[str] = set()
     unique: list[RankedSegment] = []
     for item in ranked:
-        if item.segment.provision_version_id not in seen:
-            seen.add(item.segment.provision_version_id)
+        key = section_key(item.segment.canonical_path)
+        if key not in seen:
+            seen.add(key)
             unique.append(item)
     return unique[:top_k]
 
@@ -420,7 +429,12 @@ def hybrid_search(
         session, release_id=release_id, query=query, index_kind=index_kind
     )
     return fuse_rankings(
-        dense=dense, lexical=lexical, topics=topics, top_k=top_k, rrf_k=rrf_k
+        dense=dense,
+        lexical=lexical,
+        topics=topics,
+        top_k=top_k,
+        rrf_k=rrf_k,
+        lexical_weight=settings.RETRIEVAL_LEXICAL_WEIGHT,
     )
 
 
