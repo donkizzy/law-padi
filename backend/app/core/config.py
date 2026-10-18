@@ -64,7 +64,8 @@ class Settings(BaseSettings):
     RETRIEVAL_LEXICAL_CANDIDATE_LIMIT: int = Field(default=50, ge=1)
     RETRIEVAL_RRF_K: int = Field(default=60, ge=1)
     # Keyword ranking is far weaker than dense ranking on everyday questions;
-    # at full weight it pushed correct dense matches out of first place.
+    # at full weight it pushed correct dense matches out of first place, and
+    # without dense ranking it overrode the topic guide's curated order.
     # Measured with scripts/retrieval_benchmark.py.
     RETRIEVAL_LEXICAL_WEIGHT: float = Field(default=0.15, ge=0)
     RETRIEVAL_LEXICAL_PROFILE_VERSION: str = "postgres-simple-v1"

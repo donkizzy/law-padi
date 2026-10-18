@@ -379,15 +379,20 @@ def fuse_rankings(
         merged.setdefault(segment.id, {"segment": segment, "score": 0.0})
         merged[segment.id]["score"] += lexical_weight / (constant + rank)
         merged[segment.id]["lexical_rank"] = rank
-    # A topic names candidate sections, not an order among them: each gets
-    # its boost at first rank, so dense and keyword ranking break the tie.
-    # The boost applies to every row of the section, because dense search
-    # often matches a subsection rather than the whole-section row.
+    # With dense ranking, a topic names candidate sections, not an order
+    # among them: each gets its boost at first rank on every row of the
+    # section, because dense search often matches a subsection rather than
+    # the whole-section row, and dense ranking breaks the tie. Without it,
+    # keyword hits on any row of a long section would decide, so the boost
+    # stays on the topic's own row in the curated order.
     boosts: dict[str, float] = {}
-    for segment, weight in topics:
+    for rank, (segment, weight) in enumerate(topics, start=1):
         merged.setdefault(segment.id, {"segment": segment, "score": 0.0})
-        key = section_key(segment.canonical_path)
-        boosts[key] = boosts.get(key, 0.0) + weight / (constant + 1)
+        if dense:
+            key = section_key(segment.canonical_path)
+            boosts[key] = boosts.get(key, 0.0) + weight / (constant + 1)
+        else:
+            merged[segment.id]["score"] += weight / (constant + rank)
     ranked = [
         RankedSegment(
             segment=item["segment"],

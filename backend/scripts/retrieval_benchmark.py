@@ -112,7 +112,12 @@ def run_dataset(session: Session, cases: list[dict[str, Any]]) -> dict[str, Any]
             top_k=10,
             lexical_weight=settings.RETRIEVAL_LEXICAL_WEIGHT,
         )
-        fallback = fuse_rankings(lexical=lexical, topics=topics, top_k=10)
+        fallback = fuse_rankings(
+            lexical=lexical,
+            topics=topics,
+            top_k=10,
+            lexical_weight=settings.RETRIEVAL_LEXICAL_WEIGHT,
+        )
         rankings["dense"].append(_sections(_paths(dense)))
         rankings["lexical"].append(_sections(_paths(lexical)))
         rankings["topic"].append(_sections(_paths(topics)))

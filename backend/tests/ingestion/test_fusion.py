@@ -73,13 +73,28 @@ def test_lexical_weight_lets_dense_order_win() -> None:
     assert (keyword.dense_rank, keyword.lexical_rank) == (20, 1)
 
 
-def test_lexical_only_fallback_keeps_full_weight() -> None:
-    keyword = _segment("constitution-1999.chapter4.section39")
-    topic = _segment("constitution-1999.chapter4.section40")
+def test_without_dense_ranking_topic_order_beats_keyword_hits() -> None:
+    qualification = _segment("constitution-1999.chapter6.part1.section131")
+    disqualification = _segment("constitution-1999.chapter6.part1.section137")
+    disqualification_detail = _segment(
+        "constitution-1999.chapter6.part1.section137.subsection1.paragraphe"
+    )
+    keyword = _segment("constitution-1999.chapter6.part1.section146")
 
-    ranked = fuse_rankings(lexical=[(keyword, 0.5)], topics=[(topic, 0.5)], top_k=2)
+    ranked = fuse_rankings(
+        lexical=[(keyword, 0.9), (disqualification_detail, 0.1)],
+        topics=[(qualification, 2.5), (disqualification, 2.5)],
+        top_k=3,
+        lexical_weight=0.15,
+    )
 
-    assert [item.segment for item in ranked] == [keyword, topic]
+    # A keyword hit on a long section's paragraph must not outrank the
+    # curated first choice when there is no dense ranking to break the tie.
+    assert [item.segment for item in ranked] == [
+        qualification,
+        disqualification,
+        keyword,
+    ]
 
 
 def test_topic_boost_lets_dense_order_pick_among_topic_sections() -> None:

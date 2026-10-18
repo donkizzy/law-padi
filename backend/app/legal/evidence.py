@@ -227,6 +227,7 @@ def semantic_lookup(
                 session, release_id=release.id, query=query, index_kind=index_kind
             ),
             top_k=top_k,
+            lexical_weight=settings.RETRIEVAL_LEXICAL_WEIGHT,
         )
     corpus = load_ranked_corpus(
         session,

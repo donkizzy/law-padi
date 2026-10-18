@@ -2,7 +2,7 @@
   "version": "plain-language-retrieval-heldout-v1",
   "description": "Questions the topic guide was not tuned on: everyday phrasing plus keyword-style queries that use the Constitution's own terms. Do not add topic-guide phrases from these cases; keep them for measuring. Run with backend/scripts/retrieval_benchmark.py.",
   "results_2026_10_17": {
-    "note": "Section-level hits from backend/scripts/retrieval_benchmark.py on release 1999 edition, bge-m3, rrf k 60. 'fused' is production ranking; 'fallback' is keyword + topic guide when query embeddings fail. 'topic_guide_flat_with_titles' adds section-title matches, sums boosts per section and applies topic boosts flat across a section's rows.",
+    "note": "Section-level hits from backend/scripts/retrieval_benchmark.py on release 1999 edition, bge-m3, rrf k 60. 'fused' is production ranking; 'fallback' is keyword + topic guide when query embeddings fail. 'topic_guide_flat_with_titles' adds section-title matches, sums boosts per section and applies topic boosts flat across a section's rows. 'fallback_keeps_curated_order' keeps the topic boost on the topic's own row in curated order when dense ranking is unavailable, as in production with query embeddings disabled.",
     "lexical_weight_1_0": {
       "dense": {
         "hit_at_1": 0.8,
@@ -58,6 +58,33 @@
       }
     },
     "topic_guide_flat_with_titles": {
+      "dense": {
+        "hit_at_1": 0.8,
+        "hit_at_5": 0.9,
+        "mrr_at_10": 0.84
+      },
+      "lexical": {
+        "hit_at_1": 0.3,
+        "hit_at_5": 0.47,
+        "mrr_at_10": 0.38
+      },
+      "topic": {
+        "hit_at_1": 0.9,
+        "hit_at_5": 0.95,
+        "mrr_at_10": 0.93
+      },
+      "fallback": {
+        "hit_at_1": 0.9,
+        "hit_at_5": 0.95,
+        "mrr_at_10": 0.93
+      },
+      "fused": {
+        "hit_at_1": 0.95,
+        "hit_at_5": 1.0,
+        "mrr_at_10": 0.96
+      }
+    },
+    "fallback_keeps_curated_order": {
       "dense": {
         "hit_at_1": 0.8,
         "hit_at_5": 0.9,

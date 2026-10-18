@@ -12,7 +12,7 @@
     }
   },
   "results_2026_10_17": {
-    "note": "Section-level hits from backend/scripts/retrieval_benchmark.py on release 1999 edition, bge-m3, rrf k 60. 'fused' is production ranking; 'fallback' is keyword + topic guide when query embeddings fail. 'topic_guide_flat_with_titles' adds section-title matches, sums boosts per section and applies topic boosts flat across a section's rows.",
+    "note": "Section-level hits from backend/scripts/retrieval_benchmark.py on release 1999 edition, bge-m3, rrf k 60. 'fused' is production ranking; 'fallback' is keyword + topic guide when query embeddings fail. 'topic_guide_flat_with_titles' adds section-title matches, sums boosts per section and applies topic boosts flat across a section's rows. 'fallback_keeps_curated_order' keeps the topic boost on the topic's own row in curated order when dense ranking is unavailable, as in production with query embeddings disabled.",
     "lexical_weight_1_0": {
       "dense": {
         "hit_at_1": 0.82,
@@ -87,6 +87,33 @@
         "hit_at_1": 0.93,
         "hit_at_5": 1.0,
         "mrr_at_10": 0.96
+      },
+      "fused": {
+        "hit_at_1": 0.98,
+        "hit_at_5": 1.0,
+        "mrr_at_10": 0.99
+      }
+    },
+    "fallback_keeps_curated_order": {
+      "dense": {
+        "hit_at_1": 0.82,
+        "hit_at_5": 0.93,
+        "mrr_at_10": 0.87
+      },
+      "lexical": {
+        "hit_at_1": 0.29,
+        "hit_at_5": 0.49,
+        "mrr_at_10": 0.36
+      },
+      "topic": {
+        "hit_at_1": 1.0,
+        "hit_at_5": 1.0,
+        "mrr_at_10": 1.0
+      },
+      "fallback": {
+        "hit_at_1": 0.98,
+        "hit_at_5": 1.0,
+        "mrr_at_10": 0.99
       },
       "fused": {
         "hit_at_1": 0.98,
