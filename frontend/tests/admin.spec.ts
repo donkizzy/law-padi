@@ -57,6 +57,100 @@ test("Admin legal workspace is accessible and shows evidence operations", async 
   }
 })
 
+test("Publisher composes approved Acts with the production Constitution", async ({
+  page,
+}) => {
+  await mockAdminApi(page)
+  const base = {
+    ...corpusRelease(),
+    status: "production",
+    instrument_slugs: ["constitution-1999"],
+    instrument_types: ["constitution"],
+  }
+  const act = {
+    ...corpusRelease(),
+    id: "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa",
+    version: "acja-reviewed",
+    status: "approved",
+    instrument_slugs: ["acja-2015"],
+    instrument_types: ["act"],
+    lock_version: 4,
+  }
+  const unapproved = {
+    ...act,
+    id: "bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb",
+    version: "police-unreviewed",
+    status: "validating",
+    instrument_slugs: ["police-act-2020"],
+  }
+  let composed: ReturnType<typeof corpusRelease> | undefined
+  let submitted: Record<string, unknown> | undefined
+  await page.route("**/api/v1/admin/corpus-releases", (route) =>
+    json(route, {
+      data: [base, act, unapproved, ...(composed ? [composed] : [])],
+      count: composed ? 4 : 3,
+    }),
+  )
+  await page.route("**/api/v1/admin/corpus-releases/compose", (route) => {
+    submitted = route.request().postDataJSON()
+    composed = {
+      ...corpusRelease(),
+      id: "cccccccc-cccc-4ccc-8ccc-cccccccccccc",
+      version: String(submitted?.version),
+      status: "building",
+    }
+    return json(route, composed)
+  })
+  await page.goto("/admin")
+  await page.getByRole("tab", { name: "Corpus releases" }).click()
+  const form = page.getByRole("form", { name: "Compose release" })
+  await expect(form.getByText(`Base: ${base.version}`)).toBeVisible()
+  await expect(
+    form.getByText("police-unreviewed", { exact: false }),
+  ).toHaveCount(0)
+  await form.getByLabel("Release version").fill("laws-reviewed-test")
+  await form
+    .getByRole("checkbox", { name: "acja-2015 · acja-reviewed" })
+    .check()
+  await page.screenshot({
+    path: "../output/playwright/statute-phase3-compose-release.png",
+    fullPage: true,
+  })
+  await form
+    .getByRole("button", { name: "Compose release", exact: true })
+    .click()
+  await expect(
+    page.getByText("Release composed. Retrieval build queued."),
+  ).toBeVisible()
+  expect(submitted).toMatchObject({
+    version: "laws-reviewed-test",
+    base_release_id: base.id,
+    expected_base_version: base.lock_version,
+    members: [{ release_id: act.id, expected_version: 4 }],
+  })
+})
+
+test("Composition waits for approved Acts and publisher access", async ({
+  page,
+}) => {
+  await mockAdminApi(page, { roles: ["legal_reviewer"], isSuperuser: false })
+  await page.setViewportSize({ width: 390, height: 844 })
+  await page.goto("/admin")
+  await page.getByRole("tab", { name: "Corpus releases" }).click()
+  const form = page.getByRole("form", { name: "Compose release" })
+  await expect(
+    form.getByText("Approve an Act release before composing."),
+  ).toBeVisible()
+  await expect(
+    form.getByRole("button", { name: "Compose release", exact: true }),
+  ).toBeDisabled()
+  await expect(form.getByLabel("Release version")).toBeDisabled()
+  await page.screenshot({
+    path: "../output/playwright/statute-phase3-compose-mobile.png",
+    fullPage: true,
+  })
+})
+
 test("Review queue paginates the full total and filters completed candidates", async ({
   page,
 }) => {

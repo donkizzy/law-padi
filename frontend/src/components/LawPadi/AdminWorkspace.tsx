@@ -26,6 +26,7 @@ import {
   type AdminOperationalAlertPublic,
   AdminService,
   type CompletedMultipartPart,
+  type CompositeReleaseCreate,
   type CorpusReleaseManifestPublic,
   type CorpusReleasePublic,
   type CorpusReleasePublicationEvidencePublic,
@@ -49,6 +50,7 @@ import {
   type SourceUploadPublic,
 } from "@/client"
 import { client } from "@/client/client.gen"
+import { ComposeReleaseForm } from "@/components/LawPadi/ComposeReleaseForm"
 import {
   SectionHeading,
   SegmentedControl,
@@ -451,6 +453,28 @@ export function AdminWorkspace() {
       ),
   })
 
+  const composeMutation = useMutation({
+    mutationFn: async (body: CompositeReleaseCreate) =>
+      (await AdminService.composeRelease({ body })).data,
+    onSuccess: (release) => {
+      setSelectedReleaseId(release.id)
+      const composition = release.validation_report?.composition
+      if (
+        composition &&
+        typeof composition === "object" &&
+        "run_id" in composition &&
+        typeof composition.run_id === "string"
+      )
+        setSelectedRunId(composition.run_id)
+      showSuccessToast("Release composed. Retrieval build queued.")
+      invalidateAdmin()
+    },
+    onError: (error) =>
+      showErrorToast(
+        error instanceof Error ? error.message : "Release composition failed.",
+      ),
+  })
+
   const runs = runsQuery.data?.data ?? []
   const reviews = reviewsQuery.data?.data ?? []
   const releases = releasesQuery.data?.data ?? []
@@ -671,6 +695,8 @@ export function AdminWorkspace() {
             isLoading={releasesQuery.isLoading}
             isManifestLoading={releaseManifestQuery.isLoading}
             isMutating={releaseMutation.isPending}
+            isComposing={composeMutation.isPending}
+            onCompose={(body) => composeMutation.mutate(body)}
             manifest={releaseManifestQuery.data}
             onMutate={(release, action, superuserOverrideReason) =>
               releaseMutation.mutate({
@@ -1823,6 +1849,8 @@ function ReleaseWorkspace({
   manifest,
   onSelect,
   onMutate,
+  isComposing,
+  onCompose,
 }: {
   releases: CorpusReleasePublic[]
   selected?: CorpusReleasePublic
@@ -1842,6 +1870,8 @@ function ReleaseWorkspace({
   isLoading: boolean
   isManifestLoading: boolean
   isMutating: boolean
+  isComposing: boolean
+  onCompose: (body: CompositeReleaseCreate) => void
   manifest?: CorpusReleaseManifestPublic
   onSelect: (id: string) => void
   onMutate: (
@@ -1873,6 +1903,12 @@ function ReleaseWorkspace({
   return (
     <div className="grid gap-4 lg:grid-cols-[360px_1fr]">
       <Panel title="Corpus releases" count={releases.length}>
+        <ComposeReleaseForm
+          releases={releases}
+          canCompose={canPublish}
+          isPending={isComposing}
+          onCompose={onCompose}
+        />
         <ListState isLoading={isLoading} isEmpty={!releases.length} />
         <div className="grid gap-2">
           {releases.map((release) => (

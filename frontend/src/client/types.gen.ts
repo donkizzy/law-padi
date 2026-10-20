@@ -447,6 +447,46 @@ export type CompletedMultipartPart = {
 };
 
 /**
+ * CompositeReleaseCreate
+ */
+export type CompositeReleaseCreate = {
+    /**
+     * Idempotency Key
+     */
+    idempotency_key: string;
+    /**
+     * Version
+     */
+    version: string;
+    /**
+     * Base Release Id
+     */
+    base_release_id: string;
+    /**
+     * Expected Base Version
+     */
+    expected_base_version: number;
+    /**
+     * Members
+     */
+    members: Array<CompositeReleaseMember>;
+};
+
+/**
+ * CompositeReleaseMember
+ */
+export type CompositeReleaseMember = {
+    /**
+     * Release Id
+     */
+    release_id: string;
+    /**
+     * Expected Version
+     */
+    expected_version: number;
+};
+
+/**
  * ConversationCreate
  */
 export type ConversationCreate = {
@@ -739,6 +779,14 @@ export type CorpusReleasePublic = {
      * Evidence Count
      */
     evidence_count: number;
+    /**
+     * Instrument Slugs
+     */
+    instrument_slugs?: Array<string>;
+    /**
+     * Instrument Types
+     */
+    instrument_types?: Array<InstrumentType>;
 };
 
 /**
@@ -1148,6 +1196,23 @@ export type EmbeddingRunStatus = 'pending' | 'running' | 'benchmarking' | 'succe
  * EvidenceItem
  */
 export type EvidenceItem = {
+    /**
+     * Instrument Slug
+     */
+    instrument_slug?: string;
+    /**
+     * Instrument Title
+     */
+    instrument_title?: string;
+    /**
+     * Instrument Short Title
+     */
+    instrument_short_title?: string | null;
+    instrument_type?: InstrumentType;
+    /**
+     * Short Citation
+     */
+    short_citation?: string | null;
     /**
      * Evidence Id
      */
@@ -1729,6 +1794,64 @@ export type IngestionTaskStatus = 'pending' | 'leased' | 'running' | 'succeeded'
 export type InstrumentStatus = 'draft' | 'proposed' | 'enacted' | 'repealed' | 'superseded';
 
 /**
+ * InstrumentType
+ */
+export type InstrumentType = 'constitution' | 'alteration_act' | 'bill' | 'act' | 'regulation';
+
+/**
+ * LegalInstrumentPublic
+ */
+export type LegalInstrumentPublic = {
+    /**
+     * Slug
+     */
+    slug: string;
+    /**
+     * Title
+     */
+    title: string;
+    /**
+     * Short Title
+     */
+    short_title?: string | null;
+    instrument_type: InstrumentType;
+    /**
+     * Edition Label
+     */
+    edition_label: string;
+    /**
+     * Edition Note
+     */
+    edition_note: string;
+    /**
+     * Section Count
+     */
+    section_count: number;
+    /**
+     * Legal Statuses
+     */
+    legal_statuses: Array<string>;
+};
+
+/**
+ * LegalInstrumentsPublic
+ */
+export type LegalInstrumentsPublic = {
+    /**
+     * Data
+     */
+    data: Array<LegalInstrumentPublic>;
+    /**
+     * Count
+     */
+    count: number;
+    /**
+     * Release Version
+     */
+    release_version: string;
+};
+
+/**
  * LegalReleasePublic
  */
 export type LegalReleasePublic = {
@@ -1787,6 +1910,10 @@ export type LegalSearchRequest = {
      */
     mode?: 'auto' | 'semantic';
     /**
+     * Instrument
+     */
+    instrument?: string | null;
+    /**
      * Release Version
      */
     release_version?: string | null;
@@ -1838,6 +1965,23 @@ export type LegalSearchResponse = {
  * LegalSearchResult
  */
 export type LegalSearchResult = {
+    /**
+     * Instrument Slug
+     */
+    instrument_slug?: string;
+    /**
+     * Instrument Title
+     */
+    instrument_title?: string;
+    /**
+     * Instrument Short Title
+     */
+    instrument_short_title?: string | null;
+    instrument_type?: InstrumentType;
+    /**
+     * Short Citation
+     */
+    short_citation?: string | null;
     /**
      * Canonical Path
      */
@@ -2338,6 +2482,23 @@ export type ProvisionKind = 'chapter' | 'part' | 'section' | 'subsection' | 'par
  */
 export type ProvisionReference = {
     /**
+     * Instrument Slug
+     */
+    instrument_slug?: string;
+    /**
+     * Instrument Title
+     */
+    instrument_title?: string;
+    /**
+     * Instrument Short Title
+     */
+    instrument_short_title?: string | null;
+    instrument_type?: InstrumentType;
+    /**
+     * Short Citation
+     */
+    short_citation?: string | null;
+    /**
      * Id
      */
     id: string;
@@ -2397,6 +2558,10 @@ export type ProvisionTreePublic = {
      * Scope
      */
     scope?: 'children' | 'all';
+    /**
+     * Instrument Slug
+     */
+    instrument_slug?: string;
 };
 
 /**
@@ -3121,6 +3286,10 @@ export type SourceUploadCreate = {
      */
     instrument_title: string;
     /**
+     * Instrument Type
+     */
+    instrument_type?: 'constitution' | 'act';
+    /**
      * Instrument Short Title
      */
     instrument_short_title?: string | null;
@@ -3196,6 +3365,7 @@ export type SourceUploadPublic = {
      * Instrument Title
      */
     instrument_title: string;
+    instrument_type?: InstrumentType;
     /**
      * Source Title
      */
@@ -5136,6 +5306,31 @@ export type adminValidateReleaseResponses = {
 
 export type adminValidateReleaseResponse = adminValidateReleaseResponses[keyof adminValidateReleaseResponses];
 
+export type adminComposeReleaseData = {
+    body: CompositeReleaseCreate;
+    path?: never;
+    query?: never;
+    url: '/api/v1/admin/corpus-releases/compose';
+};
+
+export type adminComposeReleaseErrors = {
+    /**
+     * Validation Error
+     */
+    422: HTTPValidationError;
+};
+
+export type adminComposeReleaseError = adminComposeReleaseErrors[keyof adminComposeReleaseErrors];
+
+export type adminComposeReleaseResponses = {
+    /**
+     * Successful Response
+     */
+    201: CorpusReleasePublic;
+};
+
+export type adminComposeReleaseResponse = adminComposeReleaseResponses[keyof adminComposeReleaseResponses];
+
 export type adminReadReleaseManifestData = {
     body?: never;
     path: {
@@ -5297,6 +5492,40 @@ export type legalReadCurrentReleaseResponses = {
 
 export type legalReadCurrentReleaseResponse = legalReadCurrentReleaseResponses[keyof legalReadCurrentReleaseResponses];
 
+export type legalReadLegalInstrumentsData = {
+    body?: never;
+    path?: never;
+    query?: {
+        /**
+         * Release Version
+         */
+        release_version?: string | null;
+        /**
+         * Index Kind
+         */
+        index_kind?: string;
+    };
+    url: '/api/v1/legal/instruments';
+};
+
+export type legalReadLegalInstrumentsErrors = {
+    /**
+     * Validation Error
+     */
+    422: HTTPValidationError;
+};
+
+export type legalReadLegalInstrumentsError = legalReadLegalInstrumentsErrors[keyof legalReadLegalInstrumentsErrors];
+
+export type legalReadLegalInstrumentsResponses = {
+    /**
+     * Successful Response
+     */
+    200: LegalInstrumentsPublic;
+};
+
+export type legalReadLegalInstrumentsResponse = legalReadLegalInstrumentsResponses[keyof legalReadLegalInstrumentsResponses];
+
 export type legalReadProvisionTreeData = {
     body?: never;
     path?: never;
@@ -5317,6 +5546,10 @@ export type legalReadProvisionTreeData = {
          * All Nodes
          */
         all_nodes?: boolean;
+        /**
+         * Instrument
+         */
+        instrument?: string | null;
     };
     url: '/api/v1/legal/provisions/tree';
 };
