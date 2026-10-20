@@ -4,8 +4,8 @@ import {
   useSearch,
 } from "@tanstack/react-router"
 import { Fragment, useState } from "react"
-import { FiMessageSquare, FiSearch } from "react-icons/fi"
-import { LiaShieldAltSolid } from "react-icons/lia"
+import { FiMessageSquare, FiSearch, FiShield } from "react-icons/fi"
+
 import { SidebarAppearance } from "@/components/Common/Appearance"
 import { Logo } from "@/components/Common/Logo"
 import { NewConversationButton } from "@/components/LawPadi/NewConversationButton"
@@ -72,10 +72,7 @@ export function AppSidebar() {
     ...baseItems,
   ]
   const items = currentUser?.is_superuser
-    ? [
-        ...navigation,
-        { icon: LiaShieldAltSolid, title: "Legal admin", path: "/admin" },
-      ]
+    ? [...navigation, { icon: FiShield, title: "Legal admin", path: "/admin" }]
     : navigation
 
   return (

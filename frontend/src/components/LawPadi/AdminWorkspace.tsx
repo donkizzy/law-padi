@@ -6,20 +6,20 @@ import {
   FiAlertTriangle,
   FiCheckCircle,
   FiClock,
+  FiDatabase,
   FiFileText,
   FiPauseCircle,
   FiRefreshCcw,
   FiRotateCcw,
   FiSearch,
+  FiShield,
   FiUploadCloud,
   FiXCircle,
 } from "react-icons/fi"
 import {
   LiaClipboardCheckSolid,
-  LiaDatabaseSolid,
   LiaFileContractSolid,
   LiaFlaskSolid,
-  LiaShieldAltSolid,
 } from "react-icons/lia"
 
 import {
@@ -537,7 +537,7 @@ export function AdminWorkspace() {
             value={formatMetric(metrics?.failed_runs)}
           />
           <MetricCard
-            icon={LiaShieldAltSolid}
+            icon={FiShield}
             label="Queue depth"
             value={formatMetric(metrics?.queue_depth)}
           />
@@ -572,7 +572,7 @@ export function AdminWorkspace() {
             value={formatPercent(metrics?.embedding_progress)}
           />
           <MetricCard
-            icon={LiaDatabaseSolid}
+            icon={FiDatabase}
             label="Production"
             value={metrics?.current_production_release ?? "None"}
           />

@@ -1,13 +1,14 @@
 import type { IconType } from "react-icons"
 import {
   FiAlertTriangle,
+  FiArchive,
   FiBookmark,
   FiBookOpen,
   FiCheckCircle,
   FiClock,
+  FiLoader,
   FiMessageSquare,
 } from "react-icons/fi"
-import { LiaArchiveSolid, LiaCircleNotchSolid } from "react-icons/lia"
 
 export type LegalStatus = "current" | "proposed" | "historical" | "warning"
 
@@ -101,13 +102,13 @@ export const statusMeta: Record<
     tone: "border-[color:var(--legal-emerald)]/20 bg-[color:var(--legal-emerald-soft)] text-[color:var(--legal-emerald-ink)]",
   },
   proposed: {
-    icon: LiaCircleNotchSolid,
+    icon: FiLoader,
     label: "Proposed change - not currently in force",
     shortLabel: "Proposed",
     tone: "border-[color:var(--legal-amber)]/25 bg-[color:var(--legal-amber-soft)] text-[color:var(--legal-amber)]",
   },
   historical: {
-    icon: LiaArchiveSolid,
+    icon: FiArchive,
     label: "Previous version - superseded",
     shortLabel: "Historical",
     tone: "border-border bg-secondary text-muted-foreground",

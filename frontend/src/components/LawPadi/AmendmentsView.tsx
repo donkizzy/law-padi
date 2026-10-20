@@ -1,6 +1,6 @@
 import { useMemo, useState } from "react"
-import { FiColumns } from "react-icons/fi"
-import { LiaCalendarAltSolid, LiaGavelSolid } from "react-icons/lia"
+import { FiCalendar, FiColumns } from "react-icons/fi"
+import { LiaGavelSolid } from "react-icons/lia"
 
 import {
   AmendmentTimeline,
@@ -149,7 +149,7 @@ function AmendmentSection({
             </p>
             <div className="mt-5 flex flex-wrap items-center gap-2 border-t border-border pt-4 text-xs text-muted-foreground">
               <span className="sq-xs inline-flex min-h-7 items-center gap-1 bg-secondary px-2 font-semibold">
-                <LiaCalendarAltSolid className="size-3.5" aria-hidden />
+                <FiCalendar className="size-3.5" aria-hidden />
                 {amendment.year}
               </span>
               <span className="sq-xs inline-flex min-h-7 items-center gap-1 bg-secondary px-2 font-semibold">
