@@ -319,7 +319,58 @@ test("A confirmed account takes in this browser's research and guest chats", asy
   await expect
     .poll(() => preferenceWrites)
     .toEqual([
-      { enter_to_send: true, follow_latest: true, open_sources: false },
+      {
+        enter_to_send: true,
+        follow_latest: true,
+        open_sources: false,
+        language: "english",
+      },
     ])
   await expect(page.getByText("Confirm your email address")).toHaveCount(0)
+})
+
+test("A confirmed account brings its saved language to a new browser", async ({
+  page,
+}) => {
+  await mockSettings(page, true)
+  await page.route("**/api/v1/users/me", (route) =>
+    route.fulfill({
+      json: { ...user, email_verified_at: "2026-10-01T00:00:00Z" },
+    }),
+  )
+  await page.route("**/api/v1/conversations/claim", (route) =>
+    route.fulfill({ json: { claimed_count: 0 } }),
+  )
+  await page.route("**/api/v1/account/saved-provisions/merge", (route) =>
+    route.fulfill({ json: [] }),
+  )
+  const preferenceWrites: unknown[] = []
+  await page.route("**/api/v1/account/preferences", (route) => {
+    if (route.request().method() === "PUT") {
+      preferenceWrites.push(route.request().postDataJSON())
+      return route.fulfill({ json: route.request().postDataJSON() })
+    }
+    return route.fulfill({
+      json: {
+        enter_to_send: true,
+        follow_latest: true,
+        open_sources: false,
+        language: "hausa",
+      },
+    })
+  })
+
+  await page.goto("/settings")
+  await expect(page.locator("html")).toHaveAttribute("lang", "ha")
+  await expect
+    .poll(() =>
+      page.evaluate(
+        () =>
+          JSON.parse(localStorage.getItem("law-padi.preferences.v1") ?? "{}")
+            .language,
+      ),
+    )
+    .toBe("hausa")
+  // The account already has a language, so nothing is written back.
+  expect(preferenceWrites).toEqual([])
 })

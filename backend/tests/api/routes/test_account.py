@@ -118,11 +118,57 @@ def test_preferences_start_empty_then_round_trip(
 ) -> None:
     _, headers = _headers(db)
     assert client.get(PREFERENCES, headers=headers).json() is None
-    body = {"enter_to_send": False, "follow_latest": True, "open_sources": True}
+    body = {
+        "enter_to_send": False,
+        "follow_latest": True,
+        "open_sources": True,
+        "language": "yoruba",
+    }
     r = client.put(PREFERENCES, headers=headers, json=body)
     assert r.status_code == 200
     assert r.json() == body
     assert client.get(PREFERENCES, headers=headers).json() == body
+
+
+def test_saving_without_a_language_keeps_the_saved_language(
+    client: TestClient, db: Session
+) -> None:
+    _, headers = _headers(db)
+    client.put(
+        PREFERENCES,
+        headers=headers,
+        json={
+            "enter_to_send": True,
+            "follow_latest": True,
+            "open_sources": False,
+            "language": "hausa",
+        },
+    )
+    older_client = {
+        "enter_to_send": False,
+        "follow_latest": True,
+        "open_sources": False,
+    }
+    r = client.put(PREFERENCES, headers=headers, json=older_client)
+    assert r.status_code == 200
+    assert r.json() == {**older_client, "language": "hausa"}
+
+
+def test_unknown_preference_language_is_rejected(
+    client: TestClient, db: Session
+) -> None:
+    _, headers = _headers(db)
+    r = client.put(
+        PREFERENCES,
+        headers=headers,
+        json={
+            "enter_to_send": True,
+            "follow_latest": True,
+            "open_sources": False,
+            "language": "french",
+        },
+    )
+    assert r.status_code == 422
 
 
 def test_deleting_an_account_deletes_its_research(

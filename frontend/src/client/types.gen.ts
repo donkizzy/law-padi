@@ -2461,6 +2461,10 @@ export type PreferencesBase = {
      * Open Sources
      */
     open_sources?: boolean;
+    /**
+     * Language
+     */
+    language?: string | null;
 };
 
 /**
@@ -2479,6 +2483,10 @@ export type PreferencesPublic = {
      * Open Sources
      */
     open_sources?: boolean;
+    /**
+     * Language
+     */
+    language?: string | null;
 };
 
 /**

@@ -1,7 +1,7 @@
 import uuid
 from datetime import UTC, datetime
 
-from pydantic import EmailStr
+from pydantic import EmailStr, field_validator
 from sqlalchemy import DateTime, UniqueConstraint
 from sqlmodel import Field, SQLModel
 
@@ -147,10 +147,25 @@ class SavedProvision(SavedProvisionBase, table=True):
     )
 
 
+PREFERENCE_LANGUAGES = frozenset(
+    {"auto", "english", "pidgin", "yoruba", "igbo", "hausa"}
+)
+
+
 class PreferencesBase(SQLModel):
     enter_to_send: bool = True
     follow_latest: bool = True
     open_sources: bool = False
+    # The interface and answer language; None means the account has not saved
+    # one, so each browser keeps its own.
+    language: str | None = Field(default=None, max_length=16)
+
+    @field_validator("language")
+    @classmethod
+    def _known_language(cls, value: str | None) -> str | None:
+        if value is not None and value not in PREFERENCE_LANGUAGES:
+            raise ValueError("Unsupported language")
+        return value
 
 
 class PreferencesPublic(PreferencesBase):

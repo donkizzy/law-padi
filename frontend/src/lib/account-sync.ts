@@ -52,14 +52,17 @@ const toServer = (value: WorkspacePreferences): PreferencesBase => ({
   enter_to_send: value.enterToSend,
   follow_latest: value.followLatest,
   open_sources: value.openSources,
+  language: value.language,
 })
 
-// The account has no language field yet, so the language stays per browser.
+// An account that has never saved a language keeps this browser's choice.
 const fromServer = (value: PreferencesBase): WorkspacePreferences => ({
   enterToSend: value.enter_to_send ?? true,
   followLatest: value.follow_latest ?? true,
   openSources: value.open_sources ?? false,
-  language: readPreferences().language,
+  language:
+    (value.language as WorkspacePreferences["language"] | null | undefined) ??
+    readPreferences().language,
 })
 
 const syncFailed = () => toast.error(i18n.t("sync.updateFailed"))
@@ -109,9 +112,14 @@ async function sync(user: UserPublic): Promise<SyncResult> {
 
   // The generated client turns a null body into {}, so check for a real value.
   const preferences = (await AccountService.readPreferences()).data
-  if (typeof preferences?.enter_to_send === "boolean")
+  if (typeof preferences?.enter_to_send === "boolean") {
     replacePreferences(fromServer(preferences))
-  else
+    // Older saves have no language: store this browser's choice.
+    if (!preferences.language)
+      await AccountService.savePreferences({
+        body: toServer(readPreferences()),
+      })
+  } else
     await AccountService.savePreferences({ body: toServer(readPreferences()) })
 
   storage((s) => s.setItem(SYNCED_ACCOUNT_KEY, user.id))

@@ -74,7 +74,7 @@ export function savePreferences(value: WorkspacePreferences) {
 /** Replace this browser's preferences with the account's, without echoing back. */
 export const replacePreferences = writePreferences
 
-/** Reset to defaults, keeping the language: the account doesn't store it. */
+/** Reset to defaults, keeping the language so signing out doesn't change it. */
 export function clearPreferences() {
   const { language } = readPreferences()
   if (language === defaultPreferences.language)

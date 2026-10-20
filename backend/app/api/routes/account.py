@@ -199,7 +199,11 @@ def save_preferences(
     preferences = session.get(UserPreferences, user.id) or UserPreferences(
         user_id=user.id
     )
-    preferences.sqlmodel_update(body.model_dump())
+    values = body.model_dump()
+    # Clients that predate the language field never clear a saved language.
+    if values["language"] is None:
+        values.pop("language")
+    preferences.sqlmodel_update(values)
     preferences.updated_at = get_datetime_utc()
     session.add(preferences)
     session.commit()
