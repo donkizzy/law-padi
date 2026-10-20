@@ -1,0 +1,31 @@
+{
+  "source": {
+    "title": "Administration of Criminal Justice Act 2015",
+    "sha256": "40418b792bf1faf6dbe5793651393e746de9e4e550d2f6d9b3bceceb1547a86a",
+    "extracted_from": "Arrangement of Sections, PDF pages 3–14",
+    "review_status": "needs_review",
+    "note": "Partial navigation catalogue. Remaining headings and all OCR body text require source review before publication."
+  },
+  "expected_section_count": 495,
+  "chapters": {},
+  "parts": {"1": "Preliminary", "2": "Arrest, bail and preventive justice"},
+  "sections": {
+    "1": "Purpose",
+    "2": "Application",
+    "3": "Arrest generally",
+    "4": "Mode of arrest",
+    "5": "No unnecessary restraint",
+    "6": "Notification of cause of arrest and rights of suspect",
+    "7": "Arrest in lieu prohibited",
+    "8": "Humane treatment of arrested suspect",
+    "9": "Search of arrested suspect",
+    "10": "Inventory of property of arrested suspect",
+    "11": "Examination of arrested suspect",
+    "12": "Search of place entered by suspect sought to be arrested",
+    "17": "Recording of statement of suspects",
+    "18": "Arrest by police officer without warrant",
+    "30": "Release on bail of a suspect arrested without warrant",
+    "31": "Power to release on bail before charge is accepted",
+    "32": "Remedy of suspect detained in custody"
+  }
+}

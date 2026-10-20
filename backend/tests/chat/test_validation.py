@@ -5,6 +5,8 @@ import pytest
 from app.chat.schemas import ExplanationBlock, ExplanationDraft
 from app.chat.validation import (
     EvidenceValidationError,
+    QuestionNotAnsweredError,
+    asks_yes_no,
     validate_draft,
     validate_verifier,
 )
@@ -100,6 +102,7 @@ def test_historical_disclaimer_is_not_a_claim_of_current_law() -> None:
 def test_prompt_evidence_includes_ancestor_citations() -> None:
     evidence = EvidenceItem.model_construct(
         evidence_id="E1",
+        canonical_path="constitution-1999.chapter4.section33.subsection2.paragraphb",
         citation="Section 33(2)(b)",
         ancestor_citations=["Chapter 4", "Section 33", "Section 33(2)"],
         legal_status="historical",
@@ -181,7 +184,12 @@ def test_a_subsection_of_a_cited_section_is_inside_its_evidence() -> None:
 def test_verifier_rejections_drop_later_blocks_but_not_the_answer() -> None:
     verdicts = {
         "verdicts": [
-            {"index": 0, "supported": True, "qualifications_preserved": True},
+            {
+                "index": 0,
+                "supported": True,
+                "qualifications_preserved": True,
+                "answers_question": True,
+            },
             {"index": 1, "supported": False, "qualifications_preserved": True},
             {"index": 2, "supported": True, "qualifications_preserved": False},
         ]
@@ -192,3 +200,186 @@ def test_verifier_rejections_drop_later_blocks_but_not_the_answer() -> None:
         validate_verifier(verdicts, block_count=3)
     with pytest.raises(EvidenceValidationError, match="incomplete"):
         validate_verifier(verdicts, block_count=4)
+
+
+@pytest.mark.parametrize(
+    "text",
+    [
+        "No such law is in the provided evidence.",
+        "The evidence list does not mention phones.",
+        "Section 37 says this, as E1 shows.",
+        "The wording of Section 37 is broad.",
+        "This answer is based on Section 37.",
+    ],
+)
+def test_blocks_never_describe_how_the_answer_was_produced(text: str) -> None:
+    release_id = uuid4()
+    opening = ExplanationBlock(
+        text="Section 37 protects your privacy.", evidence_ids=["E1"]
+    )
+    draft = ExplanationDraft(
+        blocks=[opening, ExplanationBlock(text=text, evidence_ids=["E1"])]
+    )
+    assert validate_draft(
+        draft, [_privacy_evidence(release_id)], release_id=release_id
+    ) == {1: "A block describes how the answer was produced"}
+    draft.blocks.reverse()
+    with pytest.raises(EvidenceValidationError, match="how the answer was produced"):
+        validate_draft(draft, [_privacy_evidence(release_id)], release_id=release_id)
+
+
+def test_giving_evidence_in_court_is_not_meta_language() -> None:
+    release_id = uuid4()
+    draft = ExplanationDraft(
+        blocks=[
+            ExplanationBlock(
+                text="You cannot be forced to give evidence against yourself.",
+                evidence_ids=["E1"],
+            )
+        ]
+    )
+    assert (
+        validate_draft(draft, [_privacy_evidence(release_id)], release_id=release_id)
+        == {}
+    )
+
+
+def test_a_block_restating_an_earlier_block_is_removed() -> None:
+    release_id = uuid4()
+    draft = ExplanationDraft(
+        blocks=[
+            ExplanationBlock(
+                text="Section 37 protects the privacy of your home, correspondence and telephone conversations.",
+                evidence_ids=["E1"],
+            ),
+            ExplanationBlock(
+                text="Section 37 guarantees privacy for your home, correspondence and telephone conversations.",
+                evidence_ids=["E1"],
+            ),
+            ExplanationBlock(
+                text="Police would need a lawful reason to read your messages.",
+                evidence_ids=["E1"],
+            ),
+        ]
+    )
+    assert validate_draft(
+        draft, [_privacy_evidence(release_id)], release_id=release_id
+    ) == {1: "A block repeats an earlier block"}
+
+
+def test_an_opening_that_misreads_the_question_rejects_the_explanation() -> None:
+    verdicts = {
+        "verdicts": [
+            {
+                "index": 0,
+                "supported": True,
+                "qualifications_preserved": True,
+                "answers_question": False,
+            }
+        ]
+    }
+    with pytest.raises(QuestionNotAnsweredError):
+        validate_verifier(verdicts, block_count=1)
+    verdicts["verdicts"][0]["answers_question"] = True
+    assert validate_verifier(verdicts, block_count=1) == set()
+
+
+@pytest.mark.parametrize(
+    ("question", "yes_no"),
+    [
+        ("Can police search my phone?", True),
+        ("Police held me for three days, is that allowed?", True),
+        ("What can I do if police already searched my phone?", False),
+        ("How long can police hold me?", False),
+        ("Section 37", False),
+    ],
+)
+def test_yes_no_questions_are_recognised(question: str, yes_no: bool) -> None:
+    assert asks_yes_no(question) is yes_no
+
+
+def test_an_open_question_cannot_be_answered_with_yes() -> None:
+    release_id = uuid4()
+    draft = ExplanationDraft(
+        blocks=[
+            ExplanationBlock(
+                text="Yes. You can apply to a High Court about your privacy.",
+                evidence_ids=["E1"],
+            )
+        ]
+    )
+    evidence = [_privacy_evidence(release_id)]
+    with pytest.raises(QuestionNotAnsweredError, match="does not ask for one"):
+        validate_draft(
+            draft,
+            evidence,
+            release_id=release_id,
+            question="What can I do if police already searched my phone?",
+        )
+    assert (
+        validate_draft(
+            draft,
+            evidence,
+            release_id=release_id,
+            question="Can I go to court if police searched my phone?",
+        )
+        == {}
+    )
+    draft.blocks[0].text = "You can apply to a High Court about your privacy."
+    assert (
+        validate_draft(
+            draft,
+            evidence,
+            release_id=release_id,
+            question="What can I do if police already searched my phone?",
+        )
+        == {}
+    )
+
+
+def test_section45_keeps_its_source_cross_references() -> None:
+    import json
+    from pathlib import Path
+
+    fixture = json.loads(
+        (Path(__file__).parent / "data" / "constitution-section45.json").read_text()
+    )
+    references = _source_crossrefs(fixture["text"])
+    assert {("37", None), ("33", None), ("36", "8"), ("305", None)} <= {
+        (reference.section, reference.subsection) for reference in references
+    }
+    assert len(references) <= 5
+
+
+def test_source_bad_reference_does_not_hide_independent_valid_references() -> None:
+    from app.legal.references import SectionReference
+
+    assert _source_crossrefs(
+        "Subject to section 9 of the Evidence Act. Section 37 shall invalidate any law. "
+        "See section 35 of this Constitution."
+    ) == [SectionReference("37"), SectionReference("35")]
+    assert _source_crossrefs(
+        "Subject to section 9 of this Act. Section 35 of the Constitution also applies. "
+        "Section 49 of the Police Act is referred to.",
+        "acja-2015",
+    ) == [
+        SectionReference("9", instrument_slug="acja-2015"),
+        SectionReference("35"),
+        SectionReference("49", instrument_slug="police-act-2020"),
+    ]
+
+
+def test_source_list_before_a_new_paragraph_remains_available() -> None:
+    from app.legal.references import SectionReference
+
+    assert set(
+        _source_crossrefs(
+            "See sections 221, 225(3) and 227 of this Constitution; "
+            "(b) restrictions on holding office refer to section 225(3) of this Constitution; "
+            "(c) another paragraph follows."
+        )
+    ) == {
+        SectionReference("221"),
+        SectionReference("225", "3"),
+        SectionReference("227"),
+    }

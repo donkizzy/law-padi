@@ -114,3 +114,107 @@ def test_topic_boost_lets_dense_order_pick_among_topic_sections() -> None:
     # The boost reaches the subsection dense search matched, not only the
     # whole-section row the topic names.
     assert [item.segment for item in ranked] == [establishment_detail, control]
+
+
+def test_mixed_law_ranking_limits_each_instrument_and_prioritises_rights() -> None:
+    acts = [_segment(f"acja-2015.section{n}") for n in range(9, 15)]
+    constitution = [
+        _segment(f"constitution-1999.chapter4.section{n}") for n in (35, 37, 45, 46)
+    ]
+    police = _segment("police-act-2020.section49")
+    candidates = [(row, 0.1) for row in [*acts, *constitution, police]]
+    ranked = fuse_rankings(
+        dense=candidates,
+        topics=[(constitution[0], 2.5)],
+        top_k=6,
+        prefer_constitution=True,
+        balance_instruments=True,
+    )
+    assert ranked[0].segment == constitution[0]
+    assert len(ranked) == 6
+    assert (
+        sum(item.segment.canonical_path.startswith("acja-2015.") for item in ranked)
+        == 3
+    )
+    assert (
+        sum(
+            item.segment.canonical_path.startswith("constitution-1999.")
+            for item in ranked
+        )
+        <= 3
+    )
+    # Same-numbered sections of different laws remain separate identities.
+    same_number = _segment("police-act-2020.section9")
+    assert len(fuse_rankings(dense=[(acts[0], 0.1), (same_number, 0.2)], top_k=6)) == 2
+
+
+def test_single_instrument_keeps_all_six_results() -> None:
+    rows = [_segment(f"constitution-1999.section{n}") for n in range(25, 31)]
+    ranked = fuse_rankings(
+        dense=[(row, 0.1) for row in rows], top_k=6, prefer_constitution=True
+    )
+    assert [item.segment for item in ranked] == rows
+    # Publishing other laws does not truncate a single-law candidate list.
+    assert (
+        len(
+            fuse_rankings(
+                dense=[(row, 0.1) for row in rows], top_k=6, balance_instruments=True
+            )
+        )
+        == 6
+    )
+
+
+def test_demotion_is_qualified_by_instrument() -> None:
+    act = _segment("police-act-2020.section89")
+    constitution = _segment("constitution-1999.section89")
+    ranked = fuse_rankings(
+        dense=[(constitution, 0.1), (act, 0.2)],
+        top_k=6,
+        demoted={"constitution-1999:89"},
+    )
+    assert ranked[0].segment == act
+
+
+def test_constitution_candidates_are_not_capped_by_act_membership() -> None:
+    constitution = [_segment(f"constitution-1999.section{n}") for n in range(25, 31)]
+    act = _segment("acja-2015.section9")
+    ranked = fuse_rankings(
+        dense=[*((row, 0.1) for row in constitution), (act, 0.9)],
+        top_k=6,
+        balance_instruments=True,
+    )
+    assert [row.segment for row in ranked] == constitution
+
+
+def test_unmatched_or_weak_rights_candidate_is_not_promoted() -> None:
+    acts = [_segment(f"acja-2015.section{n}") for n in range(9, 15)]
+    unrelated = _segment("constitution-1999.section44")
+    candidates = [(row, 0.1) for row in [*acts, unrelated]]
+    ranked = fuse_rankings(
+        dense=candidates, top_k=6, prefer_constitution=True, balance_instruments=True
+    )
+    assert ranked[0].segment == acts[0]
+    assert len(ranked) == 6
+    # Even a topic candidate cannot leap from outside the requested window.
+    ranked = fuse_rankings(
+        dense=candidates,
+        topics=[(unrelated, 0.01)],
+        top_k=2,
+        prefer_constitution=True,
+        balance_instruments=True,
+    )
+    assert ranked[0].segment == acts[0]
+
+
+def test_competitive_matched_constitution_can_lead_an_act_answer() -> None:
+    act = _segment("acja-2015.section9")
+    privacy = _segment("constitution-1999.section37")
+    ranked = fuse_rankings(
+        dense=[(act, 0.1), (privacy, 0.2)],
+        topics=[(act, 2.5), (privacy, 1.5)],
+        top_k=6,
+        prefer_constitution=True,
+        balance_instruments=True,
+    )
+    assert ranked[0].segment == privacy

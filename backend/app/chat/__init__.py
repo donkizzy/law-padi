@@ -1,3 +1,3 @@
 """Conversation, answer validation, and generation worker."""
 
-EXPLANATION_PROMPT_VERSION = "constitution-english-v9"
+EXPLANATION_PROMPT_VERSION = "constitution-english-v11"

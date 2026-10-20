@@ -33,7 +33,8 @@ from app.ingestion.pgvector_repository import (
 )
 from app.legal.evidence import default_embedding_provider
 from app.legal.models import EmbeddingProfile, RetrievalSegment
-from app.legal.topics import section_number
+from app.legal.release_scope import release_instruments
+from app.legal.topics import demoted_sections, section_target, rights_question
 
 TOP_K = 5
 SIGNALS = ("dense", "lexical", "topic", "fallback", "fused")
@@ -42,7 +43,7 @@ SIGNALS = ("dense", "lexical", "topic", "fallback", "fused")
 def _sections(paths: Sequence[str]) -> list[str]:
     ordered: list[str] = []
     for path in paths:
-        number = section_number(path)
+        number = section_target(path)
         if number and number not in ordered:
             ordered.append(number)
     return ordered
@@ -86,6 +87,28 @@ def _metrics(
 
 def run_dataset(session: Session, cases: list[dict[str, Any]]) -> dict[str, Any]:
     target = active_target(session)
+    available = {
+        instrument.slug
+        for instrument in release_instruments(session, target.release_id).values()
+    }
+    required = {
+        section.partition(":")[0]
+        for case in cases
+        for section in case["expected_sections"]
+    }
+    if not cases or any(
+        ":" not in section for case in cases for section in case["expected_sections"]
+    ):
+        raise ValueError(
+            "Benchmark cases require instrument-qualified expected_sections"
+        )
+    if required - available:
+        return {
+            "cases": len(cases),
+            "status": "blocked",
+            "reason": "Required instruments are absent from the active release",
+            "missing_instruments": sorted(required - available),
+        }
     profile = session.get(EmbeddingProfile, target.profile_id)
     if profile is None:
         raise SystemExit("Active retrieval target has no embedding profile")
@@ -97,6 +120,7 @@ def run_dataset(session: Session, cases: list[dict[str, Any]]) -> dict[str, Any]
     misses: list[dict[str, Any]] = []
     for query, vector, want in zip(queries, vectors, expected, strict=True):
         scope = {"release_id": target.release_id, "query": query}
+        demoted = demoted_sections(query)
         dense = dense_search(
             session,
             release_id=target.release_id,
@@ -111,12 +135,18 @@ def run_dataset(session: Session, cases: list[dict[str, Any]]) -> dict[str, Any]
             topics=topics,
             top_k=10,
             lexical_weight=settings.RETRIEVAL_LEXICAL_WEIGHT,
+            demoted=demoted,
+            prefer_constitution=rights_question(query),
+            balance_instruments=len(available) > 1,
         )
         fallback = fuse_rankings(
             lexical=lexical,
             topics=topics,
             top_k=10,
             lexical_weight=settings.RETRIEVAL_LEXICAL_WEIGHT,
+            demoted=demoted,
+            prefer_constitution=rights_question(query),
+            balance_instruments=len(available) > 1,
         )
         rankings["dense"].append(_sections(_paths(dense)))
         rankings["lexical"].append(_sections(_paths(lexical)))
@@ -165,6 +195,11 @@ def main() -> None:
     lines = [f"lexical weight {report['lexical_weight']}, rrf k {report['rrf_k']}"]
     for version, result in report["datasets"].items():
         lines.append(f"\n{version} ({result['cases']} cases)")
+        if result.get("status") == "blocked":
+            lines.append(
+                f"  blocked: {result['reason']}: {result['missing_instruments']}"
+            )
+            continue
         for signal, metrics in result["signals"].items():
             lines.append(
                 f"  {signal:9} hit@1 {metrics['hit_at_1']:.2f}"

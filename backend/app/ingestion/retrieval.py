@@ -4,8 +4,11 @@ import re
 import uuid
 from dataclasses import dataclass
 
+from app.legal.citations import qualify_citation
+from app.legal.enums import InstrumentType
 from app.legal.models import (
     CorpusReleaseEntry,
+    LegalInstrument,
     Provision,
     ProvisionVersion,
 )
@@ -49,6 +52,7 @@ def build_retrieval_documents(
     entries: list[CorpusReleaseEntry],
     versions_by_id: dict[uuid.UUID, ProvisionVersion],
     provisions_by_id: dict[uuid.UUID, Provision],
+    instruments_by_id: dict[uuid.UUID, LegalInstrument] | None = None,
     max_chars: int = DEFAULT_MAX_RETRIEVAL_TEXT_CHARS,
     language: str = SUPPORTED_RETRIEVAL_LANGUAGE,
 ) -> list[RetrievalDocument]:
@@ -68,7 +72,12 @@ def build_retrieval_documents(
         provision = provisions_by_id.get(version.provision_id)
         if not provision:
             continue
-        citation = citation_for_provision(provision)
+        instrument = (
+            instruments_by_id[provision.instrument_id]
+            if instruments_by_id is not None
+            else None
+        )
+        citation = citation_for_provision(provision, instrument)
         ancestor_headings = ancestor_headings_for(provision, provisions_by_id)
         segments = split_legal_text(version.text, max_chars=max_chars)
         for segment_index, segment_text in enumerate(segments, start=1):
@@ -86,6 +95,7 @@ def build_retrieval_documents(
                 "release_version": release_version,
                 "corpus_release_entry_id": str(entry.id),
                 "provision_id": str(provision.id),
+                "instrument_id": str(provision.instrument_id),
                 "provision_version_id": str(version.id),
                 "canonical_path": provision.canonical_path,
                 "kind": _enum_value(provision.kind),
@@ -121,7 +131,9 @@ def build_retrieval_documents(
     return documents
 
 
-def citation_for_provision(provision: Provision) -> str:
+def citation_for_provision(
+    provision: Provision, instrument: LegalInstrument | None = None
+) -> str:
     label_by_kind = {
         "chapter": "Chapter",
         "part": "Part",
@@ -133,7 +145,23 @@ def citation_for_provision(provision: Provision) -> str:
     }
     kind = _enum_value(provision.kind)
     label = label_by_kind.get(kind, kind.title())
-    return f"{label} {provision.number}" if provision.number else label
+    citation = f"{label} {provision.number}" if provision.number else label
+    if instrument is not None:
+        if instrument.instrument_type != InstrumentType.CONSTITUTION:
+            match = re.search(
+                r"\.section(\d+[a-z]?)(?:\.subsection(\d+[a-z]?))?(?:\.paragraph([a-z]+))?(?=\.|$)",
+                provision.canonical_path,
+            )
+            if match:
+                citation = f"Section {match.group(1)}" + "".join(
+                    f"({number})" for number in match.groups()[1:] if number
+                )
+        return qualify_citation(citation, instrument)
+    if not provision.canonical_path.startswith(("constitution-1999.", "constitution.")):
+        raise ValueError(
+            "Instrument metadata is required for non-Constitution retrieval citations"
+        )
+    return citation
 
 
 def ancestor_headings_for(

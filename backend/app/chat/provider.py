@@ -36,12 +36,13 @@ class DeepSeekClient:
         system: str,
         payload: dict[str, Any],
         max_tokens: int | None = None,
+        thinking: bool = False,
     ) -> ProviderResult:
         if not settings.DEEPSEEK_API_KEY:
             raise ProviderError("DeepSeek is not configured")
         owns_client = self._client is None
         client = self._client or httpx.AsyncClient(
-            timeout=httpx.Timeout(45.0, connect=10.0)
+            timeout=httpx.Timeout(settings.DEEPSEEK_TIMEOUT_SECONDS, connect=10.0)
         )
         try:
             try:
@@ -57,7 +58,8 @@ class DeepSeekClient:
                                 "content": json.dumps(payload, ensure_ascii=False),
                             },
                         ],
-                        "thinking": {"type": "disabled"},
+                        # Reasoning text is never read, stored or shown.
+                        "thinking": {"type": "enabled" if thinking else "disabled"},
                         "response_format": {"type": "json_object"},
                         "max_tokens": max_tokens or settings.DEEPSEEK_MAX_OUTPUT_TOKENS,
                     },

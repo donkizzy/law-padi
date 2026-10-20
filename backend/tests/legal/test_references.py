@@ -1,6 +1,10 @@
 import pytest
 
-from app.legal.references import SectionReference, parse_section_reference
+from app.legal.references import (
+    SectionReference,
+    matches_reference,
+    parse_section_reference,
+)
 
 
 @pytest.mark.parametrize(
@@ -18,7 +22,22 @@ def test_reference_formats_resolve_to_identical_hierarchy(query: str) -> None:
     parsed = parse_section_reference(query)
     assert parsed.error is None
     assert parsed.reference == SectionReference("33", "2", "a")
-    assert parsed.reference.suffix == ".section33.subsection2.paragrapha"
+    assert (
+        parsed.reference.suffix == "constitution-1999.section33.subsection2.paragrapha"
+    )
+
+
+@pytest.mark.parametrize(
+    "slug", ["constitution-1999", "acja-2015", "police-act-2020", "law_with%wildcards"]
+)
+def test_reference_requires_exact_instrument_and_hierarchy(slug: str) -> None:
+    reference = SectionReference("9", instrument_slug=slug)
+    assert matches_reference(f"{slug}.part2.section9", reference)
+    assert matches_reference(f"{slug}.section9", reference)
+    assert not matches_reference("other-law.part2.section9", reference)
+    assert not matches_reference(f"{slug}-other.part2.section9", reference)
+    assert not matches_reference(f"{slug}.part2.section90", reference)
+    assert not matches_reference(f"{slug}.part2.section9.subsection1", reference)
 
 
 @pytest.mark.parametrize(
@@ -112,3 +131,129 @@ def test_lists_and_ranges_keep_input_order(query: str, expected: list[str]) -> N
     assert [
         reference.citation.removeprefix("Section ") for reference in parsed.references
     ] == expected
+
+
+@pytest.mark.parametrize(
+    "query,slug,number",
+    [
+        ("section 9 of the ACJA", "acja-2015", "9"),
+        ("ACJA s.9", "acja-2015", "9"),
+        ("ACJA 2015: s9", "acja-2015", "9"),
+        ("Section 9, ACJA 2015", "acja-2015", "9"),
+        ("Administration of Criminal Justice Act 2015 section 9", "acja-2015", "9"),
+        ("section 9 under the ACJ Act", "acja-2015", "9"),
+        ("s.29 Police Act", "police-act-2020", "29"),
+        ("Nigeria Police Act 2020 section 49", "police-act-2020", "49"),
+        ("Nigerian Police Act section 9", "police-act-2020", "9"),
+        ("section 35 of the Constitution", "constitution-1999", "35"),
+        ("1999 Constitution s.35", "constitution-1999", "35"),
+        ("Constitution,\n1999 s.35", "constitution-1999", "35"),
+    ],
+)
+def test_qualified_law_aliases(query: str, slug: str, number: str) -> None:
+    for prose in (False, True):
+        parsed = parse_section_reference(query, prose=prose)
+        assert parsed.error is None
+        assert parsed.reference == SectionReference(number, instrument_slug=slug)
+
+
+@pytest.mark.parametrize(
+    "query",
+    [
+        "Evidence Act s.9",
+        "Section 9, Evidence Act",
+        "s.9 of the Evidence Act",
+        "Police Act 2015 s.9",
+        "s.9 ACJA 2020",
+        "ACJA s.9 of Police Act",
+        "Sections 9 of ACJA and 49 of Police Act",
+        "Lagos Police Act s.9",
+        "FOIA s.9",
+        "s.9 of the FOIA",
+    ],
+)
+def test_unrecognised_or_conflicting_laws_never_fall_back(query: str) -> None:
+    for prose in (False, True):
+        parsed = parse_section_reference(query, prose=prose)
+        assert parsed.error
+        assert not parsed.references
+
+
+def test_qualified_groups_ranges_and_sentence_boundaries() -> None:
+    parsed = parse_section_reference("Sections 9-11 of ACJA and Police Act s.49")
+    assert parsed.error is None
+    assert [(ref.instrument_slug, ref.section) for ref in parsed.references] == [
+        ("acja-2015", "9"),
+        ("acja-2015", "10"),
+        ("acja-2015", "11"),
+        ("police-act-2020", "49"),
+    ]
+    assert parse_section_reference("ACJA s.9 and Constitution s.9").references == (
+        SectionReference("9", instrument_slug="acja-2015"),
+        SectionReference("9"),
+    )
+    # A passing mention elsewhere does not turn a bare reference into an Act.
+    assert parse_section_reference(
+        "Does Section 37 relate to ACJA?"
+    ).reference == SectionReference("37")
+    assert parse_section_reference("ACJA s.9. Section 37.", prose=True).references[
+        -1
+    ] == SectionReference("37")
+
+
+def test_source_default_never_overwrites_an_explicit_law() -> None:
+    assert parse_section_reference(
+        "Section 35 of the Constitution", default_instrument_slug="acja-2015"
+    ).reference == SectionReference("35")
+    assert parse_section_reference(
+        "Section 9", default_instrument_slug="acja-2015"
+    ).reference == SectionReference("9", instrument_slug="acja-2015")
+
+
+def test_repeated_markers_each_use_the_explicit_or_default_law() -> None:
+    assert parse_section_reference("ACJA s.9 and s.10").references == (
+        SectionReference("9", instrument_slug="acja-2015"),
+        SectionReference("10"),
+    )
+    assert parse_section_reference("s.9 of ACJA, s.10 of Police Act").references == (
+        SectionReference("9", instrument_slug="acja-2015"),
+        SectionReference("10", instrument_slug="police-act-2020"),
+    )
+    assert parse_section_reference("s.9 ACJA, s.10").references == (
+        SectionReference("9", instrument_slug="acja-2015"),
+        SectionReference("10"),
+    )
+
+
+@pytest.mark.parametrize("prose", [False, True])
+@pytest.mark.parametrize(
+    "query",
+    [
+        "section 33 of the Lagos State ACJL",
+        "section 33 under the Lagos State Administration of Criminal Justice Law",
+        "Lagos State ACJL section 33",
+    ],
+)
+def test_state_procedure_law_cannot_become_a_constitution_reference(
+    query: str, prose: bool
+) -> None:
+    parsed = parse_section_reference(query, prose=prose)
+    assert parsed.error
+    assert parsed.references == ()
+
+
+@pytest.mark.parametrize("prose", [False, True])
+def test_new_section_marker_resets_to_default_law(prose: bool) -> None:
+    parsed = parse_section_reference(
+        "section 9 of the ACJA and section 35", prose=prose
+    )
+    assert parsed.error is None
+    assert parsed.references == (
+        SectionReference("9", instrument_slug="acja-2015"),
+        SectionReference("35"),
+    )
+    # An unmarked continuation stays within its explicitly named group.
+    assert parse_section_reference("ACJA sections 9 and 10").references == (
+        SectionReference("9", instrument_slug="acja-2015"),
+        SectionReference("10", instrument_slug="acja-2015"),
+    )

@@ -95,12 +95,23 @@ def test_feedback_is_durable_owner_scoped_and_does_not_change_validation(
 
 
 def test_quality_metrics_are_admin_only_and_contain_no_question_text(
-    superuser_token_headers: dict[str, str]
+    superuser_token_headers: dict[str, str],
 ) -> None:
     with TestClient(app) as client:
-        response = client.get("/api/v1/conversations/metrics", headers=superuser_token_headers)
+        response = client.get(
+            "/api/v1/conversations/metrics", headers=superuser_token_headers
+        )
     assert response.status_code == 200
     metrics = response.json()
     assert metrics["window_hours"] == 24
     assert metrics["accepted_questions"] >= metrics["finished_answers"]
-    assert set(metrics) == {"window_hours", "accepted_questions", "finished_answers", "explained_answers", "average_finish_ms", "outcomes", "helpful_ratings", "unhelpful_ratings"}
+    assert set(metrics) == {
+        "window_hours",
+        "accepted_questions",
+        "finished_answers",
+        "explained_answers",
+        "average_finish_ms",
+        "outcomes",
+        "helpful_ratings",
+        "unhelpful_ratings",
+    }

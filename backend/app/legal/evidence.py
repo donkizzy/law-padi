@@ -23,16 +23,19 @@ from app.ingestion.pgvector_repository import (
     topic_search,
 )
 from app.legal.enums import EmbeddingProviderKind
+from app.legal.instruments import CONSTITUTION_SLUG, instrument_label
 from app.legal.models import CorpusRelease, EmbeddingProfile
 from app.legal.parser import legal_text_sha256
 from app.legal.public_corpus import PublicCorpus, load_ranked_corpus
-from app.legal.references import ReferenceParse
+from app.legal.references import ReferenceParse, SectionReference, matches_reference
+from app.legal.release_scope import release_instruments
 from app.legal.schemas import (
     CitationOutcome,
     EvidenceItem,
     LegalSearchResponse,
     LegalSearchResult,
 )
+from app.legal.topics import demoted_sections, rights_question
 
 
 @dataclass(frozen=True)
@@ -79,6 +82,11 @@ def evidence_item(
         provision_version_id=version.id,
         canonical_path=result.canonical_path,
         citation=result.citation,
+        instrument_slug=result.instrument_slug,
+        instrument_title=result.instrument_title,
+        instrument_short_title=result.instrument_short_title,
+        instrument_type=result.instrument_type,
+        short_citation=result.short_citation,
         title=result.title,
         authoritative_text=version.text,
         text_sha256=served_hash,
@@ -95,6 +103,21 @@ def evidence_item(
         source_page_start=result.source_page_start,
         source_page_end=result.source_page_end,
     )
+
+
+def _missing_reference_message(
+    corpus: PublicCorpus, reference: SectionReference
+) -> str:
+    if reference.instrument_slug not in {
+        instrument.slug for instrument in corpus.instruments.values()
+    }:
+        return f"{instrument_label(reference.instrument_slug)} isn't included in this published edition."
+    label = (
+        "the Constitution"
+        if reference.instrument_slug == CONSTITUTION_SLUG
+        else instrument_label(reference.instrument_slug)
+    )
+    return f"This section isn't in this edition of {label}."
 
 
 def exact_lookup(
@@ -119,7 +142,7 @@ def exact_lookup(
                     provision
                     for provision in corpus.provisions.values()
                     if provision.id in corpus.versions
-                    and provision.canonical_path.endswith(reference.suffix)
+                    and matches_reference(provision.canonical_path, reference)
                 ),
                 key=lambda provision: (provision.sort_key, provision.canonical_path),
             )
@@ -148,7 +171,7 @@ def exact_lookup(
                     evidence_ids=refs,
                     message="This section number appears more than once in this edition. Choose the one you mean."
                     if status == "ambiguous"
-                    else "This section isn't in this edition of the Constitution."
+                    else _missing_reference_message(corpus, reference)
                     if status == "missing"
                     else None,
                 )
@@ -162,7 +185,13 @@ def exact_lookup(
         message = "This section number appears more than once in this edition. Choose the one you mean."
     elif statuses == {"missing"}:
         outcome = "not_found"
-        message = "We couldn't find this section in this edition of the Constitution."
+        message = (
+            "We couldn't find this section in this edition of the Constitution."
+            if all(
+                ref.instrument_slug == CONSTITUTION_SLUG for ref in parsed.references
+            )
+            else " ".join(dict.fromkeys(row.message for row in outcomes if row.message))
+        )
     elif statuses == {"unsupported"}:
         outcome = "unsupported_reference"
         message = parsed.error
@@ -194,6 +223,7 @@ def semantic_lookup(
     top_k: int,
     index_kind: str,
     embedding_provider: Callable[[EmbeddingProfile], DenseEmbeddingProvider],
+    instrument_slug: str | None = None,
 ) -> LegalSearchResponse:
     """Rank release-scoped segments, then reload all wording from canonical versions."""
     retrieval_mode = "hybrid"
@@ -212,6 +242,7 @@ def semantic_lookup(
             query=query,
             top_k=top_k,
             index_kind=index_kind,
+            instrument_slug=instrument_slug,
         )
     except EmbeddingProviderError, httpx.HTTPError:
         retrieval_mode = "lexical"
@@ -222,12 +253,22 @@ def semantic_lookup(
                 release_id=release.id,
                 query=query,
                 index_kind=index_kind,
+                instrument_slug=instrument_slug,
             ),
             topics=topic_search(
-                session, release_id=release.id, query=query, index_kind=index_kind
+                session,
+                release_id=release.id,
+                query=query,
+                index_kind=index_kind,
+                instrument_slug=instrument_slug,
             ),
             top_k=top_k,
             lexical_weight=settings.RETRIEVAL_LEXICAL_WEIGHT,
+            demoted=demoted_sections(query),
+            prefer_constitution=rights_question(query),
+            balance_instruments=not instrument_slug
+            and len(release_instruments(session, release.id, index_kind=index_kind))
+            > 1,
         )
     corpus = load_ranked_corpus(
         session,

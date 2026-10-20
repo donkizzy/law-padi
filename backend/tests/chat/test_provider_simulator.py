@@ -30,7 +30,12 @@ def test_simulator_matches_provider_json_contract(
                 payload={"blocks": generated.value["blocks"]},
             )
             assert verified.value["verdicts"] == [
-                {"index": 0, "supported": True, "qualifications_preserved": True}
+                {
+                    "index": 0,
+                    "supported": True,
+                    "qualifications_preserved": True,
+                    "answers_question": True,
+                }
             ]
 
     asyncio.run(exercise())

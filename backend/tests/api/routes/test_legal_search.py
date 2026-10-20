@@ -48,7 +48,7 @@ def corpus(db: Session, tmp_path: Path, monkeypatch: pytest.MonkeyPatch):
     _cleanup_db(db)
     init_db(db)
     instrument = LegalInstrument(
-        slug="constitution-test",
+        slug="constitution-1999",
         title="Test Constitution",
         instrument_type=InstrumentType.CONSTITUTION,
     )
@@ -150,7 +150,7 @@ def corpus(db: Session, tmp_path: Path, monkeypatch: pytest.MonkeyPatch):
             kind=ProvisionKind(kind),
             number=number,
             heading="Privacy" if number == "37" else path,
-            canonical_path=f"constitution-test.{path}",
+            canonical_path=f"constitution-1999.{path}",
             sort_key=f"{index:04d}",
         )
         db.add(provision)

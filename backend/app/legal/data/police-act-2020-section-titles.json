@@ -1,0 +1,42 @@
+{
+  "source": {
+    "title": "Nigeria Police Act 2020",
+    "sha256": "2f648787b270ad43de127a516fc4d4ec07b9bb618d0f018e143c85972a5f21cd",
+    "extracted_from": "Arrangement of Sections, PDF pages 2\u20134",
+    "review_status": "needs_review",
+    "note": "Partial navigation catalogue. Remaining headings and all OCR body text require source review before publication.",
+    "count_evidence": "PDF page 4: Arrangement ends at 142. Citation, followed by Schedule. Corrected from 145 during Phase 4; source verification remains pending."
+  },
+  "expected_section_count": 142,
+  "chapters": {},
+  "parts": {
+    "1": "Preliminary",
+    "7": "Powers of police officers"
+  },
+  "sections": {
+    "1": "General objective",
+    "2": "Specific objectives",
+    "31": "Investigation of an allegation by the Police",
+    "32": "Arrest generally",
+    "35": "Notification of cause of arrest and rights of suspect",
+    "36": "Arrest in lieu prohibited",
+    "37": "Humane treatment of arrested suspect",
+    "38": "Arrest by police officer without warrant",
+    "48": "Power to search",
+    "49": "Power to stop and search",
+    "50": "Action before a search takes place",
+    "51": "General conduct of the search",
+    "52": "Search of arrested suspect",
+    "53": "Examination of arrested suspect",
+    "54": "Where reasonable suspicion never exist",
+    "55": "Search of place entered by suspect sought to be arrested",
+    "56": "Action after search is carried out",
+    "57": "Search record",
+    "58": "Search warrant safeguards",
+    "59": "Execution of search warrant",
+    "60": "Recording of statement of suspect",
+    "62": "Release on bail of a suspect arrested without warrant",
+    "63": "Power to release on bail before charge is accepted",
+    "64": "Remedy of suspect detained in custody"
+  }
+}

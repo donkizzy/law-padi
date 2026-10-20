@@ -2439,14 +2439,15 @@
     },
     {
       "id": "e185",
-      "kind": "unanswerable",
+      "kind": "missing_instrument",
       "prompt": "What does Section 10 of the Police Act say?",
       "turns": [
         "What does Section 10 of the Police Act say?"
       ],
       "expected_paths": [],
-      "expected_outcome": "unsupported_instrument",
-      "review_status": "pending_human_review"
+      "expected_outcome": "missing",
+      "review_status": "pending_human_review",
+      "note": "Police Act 2020 is recognised, but absent from this dataset's pinned Constitution-only release. Report unavailable law rather than unsupported citation."
     },
     {
       "id": "e186",
@@ -2611,6 +2612,51 @@
       ],
       "expected_paths": [],
       "expected_outcome": "abstain_or_clarify",
+      "review_status": "pending_human_review"
+    },
+    {
+      "id": "e201",
+      "kind": "topic",
+      "prompt": "Can police search my phone?",
+      "turns": [
+        "Can police search my phone?"
+      ],
+      "expected_paths": [
+        "constitution-1999.chapter4.section37",
+        "constitution-1999.chapter4.section45",
+        "constitution-1999.chapter4.section46"
+      ],
+      "expected_outcome": "supported",
+      "review_status": "pending_human_review"
+    },
+    {
+      "id": "e202",
+      "kind": "topic",
+      "prompt": "Can I refuse a phone search without a warrant?",
+      "turns": [
+        "Can I refuse a phone search without a warrant?"
+      ],
+      "expected_paths": [
+        "constitution-1999.chapter4.section37",
+        "constitution-1999.chapter4.section45",
+        "constitution-1999.chapter4.section46"
+      ],
+      "expected_outcome": "supported",
+      "review_status": "pending_human_review"
+    },
+    {
+      "id": "e203",
+      "kind": "topic",
+      "prompt": "Do I have to unlock my phone for police?",
+      "turns": [
+        "Do I have to unlock my phone for police?"
+      ],
+      "expected_paths": [
+        "constitution-1999.chapter4.section37",
+        "constitution-1999.chapter4.section45",
+        "constitution-1999.chapter4.section46"
+      ],
+      "expected_outcome": "supported",
       "review_status": "pending_human_review"
     }
   ]

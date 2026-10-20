@@ -18,6 +18,7 @@ from app.legal.enums import (
     IngestionStepStatus,
     IngestionTaskStatus,
     InstrumentStatus,
+    InstrumentType,
     PageInclusionStatus,
     PageRole,
     ProvisionKind,
@@ -82,6 +83,9 @@ class SourceUploadCreate(SQLModel):
     mime_type: str
     instrument_slug: str = Field(min_length=1, max_length=255)
     instrument_title: str = Field(min_length=1, max_length=512)
+    instrument_type: Literal[InstrumentType.CONSTITUTION, InstrumentType.ACT] = (
+        InstrumentType.CONSTITUTION
+    )
     instrument_short_title: str | None = Field(default=None, max_length=255)
     instrument_year: int = Field(ge=1)
     instrument_status: InstrumentStatus
@@ -101,7 +105,7 @@ class SourceUploadCreate(SQLModel):
     @classmethod
     def validate_pdf_mime_type(cls, value: str) -> str:
         if value != "application/pdf":
-            raise ValueError("V1 ingestion accepts Constitution PDF sources only")
+            raise ValueError("Ingestion accepts PDF sources only")
         return value
 
     @model_validator(mode="after")
@@ -117,6 +121,7 @@ class SourceUploadPublic(SQLModel):
     source_document_id: uuid.UUID | None = None
     instrument_slug: str
     instrument_title: str
+    instrument_type: InstrumentType = InstrumentType.CONSTITUTION
     source_title: str
     authority: str
     source_url: str
@@ -573,6 +578,34 @@ class CorpusReleasePublic(SQLModel):
     lock_version: int
     created_at: datetime
     evidence_count: int
+    instrument_slugs: list[str] = Field(default_factory=list)
+    instrument_types: list[InstrumentType] = Field(default_factory=list)
+
+
+class CompositeReleaseMember(SQLModel):
+    release_id: uuid.UUID
+    expected_version: int = Field(ge=1)
+
+
+class CompositeReleaseCreate(SQLModel):
+    idempotency_key: str = Field(min_length=1, max_length=255)
+    version: str = Field(
+        min_length=1,
+        max_length=128,
+        schema_extra={"pattern": r"^[a-zA-Z0-9][a-zA-Z0-9._-]*$"},
+    )
+    base_release_id: uuid.UUID
+    expected_base_version: int = Field(ge=1)
+    members: list[CompositeReleaseMember] = Field(min_length=1, max_length=10)
+
+    @model_validator(mode="after")
+    def validate_members(self) -> CompositeReleaseCreate:
+        ids = [member.release_id for member in self.members]
+        if self.base_release_id in ids or len(set(ids)) != len(ids):
+            raise ValueError(
+                "Composite members must be distinct from one another and the base release"
+            )
+        return self
 
 
 class CorpusReleasesPublic(SQLModel):
@@ -710,6 +743,11 @@ class LegalSearchRequest(SQLModel):
     top_k: int = Field(default=10, ge=1, le=50)
     index_kind: Literal["enacted", "proposals"] = "enacted"
     mode: Literal["auto", "semantic"] = "auto"
+    instrument: str | None = Field(
+        default=None,
+        max_length=255,
+        schema_extra={"pattern": r"^[a-z0-9]+(?:-[a-z0-9]+)*$"},
+    )
     release_version: str | None = Field(default=None, min_length=1, max_length=128)
 
     @field_validator("query")
@@ -721,7 +759,16 @@ class LegalSearchRequest(SQLModel):
         return value
 
 
-class ProvisionReference(SQLModel):
+class InstrumentIdentity(SQLModel):
+    # Defaults retain compatibility with saved Constitution evidence snapshots.
+    instrument_slug: str = "constitution-1999"
+    instrument_title: str = "Constitution of the Federal Republic of Nigeria 1999"
+    instrument_short_title: str | None = None
+    instrument_type: InstrumentType = InstrumentType.CONSTITUTION
+    short_citation: str | None = None
+
+
+class ProvisionReference(InstrumentIdentity):
     id: uuid.UUID
     canonical_path: str
     kind: ProvisionKind
@@ -733,7 +780,7 @@ class ProvisionReference(SQLModel):
     authoritative_text: str | None = None
 
 
-class LegalSearchResult(SQLModel):
+class LegalSearchResult(InstrumentIdentity):
     canonical_path: str
     citation: str
     heading: str | None = None
@@ -768,7 +815,7 @@ class CitationOutcome(SQLModel):
     message: str | None = None
 
 
-class EvidenceItem(SQLModel):
+class EvidenceItem(InstrumentIdentity):
     evidence_id: str
     provision_id: uuid.UUID
     provision_version_id: uuid.UUID
@@ -816,6 +863,23 @@ class LegalReleasePublic(SQLModel):
     legal_statuses: list[str]
 
 
+class LegalInstrumentPublic(SQLModel):
+    slug: str
+    title: str
+    short_title: str | None = None
+    instrument_type: InstrumentType
+    edition_label: str
+    edition_note: str
+    section_count: int
+    legal_statuses: list[str]
+
+
+class LegalInstrumentsPublic(SQLModel):
+    data: list[LegalInstrumentPublic]
+    count: int
+    release_version: str
+
+
 class ProvisionTreePublic(SQLModel):
     data: list[ProvisionReference]
     count: int
@@ -823,6 +887,7 @@ class ProvisionTreePublic(SQLModel):
     edition_label: str
     parent: ProvisionReference | None = None
     scope: Literal["children", "all"] = "children"
+    instrument_slug: str = "constitution-1999"
 
 
 class MyAdminRolesPublic(SQLModel):

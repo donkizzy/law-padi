@@ -17,7 +17,7 @@ from app.ingestion.pgvector_repository import (
 )
 from app.ingestion.r2_blob_store import R2BlobStore
 from app.ingestion.service import get_blob_store
-from app.legal.enums import VectorIndexStatus
+from app.legal.enums import InstrumentType, ProvisionKind, VectorIndexStatus
 from app.legal.evidence import default_embedding_provider, exact_lookup, semantic_lookup
 from app.legal.models import CorpusRelease, EmbeddingProfile, RetrievalIndexBuild
 from app.legal.public_corpus import (
@@ -27,8 +27,15 @@ from app.legal.public_corpus import (
     load_reference_corpus,
     published_release,
 )
-from app.legal.references import parse_section_reference
+from app.legal.references import (
+    CONSTITUTION_SLUG,
+    SectionReference,
+    parse_section_reference,
+)
+from app.legal.release_scope import release_instruments
 from app.legal.schemas import (
+    LegalInstrumentPublic,
+    LegalInstrumentsPublic,
     LegalReleasePublic,
     LegalSearchRequest,
     LegalSearchResponse,
@@ -39,6 +46,9 @@ from app.legal.schemas import (
 router = APIRouter(prefix="/legal", tags=["legal"])
 IndexKind = Annotated[str, Query(pattern="^(enacted|proposals)$")]
 ReleaseVersion = Annotated[str | None, Query(min_length=1, max_length=128)]
+InstrumentSlug = Annotated[
+    str | None, Query(pattern=r"^[a-z0-9]+(?:-[a-z0-9]+)*$", max_length=255)
+]
 
 
 def legal_session(session: SessionDep) -> Iterator[Session]:
@@ -71,12 +81,12 @@ def _reference_corpus(
     session: Session,
     index_kind: str,
     release_version: str | None,
-    suffixes: list[str],
+    references: list[SectionReference],
 ) -> PublicCorpus:
     release = published_release(
         session, index_kind=index_kind, release_version=release_version
     )
-    return load_reference_corpus(session, release, suffixes, index_kind=index_kind)
+    return load_reference_corpus(session, release, references, index_kind=index_kind)
 
 
 def _response(
@@ -109,18 +119,41 @@ def search_legal(
             status_code=503,
             detail="Production legal search is not configured for pgvector",
         )
-    parsed = parse_section_reference(body.query) if body.mode == "auto" else None
+    parsed = (
+        parse_section_reference(
+            body.query, default_instrument_slug=body.instrument or CONSTITUTION_SLUG
+        )
+        if body.mode == "auto"
+        else None
+    )
     if parsed and (parsed.references or parsed.error):
         corpus = _reference_corpus(
             session,
             body.index_kind,
             body.release_version,
-            [reference.suffix for reference in parsed.references],
+            list(parsed.references),
         )
+        if body.instrument and body.instrument not in {
+            item.slug for item in corpus.instruments.values()
+        }:
+            raise HTTPException(
+                status_code=404,
+                detail="This law isn't included in the selected published edition",
+            )
         return exact_lookup(corpus, parsed, body.query).response
     release = published_release(
         session, index_kind=body.index_kind, release_version=body.release_version
     )
+    if body.instrument and body.instrument not in {
+        item.slug
+        for item in release_instruments(
+            session, release.id, index_kind=body.index_kind
+        ).values()
+    }:
+        raise HTTPException(
+            status_code=404,
+            detail="This law isn't included in the selected published edition",
+        )
     if body.release_version:
         build = session.exec(
             select(RetrievalIndexBuild)
@@ -159,6 +192,7 @@ def search_legal(
         top_k=body.top_k,
         index_kind=body.index_kind,
         embedding_provider=_query_embedding_provider,
+        instrument_slug=body.instrument,
     )
 
 
@@ -179,6 +213,56 @@ def read_current_release(
     )
 
 
+@router.get("/instruments")
+def read_legal_instruments(
+    session: LegalSessionDep,
+    release_version: ReleaseVersion = None,
+    index_kind: IndexKind = "enacted",
+) -> LegalInstrumentsPublic:
+    corpus = _corpus(session, index_kind, release_version)
+    data: list[LegalInstrumentPublic] = []
+    for instrument in sorted(
+        corpus.instruments.values(),
+        key=lambda item: (item.slug != CONSTITUTION_SLUG, item.slug),
+    ):
+        provisions = [
+            item
+            for item in corpus.provisions.values()
+            if item.instrument_id == instrument.id
+        ]
+        representative = next(
+            (item for item in provisions if item.id in corpus.versions), None
+        )
+        if representative is None:
+            continue
+        edition = corpus.provision_edition_label(representative)
+        data.append(
+            LegalInstrumentPublic(
+                slug=instrument.slug,
+                title=instrument.title,
+                short_title=instrument.short_title,
+                instrument_type=instrument.instrument_type,
+                edition_label=edition,
+                edition_note="As enacted, may have been amended."
+                if instrument.instrument_type == InstrumentType.ACT
+                else "Historical source edition. Later amendments may differ.",
+                section_count=sum(
+                    item.kind == ProvisionKind.SECTION for item in provisions
+                ),
+                legal_statuses=sorted(
+                    {
+                        str(corpus.versions[item.id].legal_status)
+                        for item in provisions
+                        if item.id in corpus.versions
+                    }
+                ),
+            )
+        )
+    return LegalInstrumentsPublic(
+        data=data, count=len(data), release_version=corpus.release.version
+    )
+
+
 @router.get("/provisions/tree", response_model=ProvisionTreePublic)
 def read_provision_tree(
     session: LegalSessionDep,
@@ -186,10 +270,27 @@ def read_provision_tree(
     release_version: ReleaseVersion = None,
     index_kind: IndexKind = "enacted",
     all_nodes: bool = False,
+    instrument: InstrumentSlug = None,
 ) -> ProvisionTreePublic:
     if all_nodes and parent_path:
         raise HTTPException(status_code=422, detail="Choose a parent or the full index")
     corpus = _corpus(session, index_kind, release_version)
+    slug = instrument or (
+        parent_path.partition(".")[0] if parent_path else CONSTITUTION_SLUG
+    )
+    selected_instrument = next(
+        (item for item in corpus.instruments.values() if item.slug == slug), None
+    )
+    if selected_instrument is None:
+        raise HTTPException(
+            status_code=404,
+            detail="This law isn't included in the selected published edition",
+        )
+    corpus.provisions = {
+        key: item
+        for key, item in corpus.provisions.items()
+        if item.instrument_id == selected_instrument.id
+    }
     parent = (
         next(
             (p for p in corpus.provisions.values() if p.canonical_path == parent_path),
@@ -210,9 +311,12 @@ def read_provision_tree(
         data=data,
         count=len(data),
         release_version=corpus.release.version,
-        edition_label=corpus.edition_label,
+        edition_label=corpus.provision_edition_label(nodes[0])
+        if nodes
+        else corpus.edition_label,
         parent=corpus.reference(parent) if parent else None,
         scope="all" if all_nodes else "children",
+        instrument_slug=slug,
     )
 
 
@@ -271,7 +375,7 @@ def read_provisions_by_citation(
         session,
         index_kind,
         release_version,
-        [reference.suffix for reference in parsed.references],
+        list(parsed.references),
     )
     return exact_lookup(corpus, parsed, citation).response
 

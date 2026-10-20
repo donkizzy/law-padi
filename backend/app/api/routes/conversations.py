@@ -56,7 +56,7 @@ from app.legal.models import (
     get_datetime_utc,
 )
 from app.legal.public_corpus import published_release
-from app.legal.references import parse_section_reference
+from app.legal.references import matches_reference, parse_section_reference
 from app.models import TokenPayload, User
 from app.retention import maybe_purge_idle_guest_conversations
 
@@ -594,7 +594,7 @@ def _validate_selected_version(
     if parsed.error or (
         parsed.references
         and not any(
-            provision.canonical_path.endswith(reference.suffix)
+            matches_reference(provision.canonical_path, reference)
             for reference in parsed.references
         )
     ):

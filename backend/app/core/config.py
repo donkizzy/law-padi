@@ -45,6 +45,9 @@ class Settings(BaseSettings):
     DATABASE_LOCK_TIMEOUT_MS: int = Field(default=0, ge=0)
     INGESTION_STORAGE_BACKEND: Literal["local", "r2"] = "local"
     INGESTION_STORAGE_DIR: str = "storage/source-documents"
+    INGESTION_ALLOWED_INSTRUMENT_TYPES: list[Literal["constitution", "act"]] = [
+        "constitution"
+    ]
     INGESTION_STAGE_CONCURRENCY_LIMITS: dict[str, int] = Field(default_factory=dict)
     MALWARE_SCANNER_BACKEND: Literal["static_pdf", "clamav"] = "static_pdf"
     CLAMAV_HOST: str = "127.0.0.1"
@@ -105,6 +108,17 @@ class Settings(BaseSettings):
     DEEPSEEK_INPUT_USD_PER_MILLION: float = Field(default=1.32, ge=0)
     DEEPSEEK_OUTPUT_USD_PER_MILLION: float = Field(default=3.96, ge=0)
     DEEPSEEK_MAX_OUTPUT_TOKENS: int = Field(default=2000, ge=1)
+    # Thinking tokens count toward the output limit, so each stage has its own.
+    # The verifier reasons in its JSON instead: with thinking it used its whole
+    # budget before answering.
+    DEEPSEEK_GENERATION_THINKING: bool = True
+    DEEPSEEK_VERIFIER_THINKING: bool = False
+    DEEPSEEK_GENERATION_MAX_OUTPUT_TOKENS: int = Field(default=8000, ge=1)
+    DEEPSEEK_VERIFIER_MAX_OUTPUT_TOKENS: int = Field(default=4000, ge=1)
+    DEEPSEEK_TIMEOUT_SECONDS: float = Field(default=120.0, gt=0)
+    # Stays under CHAT_TASK_DISPATCH_DEADLINE_SECONDS so Cloud Tasks never
+    # redispatches a run that is still thinking.
+    CHAT_RUN_TIMEOUT_SECONDS: int = Field(default=270, ge=60)
     INGESTION_WORKER_LEASE_SECONDS: int = Field(default=900, ge=1)
     QDRANT_URL: str | None = None
     QDRANT_API_KEY: str | None = None

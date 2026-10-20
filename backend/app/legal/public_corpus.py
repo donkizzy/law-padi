@@ -1,7 +1,8 @@
 """Published legal text and hierarchy, independent of derived retrieval segments."""
 
 import uuid
-from dataclasses import dataclass
+from collections.abc import Sequence
+from dataclasses import dataclass, field
 from urllib.parse import urlencode
 
 from fastapi import HTTPException
@@ -10,15 +11,19 @@ from sqlmodel import Session, col, select
 
 from app.core.config import settings
 from app.ingestion.pgvector_repository import PgVectorRetrievalError, active_target
-from app.legal.enums import CorpusReleaseStatus, ProvisionKind
+from app.legal.citations import qualify_citation, short_citation
+from app.legal.enums import CorpusReleaseStatus, InstrumentType, ProvisionKind
 from app.legal.models import (
     CorpusRelease,
     CorpusReleaseEntry,
+    LegalInstrument,
     Provision,
     ProvisionVersion,
     SourceDocument,
 )
-from app.legal.schemas import LegalSearchResult, ProvisionReference
+from app.legal.references import SectionReference, matches_reference
+from app.legal.release_scope import release_instruments
+from app.legal.schemas import InstrumentIdentity, LegalSearchResult, ProvisionReference
 from app.legal.topics import section_title
 
 PUBLIC_RELEASE_STATUSES = (CorpusReleaseStatus.PRODUCTION, CorpusReleaseStatus.RETIRED)
@@ -50,6 +55,17 @@ class PublicCorpus:
     versions: dict[uuid.UUID, ProvisionVersion]
     sources: dict[uuid.UUID, SourceDocument]
     index_kind: str = "enacted"
+    instruments: dict[uuid.UUID, LegalInstrument] = field(default_factory=dict)
+
+    def instrument_identity(self, provision: Provision) -> InstrumentIdentity:
+        instrument = self.instruments[provision.instrument_id]
+        return InstrumentIdentity(
+            instrument_slug=instrument.slug,
+            instrument_title=instrument.title,
+            instrument_short_title=instrument.short_title,
+            instrument_type=instrument.instrument_type,
+            short_citation=short_citation(self._citation(provision), instrument),
+        )
 
     @property
     def edition_label(self) -> str:
@@ -78,7 +94,35 @@ class PublicCorpus:
             parent_id = parent.parent_id
         return list(reversed(nodes))
 
+    def provision_edition_label(self, provision: Provision) -> str:
+        """Keep each instrument's edition when a release combines several laws."""
+        instrument = self.instruments[provision.instrument_id]
+        if instrument.instrument_type == InstrumentType.ACT:
+            return "As enacted, may have been amended."
+        composition = (self.release.validation_report or {}).get("composition", {})
+        members = (
+            composition.get("members", []) if isinstance(composition, dict) else []
+        )
+        for member in members if isinstance(members, list) else []:
+            if not isinstance(member, dict):
+                continue
+            identities = member.get("instruments", [])
+            if not isinstance(identities, list) or not any(
+                isinstance(item, dict) and item.get("slug") == instrument.slug
+                for item in identities
+            ):
+                continue
+            review = member.get("source_edition_review", {})
+            if isinstance(review, dict) and isinstance(review.get("edition"), str):
+                return str(review["edition"])
+        return self.edition_label
+
     def citation(self, provision: Provision) -> str:
+        return qualify_citation(
+            self._citation(provision), self.instruments[provision.instrument_id]
+        )
+
+    def _citation(self, provision: Provision) -> str:
         nodes = [*self.lineage(provision), provision]
         section = next(
             (node for node in nodes if node.kind == ProvisionKind.SECTION), None
@@ -95,17 +139,33 @@ class PublicCorpus:
             for node in nodes
         )
 
+    def title(self, provision: Provision) -> str | None:
+        title = section_title(provision.canonical_path)
+        if (
+            title
+            or self.instruments[provision.instrument_id].instrument_type
+            != InstrumentType.ACT
+        ):
+            return title
+        # Accepted Act headings come from the parsed Arrangement of Sections.
+        # Do not make the partial navigation catalogue the only display source.
+        for node in reversed([*self.lineage(provision), provision]):
+            if node.kind == ProvisionKind.SECTION and node.heading:
+                return node.heading
+        return provision.heading
+
     def reference(
         self, provision: Provision, *, context: bool = False
     ) -> ProvisionReference:
         version = self.versions.get(provision.id)
         return ProvisionReference(
+            **self.instrument_identity(provision).model_dump(),
             id=provision.id,
             canonical_path=provision.canonical_path,
             kind=provision.kind,
             number=provision.number,
             heading=provision.heading,
-            title=section_title(provision.canonical_path),
+            title=self.title(provision),
             citation=self.citation(provision),
             has_text=version is not None,
             authoritative_text=version.text if context and version else None,
@@ -130,10 +190,11 @@ class PublicCorpus:
         source = self.sources[version.source_document_id]
         ancestors = self.lineage(provision)
         return LegalSearchResult(
+            **self.instrument_identity(provision).model_dump(),
             canonical_path=provision.canonical_path,
             citation=self.citation(provision),
             heading=provision.heading,
-            title=section_title(provision.canonical_path),
+            title=self.title(provision),
             ancestor_headings=[p.heading for p in ancestors if p.heading],
             authoritative_text=version.text,
             source_document_id=source.id,
@@ -148,7 +209,7 @@ class PublicCorpus:
             provision_version_id=version.id,
             release_id=self.release.id,
             kind=provision.kind,
-            edition_label=self.edition_label,
+            edition_label=self.provision_edition_label(provision),
             source_title=source.title,
             source_authority=source.authority,
             source_url=source.source_url,
@@ -219,19 +280,46 @@ def load_public_corpus(
             seen.add(parent.id)
             provisions[parent.id] = parent
             child = parent
-    return PublicCorpus(release, provisions, versions, sources, index_kind)
+    return _assemble_corpus(session, release, provisions, versions, sources, index_kind)
+
+
+def _assemble_corpus(
+    session: Session,
+    release: CorpusRelease,
+    provisions: dict[uuid.UUID, Provision],
+    versions: dict[uuid.UUID, ProvisionVersion],
+    sources: dict[uuid.UUID, SourceDocument],
+    index_kind: str,
+) -> PublicCorpus:
+    instrument_ids = {provision.instrument_id for provision in provisions.values()}
+    instruments = (
+        {
+            instrument.id: instrument
+            for instrument in session.exec(
+                select(LegalInstrument).where(
+                    col(LegalInstrument.id).in_(instrument_ids)
+                )
+            ).all()
+        }
+        if instrument_ids
+        else {}
+    )
+    if instrument_ids != instruments.keys():
+        raise PgVectorRetrievalError("Published provision instrument is missing")
+    return PublicCorpus(release, provisions, versions, sources, index_kind, instruments)
 
 
 def load_reference_corpus(
     session: Session,
     release: CorpusRelease,
-    suffixes: list[str],
+    references: Sequence[SectionReference],
     *,
     index_kind: str = "enacted",
 ) -> PublicCorpus:
     """Load exact matches, their published children, and only needed ancestry."""
-    if not suffixes:
-        return PublicCorpus(release, {}, {}, {}, index_kind)
+    instruments = release_instruments(session, release.id, index_kind=index_kind)
+    if not references:
+        return PublicCorpus(release, {}, {}, {}, index_kind, instruments)
     statement = (
         select(ProvisionVersion, Provision, SourceDocument)
         .join(Provision, col(Provision.id) == col(ProvisionVersion.provision_id))
@@ -246,7 +334,10 @@ def load_reference_corpus(
         .where(
             CorpusReleaseEntry.release_id == release.id,
             or_(
-                *[col(Provision.canonical_path).endswith(suffix) for suffix in suffixes]
+                *[
+                    matches_reference(col(Provision.canonical_path), reference)
+                    for reference in references
+                ]
             ),
         )
     )
@@ -314,7 +405,11 @@ def load_reference_corpus(
             seen.add(parent.id)
             provisions[parent.id] = parent
             child = parent
-    return PublicCorpus(release, provisions, versions, sources, index_kind)
+    corpus = _assemble_corpus(
+        session, release, provisions, versions, sources, index_kind
+    )
+    corpus.instruments.update(instruments)
+    return corpus
 
 
 def load_ranked_corpus(
@@ -407,4 +502,4 @@ def load_ranked_corpus(
             seen.add(parent.id)
             provisions[parent.id] = parent
             child = parent
-    return PublicCorpus(release, provisions, versions, sources, index_kind)
+    return _assemble_corpus(session, release, provisions, versions, sources, index_kind)

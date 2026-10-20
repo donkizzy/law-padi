@@ -1,0 +1,70 @@
+{
+  "version": "statute-retrieval-benchmark-v1",
+  "description": "Provisional retrieval cases derived from the retained source navigation catalogues. These are routing checks, not lawyer-approved answer gold. Held-out questions must not be copied into topic phrases.",
+  "reference_format": "instrument-slug:section",
+  "review_status": "needs_review",
+  "required_instruments": [
+    "acja-2015",
+    "police-act-2020"
+  ],
+  "cases": [
+    {
+      "id": "benchmark-arrested-search",
+      "query": "What permits searching an arrested suspect?",
+      "expected_sections": [
+        "acja-2015:9",
+        "police-act-2020:52"
+      ]
+    },
+    {
+      "id": "benchmark-warrantless-arrest",
+      "query": "Can police arrest without a warrant?",
+      "expected_sections": [
+        "acja-2015:18",
+        "police-act-2020:38"
+      ]
+    },
+    {
+      "id": "benchmark-stop-search",
+      "query": "What governs stop and search?",
+      "expected_sections": [
+        "police-act-2020:49"
+      ]
+    },
+    {
+      "id": "benchmark-bail",
+      "query": "How does release on bail before charge work?",
+      "expected_sections": [
+        "acja-2015:30",
+        "acja-2015:31",
+        "police-act-2020:62",
+        "police-act-2020:63"
+      ]
+    },
+    {
+      "id": "benchmark-custody",
+      "query": "What remedy exists for a suspect detained in custody?",
+      "expected_sections": [
+        "acja-2015:32",
+        "police-act-2020:64"
+      ]
+    },
+    {
+      "id": "benchmark-statement",
+      "query": "How is a suspect statement recorded?",
+      "expected_sections": [
+        "acja-2015:17",
+        "police-act-2020:60"
+      ]
+    },
+    {
+      "id": "benchmark-premises",
+      "query": "What permits search of premises?",
+      "expected_sections": [
+        "acja-2015:12",
+        "police-act-2020:55",
+        "police-act-2020:58"
+      ]
+    }
+  ]
+}

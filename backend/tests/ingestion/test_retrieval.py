@@ -1,10 +1,37 @@
 import uuid
 from datetime import date
 
-from app.ingestion.retrieval import build_retrieval_documents
-from app.legal.enums import LegalStatus, ProvisionKind
-from app.legal.models import CorpusReleaseEntry, Provision, ProvisionVersion
+from app.ingestion.retrieval import build_retrieval_documents, citation_for_provision
+from app.legal.enums import InstrumentType, LegalStatus, ProvisionKind
+from app.legal.models import (
+    CorpusReleaseEntry,
+    LegalInstrument,
+    Provision,
+    ProvisionVersion,
+)
 from app.legal.parser import legal_text_sha256
+
+
+def test_retrieval_citations_qualify_acts_and_preserve_constitution_labels() -> None:
+    act = LegalInstrument(
+        slug="acja-2015",
+        title="Administration of Criminal Justice Act 2015",
+        short_title="ACJA 2015",
+        instrument_type=InstrumentType.ACT,
+    )
+    provision = Provision(
+        instrument_id=act.id,
+        kind=ProvisionKind.PARAGRAPH,
+        number="a",
+        canonical_path="acja-2015.part2.section9.subsection1.paragrapha",
+    )
+    assert citation_for_provision(provision, act) == "Section 9(1)(a), ACJA 2015"
+    constitution = LegalInstrument(
+        slug="constitution-1999",
+        title="Constitution",
+        instrument_type=InstrumentType.CONSTITUTION,
+    )
+    assert citation_for_provision(provision, constitution) == "Paragraph a"
 
 
 def test_retrieval_documents_include_citation_context_and_deterministic_segments() -> (

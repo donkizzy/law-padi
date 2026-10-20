@@ -116,287 +116,288 @@
     {
       "query": "is the governor immune from being sued while in office",
       "expected_sections": [
-        "308"
+        "constitution-1999:308"
       ],
       "kind": "everyday"
     },
     {
       "query": "how many years can a president stay in power",
       "expected_sections": [
-        "135",
-        "137"
+        "constitution-1999:135",
+        "constitution-1999:137"
       ],
       "kind": "everyday"
     },
     {
       "query": "how long is a governor's term",
       "expected_sections": [
-        "180"
+        "constitution-1999:180"
       ],
       "kind": "everyday"
     },
     {
       "query": "can the government take my land for a road",
       "expected_sections": [
-        "44"
+        "constitution-1999:44"
       ],
       "kind": "everyday"
     },
     {
       "query": "can i be a citizen of nigeria and america at the same time",
       "expected_sections": [
-        "28"
+        "constitution-1999:28"
       ],
       "kind": "everyday"
     },
     {
       "query": "my father is nigerian but i was born abroad, am i nigerian",
       "expected_sections": [
-        "25"
+        "constitution-1999:25"
       ],
       "kind": "everyday"
     },
     {
       "query": "can a foreign woman married to a nigerian become a citizen",
       "expected_sections": [
-        "26"
+        "constitution-1999:26"
       ],
       "kind": "everyday"
     },
     {
       "query": "is there an official religion in nigeria",
       "expected_sections": [
-        "10"
+        "constitution-1999:10"
       ],
       "kind": "everyday"
     },
     {
       "query": "can the president pardon a convicted person",
       "expected_sections": [
-        "175"
+        "constitution-1999:175"
       ],
       "kind": "everyday"
     },
     {
       "query": "how do you impeach the president",
       "expected_sections": [
-        "143"
+        "constitution-1999:143"
       ],
       "kind": "everyday"
     },
     {
       "query": "how is a governor removed from office",
       "expected_sections": [
-        "188"
+        "constitution-1999:188"
       ],
       "kind": "everyday"
     },
     {
       "query": "who appoints the chief justice",
       "expected_sections": [
-        "231"
+        "constitution-1999:231"
       ],
       "kind": "everyday"
     },
     {
       "query": "can a judge be sacked",
       "expected_sections": [
-        "292"
+        "constitution-1999:292"
       ],
       "kind": "everyday"
     },
     {
       "query": "do i need a lawyer before the court can try me",
       "expected_sections": [
-        "36"
+        "constitution-1999:36"
       ],
       "kind": "everyday"
     },
     {
       "query": "can they torture a suspect to confess",
       "expected_sections": [
-        "34"
+        "constitution-1999:34"
       ],
       "kind": "everyday"
     },
     {
       "query": "can i be forced to work without pay",
       "expected_sections": [
-        "34"
+        "constitution-1999:34"
       ],
       "kind": "everyday"
     },
     {
       "query": "can i be denied a job because of my tribe",
       "expected_sections": [
-        "42"
+        "constitution-1999:42"
       ],
       "kind": "everyday"
     },
     {
       "query": "can i live in any state i want",
       "expected_sections": [
-        "41"
+        "constitution-1999:41"
       ],
       "kind": "everyday"
     },
     {
       "query": "can i own a house in lagos if i am from kano",
       "expected_sections": [
-        "43"
+        "constitution-1999:43"
       ],
       "kind": "everyday"
     },
     {
       "query": "can i start a newspaper",
       "expected_sections": [
-        "39"
+        "constitution-1999:39"
       ],
       "kind": "everyday"
     },
     {
       "query": "do i need a permit to protest",
       "expected_sections": [
-        "40"
+        "constitution-1999:40"
       ],
       "kind": "everyday"
     },
     {
       "query": "can i change my religion",
       "expected_sections": [
-        "38"
+        "constitution-1999:38"
       ],
       "kind": "everyday"
     },
     {
       "query": "when can a state of emergency suspend my rights",
       "expected_sections": [
-        "45",
-        "305"
+        "constitution-1999:45",
+        "constitution-1999:305"
       ],
       "kind": "everyday"
     },
     {
       "query": "what age must you be to run for president",
       "expected_sections": [
-        "131"
+        "constitution-1999:131"
       ],
       "kind": "everyday"
     },
     {
       "query": "how is the constitution amended",
       "expected_sections": [
-        "9"
+        "constitution-1999:9"
       ],
       "kind": "everyday"
     },
     {
       "query": "does a treaty become law automatically",
       "expected_sections": [
-        "12"
+        "constitution-1999:12"
       ],
       "kind": "everyday"
     },
     {
       "query": "who makes laws for the whole country",
       "expected_sections": [
-        "4"
+        "constitution-1999:4"
       ],
       "kind": "everyday"
     },
     {
       "query": "what are my duties as a citizen",
       "expected_sections": [
-        "24"
+        "constitution-1999:24"
       ],
       "kind": "everyday"
     },
     {
       "query": "how is federation account money shared to states",
       "expected_sections": [
-        "162"
+        "constitution-1999:162"
       ],
       "kind": "everyday"
     },
     {
       "query": "can the army kill someone during a riot",
       "expected_sections": [
-        "33"
+        "constitution-1999:33"
       ],
       "kind": "everyday"
     },
     {
       "query": "consolidated revenue fund of the federation",
       "expected_sections": [
-        "80"
+        "constitution-1999:80"
       ],
       "kind": "keyword"
     },
     {
       "query": "contingencies fund",
       "expected_sections": [
-        "83",
-        "123"
+        "constitution-1999:83",
+        "constitution-1999:123"
       ],
       "kind": "keyword"
     },
     {
       "query": "inspector-general of police",
       "expected_sections": [
-        "215"
+        "constitution-1999:215"
       ],
       "kind": "keyword"
     },
     {
       "query": "attorney-general of the federation",
       "expected_sections": [
-        "150"
+        "constitution-1999:150"
       ],
       "kind": "keyword"
     },
     {
       "query": "appointment of the auditor-general",
       "expected_sections": [
-        "86",
-        "126"
+        "constitution-1999:86",
+        "constitution-1999:126"
       ],
       "kind": "keyword"
     },
     {
       "query": "ownership of lands in the federal capital territory",
       "expected_sections": [
-        "297"
+        "constitution-1999:297"
       ],
       "kind": "keyword"
     },
     {
       "query": "grand kadi of the sharia court of appeal",
       "expected_sections": [
-        "261",
-        "276"
+        "constitution-1999:261",
+        "constitution-1999:276"
       ],
       "kind": "keyword"
     },
     {
       "query": "appeal from the code of conduct tribunal",
       "expected_sections": [
-        "246"
+        "constitution-1999:246"
       ],
       "kind": "keyword"
     },
     {
       "query": "federal character of the armed forces",
       "expected_sections": [
-        "219"
+        "constitution-1999:219"
       ],
       "kind": "keyword"
     },
     {
       "query": "supremacy of the constitution",
       "expected_sections": [
-        "1"
+        "constitution-1999:1"
       ],
       "kind": "keyword"
     }
-  ]
+  ],
+  "reference_format": "instrument-slug:section"
 }

@@ -24,34 +24,47 @@ class FakeProvider:
         blocks: list[dict[str, Any]] | None = None,
         rejected: frozenset[int] = frozenset(),
         follow_ups: tuple[str, ...] = (),
+        answers: tuple[bool, ...] = (True,),
     ):
+        # One value per draft: whether the verifier says it answers the question.
+        self.answers = list(answers)
         self.supported = supported
         self.fabricated = fabricated
         self.blocks = blocks
         self.rejected = rejected
         self.follow_ups = follow_ups
         self.calls: list[str] = []
+        self.thinking: list[bool] = []
         self.payloads: list[dict[str, Any]] = []
 
     async def complete_json(
-        self, *, system: str, payload: dict[str, Any], max_tokens: int
+        self,
+        *,
+        system: str,
+        payload: dict[str, Any],
+        max_tokens: int,
+        thinking: bool = False,
     ) -> ProviderResult:
         assert max_tokens > 0
+        self.thinking.append(thinking)
         self.calls.append(system)
         self.payloads.append(payload)
         if "verdicts" in system:
+            answers = self.answers.pop(0) if len(self.answers) > 1 else self.answers[0]
             value: dict[str, Any] = {
                 "verdicts": [
                     {
                         "index": index,
                         "supported": self.supported and index not in self.rejected,
                         "qualifications_preserved": self.supported,
+                        "answers_question": answers,
                     }
                     for index in range(len(payload["blocks"]))
                 ]
             }
         else:
             value = {
+                "direct_answer": "yes",
                 "blocks": self.blocks
                 if self.blocks is not None
                 else [
@@ -370,8 +383,9 @@ def test_question_the_evidence_does_not_answer_skips_verification(
     assert answer["evidence"][0]["citation"] == "Section 37"
     assert answer["follow_up_questions"] == ["What does Section 37 protect?"]
     assert answer["notice"].startswith(
-        "The Constitution doesn't seem to answer this directly."
+        "The published provisions don't seem to answer this directly."
     )
+    assert answer["notice"].endswith("This edition includes Constitution.")
     assert len(provider.calls) == 1
 
 
@@ -462,8 +476,16 @@ def test_followup_keeps_a_user_selected_printed_identity(
     assert corpus
     monkeypatch.setattr(settings, "CHAT_ENABLED", True)
     monkeypatch.setattr(settings, "CHAT_GENERATION_ENABLED", True)
-    selected = db.exec(select(ProvisionVersion).where(ProvisionVersion.text == "First printed Section 189.")).one()
-    provider = FakeProvider(blocks=[{"text": "This is the first printed Section 189.", "evidence_ids": ["E1"]}])
+    selected = db.exec(
+        select(ProvisionVersion).where(
+            ProvisionVersion.text == "First printed Section 189."
+        )
+    ).one()
+    provider = FakeProvider(
+        blocks=[
+            {"text": "This is the first printed Section 189.", "evidence_ids": ["E1"]}
+        ]
+    )
     with TestClient(app) as client:
         conversation = client.post("/api/v1/conversations", json={}).json()
         endpoint = f"/api/v1/conversations/{conversation['id']}/messages"
@@ -481,4 +503,72 @@ def test_followup_keeps_a_user_selected_printed_identity(
             assert run is not None and run.outcome == "completed"
             message = db.get(ConversationMessage, run.assistant_message_id)
             assert message is not None and message.answer_content is not None
-            assert str(selected.id) == message.answer_content["evidence"][0]["provision_version_id"]
+            assert (
+                str(selected.id)
+                == message.answer_content["evidence"][0]["provision_version_id"]
+            )
+
+
+def test_an_opening_that_misreads_the_question_is_rewritten_once(
+    corpus, db: Session, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    assert corpus
+    provider = FakeProvider(answers=(False, True))
+    run, message = _answer_section_37(db, monkeypatch, provider)
+    assert run.outcome == "completed"
+    generation = [
+        payload
+        for payload, system in zip(provider.payloads, provider.calls, strict=True)
+        if system == worker._SYSTEM
+    ]
+    assert len(generation) == 2
+    assert "revision_reason" not in generation[0]
+    assert generation[1]["revision_reason"] == (
+        "The opening block did not answer the question as asked"
+    )
+    assert provider.payloads[1]["direct_answer"] == "yes"
+    assert message.validation_result is not None
+    assert message.validation_result["draft_attempts"] == 2
+
+
+def test_a_second_misread_opening_fails_closed(
+    corpus, db: Session, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    assert corpus
+    provider = FakeProvider(answers=(False,))
+    run, message = _answer_section_37(db, monkeypatch, provider)
+    assert run.outcome == "validation_failed"
+    assert len(provider.calls) == 4
+    assert message.validation_result is not None
+    assert message.validation_result["failure_reason"] == (
+        "The opening block did not answer the question as asked"
+    )
+
+
+def test_thinking_and_stage_limits_follow_settings(
+    corpus, db: Session, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    assert corpus
+    provider = FakeProvider()
+    _answer_section_37(db, monkeypatch, provider)
+    assert provider.thinking == [True, False]
+    monkeypatch.setattr(settings, "DEEPSEEK_VERIFIER_THINKING", True)
+    monkeypatch.setattr(settings, "DEEPSEEK_GENERATION_THINKING", False)
+    provider = FakeProvider()
+    _answer_section_37(db, monkeypatch, provider)
+    assert provider.thinking == [False, True]
+
+
+def test_privacy_answers_signpost_other_laws(
+    corpus, db: Session, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    assert corpus
+    monkeypatch.setattr(settings, "CHAT_ENABLED", True)
+    monkeypatch.setattr(settings, "CHAT_GENERATION_ENABLED", True)
+    monkeypatch.setattr(
+        worker, "related_laws", lambda _question, **_: ["Police Act 2020"]
+    )
+    provider = FakeProvider()
+    _run, message = _answer_section_37(db, monkeypatch, provider)
+    assert message.answer_content is not None
+    assert message.answer_content["related_laws"] == ["Police Act 2020"]

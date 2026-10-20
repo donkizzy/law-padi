@@ -12,7 +12,7 @@ import json
 import math
 import re
 import uuid
-from collections.abc import Sequence
+from collections.abc import Collection, Sequence
 from dataclasses import dataclass
 from typing import Any, cast
 
@@ -33,9 +33,18 @@ from app.legal.models import (
     RetrievalSegment,
     SourceDocument,
 )
-from app.legal.topics import STOPWORDS, topic_sections
+from app.legal.references import CONSTITUTION_SLUG, SectionReference, matches_reference
+from app.legal.release_scope import release_instruments
+from app.legal.topics import (
+    STOPWORDS,
+    demoted_sections,
+    rights_question,
+    section_target,
+    topic_sections,
+)
 
 _LEXICAL_WORD = re.compile(r"[a-z0-9]+")
+_DEMOTION = 0.25
 _SECTION_PREFIX = re.compile(r"^(.*?\.section\d+[a-z]?)(?=\.|$)")
 # Words present in most of the corpus add noise to keyword ranking.
 _LEXICAL_NOISE = frozenset(
@@ -115,6 +124,15 @@ def write_segments(
         select(CorpusReleaseEntry).where(col(CorpusReleaseEntry.id).in_(entry_ids))
     ).all()
     entries_by_version = {entry.provision_version_id: entry for entry in entries}
+    provision_ids = {
+        uuid.UUID(str(document.payload["provision_id"])) for document in documents
+    }
+    provisions = {
+        provision.id: provision
+        for provision in session.exec(
+            select(Provision).where(col(Provision.id).in_(provision_ids))
+        ).all()
+    }
     segments: list[RetrievalSegment] = []
     seen_segment_ids: set[uuid.UUID] = set()
     for document in documents:
@@ -126,6 +144,14 @@ def write_segments(
                 "Retrieval document does not reference an entry in the release"
             )
         provision_id = uuid.UUID(str(payload["provision_id"]))
+        provision = provisions.get(provision_id)
+        if provision is None or (
+            payload.get("instrument_id") is not None
+            and str(payload["instrument_id"]) != str(provision.instrument_id)
+        ):
+            raise PgVectorRetrievalError(
+                "Retrieval document instrument does not match its provision"
+            )
         source_document_id = uuid.UUID(str(payload["source_document_id"]))
         segment_index_value = int(str(payload["segment_index"]))
         segment_count_value = int(str(payload["segment_count"]))
@@ -145,6 +171,7 @@ def write_segments(
         if existing is not None:
             if (
                 existing.retrieval_text_sha256 != retrieval_hash
+                or existing.instrument_id != provision.instrument_id
                 or existing.release_id != release_id
                 or existing.authoritative_text_sha256
                 != _sha256(document.authoritative_text)
@@ -165,6 +192,7 @@ def write_segments(
             release_id=release_id,
             release_entry_id=entry.id,
             provision_id=provision_id,
+            instrument_id=provision.instrument_id,
             provision_version_id=version_id,
             source_document_id=source_document_id,
             index_kind=index_kind,
@@ -267,6 +295,7 @@ def lexical_search(
     query: str,
     limit: int | None = None,
     index_kind: str = "enacted",
+    instrument_slug: str | None = None,
 ) -> list[tuple[RetrievalSegment, float]]:
     candidate_limit = limit or settings.RETRIEVAL_LEXICAL_CANDIDATE_LIMIT
     expression = lexical_tsquery(query)
@@ -284,6 +313,12 @@ def lexical_search(
         .order_by(rank.desc(), col(RetrievalSegment.id))
         .limit(candidate_limit)
     )
+    if instrument_slug:
+        statement = statement.where(
+            col(RetrievalSegment.canonical_path).startswith(
+                f"{instrument_slug}.", autoescape=True
+            )
+        )
     return [(segment, float(score)) for segment, score in session.exec(statement).all()]
 
 
@@ -293,12 +328,18 @@ def topic_search(
     release_id: uuid.UUID,
     query: str,
     index_kind: str = "enacted",
+    instrument_slug: str | None = None,
 ) -> list[tuple[RetrievalSegment, float]]:
     """Whole-provision segments for curated plain-language topics, in topic order."""
-    targets = [
-        (f".section{entry}" if entry[0].isdigit() else f".{entry}", weight)
-        for entry, weight in topic_sections(query)
-    ]
+    slugs = {
+        instrument.slug
+        for instrument in release_instruments(
+            session, release_id, index_kind=index_kind
+        ).values()
+    }
+    if instrument_slug:
+        slugs &= {instrument_slug}
+    targets = topic_sections(query, instrument_slugs=slugs)
     if not targets:
         return []
     rows = session.exec(
@@ -308,16 +349,43 @@ def topic_search(
             RetrievalSegment.segment_index == 1,
             or_(
                 *(
-                    col(RetrievalSegment.canonical_path).like(f"%{suffix}")
-                    for suffix, _weight in targets
+                    matches_reference(
+                        col(RetrievalSegment.canonical_path),
+                        SectionReference(
+                            entry.partition(":")[2],
+                            instrument_slug=entry.partition(":")[0],
+                        ),
+                    )
+                    if entry.partition(":")[2][0].isdigit()
+                    else (
+                        col(RetrievalSegment.canonical_path).startswith(
+                            f"{entry.partition(':')[0]}.", autoescape=True
+                        )
+                        & col(RetrievalSegment.canonical_path).endswith(
+                            f".{entry.partition(':')[2]}", autoescape=True
+                        )
+                    )
+                    for entry, _weight in targets
                 )
             ),
         )
     ).all()
     ordered: list[tuple[RetrievalSegment, float]] = []
-    for suffix, weight in targets:
+    for entry, weight in targets:
         for segment in sorted(rows, key=lambda row: row.canonical_path):
-            if segment.canonical_path.endswith(suffix):
+            if (
+                matches_reference(
+                    segment.canonical_path,
+                    SectionReference(
+                        entry.partition(":")[2], instrument_slug=entry.partition(":")[0]
+                    ),
+                )
+                if entry.partition(":")[2][0].isdigit()
+                else (
+                    segment.canonical_path.startswith(f"{entry.partition(':')[0]}.")
+                    and segment.canonical_path.endswith(f".{entry.partition(':')[2]}")
+                )
+            ):
                 ordered.append((segment, weight))
     return ordered
 
@@ -329,6 +397,8 @@ def dense_search(
     embedding_run_id: uuid.UUID,
     query_vector: Sequence[float],
     limit: int | None = None,
+    index_kind: str = "enacted",
+    instrument_slug: str | None = None,
 ) -> list[tuple[RetrievalSegment, float]]:
     vector = validate_vector(query_vector)
     candidate_limit = limit or settings.RETRIEVAL_DENSE_CANDIDATE_LIMIT
@@ -345,11 +415,18 @@ def dense_search(
         )
         .where(
             RetrievalEmbedding.release_id == release_id,
+            RetrievalSegment.index_kind == index_kind,
             RetrievalEmbedding.embedding_run_id == embedding_run_id,
         )
         .order_by(distance, col(RetrievalSegment.id))
         .limit(candidate_limit)
     )
+    if instrument_slug:
+        statement = statement.where(
+            col(RetrievalSegment.canonical_path).startswith(
+                f"{instrument_slug}.", autoescape=True
+            )
+        )
     return [(segment, float(score)) for segment, score in session.exec(statement).all()]
 
 
@@ -367,8 +444,15 @@ def fuse_rankings(
     top_k: int,
     rrf_k: int | None = None,
     lexical_weight: float = 1.0,
+    demoted: Collection[str] = (),
+    prefer_constitution: bool = False,
+    balance_instruments: bool = False,
 ) -> list[RankedSegment]:
-    """Weighted reciprocal-rank fusion; topic matches add a flat boost."""
+    """Weighted reciprocal-rank fusion; topic matches add a flat boost.
+
+    Demoted sections keep a fraction of their score, so they still appear
+    when nothing better matches.
+    """
     constant = rrf_k or settings.RETRIEVAL_RRF_K
     merged: dict[uuid.UUID, dict[str, Any]] = {}
     for rank, (segment, _distance) in enumerate(dense, start=1):
@@ -396,8 +480,15 @@ def fuse_rankings(
     ranked = [
         RankedSegment(
             segment=item["segment"],
-            score=float(item["score"])
-            + boosts.get(section_key(item["segment"].canonical_path), 0.0),
+            score=(
+                float(item["score"])
+                + boosts.get(section_key(item["segment"].canonical_path), 0.0)
+            )
+            * (
+                _DEMOTION
+                if section_target(item["segment"].canonical_path) in demoted
+                else 1.0
+            ),
             dense_rank=item.get("dense_rank"),
             lexical_rank=item.get("lexical_rank"),
         )
@@ -414,7 +505,50 @@ def fuse_rankings(
         if key not in seen:
             seen.add(key)
             unique.append(item)
-    return unique[:top_k]
+    # A diversity quota must not truncate a single-law pool or reduce the
+    # Constitution's established results merely because Acts are published.
+    slugs = {item.segment.canonical_path.partition(".")[0] for item in unique}
+    if len(slugs) <= 1 or not balance_instruments:
+        return unique[:top_k]
+    if (
+        prefer_constitution
+        and unique[0].segment.canonical_path.partition(".")[0] != CONSTITUTION_SLUG
+    ):
+        # Promote only a Constitution candidate already inside the requested
+        # result window with a real topic/title hint for this question.
+        # Being numbered 33–46 does not by itself establish relevance.
+        topic_keys = {
+            section_key(segment.canonical_path)
+            for segment, weight in topics
+            if weight >= 1.5
+        }
+        first = next(
+            (
+                item
+                for item in unique[:top_k]
+                if item.segment.canonical_path.startswith(f"{CONSTITUTION_SLUG}.")
+                and section_key(item.segment.canonical_path) in topic_keys
+            ),
+            None,
+        )
+        if first:
+            unique.remove(first)
+            unique.insert(0, first)
+    counts: dict[str, int] = {}
+    balanced: list[RankedSegment] = []
+    deferred: list[RankedSegment] = []
+    for item in unique:
+        slug = item.segment.canonical_path.partition(".")[0]
+        if slug != CONSTITUTION_SLUG and counts.get(slug, 0) >= 3:
+            deferred.append(item)
+            continue
+        balanced.append(item)
+        counts[slug] = counts.get(slug, 0) + 1
+        if len(balanced) == top_k:
+            return balanced
+    # Diversity is a preference, not a reason to return fewer available
+    # results. Do not invent other-law evidence to satisfy the quota.
+    return (balanced + deferred)[:top_k]
 
 
 def hybrid_search(
@@ -427,18 +561,29 @@ def hybrid_search(
     top_k: int,
     index_kind: str = "enacted",
     rrf_k: int | None = None,
+    instrument_slug: str | None = None,
 ) -> list[RankedSegment]:
     dense = dense_search(
         session,
         release_id=release_id,
         embedding_run_id=embedding_run_id,
         query_vector=query_vector,
+        index_kind=index_kind,
+        instrument_slug=instrument_slug,
     )
     lexical = lexical_search(
-        session, release_id=release_id, query=query, index_kind=index_kind
+        session,
+        release_id=release_id,
+        query=query,
+        index_kind=index_kind,
+        instrument_slug=instrument_slug,
     )
     topics = topic_search(
-        session, release_id=release_id, query=query, index_kind=index_kind
+        session,
+        release_id=release_id,
+        query=query,
+        index_kind=index_kind,
+        instrument_slug=instrument_slug,
     )
     return fuse_rankings(
         dense=dense,
@@ -447,6 +592,10 @@ def hybrid_search(
         top_k=top_k,
         rrf_k=rrf_k,
         lexical_weight=settings.RETRIEVAL_LEXICAL_WEIGHT,
+        demoted=demoted_sections(query),
+        prefer_constitution=rights_question(query),
+        balance_instruments=not instrument_slug
+        and len(release_instruments(session, release_id, index_kind=index_kind)) > 1,
     )
 
 
@@ -541,13 +690,17 @@ def validate_index_build(
             errors.append(f"segment:{segment.id}:release_entry_missing")
         if not version or not provision or not source:
             errors.append(f"segment:{segment.id}:canonical_join_missing")
+        elif segment.instrument_id != provision.instrument_id:
+            errors.append(f"segment:{segment.id}:instrument_mismatch")
     lexical_smoke_result_count = 0
     if segments:
         lexical_smoke_result_count = len(
             lexical_search(
                 session,
                 release_id=build.release_id,
-                query=segments[0].citation,
+                # A citation such as "Section 9" contains only a stopword and
+                # a one-digit token. Include indexed wording for the smoke test.
+                query=f"{segments[0].citation} {segments[0].retrieval_text}",
                 index_kind=build.index_kind,
                 limit=1,
             )

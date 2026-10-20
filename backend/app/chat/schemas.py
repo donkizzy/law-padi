@@ -101,6 +101,9 @@ class ExplanationBlock(SQLModel):
 
 
 class ExplanationDraft(SQLModel):
+    direct_answer: (
+        Literal["yes", "no", "depends", "explain", "not_addressed"] | None
+    ) = None
     blocks: list[ExplanationBlock] = Field(default_factory=list)
     missing_facts: list[str] = Field(default_factory=list)
     follow_up_questions: list[str] = Field(default_factory=list)
@@ -124,4 +127,5 @@ class ExplanationAnswer(SQLModel):
     follow_up_questions: list[str] = Field(default_factory=list)
     citation_outcomes: list[CitationOutcome] = Field(default_factory=list)
     evidence: list[EvidenceItem] = Field(default_factory=list)
+    related_laws: list[str] = Field(default_factory=list)
     notice: str | None = None

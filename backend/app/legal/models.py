@@ -193,6 +193,12 @@ class SourceUpload(SQLModel, table=True):
     )
     instrument_slug: str = Field(max_length=255, index=True)
     instrument_title: str = Field(max_length=512)
+    instrument_type: InstrumentType = Field(
+        default=InstrumentType.CONSTITUTION,
+        sa_column=Column(
+            String(length=32), nullable=False, server_default="constitution"
+        ),
+    )
     instrument_short_title: str | None = Field(default=None, max_length=255)
     instrument_year: int = Field(index=True)
     instrument_status: InstrumentStatus = Field(
@@ -1630,6 +1636,7 @@ class RetrievalSegment(SQLModel, table=True):
             name="ck_retrieval_segment_authoritative_hash",
         ),
         Index("ix_retrieval_segment_release_kind", "release_id", "index_kind"),
+        Index("ix_retrieval_segment_release_instrument", "release_id", "instrument_id"),
         Index("ix_retrieval_segment_provision_version", "provision_version_id"),
     )
 
@@ -1639,6 +1646,9 @@ class RetrievalSegment(SQLModel, table=True):
     )
     release_entry_id: uuid.UUID = Field(
         foreign_key="corpus_release_entry.id", index=True, ondelete="CASCADE"
+    )
+    instrument_id: uuid.UUID = Field(
+        foreign_key="legal_instrument.id", index=True, ondelete="CASCADE"
     )
     provision_id: uuid.UUID = Field(
         foreign_key="provision.id", index=True, ondelete="CASCADE"

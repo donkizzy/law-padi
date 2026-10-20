@@ -20,7 +20,12 @@ def simulated_answer(system: str, payload: dict[str, Any]) -> dict[str, Any]:
         blocks = payload.get("blocks", [])
         return {
             "verdicts": [
-                {"index": index, "supported": True, "qualifications_preserved": True}
+                {
+                    "index": index,
+                    "supported": True,
+                    "qualifications_preserved": True,
+                    **({"answers_question": True} if index == 0 else {}),
+                }
                 for index, _ in enumerate(blocks)
             ]
         }
@@ -28,9 +33,10 @@ def simulated_answer(system: str, payload: dict[str, Any]) -> dict[str, Any]:
     if not evidence or not isinstance(evidence[0].get("id"), str):
         raise ValueError("Generation payload has no evidence identifier")
     return {
+        "direct_answer": "depends",
         "blocks": [
             {
-                "text": "The supplied historical provision contains the stored wording shown in the source card.",
+                "text": "The Constitution deals with this in the section shown below.",
                 "evidence_ids": [evidence[0]["id"]],
             }
         ],

@@ -1,4 +1,4 @@
-"""Plain-language topic guide for Constitution search.
+"""Plain-language navigation hints for release-scoped legal search.
 
 People rarely ask in the Constitution's own words: they ask whether police can
 search a phone, not about "telegraphic communications". This module maps
@@ -11,13 +11,14 @@ navigation aids, not legal text.
 """
 
 import itertools
-import json
 import re
-from dataclasses import dataclass
+from collections.abc import Collection
+from dataclasses import dataclass, replace
 from functools import cache
-from pathlib import Path
 
-_TITLES_PATH = Path(__file__).parent / "data" / "constitution-1999-section-titles.json"
+from app.legal.instruments import ACJA_SLUG, CONSTITUTION_SLUG, POLICE_SLUG
+from app.legal.titles import catalogue_titles
+
 _SECTION_IN_PATH = re.compile(r"\.section(\d+[a-z]?)(?=\.|$)")
 _CHAPTER_IN_PATH = re.compile(r"\.chapter(\d+)(?=\.|$)")
 _TOKEN = re.compile(r"[a-z0-9]+")
@@ -25,6 +26,10 @@ _TOKEN = re.compile(r"[a-z0-9]+")
 _TITLE_WEIGHT = 3.5
 _TITLE_MIN_COVERAGE = 0.75
 _TITLE_MAX_SECTIONS = 4
+# Chapter IV, fundamental rights, through enforcement in Section 46.
+_RIGHTS_SECTIONS = (33, 46)
+# Police establishment and control, and legislative investigation powers.
+_RIGHTS_NOISE = frozenset({"88", "89", "128", "129", "214", "215", "216"})
 # Asking what to do about a wrong is asking about enforcement (Section 46),
 # even though the words themselves are all filler.
 _REMEDY_INTENT = re.compile(
@@ -147,12 +152,14 @@ def _span(phrase_tokens: list[str], query_tokens: list[str]) -> int | None:
 @dataclass(frozen=True)
 class Topic:
     slug: str
-    # Section numbers, or path suffixes such as "oath-president" for
-    # schedule items.
+    # Qualified section targets, or qualified path suffixes for schedule items.
     sections: tuple[str, ...]
     phrases: tuple[str, ...]
     # Umbrella topics yield to a more specific topic in the same question.
     broad: bool = False
+    # Reviewed names of other Nigerian laws on the same subject. Shown to the
+    # reader as a signpost only; they are not part of the corpus.
+    related_laws: tuple[str, ...] = ()
 
 
 @dataclass(frozen=True)
@@ -190,6 +197,12 @@ TOPICS: tuple[Topic, ...] = (
             "letter",
             "search phone",
             "check phone",
+            "unlock phone",
+            "phone password",
+            "refuse search",
+            "consent search",
+            "search without warrant",
+            "checkpoint search",
             "search house",
             "search home",
             "enter home",
@@ -197,6 +210,11 @@ TOPICS: tuple[Topic, ...] = (
             "raid house",
             "personal data",
             "personal information",
+        ),
+        related_laws=(
+            "Administration of Criminal Justice Act 2015 (arrest, search and detention)",
+            "Police Act 2020 (police powers, including searches)",
+            "Nigeria Data Protection Act 2023 (personal data)",
         ),
     ),
     Topic(
@@ -231,6 +249,10 @@ TOPICS: tuple[Topic, ...] = (
             "unlawful detention",
             "compensation apology",
         ),
+        related_laws=(
+            "Administration of Criminal Justice Act 2015 (arrest, search and detention)",
+            "Police Act 2020 (police powers, including searches)",
+        ),
     ),
     Topic(
         "legal-representation",
@@ -264,6 +286,10 @@ TOPICS: tuple[Topic, ...] = (
             "charged offence",
             "criminal charge",
         ),
+        related_laws=(
+            "Administration of Criminal Justice Act 2015 (criminal trials)",
+            "Evidence Act 2011",
+        ),
     ),
     Topic(
         "dignity-torture",
@@ -285,6 +311,10 @@ TOPICS: tuple[Topic, ...] = (
             "brutality",
             "maltreat",
             "trafficking",
+        ),
+        related_laws=(
+            "Anti-Torture Act 2017",
+            "Police Act 2020 (police powers, including searches)",
         ),
     ),
     Topic(
@@ -1477,20 +1507,112 @@ TOPICS: tuple[Topic, ...] = (
     Topic("pension", ("173", "210"), ("pension", "gratuity")),
 )
 
+TOPICS = tuple(
+    replace(
+        topic,
+        sections=tuple(f"{CONSTITUTION_SLUG}:{number}" for number in topic.sections),
+    )
+    for topic in TOPICS
+)
+
+# Navigation hints only. Actual wording always comes from release-scoped versions.
+STATUTE_TOPICS = (
+    Topic(
+        "phone-search",
+        (f"{ACJA_SLUG}:9", f"{POLICE_SLUG}:49"),
+        ("search phone", "search telephone", "unlock phone", "police phone"),
+    ),
+    Topic(
+        "arrested-search",
+        (f"{ACJA_SLUG}:9", f"{POLICE_SLUG}:52"),
+        ("search arrested suspect", "search arrested person", "search after arrest"),
+    ),
+    Topic(
+        "arrest-without-warrant",
+        (f"{ACJA_SLUG}:18", f"{POLICE_SLUG}:38"),
+        ("arrest without warrant", "arrest no warrant"),
+    ),
+    Topic(
+        "stop-search",
+        (f"{POLICE_SLUG}:49", f"{POLICE_SLUG}:50", f"{POLICE_SLUG}:51"),
+        ("stop and search", "stopped searched", "reasonable suspicion search"),
+    ),
+    Topic(
+        "statute-bail",
+        (
+            f"{ACJA_SLUG}:30",
+            f"{ACJA_SLUG}:31",
+            f"{POLICE_SLUG}:62",
+            f"{POLICE_SLUG}:63",
+        ),
+        ("bail", "release before charge"),
+    ),
+    Topic(
+        "detention-limits",
+        (f"{ACJA_SLUG}:32", f"{POLICE_SLUG}:64"),
+        ("detention", "detained", "held without charge", "custody time limit"),
+    ),
+    Topic(
+        "statements",
+        (f"{ACJA_SLUG}:17", f"{POLICE_SLUG}:60"),
+        ("record statement", "recording statement", "suspect statement"),
+    ),
+    Topic(
+        "premises-search",
+        (f"{ACJA_SLUG}:12", f"{POLICE_SLUG}:55", f"{POLICE_SLUG}:58"),
+        (
+            "search premises",
+            "search house",
+            "search place",
+            "search warrant safeguards",
+        ),
+    ),
+)
+
 # Provisions that change how the main answer applies, added as context when a
 # section is explained: restrictions on rights, and the paired
 # disqualification rules for each office.
 COMPANIONS: dict[str, tuple[str, ...]] = {
-    "37": ("45",),
-    "38": ("45",),
-    "39": ("45",),
-    "40": ("45",),
-    "41": ("45",),
+    # Section 46 tells people how to enforce any right in Chapter IV, so an
+    # explanation can say what the reader can do.
+    **{str(number): ("46",) for number in range(33, 45)},
+    "37": ("45", "46"),
+    "38": ("45", "46"),
+    "39": ("45", "46"),
+    "40": ("45", "46"),
+    "41": ("45", "46"),
     "131": ("137",),
     "177": ("182",),
     "65": ("66",),
     "106": ("107",),
 }
+COMPANIONS = {
+    f"{CONSTITUTION_SLUG}:{number}": tuple(
+        f"{CONSTITUTION_SLUG}:{other}" for other in others
+    )
+    for number, others in COMPANIONS.items()
+}
+COMPANIONS[f"{CONSTITUTION_SLUG}:35"] += (
+    f"{ACJA_SLUG}:18",
+    f"{ACJA_SLUG}:32",
+    f"{POLICE_SLUG}:38",
+    f"{POLICE_SLUG}:64",
+)
+COMPANIONS[f"{CONSTITUTION_SLUG}:37"] += (
+    f"{ACJA_SLUG}:9",
+    f"{POLICE_SLUG}:49",
+    f"{POLICE_SLUG}:52",
+)
+for _topic in STATUTE_TOPICS:
+    for _target in _topic.sections:
+        COMPANIONS[_target] = tuple(
+            f"{CONSTITUTION_SLUG}:{number}"
+            for number in (
+                ("37", "45", "46", "35")
+                if _topic.slug in {"arrested-search", "stop-search", "premises-search"}
+                else ("35", "46")
+            )
+        )
 
 # Context for titles the source repeats across chapters, such as "Quorum".
 _TITLE_CONTEXT: tuple[tuple[int, int, str], ...] = (
@@ -1557,9 +1679,11 @@ _GENERIC_TITLES = frozenset(
 
 
 @cache
-def _titles() -> dict[str, dict[str, str]]:
-    data = json.loads(_TITLES_PATH.read_text(encoding="utf-8"))
-    return {"sections": data["sections"], "chapters": data["chapters"]}
+def _titles(instrument_slug: str = "constitution-1999") -> dict[str, dict[str, str]]:
+    return {
+        kind: catalogue_titles(instrument_slug, kind)
+        for kind in ("sections", "chapters", "parts")
+    }
 
 
 def section_number(canonical_path: str) -> str | None:
@@ -1567,18 +1691,32 @@ def section_number(canonical_path: str) -> str | None:
     return match.group(1) if match else None
 
 
-def section_title(canonical_path: str) -> str | None:
+def section_target(canonical_path: str) -> str | None:
+    number = section_number(canonical_path)
+    return f"{canonical_path.partition('.')[0]}:{number}" if number else None
+
+
+def section_title(
+    canonical_path: str, instrument_slug: str | None = None
+) -> str | None:
     """Plain title for a section, or for the section containing a sub-provision."""
+    slug = instrument_slug or canonical_path.partition(".")[0]
+    if not canonical_path.startswith(f"{slug}."):
+        return None
     number = section_number(canonical_path)
     if number is None:
         chapter = _CHAPTER_IN_PATH.search(canonical_path)
         if chapter and canonical_path.endswith(f".chapter{chapter.group(1)}"):
-            return _titles()["chapters"].get(chapter.group(1))
+            return _titles(slug)["chapters"].get(chapter.group(1))
         return None
-    title = _titles()["sections"].get(number)
+    title = _titles(slug)["sections"].get(number)
     if title is None:
         return None
-    if title.casefold() in _GENERIC_TITLES and number.isdigit():
+    if (
+        slug == "constitution-1999"
+        and title.casefold() in _GENERIC_TITLES
+        and number.isdigit()
+    ):
         value = int(number)
         for start, end, context in _TITLE_CONTEXT:
             if start <= value <= end:
@@ -1586,7 +1724,9 @@ def section_title(canonical_path: str) -> str | None:
     return title
 
 
-def match_topics(query: str, *, limit: int = 3) -> list[TopicMatch]:
+def match_topics(
+    query: str, *, limit: int = 3, topics: tuple[Topic, ...] = TOPICS
+) -> list[TopicMatch]:
     """Rank topics by how much of the question their matched phrases explain.
 
     A phrase matches when all its words appear close together, in any order.
@@ -1595,7 +1735,7 @@ def match_topics(query: str, *, limit: int = 3) -> list[TopicMatch]:
     if not query_tokens:
         return []
     matches: list[TopicMatch] = []
-    for topic in TOPICS:
+    for topic in topics:
         covered: set[int] = set()
         best = ""
         for phrase in topic.phrases:
@@ -1629,14 +1769,18 @@ def match_topics(query: str, *, limit: int = 3) -> list[TopicMatch]:
 
 
 @cache
-def _title_tokens() -> tuple[tuple[str, frozenset[str]], ...]:
+def _title_tokens(
+    instrument_slug: str = CONSTITUTION_SLUG,
+) -> tuple[tuple[str, frozenset[str]], ...]:
     return tuple(
-        (number, frozenset(tokens(title)))
-        for number, title in _titles()["sections"].items()
+        (f"{instrument_slug}:{number}", frozenset(tokens(title)))
+        for number, title in _titles(instrument_slug)["sections"].items()
     )
 
 
-def title_sections(query: str) -> list[str]:
+def title_sections(
+    query: str, *, instrument_slugs: Collection[str] = (CONSTITUTION_SLUG,)
+) -> list[str]:
     """Sections whose own title covers the question, such as "grand kadi".
 
     Titles are not in the search index, so a question phrased in the
@@ -1648,7 +1792,9 @@ def title_sections(query: str) -> list[str]:
         return []
     best = 0.0
     found: list[str] = []
-    for number, title_tokens in _title_tokens():
+    for number, title_tokens in itertools.chain.from_iterable(
+        _title_tokens(slug) for slug in sorted(instrument_slugs)
+    ):
         matched = sum(
             1
             for token in query_tokens
@@ -1664,7 +1810,9 @@ def title_sections(query: str) -> list[str]:
     return found if len(found) <= _TITLE_MAX_SECTIONS else []
 
 
-def topic_sections(query: str) -> list[tuple[str, float]]:
+def topic_sections(
+    query: str, *, instrument_slugs: Collection[str] = (CONSTITUTION_SLUG,)
+) -> list[tuple[str, float]]:
     """Section numbers for a query with a fusion weight for each.
 
     Multi-word matches are specific enough to lead the ranking; single-word
@@ -1672,16 +1820,76 @@ def topic_sections(query: str) -> list[tuple[str, float]]:
     section named by several topics, or by its own title, collects each boost.
     """
     weights: dict[str, float] = {}
-    for match in match_topics(query):
+    matches = match_topics(query)
+    # Match statutes separately so new topics cannot displace established
+    # Constitution hints in the three-topic window.
+    matches += match_topics(query, topics=STATUTE_TOPICS)
+    for match in matches:
         weight = 2.5 if match.score >= 2 else 1.5
         for number in match.sections:
+            if number.partition(":")[0] not in instrument_slugs:
+                continue
             weights[number] = weights.get(number, 0.0) + weight
-    for number in title_sections(query):
+    for number in title_sections(query, instrument_slugs=instrument_slugs):
         weights[number] = weights.get(number, 0.0) + _TITLE_WEIGHT
-    if _REMEDY_INTENT.search(query) and "46" not in weights:
-        weights["46"] = 1.5
+    remedy = f"{CONSTITUTION_SLUG}:46"
+    if (
+        CONSTITUTION_SLUG in instrument_slugs
+        and _REMEDY_INTENT.search(query)
+        and remedy not in weights
+    ):
+        weights[remedy] = 1.5
     # Stable sort keeps the curated order for equal weights.
     return sorted(weights.items(), key=lambda item: -item[1])
+
+
+def _is_rights_topic(match: TopicMatch) -> bool:
+    return all(
+        slug == CONSTITUTION_SLUG
+        and number.isdigit()
+        and _RIGHTS_SECTIONS[0] <= int(number) <= _RIGHTS_SECTIONS[1]
+        for slug, _, number in (target.partition(":") for target in match.sections)
+    )
+
+
+def related_laws(
+    query: str, *, instrument_slugs: Collection[str] = (CONSTITUTION_SLUG,)
+) -> list[str]:
+    """Other laws on the subjects a question matches, most relevant first."""
+    by_slug = {topic.slug: topic for topic in TOPICS}
+    laws: list[str] = []
+    for match in match_topics(query):
+        for law in by_slug[match.slug].related_laws:
+            if (
+                ACJA_SLUG in instrument_slugs
+                and law.startswith("Administration of Criminal Justice Act")
+            ) or (POLICE_SLUG in instrument_slugs and law.startswith("Police Act")):
+                continue
+            if law not in laws:
+                laws.append(law)
+    return laws[:3]
+
+
+def demoted_sections(query: str) -> frozenset[str]:
+    """Sections that share a rights question's words but not its subject.
+
+    "Can police search my phone?" shares "police" with the sections that set
+    up the police force, and "warrant" with the legislature's power to summon
+    witnesses. Neither says anything about the reader's rights, so a rights
+    question pushes them down unless the question is about them.
+    """
+    matches = match_topics(query)
+    if not any(_is_rights_topic(match) for match in matches):
+        return frozenset()
+    named = {number for match in matches for number in match.sections}
+    named.update(title_sections(query))
+    return (
+        frozenset(f"{CONSTITUTION_SLUG}:{number}" for number in _RIGHTS_NOISE) - named
+    )
+
+
+def rights_question(query: str) -> bool:
+    return any(_is_rights_topic(match) for match in match_topics(query))
 
 
 def companion_sections(number: str) -> tuple[str, ...]:

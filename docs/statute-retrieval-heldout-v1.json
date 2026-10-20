@@ -1,0 +1,66 @@
+{
+  "version": "statute-retrieval-heldout-v1",
+  "description": "Provisional retrieval cases derived from the retained source navigation catalogues. These are routing checks, not lawyer-approved answer gold. Held-out questions must not be copied into topic phrases.",
+  "reference_format": "instrument-slug:section",
+  "review_status": "needs_review",
+  "required_instruments": [
+    "acja-2015",
+    "police-act-2020"
+  ],
+  "cases": [
+    {
+      "id": "heldout-arrested-search",
+      "query": "Which provision concerns search after arrest?",
+      "expected_sections": [
+        "acja-2015:9",
+        "police-act-2020:52"
+      ]
+    },
+    {
+      "id": "heldout-warrantless-arrest",
+      "query": "Where is arrest by a police officer without warrant addressed?",
+      "expected_sections": [
+        "acja-2015:18",
+        "police-act-2020:38"
+      ]
+    },
+    {
+      "id": "heldout-stop-search",
+      "query": "What action must precede a search taking place?",
+      "expected_sections": [
+        "police-act-2020:50"
+      ]
+    },
+    {
+      "id": "heldout-bail",
+      "query": "Where is power to release on bail before charge is accepted?",
+      "expected_sections": [
+        "acja-2015:31",
+        "police-act-2020:63"
+      ]
+    },
+    {
+      "id": "heldout-custody",
+      "query": "Which sections deal with remedy of a suspect detained in custody?",
+      "expected_sections": [
+        "acja-2015:32",
+        "police-act-2020:64"
+      ]
+    },
+    {
+      "id": "heldout-statement",
+      "query": "Which headings address recording of a statement of a suspect?",
+      "expected_sections": [
+        "acja-2015:17",
+        "police-act-2020:60"
+      ]
+    },
+    {
+      "id": "heldout-premises",
+      "query": "Where are search warrant safeguards addressed?",
+      "expected_sections": [
+        "police-act-2020:58"
+      ]
+    }
+  ]
+}
