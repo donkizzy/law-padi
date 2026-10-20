@@ -448,28 +448,42 @@ class ReviewItemUpdate(IdempotentMutation):
 
     @model_validator(mode="after")
     def require_patch_field(self) -> ReviewItemUpdate:
-        if not any(
-            value is not None
-            for value in (
-                self.revised_text,
-                self.heading,
-                self.kind,
-                self.number,
-                self.parent_candidate_id,
-                self.canonical_path,
-                self.sort_key,
-                self.source_page_start,
-                self.source_page_end,
-                self.source_spans,
-            )
-        ):
+        patch_fields = self.model_fields_set - {
+            "idempotency_key",
+            "expected_version",
+            "reason",
+        }
+        if not patch_fields:
             raise ValueError("At least one candidate field must be revised")
+        for name in ("kind", "canonical_path", "sort_key", "revised_text"):
+            if name in patch_fields and getattr(self, name) is None:
+                raise ValueError(f"{name} cannot be cleared")
         if (
             self.source_page_start is not None
             and self.source_page_end is not None
             and self.source_page_end < self.source_page_start
         ):
             raise ValueError("source_page_end must be at least source_page_start")
+        return self
+
+
+class ReviewItemDerive(ReviewItemUpdate):
+    """Recover a provision from a retained candidate without approving it."""
+
+    kind: ProvisionKind
+    canonical_path: str = Field(min_length=1, max_length=512)
+    sort_key: str = Field(min_length=1, max_length=255)
+    source_page_start: int = Field(ge=1)
+    source_page_end: int = Field(ge=1)
+    source_spans: list[dict[str, Any]] = Field(min_length=1)
+
+    @model_validator(mode="after")
+    def require_body_or_structural_heading(self) -> ReviewItemDerive:
+        if not (self.revised_text or "").strip() and not (
+            self.kind in {ProvisionKind.CHAPTER, ProvisionKind.PART}
+            and (self.heading or "").strip()
+        ):
+            raise ValueError("A provision needs body text or a structural heading")
         return self
 
 

@@ -54,6 +54,7 @@ from app.legal.enums import (
     IngestionStepStatus,
     IngestionTaskStatus,
     InstrumentType,
+    PageInclusionStatus,
     ReleasePromotionStatus,
     ReviewDecisionType,
     ReviewIssueSeverity,
@@ -95,6 +96,7 @@ from app.legal.schemas import (
     PageSelectionUpdate,
     ReviewDecisionCreate,
     ReviewIssueUpdate,
+    ReviewItemDerive,
     ReviewItemUpdate,
     SourceUploadComplete,
     SourceUploadCreate,
@@ -820,7 +822,12 @@ def update_page_selection(
     if run is None:
         raise HTTPException(status_code=404, detail="Ingestion run not found")
     _check_expected_version(run.lock_version, body.expected_run_version)
-    if (
+    imported_review = (
+        run.status == IngestionRunStatus.WAITING_FOR_REVIEW
+        and run.current_stage == IngestionStage.REVIEW
+        and bool((run.pipeline_config or {}).get("review_import_complete"))
+    )
+    if not imported_review and (
         run.status != IngestionRunStatus.WAITING_FOR_INPUT
         or run.current_stage != IngestionStage.AWAITING_PAGE_CONFIRMATION
     ):
@@ -844,6 +851,16 @@ def update_page_selection(
             detail="Page selection must include every profiled page exactly once",
         )
     pages_by_number = {page.page_number: page for page in all_pages}
+    if imported_review and any(
+        page.inclusion_status
+        not in {PageInclusionStatus.INCLUDED, PageInclusionStatus.EXCLUDED}
+        or not (page.inclusion_reason or "").strip()
+        for page in body.pages
+    ):
+        raise HTTPException(
+            status_code=422,
+            detail="Imported review pages require explicit inclusion decisions and reasons",
+        )
     pages: list[SourcePage] = []
     for requested_page in body.pages:
         page = pages_by_number.get(requested_page.page_number)
@@ -855,6 +872,88 @@ def update_page_selection(
         page.lock_version += 1
         session.add(page)
         pages.append(page)
+    if imported_review:
+        candidates = session.exec(
+            select(ExtractionCandidate).where(ExtractionCandidate.run_id == run.id)
+        ).all()
+        included = {
+            page.page_number
+            for page in pages
+            if page.inclusion_status == PageInclusionStatus.INCLUDED
+        }
+        for candidate in candidates:
+            if (
+                candidate.status == ExtractionCandidateStatus.MATERIALIZED
+                or candidate.materialized_version_id
+            ):
+                raise HTTPException(
+                    status_code=409,
+                    detail="Materialized runs cannot change page boundaries",
+                )
+            _revalidate_review_page_coverage(session, candidate, included, current_user)
+            if candidate.status in {
+                ExtractionCandidateStatus.APPROVED,
+                ExtractionCandidateStatus.AUTO_APPROVED,
+            }:
+                candidate.status = ExtractionCandidateStatus.NEEDS_REVIEW
+            candidate.lock_version += 1
+            session.add(candidate)
+            for issue in session.exec(
+                select(ReviewIssue).where(
+                    ReviewIssue.candidate_id == candidate.id,
+                    ReviewIssue.issue_type == "provisional_page_boundaries",
+                    ReviewIssue.status == ReviewIssueStatus.OPEN,
+                )
+            ).all():
+                issue.status = ReviewIssueStatus.RESOLVED
+                issue.resolved_by = current_user.id
+                issue.resolved_at = get_datetime_utc()
+                issue.resolution_reason = "All imported source pages received explicit reviewed boundary decisions."
+                issue.resolution_evidence = {
+                    "page_numbers": sorted(included),
+                    "idempotency_key": body.idempotency_key,
+                }
+                session.add(issue)
+            session.flush()
+            candidate.blocking_issue_count = _open_blocking_issue_count(
+                session, candidate.id
+            )
+        run.pipeline_config = {
+            **run.pipeline_config,
+            "provisional_page_boundaries": False,
+        }
+        run.lock_version += 1
+        run.updated_at = get_datetime_utc()
+        session.add(run)
+        append_run_event(
+            session,
+            run,
+            event_type="review_page_boundaries_confirmed",
+            message="Imported page boundaries confirmed; candidate review remains required",
+            stage=IngestionStage.REVIEW,
+            payload={
+                "actor_user_id": str(current_user.id),
+                "pages": [item.model_dump(mode="json") for item in body.pages],
+            },
+            commit=False,
+        )
+        _add_idempotency_record(
+            session,
+            scope=scope,
+            idempotency_key=body.idempotency_key,
+            request_hash=request_hash,
+            result_type="page_selection",
+            result_id=run.id,
+            created_by=current_user.id,
+            result_payload={
+                "run_id": str(run.id),
+                "page_numbers": [page.page_number for page in pages],
+            },
+        )
+        session.commit()
+        for page in pages:
+            session.refresh(page)
+        return pages
     awaiting_step = _get_run_step(
         session, run.id, IngestionStage.AWAITING_PAGE_CONFIRMATION
     )
@@ -937,6 +1036,7 @@ def update_review_candidate(
         return revision
     candidate = _get_candidate(session, candidate_id)
     _check_expected_version(candidate.lock_version, body.expected_version)
+    _validate_review_patch(session, candidate, body)
     latest_revision = _latest_candidate_revision(session, candidate.id)
     previous_text = (
         latest_revision.revised_text if latest_revision else candidate.raw_text
@@ -944,6 +1044,7 @@ def update_review_candidate(
     next_text = body.revised_text if body.revised_text is not None else previous_text
     before_snapshot = _candidate_snapshot(candidate, previous_text)
     changed_fields: dict[str, object] = {}
+    json_patch = body.model_dump(mode="json", exclude_unset=True)
     for field_name in (
         "heading",
         "kind",
@@ -956,9 +1057,9 @@ def update_review_candidate(
         "source_spans",
     ):
         value = getattr(body, field_name)
-        if value is not None:
+        if field_name in body.model_fields_set:
             setattr(candidate, field_name, value)
-            changed_fields[field_name] = value
+            changed_fields[field_name] = json_patch[field_name]
     after_snapshot = _candidate_snapshot(candidate, next_text)
     for field_name, after_value in after_snapshot.items():
         before_value = before_snapshot.get(field_name)
@@ -1004,6 +1105,196 @@ def update_review_candidate(
     session.commit()
     session.refresh(revision)
     return revision
+
+
+def derive_review_candidate(
+    session: Session,
+    candidate_id: uuid.UUID,
+    body: ReviewItemDerive,
+    current_user: User,
+) -> ExtractionCandidate:
+    scope = _idempotency_scope("review_item.derive", candidate_id)
+    request_hash = _idempotency_request_hash(body)
+    record = _idempotency_record_for_request(
+        session,
+        scope=scope,
+        idempotency_key=body.idempotency_key,
+        request_hash=request_hash,
+    )
+    if record and record.result_id:
+        return _get_candidate(session, record.result_id)
+    original = _get_candidate(session, candidate_id)
+    _check_expected_version(original.lock_version, body.expected_version)
+    if (
+        original.materialized_version_id
+        or original.status == ExtractionCandidateStatus.MATERIALIZED
+    ):
+        raise HTTPException(
+            status_code=409, detail="Derive from an unmaterialized review candidate"
+        )
+    candidate = ExtractionCandidate(
+        run_id=original.run_id,
+        source_document_id=original.source_document_id,
+        kind=body.kind,
+        number=body.number,
+        heading=body.heading,
+        parent_candidate_id=body.parent_candidate_id,
+        canonical_path=body.canonical_path,
+        sort_key=body.sort_key,
+        # A recovered bodyless Part/Chapter must not inherit its origin's body.
+        # The original extraction is retained in the revision's before snapshot.
+        raw_text=original.raw_text if body.revised_text is not None else None,
+        source_page_start=body.source_page_start,
+        source_page_end=body.source_page_end,
+        source_spans=body.source_spans,
+        parser_version="reviewer-derived-v1",
+        extractor_version=original.extractor_version,
+        revision_number=2,
+    )
+    _validate_review_patch(session, candidate, body)
+    session.add(candidate)
+    session.flush()
+    revision = CandidateRevision(
+        candidate_id=candidate.id,
+        revision_number=2,
+        previous_text=original.raw_text,
+        revised_text=body.revised_text,
+        diff=_line_diff(original.raw_text or "", body.revised_text or ""),
+        before_snapshot=_candidate_snapshot(original, original.raw_text),
+        after_snapshot=_candidate_snapshot(candidate, body.revised_text),
+        changed_fields={"derived_from_candidate_id": str(original.id)},
+        reason=body.reason,
+        revised_by=current_user.id,
+    )
+    session.add(revision)
+    session.add(
+        AuditEvent(
+            actor_user_id=current_user.id,
+            action="review_item.derived",
+            entity_type="extraction_candidate",
+            entity_id=candidate.id,
+            reason=body.reason,
+            payload={
+                "source_candidate_id": str(original.id),
+                "source_document_id": str(original.source_document_id),
+            },
+        )
+    )
+    _revalidate_candidate_revision_text(
+        session,
+        candidate=candidate,
+        revised_text=body.revised_text or "",
+        current_user=current_user,
+    )
+    _add_idempotency_record(
+        session,
+        scope=scope,
+        idempotency_key=body.idempotency_key,
+        request_hash=request_hash,
+        result_type="extraction_candidate",
+        result_id=candidate.id,
+        created_by=current_user.id,
+    )
+    session.commit()
+    session.refresh(candidate)
+    return candidate
+
+
+def _validate_review_patch(
+    session: Session, candidate: ExtractionCandidate, body: ReviewItemUpdate
+) -> None:
+    """Reject unsafe structure edits before changing the audited candidate."""
+    if (
+        candidate.status == ExtractionCandidateStatus.MATERIALIZED
+        or candidate.materialized_version_id
+        or candidate.materialized_provision_id
+    ):
+        raise HTTPException(
+            status_code=409, detail="Materialized candidates cannot be revised"
+        )
+    run = session.get(IngestionRun, candidate.run_id)
+    if not run or run.status == IngestionRunStatus.CANCELLED:
+        raise HTTPException(status_code=409, detail="Cancelled runs cannot be revised")
+    # Serialize graph edits within a run, including path uniqueness checks.
+    session.exec(
+        select(IngestionRun).where(IngestionRun.id == run.id).with_for_update()
+    ).one()
+    path = body.canonical_path or candidate.canonical_path
+    duplicate = session.exec(
+        select(ExtractionCandidate.id).where(
+            ExtractionCandidate.run_id == candidate.run_id,
+            ExtractionCandidate.canonical_path == path,
+            ExtractionCandidate.id != candidate.id,
+        )
+    ).first()
+    if duplicate:
+        raise HTTPException(
+            status_code=409, detail="Canonical path already exists in this run"
+        )
+    parent_id = (
+        body.parent_candidate_id
+        if "parent_candidate_id" in body.model_fields_set
+        else candidate.parent_candidate_id
+    )
+    visited = {candidate.id}
+    while parent_id:
+        if parent_id in visited:
+            raise HTTPException(
+                status_code=422, detail="Candidate parent would create a cycle"
+            )
+        visited.add(parent_id)
+        parent = session.get(ExtractionCandidate, parent_id)
+        if (
+            not parent
+            or parent.run_id != candidate.run_id
+            or parent.source_document_id != candidate.source_document_id
+        ):
+            raise HTTPException(
+                status_code=422, detail="Parent must belong to the same source and run"
+            )
+        parent_id = parent.parent_candidate_id
+    start = (
+        body.source_page_start
+        if "source_page_start" in body.model_fields_set
+        else candidate.source_page_start
+    )
+    end = (
+        body.source_page_end
+        if "source_page_end" in body.model_fields_set
+        else candidate.source_page_end
+    )
+    source = session.get(SourceDocument, candidate.source_document_id)
+    if start is not None and end is not None and end < start:
+        raise HTTPException(
+            status_code=422, detail="Source end page precedes start page"
+        )
+    if (
+        source
+        and source.page_count
+        and any(page and page > source.page_count for page in (start, end))
+    ):
+        raise HTTPException(
+            status_code=422, detail="Source page exceeds the document page count"
+        )
+    if body.model_fields_set & {"source_spans", "source_page_start", "source_page_end"}:
+        spans = (
+            body.source_spans
+            if "source_spans" in body.model_fields_set
+            else candidate.source_spans
+        )
+        for span in spans or []:
+            page = span.get("page_number", span.get("page"))
+            if (
+                not isinstance(page, int)
+                or isinstance(page, bool)
+                or page < 1
+                or (start is not None and page < start)
+                or (end is not None and page > end)
+            ):
+                raise HTTPException(
+                    status_code=422,
+                    detail="Each source span must name a page within the candidate range",
+                )
 
 
 def decide_review_candidate(
@@ -2508,7 +2799,12 @@ def _get_run_step(
 
 
 def _get_candidate(session: Session, candidate_id: uuid.UUID) -> ExtractionCandidate:
-    candidate = session.get(ExtractionCandidate, candidate_id)
+    candidate = session.exec(
+        select(ExtractionCandidate)
+        .where(ExtractionCandidate.id == candidate_id)
+        .with_for_update()
+        .execution_options(populate_existing=True)
+    ).one_or_none()
     if not candidate:
         raise HTTPException(status_code=404, detail="Review item not found")
     return candidate
@@ -2758,6 +3054,21 @@ def _revalidate_candidate_revision_text(
     revised_text: str,
     current_user: User,
 ) -> None:
+    run = session.get(IngestionRun, candidate.run_id)
+    if (
+        run
+        and (run.pipeline_config or {}).get("review_import_complete")
+        and not (run.pipeline_config or {}).get("provisional_page_boundaries", True)
+    ):
+        included = set(
+            session.exec(
+                select(SourcePage.page_number).where(
+                    SourcePage.run_id == candidate.run_id,
+                    SourcePage.inclusion_status == PageInclusionStatus.INCLUDED,
+                )
+            ).all()
+        )
+        _revalidate_review_page_coverage(session, candidate, included, current_user)
     open_revision_issue = session.exec(
         select(ReviewIssue).where(
             ReviewIssue.candidate_id == candidate.id,
@@ -2853,6 +3164,57 @@ def _open_blocking_issue_count(session: Session, candidate_id: uuid.UUID) -> int
             ReviewIssue.status == ReviewIssueStatus.OPEN,
         )
     ).one()
+
+
+def _revalidate_review_page_coverage(
+    session: Session,
+    candidate: ExtractionCandidate,
+    included: set[int],
+    current_user: User,
+) -> None:
+    pages: set[int | None] = set(
+        range(
+            candidate.source_page_start or 1,
+            (candidate.source_page_end or candidate.source_page_start or 1) + 1,
+        )
+    )
+    for span in candidate.source_spans or []:
+        page = span.get("page_number", span.get("page"))
+        pages.add(
+            page if isinstance(page, int) and not isinstance(page, bool) else None
+        )
+    invalid = pages - included
+    issue = session.exec(
+        select(ReviewIssue).where(
+            ReviewIssue.candidate_id == candidate.id,
+            ReviewIssue.issue_type == "excluded_source_page",
+        )
+    ).first()
+    if invalid:
+        if issue is None:
+            issue = ReviewIssue(
+                candidate_id=candidate.id,
+                issue_type="excluded_source_page",
+                severity=ReviewIssueSeverity.BLOCKING,
+                blocking=True,
+                message="Candidate source mapping includes excluded or unknown pages.",
+            )
+        issue.status = ReviewIssueStatus.OPEN
+        issue.evidence = {
+            "excluded_or_unknown_pages": sorted(str(page) for page in invalid)
+        }
+        issue.resolved_by = None
+        issue.resolved_at = None
+        session.add(issue)
+    elif issue and issue.status == ReviewIssueStatus.OPEN:
+        issue.status = ReviewIssueStatus.RESOLVED
+        issue.resolved_by = current_user.id
+        issue.resolved_at = get_datetime_utc()
+        issue.resolution_reason = (
+            "Current candidate mapping uses only confirmed included source pages."
+        )
+        issue.resolution_evidence = {"revision_number": candidate.revision_number}
+        session.add(issue)
 
 
 def _candidate_status_for_decision(

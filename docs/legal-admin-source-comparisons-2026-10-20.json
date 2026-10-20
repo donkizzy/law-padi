@@ -1,0 +1,533 @@
+{
+  "scope": "AI-assisted source extraction only; source verification/publication excluded",
+  "police": {
+    "run": "07e6dc81-c9d5-421c-83d5-1cb618a19578",
+    "approvedPart17": [
+      {
+        "id": "5684ead3-91fb-431d-8633-d9ee8185e243",
+        "path": "police-act-2020.part17.section139.subsection2",
+        "text": "(2) Subject to section 6 of the Interpretation Act (relating to the repeal of enactments), the repeal of the Act referred to under subsection (1) does not affect anything done or purported to have been done under it.",
+        "heading": "",
+        "parent": "eda3afff-beae-48ea-a9e9-b7ed2bffaeca",
+        "sort": "00142.002",
+        "kind": "subsection",
+        "start": "51",
+        "end": "51"
+      },
+      {
+        "id": "6d111c9b-c311-4617-8925-6e6116504dfb",
+        "path": "police-act-2020.part17.section139.subsection1",
+        "text": "(1) The Police Act Cap P19 Laws of the Federation of Nigeria, 2004 is repealed.",
+        "heading": "",
+        "parent": "eda3afff-beae-48ea-a9e9-b7ed2bffaeca",
+        "sort": "00142.001",
+        "kind": "subsection",
+        "start": "51",
+        "end": "51"
+      },
+      {
+        "id": "62e2bc24-5271-4e91-aec1-ce8a30d7f453",
+        "path": "police-act-2020.part17.section138.subsection1.paragraphb",
+        "text": "(b) the Police Service Commission, with respect to appointments, promotions and disciplinary control of police officers as specified in the Constitution.",
+        "heading": "",
+        "parent": "ef6e66a2-1c79-4890-b53f-ebdf725ec3e8",
+        "sort": "00141.001.002",
+        "kind": "paragraph",
+        "start": "51",
+        "end": "51"
+      },
+      {
+        "id": "00543b88-838d-487e-a8aa-bd0b009421ed",
+        "path": "police-act-2020.part17.section142",
+        "text": "This Act may be cited as the Nigeria Police Act, 2020.",
+        "heading": "Citation",
+        "parent": "a0e0f165-5348-4bcd-bfe6-271b3f1c73e6",
+        "sort": "00145",
+        "kind": "section",
+        "start": "53",
+        "end": "53"
+      },
+      {
+        "id": "d852d4bf-336f-4b89-9f25-e72486245165",
+        "path": "police-act-2020.part17.section141",
+        "text": "In this Act:\n“Commissioner” means a Commissioner of Police, a Deputy Commissioner of Police or an Assistant Commissioner of Police;\n“Constable” means any police officer below the rank of Corporal;\n“Constitution” means the Constitution of the Federal Republic of Nigeria, 1999 (as altered);\n“court” means any court established by any law in force in Nigeria;\n“Criminal Justice Monitoring Committee” refers to the Administration of Criminal Justice Monitoring Committee set up under section 469 of the Administration of Criminal Justice Act to ensure effective and efficient application of the Act, speedy dispensation of criminal matters and for related matters;\n“functions” includes duties;\n“Inspector” includes a Chief Inspector and an Inspector of Police;\n“Minister” means the Minister charged with responsibility over police matters;\n“Ministry” shall be construed accordingly;\n“Non-Commissioned Officer” means a Police Sergeant-Major, a Police Sergeant or a Police Corporal as the case may be;\n“Police” means the Police Force;\n“Police Force” means the Police Force established under section 3 of this Act;\n“police officer” means a member of the Nigerian Police;\n“prosecuting officer” means any person appointed by the Attorney-General of the Federation or of the States to prosecute crimes on their behalf and for the Nigeria Police;\n“senior police officer” means any police officer above the rank of a Cadet Assistant Superintendent of Police; and\n“Superintendent of Police, includes a Chief Superintendent of Police, Superintendent of Police, a Deputy Superintendent of Police, and an Assistant Superintendent of Police.",
+        "heading": "Interpretation",
+        "parent": "a0e0f165-5348-4bcd-bfe6-271b3f1c73e6",
+        "sort": "00144",
+        "kind": "section",
+        "start": "52",
+        "end": "53"
+      },
+      {
+        "id": "e5a726e1-e7b8-440f-a95e-f2f45db8c930",
+        "path": "police-act-2020.part17.section140.subsection7",
+        "text": "(7) The Minister may if he thinks fit, within 12 months after the commencement of this Act, by notice published in the Federal Government Gazette, make additional transitional provisions for the better carrying out of the objectives of this section.",
+        "heading": "",
+        "parent": "3d64a9bd-43da-4879-b143-6ff4b9835f1a",
+        "sort": "00143.007",
+        "kind": "subsection",
+        "start": "52",
+        "end": "52"
+      },
+      {
+        "id": "83f99b82-a088-4100-aab1-d7443a405728",
+        "path": "police-act-2020.part17.section140.subsection6",
+        "text": "(6) Any regulation, order, notice made or issued by or for the purpose of the Police Force existing immediately before the commencement of this Act are deemed, if not inconsistent with this Act, to have been made or issued by or for the purposes of the Police Force established under this Act and shall continue in force until revoked or amended, subject to such modifications as may, from time to time be applicable to the Police Force established under this Act.",
+        "heading": "",
+        "parent": "3d64a9bd-43da-4879-b143-6ff4b9835f1a",
+        "sort": "00143.006",
+        "kind": "subsection",
+        "start": "52",
+        "end": "52"
+      },
+      {
+        "id": "07d1deea-8e4a-468b-a631-522d14cb1ab3",
+        "path": "police-act-2020.part17.section140.subsection5",
+        "text": "(5) Subject to the provisions of this Act and to such directions as may be issued by the Police Service Commission, a person who immediately before the commencement of this Act held office in the Police Force existing before the commencement of this Act is deemed to have been transferred to the Police Force established under this Act on terms and conditions not less favourable than those obtaining immediately before the commencement of this Act and employment in the Police Force existing immediately before the commencement of this Act is deem to be service in the Police Force established under this Act for the purpose of pension.",
+        "heading": "",
+        "parent": "3d64a9bd-43da-4879-b143-6ff4b9835f1a",
+        "sort": "00143.005",
+        "kind": "subsection",
+        "start": "52",
+        "end": "52"
+      },
+      {
+        "id": "953c302a-f57c-48f3-a97a-413d8f1cfe3c",
+        "path": "police-act-2020.part17.section140.subsection4",
+        "text": "(4) Any proceeding or cause of action pending or existing immediately before the commencement of this Act in respect of any right, interest, obligation or liability of the Police Force existing immediately before the commencement of this Act may be continued, or as the case may require, be commenced and the determination of a court or tribunal or other authority or person may be enforced by or against the Police Force established under this Act to the same extent that the cause of action or determination might have been continued or commenced or enforced by or against the Police Force existing immediately before the commencement of this Act as if this Act had not been enacted.",
+        "heading": "",
+        "parent": "3d64a9bd-43da-4879-b143-6ff4b9835f1a",
+        "sort": "00143.004",
+        "kind": "subsection",
+        "start": "52",
+        "end": "52"
+      },
+      {
+        "id": "49930e57-e3b3-4f34-ba5b-05a70d768542",
+        "path": "police-act-2020.part17.section140.subsection3",
+        "text": "(3) Any contract or instrument referred to in subsection (2) has the same effect against or in favour of the Police Force established under this Act and shall be enforced as fully and effectively as if, instead of the Police Force existing immediately before the commencement of this Act, the Police Force established under this Act had been named in it or had been a party to it.",
+        "heading": "",
+        "parent": "3d64a9bd-43da-4879-b143-6ff4b9835f1a",
+        "sort": "00143.003",
+        "kind": "subsection",
+        "start": "52",
+        "end": "52"
+      },
+      {
+        "id": "4112680f-3777-4304-b079-54986a4e988f",
+        "path": "police-act-2020.part17.section140.subsection2",
+        "text": "(2) All rights, interests, obligations and liabilities of the Police Force existing immediately before the commencement of this Act under any contract or instrument, or in law or in equity, are by virtue of this Act assigned to and vested in the Police Force established under this Act.",
+        "heading": "",
+        "parent": "3d64a9bd-43da-4879-b143-6ff4b9835f1a",
+        "sort": "00143.002",
+        "kind": "subsection",
+        "start": "51",
+        "end": "52"
+      },
+      {
+        "id": "79a45d23-b854-4dd5-a602-30d08de03d6f",
+        "path": "police-act-2020.part17.section140.subsection1",
+        "text": "(1) There are vested in the Police Force established under this Act, all assets, funds, resources and other moveable or immoveable property which immediately before the commencement of this Act were vested in the Police Force existing immediately before the commencement of this Act.",
+        "heading": "",
+        "parent": "3d64a9bd-43da-4879-b143-6ff4b9835f1a",
+        "sort": "00143.001",
+        "kind": "subsection",
+        "start": "51",
+        "end": "51"
+      },
+      {
+        "id": "3d64a9bd-43da-4879-b143-6ff4b9835f1a",
+        "path": "police-act-2020.part17.section140",
+        "text": "(1) There are vested in the Police Force established under this Act, all assets, funds, resources and other moveable or immoveable property which immediately before the commencement of this Act were vested in the Police Force existing immediately before the commencement of this Act.\n(2) All rights, interests, obligations and liabilities of the Police Force existing immediately before the commencement of this Act under any contract or instrument, or in law or in equity, are by virtue of this Act assigned to and vested in the Police Force established under this Act.\n(3) Any contract or instrument referred to in subsection (2) has the same effect against or in favour of the Police Force established under this Act and shall be enforced as fully and effectively as if, instead of the Police Force existing immediately before the commencement of this Act, the Police Force established under this Act had been named in it or had been a party to it.\n(4) Any proceeding or cause of action pending or existing immediately before the commencement of this Act in respect of any right, interest, obligation or liability of the Police Force existing immediately before the commencement of this Act may be continued, or as the case may require, be commenced and the determination of a court or tribunal or other authority or person may be enforced by or against the Police Force established under this Act to the same extent that the cause of action or determination might have been continued or commenced or enforced by or against the Police Force existing immediately before the commencement of this Act as if this Act had not been enacted.\n(5) Subject to the provisions of this Act and to such directions as may be issued by the Police Service Commission, a person who immediately before the commencement of this Act held office in the Police Force existing before the commencement of this Act is deemed to have been transferred to the Police Force established under this Act on terms and conditions not less favourable than those obtaining immediately before the commencement of this Act and employment in the Police Force existing immediately before the commencement of this Act is deem to be service in the Police Force established under this Act for the purpose of pension.\n(6) Any regulation, order, notice made or issued by or for the purpose of the Police Force existing immediately before the commencement of this Act are deemed, if not inconsistent with this Act, to have been made or issued by or for the purposes of the Police Force established under this Act and shall continue in force until revoked or amended, subject to such modifications as may, from time to time be applicable to the Police Force established under this Act.\n(7) The Minister may if he thinks fit, within 12 months after the commencement of this Act, by notice published in the Federal Government Gazette, make additional transitional provisions for the better carrying out of the objectives of this section.",
+        "heading": "Savings and transitional provisions",
+        "parent": "a0e0f165-5348-4bcd-bfe6-271b3f1c73e6",
+        "sort": "00143",
+        "kind": "section",
+        "start": "51",
+        "end": "52"
+      },
+      {
+        "id": "eda3afff-beae-48ea-a9e9-b7ed2bffaeca",
+        "path": "police-act-2020.part17.section139",
+        "text": "(1) The Police Act Cap P19 Laws of the Federation of Nigeria, 2004 is repealed.\n(2) Subject to section 6 of the Interpretation Act (relating to the repeal of enactments), the repeal of the Act referred to under subsection (1) does not affect anything done or purported to have been done under it.",
+        "heading": "Repeal",
+        "parent": "a0e0f165-5348-4bcd-bfe6-271b3f1c73e6",
+        "sort": "00142",
+        "kind": "section",
+        "start": "51",
+        "end": "51"
+      },
+      {
+        "id": "c14a2b3b-f1b4-4c96-85bc-570d6c167266",
+        "path": "police-act-2020.part17.section138.subsection2",
+        "text": "(2) The Minister shall regularly review the police regulations.",
+        "heading": "",
+        "parent": "85756182-cfbf-4412-8443-de57fdc2feac",
+        "sort": "00141.002",
+        "kind": "subsection",
+        "start": "51",
+        "end": "51"
+      },
+      {
+        "id": "cb70edb7-da8d-402d-9be2-3b09a8e93c74",
+        "path": "police-act-2020.part17.section138.subsection1.paragrapha",
+        "text": "(a) the Inspector-General of Police, with respect to the policy, organisation and administration of the Police Force, including establishments and financial matters, other than pensions within the meaning of the Pensions Reform Act.",
+        "heading": "",
+        "parent": "ef6e66a2-1c79-4890-b53f-ebdf725ec3e8",
+        "sort": "00141.001.001",
+        "kind": "paragraph",
+        "start": "51",
+        "end": "51"
+      },
+      {
+        "id": "ef6e66a2-1c79-4890-b53f-ebdf725ec3e8",
+        "path": "police-act-2020.part17.section138.subsection1",
+        "text": "(1) The Minister may make regulations on the recommendation of:\n(a) the Inspector-General of Police, with respect to the policy, organisation and administration of the Police Force, including establishments and financial matters, other than pensions within the meaning of the Pensions Reform Act.\n(b) the Police Service Commission, with respect to appointments, promotions and disciplinary control of police officers as specified in the Constitution.",
+        "heading": "",
+        "parent": "85756182-cfbf-4412-8443-de57fdc2feac",
+        "sort": "00141.001",
+        "kind": "subsection",
+        "start": "51",
+        "end": "51"
+      },
+      {
+        "id": "85756182-cfbf-4412-8443-de57fdc2feac",
+        "path": "police-act-2020.part17.section138",
+        "text": "(1) The Minister may make regulations on the recommendation of:\n(a) the Inspector-General of Police, with respect to the policy, organisation and administration of the Police Force, including establishments and financial matters, other than pensions within the meaning of the Pensions Reform Act.\n(b) the Police Service Commission, with respect to appointments, promotions and disciplinary control of police officers as specified in the Constitution.\n(2) The Minister shall regularly review the police regulations.",
+        "heading": "Power to make regulations",
+        "parent": "a0e0f165-5348-4bcd-bfe6-271b3f1c73e6",
+        "sort": "00141",
+        "kind": "section",
+        "start": "51",
+        "end": "51"
+      },
+      {
+        "id": "2cca12f6-2f43-4ed3-a68a-9f63a019e9a1",
+        "path": "police-act-2020.part17.section137.subsection2.paragraphb",
+        "text": "(b) unlawful, take appropriate disciplinary action against the senior police officer for giving an unlawful order.",
+        "heading": "",
+        "parent": "c165bc35-f2f1-46bd-91dc-03c3ad2e9739",
+        "sort": "00140.002.002",
+        "kind": "paragraph",
+        "start": "51",
+        "end": "51"
+      },
+      {
+        "id": "7b4284d7-46dc-4d20-a12a-61d0e5cc5d85",
+        "path": "police-act-2020.part17.section137.subsection2.paragrapha",
+        "text": "(a) lawful, take appropriate disciplinary action against the police officer for disobeying a lawful order; and",
+        "heading": "",
+        "parent": "c165bc35-f2f1-46bd-91dc-03c3ad2e9739",
+        "sort": "00140.002.001",
+        "kind": "paragraph",
+        "start": "51",
+        "end": "51"
+      },
+      {
+        "id": "c165bc35-f2f1-46bd-91dc-03c3ad2e9739",
+        "path": "police-act-2020.part17.section137.subsection2",
+        "text": "(2) On the receipt of the report referred to in subsection (1), the Police Service Commission shall immediately inquire into the matter and may, where the inquiry reveals that the order was:\n(a) lawful, take appropriate disciplinary action against the police officer for disobeying a lawful order; and\n(b) unlawful, take appropriate disciplinary action against the senior police officer for giving an unlawful order.",
+        "heading": "",
+        "parent": "91460454-ba90-4426-91c9-ee1d1bab673e",
+        "sort": "00140.002",
+        "kind": "subsection",
+        "start": "51",
+        "end": "51"
+      },
+      {
+        "id": "51d8c064-3436-460a-8d27-8a8d2ea548cf",
+        "path": "police-act-2020.part17.section137.subsection1.paragraphb",
+        "text": "(b) shall immediately make a report in such form as it is provided by the Police Service Commission for that purpose.",
+        "heading": "",
+        "parent": "b820ef44-ea8d-479d-bd5b-0de70049c50f",
+        "sort": "00140.001.002",
+        "kind": "paragraph",
+        "start": "51",
+        "end": "51"
+      },
+      {
+        "id": "c34262a1-6f88-4d2c-a66b-c34fcd580a61",
+        "path": "police-act-2020.part17.section137.subsection1.paragrapha",
+        "text": "(a) is not bound to comply with the order; and",
+        "heading": "",
+        "parent": "b820ef44-ea8d-479d-bd5b-0de70049c50f",
+        "sort": "00140.001.001",
+        "kind": "paragraph",
+        "start": "51",
+        "end": "51"
+      },
+      {
+        "id": "b820ef44-ea8d-479d-bd5b-0de70049c50f",
+        "path": "police-act-2020.part17.section137.subsection1",
+        "text": "(1) A police officer who, on reasonable grounds, believes that an order given to him by a senior officer is unlawful, he:\n(a) is not bound to comply with the order; and\n(b) shall immediately make a report in such form as it is provided by the Police Service Commission for that purpose.",
+        "heading": "",
+        "parent": "91460454-ba90-4426-91c9-ee1d1bab673e",
+        "sort": "00140.001",
+        "kind": "subsection",
+        "start": "51",
+        "end": "51"
+      },
+      {
+        "id": "91460454-ba90-4426-91c9-ee1d1bab673e",
+        "path": "police-act-2020.part17.section137",
+        "text": "(1) A police officer who, on reasonable grounds, believes that an order given to him by a senior officer is unlawful, he:\n(a) is not bound to comply with the order; and\n(b) shall immediately make a report in such form as it is provided by the Police Service Commission for that purpose.\n(2) On the receipt of the report referred to in subsection (1), the Police Service Commission shall immediately inquire into the matter and may, where the inquiry reveals that the order was:\n(a) lawful, take appropriate disciplinary action against the police officer for disobeying a lawful order; and\n(b) unlawful, take appropriate disciplinary action against the senior police officer for giving an unlawful order.",
+        "heading": "Disobeying of unlawful orders",
+        "parent": "a0e0f165-5348-4bcd-bfe6-271b3f1c73e6",
+        "sort": "00140",
+        "kind": "section",
+        "start": "51",
+        "end": "51"
+      },
+      {
+        "id": "efb15734-ef48-4ee1-8aa1-ea78bfd65fc6",
+        "path": "police-act-2020.part17.section136",
+        "text": "All the provisions of this Act shall extend to all persons who, at the commencement of this Act are serving in the Nigeria Police Force established by the Constitution of the Federal of Nigeria as if such persons had been appointed under this Act.",
+        "heading": "Application of the Act",
+        "parent": "a0e0f165-5348-4bcd-bfe6-271b3f1c73e6",
+        "sort": "00139",
+        "kind": "section",
+        "start": "51",
+        "end": "51"
+      },
+      {
+        "id": "d49a48d0-a8cd-4931-bba9-0b9a13763d48",
+        "path": "police-act-2020.part17.section135",
+        "text": "The Police Force or other persons shall not, in the performance of his or its functions under this Act, regulations or standing orders made under to this Act, discriminate against any person on the basis of gender as provided under section 42 of the Constitution of the Federal Republic of Nigeria, 1999.",
+        "heading": "Prohibition against gender discrimination",
+        "parent": "a0e0f165-5348-4bcd-bfe6-271b3f1c73e6",
+        "sort": "00138",
+        "kind": "section",
+        "start": "51",
+        "end": "51"
+      }
+    ],
+    "approvedComplaints": [
+      {
+        "id": "c964842c-202d-4f50-89fc-8f4ea13d8a35",
+        "path": "police-act-2020.part15.source50.section134.paragraphb",
+        "text": "(b) where it is discovered after investigations that the complainant knowingly gave false information against the police officer or should have reasonably known that the information is false, the complainant shall be tried according to relevant laws for the time being in force.",
+        "heading": "",
+        "parent": "79eba466-96cf-46b9-802b-64e2b9654eb7",
+        "sort": "00136.002",
+        "kind": "paragraph",
+        "start": 50,
+        "end": 51
+      },
+      {
+        "id": "21477aab-a12a-497c-a12b-dc67e3d92deb",
+        "path": "police-act-2020.part15.source50.section134.paragrapha",
+        "text": "(a) send a copy of the investigation report and recommendations to the appropriate Police or oversight authority for proper disciplinary action if the investigations reveal that the offence committed is against discipline as specified in this Act and in the Police Regulations made under this Act; and",
+        "heading": "",
+        "parent": "79eba466-96cf-46b9-802b-64e2b9654eb7",
+        "sort": "00136.001",
+        "kind": "paragraph",
+        "start": 50,
+        "end": 50
+      },
+      {
+        "id": "76e6a80f-fc7d-425c-b8cf-c99ec0923d97",
+        "path": "police-act-2020.part15.source50.section133.subsection2.paragraphc",
+        "text": "(c) any complaint which shows that a police officer is involved in an act constituting professional misconduct.",
+        "heading": "",
+        "parent": "f469f4fe-e105-47b4-b359-ac41ea5f6a23",
+        "sort": "00135.002.003",
+        "kind": "paragraph",
+        "start": 50,
+        "end": 50
+      },
+      {
+        "id": "edeee9d6-5898-40d5-a216-e8f423e1fb83",
+        "path": "police-act-2020.part15.source50.section133.subsection2.paragraphb",
+        "text": "(b) any complaint showing that a police officer may have committed a criminal offence; or",
+        "heading": "",
+        "parent": "f469f4fe-e105-47b4-b359-ac41ea5f6a23",
+        "sort": "00135.002.002",
+        "kind": "paragraph",
+        "start": 50,
+        "end": 50
+      },
+      {
+        "id": "a6e606f0-59a5-439a-ae0b-a276d8ee23fd",
+        "path": "police-act-2020.part15.source50.section133.subsection5",
+        "text": "(5) Upon the conclusion of an investigation, the appropriate investigative unit shall make available a copy of its findings or investigation report to the Unit within 21 days from the day the complaint was made.",
+        "heading": "",
+        "parent": "98cfd186-dc53-4890-97fd-0c804f83e8e8",
+        "sort": "00135.005",
+        "kind": "subsection",
+        "start": 50,
+        "end": 50
+      },
+      {
+        "id": "79eba466-96cf-46b9-802b-64e2b9654eb7",
+        "path": "police-act-2020.part15.source50.section134",
+        "text": "After investigation, the head of the Unit through the Force Public Relations Officer or Public Relations Officer of a State or the Federal Capital Territory shall forward the report and its recommendations to the Inspector-General or Commissioner of Police a State or the Federal Capital Territory who shall:\n(a) send a copy of the investigation report and recommendations to the appropriate Police or oversight authority for proper disciplinary action if the investigations reveal that the offence committed is against discipline as specified in this Act and in the Police Regulations made under this Act; and\n(b) where it is discovered after investigations that the complainant knowingly gave false information against the police officer or should have reasonably known that the information is false, the complainant shall be tried according to relevant laws for the time being in force.",
+        "heading": "Steps to be taken after investigation",
+        "parent": "b713c302-e34a-42e9-97b4-9606392d90bd",
+        "sort": "00136",
+        "kind": "section",
+        "start": 50,
+        "end": 51
+      },
+      {
+        "id": "ce907ac4-8263-4ccf-94d5-d6959b288fc1",
+        "path": "police-act-2020.part15.source50.section133.subsection4",
+        "text": "(4) While conducting investigation into any complaint by any member of the public against a police officer, the Nigeria Police Force shall afford the person against whom the complaint has been made opportunity to defend himself.",
+        "heading": "",
+        "parent": "98cfd186-dc53-4890-97fd-0c804f83e8e8",
+        "sort": "00135.004",
+        "kind": "subsection",
+        "start": 50,
+        "end": 50
+      },
+      {
+        "id": "5bf244c8-13e7-4a88-990b-ab6e40c9a543",
+        "path": "police-act-2020.part15.source50.section133.subsection3",
+        "text": "(3) The Unit shall monitor the investigations initiated by the Unit.",
+        "heading": "",
+        "parent": "98cfd186-dc53-4890-97fd-0c804f83e8e8",
+        "sort": "00135.003",
+        "kind": "subsection",
+        "start": 50,
+        "end": 50
+      },
+      {
+        "id": "235378be-b5ae-4b25-95e3-10c0280e9455",
+        "path": "police-act-2020.part15.source50.section133.subsection2.paragrapha",
+        "text": "(a) any complaint alleging that the conduct complained of resulted in the death of or serious injury or other gross human rights violations;",
+        "heading": "",
+        "parent": "f469f4fe-e105-47b4-b359-ac41ea5f6a23",
+        "sort": "00135.002.001",
+        "kind": "paragraph",
+        "start": 50,
+        "end": 50
+      },
+      {
+        "id": "f469f4fe-e105-47b4-b359-ac41ea5f6a23",
+        "path": "police-act-2020.part15.source50.section133.subsection2",
+        "text": "(2) The Unit may receive:\n(a) any complaint alleging that the conduct complained of resulted in the death of or serious injury or other gross human rights violations;\n(b) any complaint showing that a police officer may have committed a criminal offence; or\n(c) any complaint which shows that a police officer is involved in an act constituting professional misconduct.",
+        "heading": "",
+        "parent": "98cfd186-dc53-4890-97fd-0c804f83e8e8",
+        "sort": "00135.002",
+        "kind": "subsection",
+        "start": 50,
+        "end": 50
+      },
+      {
+        "id": "8797f733-75c4-4bc8-8891-2005242b571b",
+        "path": "police-act-2020.part15.source50.section133.subsection1.paragraphb",
+        "text": "(b) complaint of police officers misconduct from other police members or authority.",
+        "heading": "",
+        "parent": "8b0379d7-ef48-4e0e-931f-9fa86336f0a3",
+        "sort": "00135.001.002",
+        "kind": "paragraph",
+        "start": 50,
+        "end": 50
+      },
+      {
+        "id": "78aea0b1-dcc0-4932-9724-cf98a0be6a79",
+        "path": "police-act-2020.part15.source50.section133.subsection1.paragrapha",
+        "text": "(a) complaint or information of police officers misconduct from the public; or",
+        "heading": "",
+        "parent": "8b0379d7-ef48-4e0e-931f-9fa86336f0a3",
+        "sort": "00135.001.001",
+        "kind": "paragraph",
+        "start": 50,
+        "end": 50
+      },
+      {
+        "id": "8b0379d7-ef48-4e0e-931f-9fa86336f0a3",
+        "path": "police-act-2020.part15.source50.section133.subsection1",
+        "text": "(1) The Unit shall receive:\n(a) complaint or information of police officers misconduct from the public; or\n(b) complaint of police officers misconduct from other police members or authority.",
+        "heading": "",
+        "parent": "98cfd186-dc53-4890-97fd-0c804f83e8e8",
+        "sort": "00135.001",
+        "kind": "subsection",
+        "start": 50,
+        "end": 50
+      },
+      {
+        "id": "98cfd186-dc53-4890-97fd-0c804f83e8e8",
+        "path": "police-act-2020.part15.source50.section133",
+        "text": "(1) The Unit shall receive:\n(a) complaint or information of police officers misconduct from the public; or\n(b) complaint of police officers misconduct from other police members or authority.\n(2) The Unit may receive:\n(a) any complaint alleging that the conduct complained of resulted in the death of or serious injury or other gross human rights violations;\n(b) any complaint showing that a police officer may have committed a criminal offence; or\n(c) any complaint which shows that a police officer is involved in an act constituting professional misconduct.\n(3) The Unit shall monitor the investigations initiated by the Unit.\n(4) While conducting investigation into any complaint by any member of the public against a police officer, the Nigeria Police Force shall afford the person against whom the complaint has been made opportunity to defend himself.\n(5) Upon the conclusion of an investigation, the appropriate investigative unit shall make available a copy of its findings or investigation report to the Unit within 21 days from the day the complaint was made.",
+        "heading": "Functions of the Unit",
+        "parent": "b713c302-e34a-42e9-97b4-9606392d90bd",
+        "sort": "00135",
+        "kind": "section",
+        "start": 50,
+        "end": 50
+      },
+      {
+        "id": "689fe257-1953-42b0-8b4b-65b1c6f87dbd",
+        "path": "police-act-2020.part15.source50.section132.subsection2",
+        "text": "(2) The Unit shall be headed by an officer not below the rank of a Chief Superintendent of Police,",
+        "heading": "",
+        "parent": "f7691012-f883-4077-8699-1c1179daf077",
+        "sort": "00134.002",
+        "kind": "subsection",
+        "start": 50,
+        "end": 50
+      },
+      {
+        "id": "4849dee6-f6b3-4f2b-b70d-c57f231b2f23",
+        "path": "police-act-2020.part15.source50.section132.subsection1",
+        "text": "(1) The Unit shall consist of representatives of the Federal or State Intelligence Bureau, Police Provost Marshal and any other unit of the Police Force as the Inspector-General of Police considers fit.",
+        "heading": "",
+        "parent": "f7691012-f883-4077-8699-1c1179daf077",
+        "sort": "00134.001",
+        "kind": "subsection",
+        "start": 50,
+        "end": 50
+      },
+      {
+        "id": "f7691012-f883-4077-8699-1c1179daf077",
+        "path": "police-act-2020.part15.source50.section132",
+        "text": "(1) The Unit shall consist of representatives of the Federal or State Intelligence Bureau, Police Provost Marshal and any other unit of the Police Force as the Inspector-General of Police considers fit.\n(2) The Unit shall be headed by an officer not below the rank of a Chief Superintendent of Police,",
+        "heading": "Composition of the Unit",
+        "parent": "b713c302-e34a-42e9-97b4-9606392d90bd",
+        "sort": "00134",
+        "kind": "section",
+        "start": 50,
+        "end": 50
+      },
+      {
+        "id": "31a415df-1984-4416-b629-98ba9d66123f",
+        "path": "police-act-2020.part15.source50.section131.subsection2",
+        "text": "(2) The Unit established under subsection (1) shall be under the Public Relations Section.",
+        "heading": "",
+        "parent": "0930fd5c-4b1b-44f5-b603-de2733d050fa",
+        "sort": "00133.002",
+        "kind": "subsection",
+        "start": 50,
+        "end": 50
+      },
+      {
+        "id": "7e4fd172-faf6-4f47-8320-606e40f321fd",
+        "path": "police-act-2020.part15.source50.section131.subsection1",
+        "text": "(1) The Inspector-General of Police shall establish a Police Complaints Response Unit (in this Act referred to as “the Unit”) in the Force Headquarters, and each of the Police Commands in all the States of the Federation and the Federal Capital Territory.",
+        "heading": "",
+        "parent": "0930fd5c-4b1b-44f5-b603-de2733d050fa",
+        "sort": "00133.001",
+        "kind": "subsection",
+        "start": 50,
+        "end": 50
+      },
+      {
+        "id": "0930fd5c-4b1b-44f5-b603-de2733d050fa",
+        "path": "police-act-2020.part15.source50.section131",
+        "text": "(1) The Inspector-General of Police shall establish a Police Complaints Response Unit (in this Act referred to as “the Unit”) in the Force Headquarters, and each of the Police Commands in all the States of the Federation and the Federal Capital Territory.\n(2) The Unit established under subsection (1) shall be under the Public Relations Section.",
+        "heading": "Establishment of Police Complaints Response Unit",
+        "parent": "b713c302-e34a-42e9-97b4-9606392d90bd",
+        "sort": "00133",
+        "kind": "section",
+        "start": 50,
+        "end": 50
+      }
+    ],
+    "otherApprovals": [
+      "police-act-2020.schedule1",
+      "police-act-2020.part17",
+      "police-act-2020.part15.source50"
+    ]
+  },
+  "remaining": "Most Police Act and all ACJA candidates still require individual review"
+}

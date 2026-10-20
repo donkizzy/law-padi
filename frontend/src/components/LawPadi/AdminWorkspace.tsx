@@ -50,7 +50,9 @@ import {
   type SourceUploadPublic,
 } from "@/client"
 import { client } from "@/client/client.gen"
+import { CandidateStructureEditor } from "@/components/LawPadi/CandidateStructureEditor"
 import { ComposeReleaseForm } from "@/components/LawPadi/ComposeReleaseForm"
+import { DeriveProvisionForm } from "@/components/LawPadi/DeriveProvisionForm"
 import {
   SectionHeading,
   SegmentedControl,
@@ -109,6 +111,8 @@ type RunEventsStreamState = {
 type SourceSpanPreview = {
   bbox?: number[]
   page?: number
+  width: number
+  height: number
 }
 
 type ReleaseManifestSourcePreview = {
@@ -158,6 +162,7 @@ export function AdminWorkspace() {
   const [selectedRunId, setSelectedRunId] = useState<string>()
   const [selectedReviewId, setSelectedReviewId] = useState<string>()
   const [reviewOffset, setReviewOffset] = useState(0)
+  const [reviewFilter, setReviewFilter] = useState({ path: "", page: "" })
   const [reviewStatus, setReviewStatus] =
     useState<ExtractionCandidateStatus>("needs_review")
   const [selectedReleaseId, setSelectedReleaseId] = useState<string>()
@@ -211,6 +216,7 @@ export function AdminWorkspace() {
       selectedRunId,
       reviewStatus,
       reviewOffset,
+      reviewFilter,
     ],
     queryFn: async () =>
       (
@@ -220,6 +226,8 @@ export function AdminWorkspace() {
             status: reviewStatus,
             skip: reviewOffset,
             limit: 100,
+            path: reviewFilter.path || undefined,
+            page: reviewFilter.page ? Number(reviewFilter.page) : undefined,
           },
         })
       ).data,
@@ -655,6 +663,12 @@ export function AdminWorkspace() {
             totalCount={reviewsQuery.data?.count ?? 0}
             pageOffset={reviewOffset}
             onPageChange={setReviewOffset}
+            filter={reviewFilter}
+            onFilter={(value) => {
+              setReviewFilter(value)
+              setReviewOffset(0)
+              setSelectedReviewId(undefined)
+            }}
             statusFilter={reviewStatus}
             onStatusFilterChange={(value) => {
               setReviewStatus(value)
@@ -674,10 +688,17 @@ export function AdminWorkspace() {
               reviewUpdateMutation.mutate({ candidateId, body })
             }
             onSelect={setSelectedReviewId}
+            onDerivedCreated={(id) => {
+              setReviewStatus("needs_review")
+              setReviewOffset(0)
+              setReviewFilter({ path: "", page: "" })
+              setSelectedReviewId(id)
+            }}
             onVerifySource={(source, reason) =>
               sourceVerificationMutation.mutate({ source, reason })
             }
             reviews={reviews}
+            pages={pagesQuery.data?.data ?? []}
             selected={selectedReview}
             selectedId={selectedReviewId}
           />
@@ -1001,9 +1022,14 @@ function PageBoundaryWorkspace({
   isMutating: boolean
   onConfirm: (pages: SourcePagePublic[]) => void
 }) {
+  const importedReview =
+    selectedRun?.status === "waiting_for_review" &&
+    selectedRun.current_stage === "review" &&
+    Boolean(selectedRun.pipeline_config.review_import_complete)
   const canConfirm =
-    selectedRun?.status === "waiting_for_input" &&
-    selectedRun.current_stage === "awaiting_page_confirmation"
+    importedReview ||
+    (selectedRun?.status === "waiting_for_input" &&
+      selectedRun.current_stage === "awaiting_page_confirmation")
   const [pageDrafts, setPageDrafts] = useState<
     Record<string, PageBoundaryDraft>
   >({})
@@ -1078,7 +1104,9 @@ function PageBoundaryWorkspace({
           type="button"
         >
           <FiCheckCircle className="size-4" aria-hidden />
-          Confirm suggested pages
+          {importedReview
+            ? "Confirm reviewed boundaries"
+            : "Confirm suggested pages"}
         </SquircleButton>
       }
       title="Page boundaries"
@@ -1231,6 +1259,7 @@ function PageBoundaryDecision({
 
 function ReviewWorkspace({
   reviews,
+  pages,
   totalCount,
   pageOffset,
   onPageChange,
@@ -1245,8 +1274,12 @@ function ReviewWorkspace({
   onSave,
   onDecide,
   onVerifySource,
+  onDerivedCreated,
+  filter,
+  onFilter,
 }: {
   reviews: ReviewItemPublic[]
+  pages: SourcePagePublic[]
   totalCount: number
   pageOffset: number
   onPageChange: (offset: number) => void
@@ -1261,20 +1294,40 @@ function ReviewWorkspace({
   onSave: (id: string, body: ReviewItemUpdate) => void
   onDecide: (id: string, body: ReviewDecisionCreate) => void
   onVerifySource: (source: SourceDocumentPublic, reason: string) => void
+  onDerivedCreated: (id: string) => void
+  filter: { path: string; page: string }
+  onFilter: (filter: { path: string; page: string }) => void
 }) {
   const [revisedText, setRevisedText] = useState("")
   const [reason, setReason] = useState("")
   const [decisionReason, setDecisionReason] = useState("")
   const [sourceVerificationReason, setSourceVerificationReason] = useState("")
   const [selectedSpanIndex, setSelectedSpanIndex] = useState(0)
+  const [structurePatch, setStructurePatch] = useState<
+    Partial<ReviewItemUpdate>
+  >({})
+  const [structureError, setStructureError] = useState<string>()
+  const [pathFilter, setPathFilter] = useState(filter.path)
+  const [pageFilter, setPageFilter] = useState(filter.page)
 
   useEffect(() => {
-    setRevisedText(selected?.latest_revision_text ?? selected?.raw_text ?? "")
+    setRevisedText(
+      selected?.id && selected.lock_version
+        ? (selected.latest_revision_text ?? selected.raw_text ?? "")
+        : "",
+    )
     setReason("")
     setDecisionReason("")
     setSourceVerificationReason("")
     setSelectedSpanIndex(0)
-  }, [selected?.latest_revision_text, selected?.raw_text])
+    setStructurePatch({})
+    setStructureError(undefined)
+  }, [
+    selected?.id,
+    selected?.lock_version,
+    selected?.latest_revision_text,
+    selected?.raw_text,
+  ])
 
   const selectedText =
     selected?.latest_revision_text ?? selected?.raw_text ?? ""
@@ -1294,6 +1347,31 @@ function ReviewWorkspace({
   return (
     <div className="grid gap-4 lg:grid-cols-[360px_1fr]">
       <Panel title="Review queue" count={totalCount}>
+        <form
+          className="mb-3 grid gap-2"
+          onSubmit={(event) => {
+            event.preventDefault()
+            onFilter({ path: pathFilter.trim(), page: pageFilter })
+          }}
+        >
+          <Input
+            aria-label="Filter canonical path"
+            placeholder="Find a provision path"
+            value={pathFilter}
+            onChange={(event) => setPathFilter(event.target.value)}
+          />
+          <Input
+            aria-label="Filter source page"
+            type="number"
+            min={1}
+            placeholder="Source page"
+            value={pageFilter}
+            onChange={(event) => setPageFilter(event.target.value)}
+          />
+          <SquircleButton type="submit" variant="outline">
+            Filter reviews
+          </SquircleButton>
+        </form>
         <label className="mb-3 grid gap-1 text-sm">
           Candidate status
           <select
@@ -1362,7 +1440,7 @@ function ReviewWorkspace({
                   </p>
                   <p className="mt-1 text-xs text-muted-foreground">
                     {item.number
-                      ? `Section ${item.number}`
+                      ? `${labelize(item.kind)} ${item.number}`
                       : labelize(item.kind)}
                   </p>
                 </div>
@@ -1391,6 +1469,16 @@ function ReviewWorkspace({
               </div>
               <StatusPill status={selected.status} />
             </div>
+            <p className="break-all text-xs text-muted-foreground">
+              Candidate ID: {selected.id}
+            </p>
+            <DeriveProvisionForm
+              candidate={selected}
+              disabled={
+                !canReview || isMutating || selected.status === "materialized"
+              }
+              onCreated={onDerivedCreated}
+            />
 
             <div className="grid gap-3 md:grid-cols-4">
               <SmallStat label="Kind" value={labelize(selected.kind)} />
@@ -1428,9 +1516,27 @@ function ReviewWorkspace({
               before={selected.raw_text ?? ""}
               after={selectedText}
             />
+            {selected.revisions?.length || selected.decisions?.length ? (
+              <details className="sq-md min-w-0 border border-border p-3 text-sm">
+                <summary className="cursor-pointer font-bold">
+                  Review audit history
+                </summary>
+                {selected.revisions?.map((revision) => (
+                  <p key={revision.id} className="mt-3 break-words">
+                    Revision {revision.revision_number}: {revision.reason}
+                  </p>
+                ))}
+                {selected.decisions?.map((decision) => (
+                  <p key={decision.id} className="mt-3 break-words">
+                    {labelize(decision.decision)}: {decision.reason}
+                  </p>
+                ))}
+              </details>
+            ) : null}
 
             <SourceEvidencePreview
               candidate={selected}
+              pages={pages}
               onSelect={setSelectedSpanIndex}
               selectedSpanIndex={selectedSpanIndex}
             />
@@ -1503,6 +1609,17 @@ function ReviewWorkspace({
               </div>
             ) : null}
 
+            <CandidateStructureEditor
+              key={`${selected.id}-${selected.lock_version}`}
+              candidate={selected}
+              disabled={
+                isMutating || !canReview || selected.status === "materialized"
+              }
+              onChange={(patch, error) => {
+                setStructurePatch(patch)
+                setStructureError(error)
+              }}
+            />
             <FieldLabel label="Revised text">
               <textarea
                 className={cn(inputClass, "min-h-36 resize-y py-3")}
@@ -1521,15 +1638,22 @@ function ReviewWorkspace({
                 disabled={
                   isMutating ||
                   !canReview ||
+                  selected.status === "materialized" ||
+                  Boolean(structureError) ||
                   !reason.trim() ||
-                  !revisedText.trim()
+                  (!revisedText.trim() &&
+                    (Boolean(selectedText.trim()) ||
+                      Object.keys(structurePatch).length === 0))
                 }
                 loading={isMutating}
                 onClick={() =>
                   onSave(selected.id, {
+                    ...structurePatch,
                     idempotency_key: `review-revision-${crypto.randomUUID()}`,
                     expected_version: selected.lock_version,
-                    revised_text: revisedText.trim(),
+                    ...(revisedText.trim()
+                      ? { revised_text: revisedText.trim() }
+                      : {}),
                     reason: reason.trim(),
                   })
                 }
@@ -1698,15 +1822,23 @@ function PageThumbnail({
 
 function SourceEvidencePreview({
   candidate,
+  pages,
   selectedSpanIndex,
   onSelect,
 }: {
   candidate: ReviewItemPublic
+  pages: SourcePagePublic[]
   selectedSpanIndex: number
   onSelect: (index: number) => void
 }) {
-  const spans = sourceSpanPreviews(candidate.source_spans)
+  const spans = sourceSpanPreviews(candidate.source_spans, pages)
   const selectedSpan = spans[selectedSpanIndex] ?? spans[0]
+  const previewPageNumber = selectedSpan?.page ?? candidate.source_page_start
+  const previewPage = pages.find(
+    (page) => page.page_number === previewPageNumber,
+  )
+  const previewUrl =
+    previewPage?.thumbnail_url ?? candidate.source_page_thumbnail_url
 
   return (
     <section
@@ -1726,31 +1858,36 @@ function SourceEvidencePreview({
 
       <div className="grid gap-4 lg:grid-cols-[minmax(220px,320px)_1fr]">
         <div className="relative aspect-[8.5/11] overflow-hidden border border-border bg-muted">
-          {candidate.source_page_thumbnail_url ? (
+          {previewUrl ? (
             <ProtectedImage
-              alt={`Source page ${candidate.source_page_start ?? ""}`}
+              alt={`Source page ${previewPageNumber ?? ""}`}
               className="absolute inset-0 h-full w-full object-contain"
-              url={candidate.source_page_thumbnail_url}
+              url={previewUrl}
             />
           ) : null}
           {spans.length ? (
-            spans.map((span, index) => (
-              <button
-                aria-label={`Source span page ${span.page ?? "unknown"} box ${
-                  index + 1
-                }`}
-                className={cn(
-                  "absolute border-2 bg-primary/15 transition",
-                  index === selectedSpanIndex
-                    ? "border-primary"
-                    : "border-[color:var(--legal-gold)]",
-                )}
-                key={`${span.page ?? "unknown"}-${index}`}
-                onClick={() => onSelect(index)}
-                style={sourceBoxStyle(span)}
-                type="button"
-              />
-            ))
+            spans.map((span, index) =>
+              span.page === previewPageNumber &&
+              span.bbox &&
+              span.width > 0 &&
+              span.height > 0 ? (
+                <button
+                  aria-label={`Source span page ${span.page ?? "unknown"} box ${
+                    index + 1
+                  }`}
+                  className={cn(
+                    "absolute border-2 bg-primary/15 transition",
+                    index === selectedSpanIndex
+                      ? "border-primary"
+                      : "border-[color:var(--legal-gold)]",
+                  )}
+                  key={`${span.page ?? "unknown"}-${index}`}
+                  onClick={() => onSelect(index)}
+                  style={sourceBoxStyle(span)}
+                  type="button"
+                />
+              ) : null,
+            )
           ) : (
             <div className="grid h-full place-items-center px-4 text-center text-sm text-muted-foreground">
               Source boxes pending.
@@ -1758,6 +1895,20 @@ function SourceEvidencePreview({
           )}
         </div>
         <div>
+          <label className="mb-3 grid gap-1 text-sm">
+            Source span
+            <select
+              className={inputClass}
+              value={selectedSpanIndex}
+              onChange={(event) => onSelect(Number(event.target.value))}
+            >
+              {spans.map((span, index) => (
+                <option key={`${span.page}-${index}`} value={index}>
+                  Page {span.page ?? "unknown"}, box {index + 1}
+                </option>
+              ))}
+            </select>
+          </label>
           {selectedSpan ? (
             <div className="sq-md border border-border p-3 text-sm">
               <p className="font-semibold">
@@ -2962,7 +3113,7 @@ function Panel({
   children: ReactNode
 }) {
   return (
-    <section className="sq-lg border border-border bg-card p-5 shadow-[var(--shadow-subtle)]">
+    <section className="sq-lg min-w-0 border border-border bg-card p-5 shadow-[var(--shadow-subtle)]">
       <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
         <div className="flex items-center gap-2">
           <h2 className="font-display text-xl text-foreground">{title}</h2>
@@ -3244,14 +3395,58 @@ function signalStringList(
 
 function sourceSpanPreviews(
   spans: ReviewItemPublic["source_spans"],
+  pages: SourcePagePublic[],
 ): SourceSpanPreview[] {
   if (!Array.isArray(spans)) return []
-  return spans.map((span) => ({
-    bbox: Array.isArray(span.bbox)
-      ? span.bbox.filter((value): value is number => typeof value === "number")
-      : undefined,
-    page: typeof span.page === "number" ? span.page : undefined,
-  }))
+  return spans.map((span) => {
+    const page =
+      typeof span.page_number === "number"
+        ? span.page_number
+        : typeof span.page === "number"
+          ? span.page
+          : undefined
+    const sourcePage = pages.find((item) => item.page_number === page)
+    const box = span.bbox
+    const objectBox =
+      box && typeof box === "object"
+        ? (box as Record<string, unknown>)
+        : undefined
+    const coordinates = Array.isArray(box)
+      ? box
+      : objectBox
+        ? [objectBox.x0, objectBox.y0, objectBox.x1, objectBox.y1]
+        : undefined
+    const bbox =
+      coordinates?.length === 4 &&
+      coordinates.every(
+        (value) => typeof value === "number" && Number.isFinite(value),
+      )
+        ? (coordinates as number[])
+        : undefined
+    const space = sourcePage?.quality_signals?.coordinate_space
+    const dpi =
+      space &&
+      typeof space === "object" &&
+      "render_dpi" in space &&
+      typeof space.render_dpi === "number"
+        ? space.render_dpi
+        : 72
+    const scale = dpi / 72
+    const dimensionsKnown = sourcePage?.width && sourcePage?.height
+    const raster =
+      space &&
+      typeof space === "object" &&
+      "unit" in space &&
+      space.unit === "raster_pixels"
+    return {
+      bbox,
+      page,
+      width:
+        dimensionsKnown || !raster ? (sourcePage?.width ?? 612) * scale : 0,
+      height:
+        dimensionsKnown || !raster ? (sourcePage?.height ?? 792) * scale : 0,
+    }
+  })
 }
 
 function releaseManifestSummary(manifest?: CorpusReleaseManifestPublic): {
@@ -3331,17 +3526,17 @@ function releaseManifestEntryPreview(
 
 function sourceBoxStyle(span: SourceSpanPreview) {
   const [x1, y1, x2, y2] =
-    span.bbox && span.bbox.length >= 4 ? span.bbox : [96, 120, 516, 190]
+    span.bbox && span.bbox.length >= 4 ? span.bbox : [0, 0, 0, 0]
   return {
-    height: `${clampPercent(((y2 - y1) / 792) * 100)}%`,
-    left: `${clampPercent((x1 / 612) * 100)}%`,
-    top: `${clampPercent((y1 / 792) * 100)}%`,
-    width: `${clampPercent(((x2 - x1) / 612) * 100)}%`,
+    height: `${clampPercent(((y2 - y1) / span.height) * 100)}%`,
+    left: `${clampPercent((x1 / span.width) * 100)}%`,
+    top: `${clampPercent((y1 / span.height) * 100)}%`,
+    width: `${clampPercent(((x2 - x1) / span.width) * 100)}%`,
   }
 }
 
 function clampPercent(value: number): number {
-  return Math.max(1, Math.min(100, Math.round(value * 100) / 100))
+  return Math.max(0, Math.min(100, Math.round(value * 100) / 100))
 }
 
 async function uploadSourcePdf(input: UploadMutationInput) {

@@ -347,6 +347,10 @@ export type ChatCapabilities = {
      */
     supported_languages: Array<string>;
     /**
+     * Answer Languages
+     */
+    answer_languages?: Array<Language>;
+    /**
      * Question Max Length
      */
     question_max_length?: number;
@@ -498,6 +502,7 @@ export type ConversationCreate = {
      * Release Version
      */
     release_version?: string | null;
+    preferred_language?: Language | null;
 };
 
 /**
@@ -520,6 +525,10 @@ export type ConversationDetail = {
      * Edition Label
      */
     edition_label: string;
+    /**
+     * Preferred Language
+     */
+    preferred_language?: string | null;
     /**
      * Created At
      */
@@ -580,6 +589,10 @@ export type ConversationPublic = {
      * Edition Label
      */
     edition_label: string;
+    /**
+     * Preferred Language
+     */
+    preferred_language?: string | null;
     /**
      * Created At
      */
@@ -1799,6 +1812,11 @@ export type InstrumentStatus = 'draft' | 'proposed' | 'enacted' | 'repealed' | '
 export type InstrumentType = 'constitution' | 'alteration_act' | 'bill' | 'act' | 'regulation';
 
 /**
+ * Language
+ */
+export type Language = 'en' | 'pcm' | 'yo' | 'ha' | 'ig';
+
+/**
  * LegalInstrumentPublic
  */
 export type LegalInstrumentPublic = {
@@ -2125,6 +2143,7 @@ export type MessageCreate = {
      * Selected Provision Version Id
      */
     selected_provision_version_id?: string | null;
+    answer_language?: Language | null;
 };
 
 /**
@@ -2757,6 +2776,65 @@ export type ReviewIssueUpdate = {
      * Superuser Override Reason
      */
     superuser_override_reason?: string | null;
+};
+
+/**
+ * ReviewItemDerive
+ *
+ * Recover a provision from a retained candidate without approving it.
+ */
+export type ReviewItemDerive = {
+    /**
+     * Idempotency Key
+     */
+    idempotency_key: string;
+    /**
+     * Expected Version
+     */
+    expected_version: number;
+    /**
+     * Revised Text
+     */
+    revised_text?: string | null;
+    /**
+     * Heading
+     */
+    heading?: string | null;
+    kind: ProvisionKind;
+    /**
+     * Number
+     */
+    number?: string | null;
+    /**
+     * Parent Candidate Id
+     */
+    parent_candidate_id?: string | null;
+    /**
+     * Canonical Path
+     */
+    canonical_path: string;
+    /**
+     * Sort Key
+     */
+    sort_key: string;
+    /**
+     * Source Page Start
+     */
+    source_page_start: number;
+    /**
+     * Source Page End
+     */
+    source_page_end: number;
+    /**
+     * Source Spans
+     */
+    source_spans: Array<{
+        [key: string]: unknown;
+    }>;
+    /**
+     * Reason
+     */
+    reason: string;
 };
 
 /**
@@ -5018,6 +5096,36 @@ export type adminPatchReviewItemResponses = {
 };
 
 export type adminPatchReviewItemResponse = adminPatchReviewItemResponses[keyof adminPatchReviewItemResponses];
+
+export type adminDeriveReviewItemData = {
+    body: ReviewItemDerive;
+    path: {
+        /**
+         * Candidate Id
+         */
+        candidate_id: string;
+    };
+    query?: never;
+    url: '/api/v1/admin/review-items/{candidate_id}/derived-items';
+};
+
+export type adminDeriveReviewItemErrors = {
+    /**
+     * Validation Error
+     */
+    422: HTTPValidationError;
+};
+
+export type adminDeriveReviewItemError = adminDeriveReviewItemErrors[keyof adminDeriveReviewItemErrors];
+
+export type adminDeriveReviewItemResponses = {
+    /**
+     * Successful Response
+     */
+    200: ReviewItemPublic;
+};
+
+export type adminDeriveReviewItemResponse = adminDeriveReviewItemResponses[keyof adminDeriveReviewItemResponses];
 
 export type adminDecideReviewItemData = {
     body: ReviewDecisionCreate;

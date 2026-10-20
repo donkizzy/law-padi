@@ -186,6 +186,139 @@ test("Review queue paginates the full total and filters completed candidates", a
   ).toBeDisabled()
 })
 
+test("Review structure corrections include the metadata patch and preserve source references", async ({
+  page,
+}) => {
+  await mockAdminApi(page)
+  let submitted: Record<string, unknown> | undefined
+  const item = reviewItem()
+  await page.route(
+    `**/api/v1/admin/review-items/${candidateId}`,
+    async (route) => {
+      if (route.request().method() === "PATCH") {
+        submitted = route.request().postDataJSON()
+        return json(route, { ...item, ...submitted, lock_version: 3 })
+      }
+      return json(route, item)
+    },
+  )
+  await page.goto("/admin")
+  await page.getByRole("tab", { name: "Review queue" }).click()
+  await page.getByLabel("Provision number", { exact: true }).fill("141")
+  await page
+    .getByLabel("Provision heading", { exact: true })
+    .fill("Interpretation")
+  await page
+    .getByLabel("Canonical path", { exact: true })
+    .fill("constitution.1999.chapter4.section141")
+  await page.getByLabel("Source spans JSON").fill("invalid JSON")
+  await page
+    .getByLabel("Revision reason", { exact: true })
+    .fill("Checked against the retained source scan.")
+  await expect(
+    page.getByRole("button", { name: "Save revision", exact: true }),
+  ).toBeDisabled()
+  await page.getByLabel("Source spans JSON").fill(
+    JSON.stringify([
+      {
+        page_number: 2,
+        bbox: { x0: 72, y0: 120, x1: 520, y1: 180 },
+        text: item.raw_text,
+      },
+    ]),
+  )
+  await page.getByRole("button", { name: "Save revision", exact: true }).click()
+  await expect(page.getByText("Review revision saved.")).toBeVisible()
+  expect(submitted).toMatchObject({
+    number: "141",
+    heading: "Interpretation",
+    canonical_path: "constitution.1999.chapter4.section141",
+    source_spans: [{ page_number: 2 }],
+  })
+})
+
+test("Structure-only nodes can save metadata without inventing body text", async ({
+  page,
+}) => {
+  await mockAdminApi(page)
+  const item = {
+    ...reviewItem(),
+    kind: "part",
+    number: "17",
+    canonical_path: "police-act-2020.part17",
+    raw_text: null,
+    latest_revision_text: null,
+    heading: "Miscellaneous provisions",
+  }
+  let submitted: Record<string, unknown> | undefined
+  await page.route("**/api/v1/admin/review-items?**", async (route) =>
+    json(route, { data: [item], count: 1 }),
+  )
+  await page.route(
+    `**/api/v1/admin/review-items/${candidateId}`,
+    async (route) => {
+      if (route.request().method() === "PATCH")
+        submitted = route.request().postDataJSON()
+      return json(route, { ...item, ...submitted })
+    },
+  )
+  await page.goto("/admin")
+  await page.getByRole("tab", { name: "Review queue" }).click()
+  await page
+    .getByLabel("Provision heading", { exact: true })
+    .fill("MISCELLANEOUS PROVISIONS")
+  await page
+    .getByLabel("Revision reason", { exact: true })
+    .fill("Checked the printed Part heading.")
+  await page.getByRole("button", { name: "Save revision", exact: true }).click()
+  await expect(page.getByText("Review revision saved.")).toBeVisible()
+  expect(submitted).toHaveProperty("heading", "MISCELLANEOUS PROVISIONS")
+  expect(submitted).not.toHaveProperty("revised_text")
+})
+
+test("A recovered provision starts a separate review and keeps the original candidate", async ({
+  page,
+}) => {
+  await mockAdminApi(page)
+  let submitted: Record<string, unknown> | undefined
+  await page.route(
+    `**/api/v1/admin/review-items/${candidateId}/derived-items`,
+    async (route) => {
+      submitted = route.request().postDataJSON()
+      return json(route, {
+        ...reviewItem(),
+        ...submitted,
+        id: "recovered-candidate",
+        status: "needs_review",
+      })
+    },
+  )
+  await page.goto("/admin")
+  await page.getByRole("tab", { name: "Review queue" }).click()
+  await page.getByRole("button", { name: "Add missing provision" }).click()
+  const form = page.getByRole("dialog", { name: "Recover a missing provision" })
+  await form
+    .getByLabel("Canonical path", { exact: true })
+    .fill("constitution.1999.schedule1")
+  await form.getByLabel("Sort key", { exact: true }).fill("999")
+  await form
+    .getByLabel("Recovered provision text")
+    .fill("Wording checked against the Schedule scan.")
+  await form
+    .getByLabel("Recovery reason")
+    .fill("The parser merged a separate Schedule into the final section.")
+  await form.getByRole("button", { name: "Save recovered provision" }).click()
+  await expect(
+    page.getByText("Recovered provision saved for review."),
+  ).toBeVisible()
+  expect(submitted).toMatchObject({
+    kind: "schedule",
+    canonical_path: "constitution.1999.schedule1",
+    expected_version: 2,
+  })
+  expect(submitted).not.toHaveProperty("decision")
+})
+
 test("Historical release review displays preserved source exceptions", async ({
   page,
 }) => {

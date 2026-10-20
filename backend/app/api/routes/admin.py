@@ -21,6 +21,7 @@ from app.ingestion.service import (
     create_source_upload_multipart_parts,
     create_source_upload_session,
     decide_review_candidate,
+    derive_review_candidate,
     get_blob_store,
     latest_revision_text,
     publish_corpus_release,
@@ -123,6 +124,7 @@ from app.legal.schemas import (
     ReviewDecisionPublic,
     ReviewIssuePublic,
     ReviewIssueUpdate,
+    ReviewItemDerive,
     ReviewItemPublic,
     ReviewItemsPublic,
     ReviewItemUpdate,
@@ -761,6 +763,18 @@ def patch_review_item(
     candidate = session.get(ExtractionCandidate, candidate_id)
     if not candidate:
         raise HTTPException(status_code=404, detail="Review item not found")
+    return _review_public(session, candidate)
+
+
+@router.post("/review-items/{candidate_id}/derived-items")
+def derive_review_item(
+    candidate_id: uuid.UUID,
+    body: ReviewItemDerive,
+    session: SessionDep,
+    current_user: CurrentUser,
+) -> ReviewItemPublic:
+    require_admin_role(session, current_user, AdminRole.LEGAL_REVIEWER)
+    candidate = derive_review_candidate(session, candidate_id, body, current_user)
     return _review_public(session, candidate)
 
 
