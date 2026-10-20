@@ -1,0 +1,61 @@
+{
+  "phase": 4,
+  "date": "2026-10-20",
+  "implementation_status": "implemented",
+  "acceptance_status": "real_statute_retrieval_pending_source_extraction_and_publication_approval",
+  "backend": {
+    "passed": 602,
+    "skipped": 4,
+    "coverage_percent": 89,
+    "mypy": "passed",
+    "ty": "passed",
+    "ruff_lint": "passed",
+    "ruff_format": "passed"
+  },
+  "frontend": {
+    "production_build": "passed",
+    "biome": "passed",
+    "playwright_passed": 36,
+    "playwright_scope": [
+      "admin.spec.ts",
+      "legal-home.spec.ts"
+    ],
+    "retries_needed": 0,
+    "client_schema_changed": false
+  },
+  "synthetic_validation": {
+    "qualified_exact_lookup": "passed",
+    "missing_law_vs_missing_section": "passed",
+    "same_number_cross_law_isolation": "passed",
+    "qualified_topics_and_title_lookup": "passed",
+    "rights_constitution_first": "passed",
+    "mixed_release_max_sections_per_instrument": 3,
+    "single_law_ranking_preserved": "passed",
+    "relative_subsection_retains_instrument": "passed",
+    "statute_benchmark_routing_cases": 14,
+    "statute_benchmark_quality_status": "blocked_until_real_acts_are_published"
+  },
+  "constitution": {
+    "queries": 97,
+    "all_signal_metrics_and_misses_unchanged": true,
+    "active_release": "draft-c8d50d87fae9",
+    "index_validation": "passed",
+    "segments": 1829,
+    "embeddings": 1829,
+    "checksums_unchanged": true
+  },
+  "source_review": {
+    "sources_remain_needs_review": true,
+    "materialized_act_versions": 0,
+    "approved_member_releases": 0,
+    "police_act_expected_section_count": 142,
+    "count_correction_evidence": "Police Act retained PDF page 4, Arrangement of Sections: 142. Citation, followed by Schedule.",
+    "full_ocr_reconciliation": "fails_for_both_acts",
+    "no_source_or_publication_approval_performed": true
+  },
+  "evidence": [
+    "statute-phase4-retrieval-validation-2026-10-20.json",
+    "statute-phase4-local-preflight-2026-10-20.json",
+    "statute-phase4-source-checks-2026-10-20.json"
+  ]
+}

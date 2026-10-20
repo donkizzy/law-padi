@@ -89,3 +89,8 @@ The recovery did **not** restore deleted account data, candidate reviews, ingest
 The recovery script is intentionally non-mergeable: it refuses a database with existing corpus rows and requires the original manifest, retrieval documents, embedding batches, and review evidence file. Its default mode validates without writing. Keep the ignored local dump or move it to a managed backup location; PostgreSQL WAL/PITR was not configured for the previous loss.
 
 On 2026-10-09, a fresh ignored dump was saved at `backend/storage/backups/app-pre-chat-fixes-2026-10-09.dump` before the additive reservation and selected-identity migrations. The local `app` schema is at revision `9e0f1a2b3c4d`.
+
+
+## Statute answer infrastructure (20 October 2026)
+
+Prompt `constitution-english-v11` handles published multi-law evidence, named Act citations, constitutional context, application limits and per-law edition notices. Synthetic mixed-release cases pass deterministic checks and the scripted verifier flow. Real ACJA and Police Act sources remain unverified and fail OCR reconciliation; neither is published. No live v11 answer-quality run or new human grounding review was performed. Earlier prompt captures do not certify v11, and the existing rollout gates remain required. See [Phase 5 implementation and validation](statute-phase5-answer-generation-2026-10-20.md).

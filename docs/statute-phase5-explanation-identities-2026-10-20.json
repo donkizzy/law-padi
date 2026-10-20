@@ -1,0 +1,7 @@
+{
+  "dataset": "constitution-explanation-evaluation-2026-10-07-v1",
+  "deterministic_cases_checked": 90,
+  "failures": [],
+  "human_review_status": "pending",
+  "live_model_calls": 0
+}

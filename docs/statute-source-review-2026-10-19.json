@@ -1,0 +1,103 @@
+{
+  "review_date": "2026-10-19",
+  "download_approval": "Both downloads approved by the user in this chat on 2026-10-19. This does not approve legal verification or publication.",
+  "source_verification": "pending_human_sign_off",
+  "sources": [
+    {
+      "filename": "Administration-of-Justice-Criminal-Act-2015.pdf",
+      "sha256": "40418b792bf1faf6dbe5793651393e746de9e4e550d2f6d9b3bceceb1547a86a",
+      "size_bytes": 14002925,
+      "page_count": 243,
+      "encrypted": false,
+      "pages_with_text": 0,
+      "verification_status": "needs_review",
+      "download_approved": true,
+      "static_safety_scan": {
+        "scanner": "pdf-static-safety-v1",
+        "clean": true,
+        "threats": [],
+        "active_content_markers": [],
+        "bytes_scanned": 14002925
+      },
+      "ocr_required": true,
+      "source_document_id": "e7199e57-6af1-4020-948d-82b5cf9b8c7d",
+      "legal_instrument_id": "a875f29f-1658-4f23-a7d0-0484552d136f",
+      "source_url": "https://justice.gov.ng/wp-content/uploads/2020/09/Administration-of-Justice-Criminal-Act-2015.pdf",
+      "source_tier": "trusted_secondary",
+      "edition_label": "As enacted, 2015",
+      "edition_note": "As enacted, may have been amended.",
+      "canonical_storage_key": "sources/sha256/40418b792bf1faf6dbe5793651393e746de9e4e550d2f6d9b3bceceb1547a86a/original.pdf",
+      "instrument_slug": "acja-2015",
+      "local_file": "/Users/amosgodwin/WebstormProjects/law-padi/backend/storage/statute-review/acja-2015/Administration-of-Justice-Criminal-Act-2015.pdf",
+      "ocr_pages": 243,
+      "ocr_method": "Tesseract 5, psm 1, 150 dpi, existing ingestion-worker image; offline review artifact only",
+      "low_mean_word_confidence_pages": [
+        1,
+        204
+      ],
+      "ocr_review_status": "needs_review",
+      "source_tier_note": "Signed enrolled-copy scan; official Gazette cover not confirmed. Conservatively trusted_secondary pending human review.",
+      "review_findings": [
+        "Scanned source has no text layer.",
+        "OCR word confidence does not establish legal accuracy. Section numbering and marginal-heading order require review.",
+        "Page 1 is rotated and not correctly recognized; Arrangement of Sections numbering is missing or displaced in OCR on several pages."
+      ]
+    },
+    {
+      "filename": "Police-Act-2020.pdf",
+      "sha256": "2f648787b270ad43de127a516fc4d4ec07b9bb618d0f018e143c85972a5f21cd",
+      "size_bytes": 2699714,
+      "page_count": 57,
+      "encrypted": false,
+      "pages_with_text": 0,
+      "verification_status": "needs_review",
+      "download_approved": true,
+      "source_document_id": "a1f5f0aa-de92-4882-a0ab-37eed2f4a604",
+      "legal_instrument_id": "9b480da1-89d5-4a9a-b78f-230425b69c20",
+      "source_url": "https://placng.org/i/wp-content/uploads/2020/09/Police-Act-2020.pdf",
+      "source_tier": "trusted_secondary",
+      "edition_label": "As enacted, 2020",
+      "edition_note": "As enacted, may have been amended.",
+      "static_safety_scan": {
+        "scanner": "pdf-static-safety-v1",
+        "clean": true,
+        "threats": [],
+        "active_content_markers": [],
+        "bytes_scanned": 2699714
+      },
+      "ocr_required": true,
+      "canonical_storage_key": "sources/sha256/2f648787b270ad43de127a516fc4d4ec07b9bb618d0f018e143c85972a5f21cd/original.pdf",
+      "instrument_slug": "police-act-2020",
+      "local_file": "/Users/amosgodwin/WebstormProjects/law-padi/backend/storage/statute-review/police-act-2020/Police-Act-2020.pdf",
+      "ocr_pages": 57,
+      "ocr_method": "Tesseract 5, psm 1, 150 dpi, existing ingestion-worker image; offline review artifact only",
+      "low_mean_word_confidence_pages": [],
+      "ocr_review_status": "needs_review",
+      "source_tier_note": "Signed enrolled-copy scan; official Gazette cover not confirmed. Conservatively trusted_secondary pending human review.",
+      "review_findings": [
+        "Scanned source has no text layer.",
+        "OCR word confidence does not establish legal accuracy. Section numbering and marginal-heading order require review."
+      ]
+    }
+  ],
+  "amendment_research": [
+    {
+      "instrument_slug": "police-act-2020",
+      "finding": "Reports identify a Nigeria Police (Amendment) Act 2024. Primary amendment text, assent and commencement still need verification; no amendment text was downloaded or merged.",
+      "status": "unverified_lead",
+      "url": "https://lip.legis360.org/uploads/resources/1769429986_MTR_1.0.pdf"
+    },
+    {
+      "instrument_slug": "acja-2015",
+      "finding": "Federal Ministry of Information reports a final stakeholder review of a draft Administration of Criminal Justice Amendment Bill. This is evidence of a proposal, not evidence of enactment or of the absence of other amendments.",
+      "status": "draft_bill_reported",
+      "url": "https://fmino.gov.ng/president-tinubu-committed-to-building-an-efficient-judiciary-system-agf-fagbemi/"
+    },
+    {
+      "instrument_slug": "police-act-2020",
+      "finding": "Nigeria Police Force reports gazetted Police Regulations in April 2026. Regulations are distinct from an amending Act.",
+      "status": "related_regulations_reported",
+      "url": "https://www.police.gov.ng/news/details/769"
+    }
+  ]
+}
