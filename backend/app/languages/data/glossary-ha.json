@@ -1,0 +1,1408 @@
+{
+  "version": "glossary-ha-v1",
+  "language": "ha",
+  "review_status": "draft",
+  "description": "Draft legal glossary for translating verified English answers and understanding questions. Built from two independent drafts (different models) and cross-checked; no native-speaker review yet. 'confidence' is the lower of the two drafts' confidence after reconciliation. Entries marked 'locked' keep their English form in answers. Spelling uses the Nigerian 'y form ('yan sanda); the ƴ form used in Niger is equivalent and folds to the same match form.",
+  "terms": [
+    {
+      "en": "What you can do:",
+      "target": "Abin da za ku iya yi:",
+      "alternatives": [
+        "Abin da za ka iya yi:",
+        "Abubuwan da za ka iya yi:"
+      ],
+      "note": "Fixed rendering of the answer heading 'What you can do:'. Second draft: 'Abin da za ku iya yi:'. Chose second draft: 'ku' (plural/polite) is gender-neutral, while 'ka' addresses a man only.",
+      "confidence": "high"
+    },
+    {
+      "en": "right",
+      "target": "haƙƙi",
+      "alternatives": [],
+      "note": "Two drafts agree.",
+      "confidence": "high"
+    },
+    {
+      "en": "rights",
+      "target": "haƙƙoƙi",
+      "alternatives": [
+        "haƙƙi"
+      ],
+      "note": "Two drafts agree.",
+      "confidence": "high"
+    },
+    {
+      "en": "fundamental rights",
+      "target": "haƙƙoƙi na asali",
+      "alternatives": [
+        "muhimman haƙƙoƙi",
+        "haƙƙoƙin asali"
+      ],
+      "note": "Drafts overlap; second draft led with 'haƙƙoƙin asali'.",
+      "confidence": "high"
+    },
+    {
+      "en": "human rights",
+      "target": "haƙƙin ɗan Adam",
+      "alternatives": [],
+      "note": "Two drafts agree.",
+      "confidence": "high"
+    },
+    {
+      "en": "freedom",
+      "target": "'yanci",
+      "alternatives": [],
+      "note": "Two drafts agree.",
+      "confidence": "high"
+    },
+    {
+      "en": "liberty",
+      "target": "'yanci",
+      "alternatives": [],
+      "note": "Two drafts agree.",
+      "confidence": "high"
+    },
+    {
+      "en": "right to life",
+      "target": "haƙƙin rayuwa",
+      "alternatives": [
+        "'yancin rayuwa"
+      ],
+      "note": "Two drafts agree.",
+      "confidence": "high"
+    },
+    {
+      "en": "right to dignity",
+      "target": "haƙƙin mutunci",
+      "alternatives": [
+        "'yancin mutunci"
+      ],
+      "note": "Two drafts agree.",
+      "confidence": "high"
+    },
+    {
+      "en": "torture",
+      "target": "azabtarwa",
+      "alternatives": [
+        "gana azaba"
+      ],
+      "note": "Two drafts agree.",
+      "confidence": "high"
+    },
+    {
+      "en": "inhuman or degrading treatment",
+      "target": "wulaƙanci ko cin mutunci",
+      "alternatives": [
+        "wulaƙanci da rashin imani"
+      ],
+      "note": "Drafts disagree; second draft: 'wulaƙanci da rashin imani'. Needs native review.",
+      "confidence": "medium"
+    },
+    {
+      "en": "slavery",
+      "target": "bauta",
+      "alternatives": [],
+      "note": "Two drafts agree.",
+      "confidence": "high"
+    },
+    {
+      "en": "forced labour",
+      "target": "aikin dole",
+      "alternatives": [
+        "aikin tilas"
+      ],
+      "note": "Drafts overlap; second draft led with 'aikin tilas'.",
+      "confidence": "high"
+    },
+    {
+      "en": "personal liberty",
+      "target": "'yancin kai",
+      "alternatives": [
+        "ƴancin kai na mutum"
+      ],
+      "note": "Minor wording difference; second draft: 'ƴancin kai na mutum'.",
+      "confidence": "medium"
+    },
+    {
+      "en": "arrest",
+      "target": "kama",
+      "alternatives": [
+        "kamu"
+      ],
+      "note": "Drafts overlap; second draft led with 'kamu'.",
+      "confidence": "high"
+    },
+    {
+      "en": "arrested",
+      "target": "an kama",
+      "alternatives": [
+        "aka kama"
+      ],
+      "note": "Drafts disagree; second draft: 'aka kama'. Needs native review.",
+      "confidence": "medium"
+    },
+    {
+      "en": "warrant",
+      "target": "takardar izini",
+      "alternatives": [
+        "sammaci",
+        "wàrànt"
+      ],
+      "note": "Two drafts agree.",
+      "confidence": "medium"
+    },
+    {
+      "en": "arrest warrant",
+      "target": "takardar izinin kama",
+      "alternatives": [
+        "takardar izinin kama mutum"
+      ],
+      "note": "Minor wording difference; second draft: 'takardar izinin kama mutum'.",
+      "confidence": "medium"
+    },
+    {
+      "en": "search warrant",
+      "target": "takardar izinin bincike",
+      "alternatives": [],
+      "note": "Two drafts agree.",
+      "confidence": "medium"
+    },
+    {
+      "en": "search",
+      "target": "bincike",
+      "alternatives": [
+        "caje"
+      ],
+      "note": "Two drafts agree.",
+      "confidence": "high"
+    },
+    {
+      "en": "seize",
+      "target": "ƙwace",
+      "alternatives": [],
+      "note": "Two drafts agree.",
+      "confidence": "high"
+    },
+    {
+      "en": "detain",
+      "target": "tsare",
+      "alternatives": [],
+      "note": "Two drafts agree.",
+      "confidence": "high"
+    },
+    {
+      "en": "detained",
+      "target": "an tsare",
+      "alternatives": [
+        "aka tsare"
+      ],
+      "note": "Drafts disagree; second draft: 'aka tsare'. Needs native review.",
+      "confidence": "medium"
+    },
+    {
+      "en": "detention",
+      "target": "tsarewa",
+      "alternatives": [
+        "tsare"
+      ],
+      "note": "Two drafts agree.",
+      "confidence": "high"
+    },
+    {
+      "en": "custody",
+      "target": "tsare",
+      "alternatives": [
+        "hannun hukuma",
+        "tsarewa",
+        "tsaro"
+      ],
+      "note": "Drafts disagree; second draft: 'tsarewa'. Needs native review.",
+      "confidence": "medium"
+    },
+    {
+      "en": "police custody",
+      "target": "tsare a hannun 'yan sanda",
+      "alternatives": [
+        "hannun 'yan sanda",
+        "tsarewar ƴan sanda"
+      ],
+      "note": "Drafts disagree; second draft: 'tsarewar ƴan sanda'. Needs native review.",
+      "confidence": "medium"
+    },
+    {
+      "en": "police station",
+      "target": "ofishin 'yan sanda",
+      "alternatives": [],
+      "note": "Two drafts agree.",
+      "confidence": "high"
+    },
+    {
+      "en": "police",
+      "target": "'yan sanda",
+      "alternatives": [],
+      "note": "Two drafts agree.",
+      "confidence": "high"
+    },
+    {
+      "en": "police officer",
+      "target": "ɗan sanda",
+      "alternatives": [
+        "jami’in ɗan sanda"
+      ],
+      "note": "Minor wording difference; second draft: 'jami’in ɗan sanda'.",
+      "confidence": "high"
+    },
+    {
+      "en": "Inspector-General of Police",
+      "target": "Babban Sufeton 'Yan Sanda",
+      "alternatives": [
+        "IGP",
+        "Inspector-General of Police",
+        "Sufeto Janar na ƴan sanda",
+        "Sufeto-Janar na ƴan sanda"
+      ],
+      "note": "Drafts disagree; second draft: 'Sufeto Janar na ƴan sanda'. Needs native review.",
+      "confidence": "medium"
+    },
+    {
+      "en": "suspect",
+      "target": "wanda ake zargi",
+      "alternatives": [],
+      "note": "Two drafts agree.",
+      "confidence": "high"
+    },
+    {
+      "en": "accused person",
+      "target": "wanda ake tuhuma",
+      "alternatives": [],
+      "note": "Two drafts agree.",
+      "confidence": "high"
+    },
+    {
+      "en": "charge",
+      "target": "tuhuma",
+      "alternatives": [],
+      "note": "Two drafts agree.",
+      "confidence": "high"
+    },
+    {
+      "en": "charged",
+      "target": "an tuhuma",
+      "alternatives": [
+        "an gurfanar",
+        "aka tuhume shi"
+      ],
+      "note": "Drafts disagree; second draft: 'aka tuhume shi'. Needs native review.",
+      "confidence": "medium"
+    },
+    {
+      "en": "offence",
+      "target": "laifi",
+      "alternatives": [],
+      "note": "Two drafts agree.",
+      "confidence": "high"
+    },
+    {
+      "en": "crime",
+      "target": "laifi",
+      "alternatives": [
+        "aikata laifi"
+      ],
+      "note": "Two drafts agree.",
+      "confidence": "high"
+    },
+    {
+      "en": "criminal",
+      "target": "mai laifi",
+      "alternatives": [
+        "mai aikata laifi"
+      ],
+      "note": "Two drafts agree.",
+      "confidence": "high"
+    },
+    {
+      "en": "bail",
+      "target": "beli",
+      "alternatives": [],
+      "note": "Two drafts agree.",
+      "confidence": "high"
+    },
+    {
+      "en": "surety",
+      "target": "mai tsaya masa",
+      "alternatives": [
+        "tsayayye",
+        "mai tsaya wa"
+      ],
+      "note": "Minor wording difference; second draft: 'mai tsaya wa'.",
+      "confidence": "medium"
+    },
+    {
+      "en": "remand",
+      "target": "tsarewa a gidan yari kafin shari'a ta ƙare",
+      "alternatives": [
+        "tsarewa ta kotu"
+      ],
+      "note": "Drafts disagree; second draft: 'tsarewa ta kotu'. Needs native review.",
+      "confidence": "medium"
+    },
+    {
+      "en": "court",
+      "target": "kotu",
+      "alternatives": [],
+      "note": "Two drafts agree.",
+      "confidence": "high"
+    },
+    {
+      "en": "High Court",
+      "target": "Babbar Kotu",
+      "alternatives": [
+        "High Court"
+      ],
+      "note": "Two drafts agree.",
+      "confidence": "high"
+    },
+    {
+      "en": "Federal High Court",
+      "target": "Babbar Kotun Tarayya",
+      "alternatives": [
+        "Federal High Court"
+      ],
+      "note": "Two drafts agree.",
+      "confidence": "high"
+    },
+    {
+      "en": "Magistrate Court",
+      "target": "Kotun Majistare",
+      "alternatives": [],
+      "note": "Two drafts agree.",
+      "confidence": "high"
+    },
+    {
+      "en": "Court of Appeal",
+      "target": "Kotun Ɗaukaka Ƙara",
+      "alternatives": [],
+      "note": "Two drafts agree.",
+      "confidence": "high"
+    },
+    {
+      "en": "Supreme Court",
+      "target": "Kotun Ƙoli",
+      "alternatives": [],
+      "note": "Two drafts agree.",
+      "confidence": "high"
+    },
+    {
+      "en": "Sharia Court of Appeal",
+      "target": "Kotun Ɗaukaka Ƙara ta Shari'a",
+      "alternatives": [],
+      "note": "Two drafts agree.",
+      "confidence": "high"
+    },
+    {
+      "en": "Customary Court of Appeal",
+      "target": "Kotun Ɗaukaka Ƙara ta Al'ada",
+      "alternatives": [],
+      "note": "Two drafts agree.",
+      "confidence": "medium"
+    },
+    {
+      "en": "judge",
+      "target": "alƙali",
+      "alternatives": [
+        "joji"
+      ],
+      "note": "Two drafts agree.",
+      "confidence": "high"
+    },
+    {
+      "en": "magistrate",
+      "target": "majistare",
+      "alternatives": [
+        "alƙalin kotun majistare"
+      ],
+      "note": "Two drafts agree.",
+      "confidence": "high"
+    },
+    {
+      "en": "Chief Justice of Nigeria",
+      "target": "Babban Jojin Najeriya",
+      "alternatives": [
+        "Alƙalin Alƙalai",
+        "CJN",
+        "Babban Alƙalin Alƙalan Najeriya"
+      ],
+      "note": "Second draft: 'Babban Alƙalin Alƙalan Najeriya'. Both 'Babban Jojin Najeriya' and 'Babban Alƙalin Alƙalan Najeriya' are used in media.",
+      "confidence": "medium"
+    },
+    {
+      "en": "tribunal",
+      "target": "kotun sauraron ƙara",
+      "alternatives": [
+        "tribunal",
+        "kotun musamman"
+      ],
+      "note": "Drafts disagree; second draft: 'kotun musamman'. Needs native review.",
+      "confidence": "medium"
+    },
+    {
+      "en": "trial",
+      "target": "shari'a",
+      "alternatives": [],
+      "note": "Two drafts agree.",
+      "confidence": "high"
+    },
+    {
+      "en": "fair hearing",
+      "target": "sauraro na adalci",
+      "alternatives": [
+        "sauraron ɓangarorin biyu",
+        "sauraron shari’a cikin adalci"
+      ],
+      "note": "Drafts disagree; second draft: 'sauraron shari’a cikin adalci'. Needs native review.",
+      "confidence": "medium"
+    },
+    {
+      "en": "fair trial",
+      "target": "shari'a ta adalci",
+      "alternatives": [],
+      "note": "Two drafts agree.",
+      "confidence": "high"
+    },
+    {
+      "en": "presumed innocent",
+      "target": "ana ɗaukarsa marar laifi",
+      "alternatives": [
+        "ba shi da laifi har sai an tabbatar",
+        "ana ɗaukar mutum ba shi da laifi har sai an tabbatar"
+      ],
+      "note": "Drafts disagree; second draft: 'ana ɗaukar mutum ba shi da laifi har sai an tabbatar'. Needs native review.",
+      "confidence": "medium"
+    },
+    {
+      "en": "guilty",
+      "target": "da laifi",
+      "alternatives": [
+        "mai laifi"
+      ],
+      "note": "Two drafts agree.",
+      "confidence": "high"
+    },
+    {
+      "en": "innocent",
+      "target": "marar laifi",
+      "alternatives": [
+        "ba shi da laifi"
+      ],
+      "note": "Two drafts agree.",
+      "confidence": "high"
+    },
+    {
+      "en": "conviction",
+      "target": "samun mutum da laifi",
+      "alternatives": [
+        "hukuncin laifi"
+      ],
+      "note": "Two drafts agree.",
+      "confidence": "medium"
+    },
+    {
+      "en": "convicted",
+      "target": "an same shi da laifi",
+      "alternatives": [
+        "aka samu da laifi"
+      ],
+      "note": "Drafts disagree; second draft: 'aka samu da laifi'. Needs native review.",
+      "confidence": "medium"
+    },
+    {
+      "en": "sentence",
+      "target": "hukunci",
+      "alternatives": [],
+      "note": "Two drafts agree.",
+      "confidence": "high"
+    },
+    {
+      "en": "punishment",
+      "target": "hukunci",
+      "alternatives": [
+        "horo",
+        "ukuba"
+      ],
+      "note": "Two drafts agree.",
+      "confidence": "high"
+    },
+    {
+      "en": "appeal",
+      "target": "ɗaukaka ƙara",
+      "alternatives": [],
+      "note": "Two drafts agree.",
+      "confidence": "high"
+    },
+    {
+      "en": "lawyer",
+      "target": "lauya",
+      "alternatives": [],
+      "note": "Two drafts agree.",
+      "confidence": "high"
+    },
+    {
+      "en": "legal representation",
+      "target": "lauya mai kare mutum",
+      "alternatives": [
+        "wakilcin lauya"
+      ],
+      "note": "Drafts overlap; second draft led with 'wakilcin lauya'.",
+      "confidence": "high"
+    },
+    {
+      "en": "legal aid",
+      "target": "lauya kyauta",
+      "alternatives": [
+        "taimakon shari'a",
+        "tallafin shari’a"
+      ],
+      "note": "Drafts disagree; second draft: 'tallafin shari’a'. Needs native review.",
+      "confidence": "medium"
+    },
+    {
+      "en": "interpreter",
+      "target": "mai fassara",
+      "alternatives": [
+        "tafinta"
+      ],
+      "note": "Two drafts agree.",
+      "confidence": "high"
+    },
+    {
+      "en": "remain silent",
+      "target": "yin shiru",
+      "alternatives": [],
+      "note": "Two drafts agree.",
+      "confidence": "high"
+    },
+    {
+      "en": "confession",
+      "target": "ikirari",
+      "alternatives": [
+        "amsa laifi"
+      ],
+      "note": "Two drafts agree.",
+      "confidence": "high"
+    },
+    {
+      "en": "evidence",
+      "target": "shaida",
+      "alternatives": [
+        "hujja"
+      ],
+      "note": "Two drafts agree.",
+      "confidence": "high"
+    },
+    {
+      "en": "witness",
+      "target": "mai ba da shaida",
+      "alternatives": [
+        "shaida",
+        "mai shaida"
+      ],
+      "note": "Drafts overlap; second draft led with 'mai shaida'.",
+      "confidence": "high"
+    },
+    {
+      "en": "prosecution",
+      "target": "masu gabatar da ƙara",
+      "alternatives": [],
+      "note": "Two drafts agree.",
+      "confidence": "high"
+    },
+    {
+      "en": "prosecutor",
+      "target": "mai gabatar da ƙara",
+      "alternatives": [],
+      "note": "Two drafts agree.",
+      "confidence": "high"
+    },
+    {
+      "en": "Attorney-General",
+      "target": "Antoni Janar",
+      "alternatives": [
+        "Babban Lauyan Gwamnati",
+        "Attorney-General"
+      ],
+      "note": "Drafts overlap; second draft led with 'Babban Lauyan Gwamnati'.",
+      "confidence": "high"
+    },
+    {
+      "en": "reasonable time",
+      "target": "lokaci mai ma'ana",
+      "alternatives": [
+        "madaidaicin lokaci"
+      ],
+      "note": "Two drafts agree.",
+      "confidence": "medium"
+    },
+    {
+      "en": "within a reasonable time",
+      "target": "cikin lokaci mai ma'ana",
+      "alternatives": [
+        "ba tare da jinkiri ba"
+      ],
+      "note": "Two drafts agree.",
+      "confidence": "medium"
+    },
+    {
+      "en": "compensation",
+      "target": "diyya",
+      "alternatives": [],
+      "note": "Two drafts agree.",
+      "confidence": "high"
+    },
+    {
+      "en": "apology",
+      "target": "ban haƙuri",
+      "alternatives": [
+        "neman gafara",
+        "neman afuwa"
+      ],
+      "note": "Drafts overlap; second draft led with 'neman afuwa'.",
+      "confidence": "high"
+    },
+    {
+      "en": "privacy",
+      "target": "sirri",
+      "alternatives": [
+        "sirrin mutum"
+      ],
+      "note": "Two drafts agree.",
+      "confidence": "high"
+    },
+    {
+      "en": "private and family life",
+      "target": "rayuwar sirri da ta iyali",
+      "alternatives": [],
+      "note": "Two drafts agree.",
+      "confidence": "medium"
+    },
+    {
+      "en": "home",
+      "target": "gida",
+      "alternatives": [],
+      "note": "Two drafts agree.",
+      "confidence": "high"
+    },
+    {
+      "en": "correspondence",
+      "target": "wasiƙu",
+      "alternatives": [
+        "takardu da saƙonni"
+      ],
+      "note": "Two drafts agree.",
+      "confidence": "medium"
+    },
+    {
+      "en": "telephone conversations",
+      "target": "hirar waya",
+      "alternatives": [
+        "kiran waya",
+        "tattaunawar waya"
+      ],
+      "note": "Drafts disagree; second draft: 'tattaunawar waya'. Needs native review.",
+      "confidence": "medium"
+    },
+    {
+      "en": "messages",
+      "target": "saƙonni",
+      "alternatives": [],
+      "note": "Two drafts agree.",
+      "confidence": "high"
+    },
+    {
+      "en": "freedom of thought, conscience and religion",
+      "target": "'yancin tunani, lamiri da addini",
+      "alternatives": [],
+      "note": "Two drafts agree.",
+      "confidence": "high"
+    },
+    {
+      "en": "religion",
+      "target": "addini",
+      "alternatives": [],
+      "note": "Two drafts agree.",
+      "confidence": "high"
+    },
+    {
+      "en": "change religion",
+      "target": "canza addini",
+      "alternatives": [
+        "sauya addini"
+      ],
+      "note": "Two drafts agree.",
+      "confidence": "high"
+    },
+    {
+      "en": "freedom of expression",
+      "target": "'yancin faɗin albarkacin baki",
+      "alternatives": [
+        "'yancin magana"
+      ],
+      "note": "Two drafts agree.",
+      "confidence": "high"
+    },
+    {
+      "en": "freedom of the press",
+      "target": "'yancin 'yan jarida",
+      "alternatives": [
+        "ƴancin aikin jarida"
+      ],
+      "note": "Minor wording difference; second draft: 'ƴancin aikin jarida'.",
+      "confidence": "high"
+    },
+    {
+      "en": "newspaper",
+      "target": "jarida",
+      "alternatives": [],
+      "note": "Two drafts agree.",
+      "confidence": "high"
+    },
+    {
+      "en": "peaceful assembly",
+      "target": "taro cikin lumana",
+      "alternatives": [],
+      "note": "Two drafts agree.",
+      "confidence": "high"
+    },
+    {
+      "en": "association",
+      "target": "ƙungiya",
+      "alternatives": [
+        "kafa ƙungiya"
+      ],
+      "note": "Two drafts agree.",
+      "confidence": "high"
+    },
+    {
+      "en": "trade union",
+      "target": "ƙungiyar ƙwadago",
+      "alternatives": [],
+      "note": "Two drafts agree.",
+      "confidence": "high"
+    },
+    {
+      "en": "political party",
+      "target": "jam'iyyar siyasa",
+      "alternatives": [],
+      "note": "Two drafts agree.",
+      "confidence": "high"
+    },
+    {
+      "en": "protest",
+      "target": "zanga-zanga",
+      "alternatives": [],
+      "note": "Two drafts agree.",
+      "confidence": "high"
+    },
+    {
+      "en": "freedom of movement",
+      "target": "'yancin zirga-zirga",
+      "alternatives": [],
+      "note": "Two drafts agree.",
+      "confidence": "high"
+    },
+    {
+      "en": "leave Nigeria",
+      "target": "fita daga Najeriya",
+      "alternatives": [
+        "barin Najeriya"
+      ],
+      "note": "Drafts disagree; second draft: 'barin Najeriya'. Needs native review.",
+      "confidence": "medium"
+    },
+    {
+      "en": "discrimination",
+      "target": "nuna wariya",
+      "alternatives": [
+        "nuna bambanci"
+      ],
+      "note": "Drafts overlap; second draft led with 'nuna bambanci'.",
+      "confidence": "high"
+    },
+    {
+      "en": "sex",
+      "target": "jinsi",
+      "alternatives": [],
+      "note": "Two drafts agree.",
+      "confidence": "high"
+    },
+    {
+      "en": "ethnic group",
+      "target": "ƙabila",
+      "alternatives": [],
+      "note": "Two drafts agree.",
+      "confidence": "high"
+    },
+    {
+      "en": "place of origin",
+      "target": "asalin wuri",
+      "alternatives": [
+        "jihar asali",
+        "wurin asali",
+        "asalin gari"
+      ],
+      "note": "Drafts disagree; second draft: 'wurin asali'. Needs native review.",
+      "confidence": "medium"
+    },
+    {
+      "en": "circumstance of birth",
+      "target": "yanayin haihuwa",
+      "alternatives": [],
+      "note": "Two drafts agree.",
+      "confidence": "medium"
+    },
+    {
+      "en": "property",
+      "target": "dukiya",
+      "alternatives": [
+        "kadara"
+      ],
+      "note": "Two drafts agree.",
+      "confidence": "high"
+    },
+    {
+      "en": "land",
+      "target": "ƙasa",
+      "alternatives": [
+        "fili",
+        "filaye"
+      ],
+      "note": "Drafts overlap; second draft led with 'fili'.",
+      "confidence": "medium"
+    },
+    {
+      "en": "compulsory acquisition",
+      "target": "karɓe ƙasa da ƙarfi daga gwamnati",
+      "alternatives": [
+        "ƙwace fili",
+        "ƙwace dukiya ta tilas"
+      ],
+      "note": "Drafts disagree; second draft: 'ƙwace dukiya ta tilas'. Needs native review.",
+      "confidence": "medium"
+    },
+    {
+      "en": "state of emergency",
+      "target": "dokar ta-ɓaci",
+      "alternatives": [],
+      "note": "Two drafts agree.",
+      "confidence": "high"
+    },
+    {
+      "en": "citizen",
+      "target": "ɗan ƙasa",
+      "alternatives": [],
+      "note": "Two drafts agree.",
+      "confidence": "high"
+    },
+    {
+      "en": "citizenship",
+      "target": "zama ɗan ƙasa",
+      "alternatives": [],
+      "note": "Two drafts agree.",
+      "confidence": "high"
+    },
+    {
+      "en": "citizen by birth",
+      "target": "ɗan ƙasa ta haihuwa",
+      "alternatives": [
+        "ɗan ƙasa ta hanyar haihuwa"
+      ],
+      "note": "Minor wording difference; second draft: 'ɗan ƙasa ta hanyar haihuwa'.",
+      "confidence": "high"
+    },
+    {
+      "en": "citizen by registration",
+      "target": "ɗan ƙasa ta rajista",
+      "alternatives": [
+        "ɗan ƙasa ta hanyar rajista"
+      ],
+      "note": "Minor wording difference; second draft: 'ɗan ƙasa ta hanyar rajista'.",
+      "confidence": "high"
+    },
+    {
+      "en": "naturalisation",
+      "target": "zama ɗan ƙasa ta hanyar neman izini",
+      "alternatives": [
+        "naturalisation",
+        "samun zama ɗan ƙasa ta hanyar neman izini"
+      ],
+      "note": "Minor wording difference; second draft: 'samun zama ɗan ƙasa ta hanyar neman izini'.",
+      "confidence": "low"
+    },
+    {
+      "en": "dual citizenship",
+      "target": "zama ɗan ƙasa biyu",
+      "alternatives": [
+        "'yan ƙasa biyu",
+        "zama ɗan ƙasa na ƙasashe biyu"
+      ],
+      "note": "Minor wording difference; second draft: 'zama ɗan ƙasa na ƙasashe biyu'.",
+      "confidence": "medium"
+    },
+    {
+      "en": "renounce citizenship",
+      "target": "watsi da zama ɗan ƙasa",
+      "alternatives": [
+        "yin watsi da ɗan ƙasa",
+        "yin watsi da zama ɗan ƙasa"
+      ],
+      "note": "Minor wording difference; second draft: 'yin watsi da zama ɗan ƙasa'.",
+      "confidence": "medium"
+    },
+    {
+      "en": "deprive of citizenship",
+      "target": "ƙwace zama ɗan ƙasa",
+      "alternatives": [],
+      "note": "Two drafts agree.",
+      "confidence": "medium"
+    },
+    {
+      "en": "duty",
+      "target": "wajibi",
+      "alternatives": [
+        "nauyi",
+        "wajibci"
+      ],
+      "note": "Drafts overlap; second draft led with 'nauyi'.",
+      "confidence": "high"
+    },
+    {
+      "en": "duties of a citizen",
+      "target": "wajiban ɗan ƙasa",
+      "alternatives": [
+        "nauyin da ke kan ɗan ƙasa",
+        "nauyin ɗan ƙasa"
+      ],
+      "note": "Minor wording difference; second draft: 'nauyin ɗan ƙasa'.",
+      "confidence": "high"
+    },
+    {
+      "en": "Constitution",
+      "target": "Constitution",
+      "alternatives": [
+        "Kundin Tsarin Mulki"
+      ],
+      "note": "Locked: keep the English form in answers (with any number or law name); local forms are listed only to recognise questions. Second draft used the local word 'Kundin Tsarin Mulki'.",
+      "confidence": "high",
+      "locked": true
+    },
+    {
+      "en": "section",
+      "target": "section",
+      "alternatives": [
+        "sashe"
+      ],
+      "note": "Locked: keep the English form in answers (with any number or law name); local forms are listed only to recognise questions. Second draft used the local word 'sashe'.",
+      "confidence": "high",
+      "locked": true
+    },
+    {
+      "en": "subsection",
+      "target": "subsection",
+      "alternatives": [
+        "ƙaramin sashe"
+      ],
+      "note": "Locked: keep the English form in answers (with any number or law name); local forms are listed only to recognise questions. Second draft used the local word 'ƙaramin sashe'.",
+      "confidence": "medium",
+      "locked": true
+    },
+    {
+      "en": "paragraph",
+      "target": "paragraph",
+      "alternatives": [
+        "sakin layi"
+      ],
+      "note": "Locked: keep the English form in answers (with any number or law name); local forms are listed only to recognise questions. Second draft used the local word 'sakin layi'.",
+      "confidence": "medium",
+      "locked": true
+    },
+    {
+      "en": "chapter",
+      "target": "chapter",
+      "alternatives": [
+        "babi"
+      ],
+      "note": "Locked: keep the English form in answers (with any number or law name); local forms are listed only to recognise questions. Second draft used the local word 'babi'.",
+      "confidence": "medium",
+      "locked": true
+    },
+    {
+      "en": "schedule",
+      "target": "schedule",
+      "alternatives": [
+        "jadawali"
+      ],
+      "note": "Locked: keep the English form in answers (with any number or law name); local forms are listed only to recognise questions. Second draft used the local word 'jadawali'.",
+      "confidence": "medium",
+      "locked": true
+    },
+    {
+      "en": "law",
+      "target": "doka",
+      "alternatives": [],
+      "note": "Two drafts agree.",
+      "confidence": "high"
+    },
+    {
+      "en": "Act",
+      "target": "Act",
+      "alternatives": [
+        "doka"
+      ],
+      "note": "Locked: keep the English form in answers (with any number or law name); local forms are listed only to recognise questions. Second draft used the local word 'Doka'.",
+      "confidence": "high",
+      "locked": true
+    },
+    {
+      "en": "Bill",
+      "target": "ƙudiri",
+      "alternatives": [
+        "ƙudirin doka",
+        "ƙudurin doka"
+      ],
+      "note": "Drafts disagree; second draft: 'ƙudurin doka'. Needs native review.",
+      "confidence": "medium"
+    },
+    {
+      "en": "amend",
+      "target": "gyara",
+      "alternatives": [
+        "yi wa kwaskwarima",
+        "yin gyara ga"
+      ],
+      "note": "Drafts disagree; second draft: 'yin gyara ga'. Needs native review.",
+      "confidence": "medium"
+    },
+    {
+      "en": "amendment",
+      "target": "gyara",
+      "alternatives": [
+        "kwaskwarima"
+      ],
+      "note": "Two drafts agree.",
+      "confidence": "high"
+    },
+    {
+      "en": "government",
+      "target": "gwamnati",
+      "alternatives": [],
+      "note": "Two drafts agree.",
+      "confidence": "high"
+    },
+    {
+      "en": "Federal Government",
+      "target": "Gwamnatin Tarayya",
+      "alternatives": [],
+      "note": "Two drafts agree.",
+      "confidence": "high"
+    },
+    {
+      "en": "State Government",
+      "target": "Gwamnatin Jiha",
+      "alternatives": [],
+      "note": "Two drafts agree.",
+      "confidence": "high"
+    },
+    {
+      "en": "Local Government",
+      "target": "Ƙaramar Hukuma",
+      "alternatives": [
+        "Gwamnatin Ƙaramar Hukuma"
+      ],
+      "note": "Minor wording difference; second draft: 'Gwamnatin Ƙaramar Hukuma'.",
+      "confidence": "high"
+    },
+    {
+      "en": "federation",
+      "target": "tarayya",
+      "alternatives": [],
+      "note": "Two drafts agree.",
+      "confidence": "high"
+    },
+    {
+      "en": "state",
+      "target": "jiha",
+      "alternatives": [],
+      "note": "Two drafts agree.",
+      "confidence": "high"
+    },
+    {
+      "en": "National Assembly",
+      "target": "Majalisar Dokoki ta Ƙasa",
+      "alternatives": [
+        "National Assembly",
+        "Majalisar Dokokin Ƙasa",
+        "Majalisar Tarayya"
+      ],
+      "note": "Drafts disagree; second draft: 'Majalisar Dokokin Ƙasa'. Needs native review.",
+      "confidence": "medium"
+    },
+    {
+      "en": "Senate",
+      "target": "Majalisar Dattawa",
+      "alternatives": [],
+      "note": "Two drafts agree.",
+      "confidence": "high"
+    },
+    {
+      "en": "House of Representatives",
+      "target": "Majalisar Wakilai",
+      "alternatives": [],
+      "note": "Two drafts agree.",
+      "confidence": "high"
+    },
+    {
+      "en": "State House of Assembly",
+      "target": "Majalisar Dokokin Jiha",
+      "alternatives": [],
+      "note": "Two drafts agree.",
+      "confidence": "high"
+    },
+    {
+      "en": "senator",
+      "target": "sanata",
+      "alternatives": [],
+      "note": "Two drafts agree.",
+      "confidence": "high"
+    },
+    {
+      "en": "recall",
+      "target": "kiranye",
+      "alternatives": [
+        "yi wa wakili kiranye",
+        "tuno da ɗan majalisa"
+      ],
+      "note": "Second draft: 'tuno da ɗan majalisa'. 'kiranye' is the term used in Hausa media for recalling a legislator; second draft 'tuno da ɗan majalisa' is a paraphrase.",
+      "confidence": "medium"
+    },
+    {
+      "en": "election",
+      "target": "zaɓe",
+      "alternatives": [],
+      "note": "Two drafts agree.",
+      "confidence": "high"
+    },
+    {
+      "en": "vote",
+      "target": "ƙuri'a",
+      "alternatives": [
+        "kaɗa ƙuri'a",
+        "jefa kuri’a"
+      ],
+      "note": "Two drafts agree.",
+      "confidence": "high"
+    },
+    {
+      "en": "President",
+      "target": "Shugaban Ƙasa",
+      "alternatives": [],
+      "note": "Two drafts agree.",
+      "confidence": "high"
+    },
+    {
+      "en": "Vice-President",
+      "target": "Mataimakin Shugaban Ƙasa",
+      "alternatives": [],
+      "note": "Two drafts agree.",
+      "confidence": "high"
+    },
+    {
+      "en": "Governor",
+      "target": "Gwamna",
+      "alternatives": [],
+      "note": "Two drafts agree.",
+      "confidence": "high"
+    },
+    {
+      "en": "Deputy Governor",
+      "target": "Mataimakin Gwamna",
+      "alternatives": [],
+      "note": "Two drafts agree.",
+      "confidence": "high"
+    },
+    {
+      "en": "Minister",
+      "target": "Minista",
+      "alternatives": [],
+      "note": "Two drafts agree.",
+      "confidence": "high"
+    },
+    {
+      "en": "Commissioner",
+      "target": "Kwamishina",
+      "alternatives": [],
+      "note": "Two drafts agree.",
+      "confidence": "high"
+    },
+    {
+      "en": "impeach",
+      "target": "tsige",
+      "alternatives": [],
+      "note": "Two drafts agree.",
+      "confidence": "high"
+    },
+    {
+      "en": "impeachment",
+      "target": "tsigewa",
+      "alternatives": [],
+      "note": "Two drafts agree.",
+      "confidence": "high"
+    },
+    {
+      "en": "remove from office",
+      "target": "cire daga muƙami",
+      "alternatives": [
+        "tsige"
+      ],
+      "note": "Two drafts agree.",
+      "confidence": "high"
+    },
+    {
+      "en": "gross misconduct",
+      "target": "babban rashin ɗa'a",
+      "alternatives": [
+        "mummunar ɗabi'a",
+        "babban laifin rashin da’a"
+      ],
+      "note": "Minor wording difference; second draft: 'babban laifin rashin da’a'.",
+      "confidence": "medium"
+    },
+    {
+      "en": "immunity",
+      "target": "kariya daga shari'a",
+      "alternatives": [
+        "rigar kariya",
+        "kariya daga ƙara"
+      ],
+      "note": "Drafts overlap; second draft led with 'rigar kariya'.",
+      "confidence": "medium"
+    },
+    {
+      "en": "sue",
+      "target": "kai ƙara",
+      "alternatives": [],
+      "note": "Two drafts agree.",
+      "confidence": "high"
+    },
+    {
+      "en": "term of office",
+      "target": "wa'adin mulki",
+      "alternatives": [
+        "wa'adi"
+      ],
+      "note": "Two drafts agree.",
+      "confidence": "high"
+    },
+    {
+      "en": "qualification",
+      "target": "cancanta",
+      "alternatives": [
+        "sharuɗɗan cancanta"
+      ],
+      "note": "Two drafts agree.",
+      "confidence": "high"
+    },
+    {
+      "en": "pardon",
+      "target": "afuwa",
+      "alternatives": [],
+      "note": "Two drafts agree.",
+      "confidence": "high"
+    },
+    {
+      "en": "prerogative of mercy",
+      "target": "ikon yin afuwa",
+      "alternatives": [],
+      "note": "Two drafts agree.",
+      "confidence": "medium"
+    },
+    {
+      "en": "armed forces",
+      "target": "sojoji",
+      "alternatives": [
+        "rundunar soji",
+        "rundunar sojoji"
+      ],
+      "note": "Minor wording difference; second draft: 'rundunar sojoji'.",
+      "confidence": "high"
+    },
+    {
+      "en": "soldier",
+      "target": "soja",
+      "alternatives": [],
+      "note": "Two drafts agree.",
+      "confidence": "high"
+    },
+    {
+      "en": "customary law",
+      "target": "dokar al'ada",
+      "alternatives": [],
+      "note": "Two drafts agree.",
+      "confidence": "high"
+    },
+    {
+      "en": "Islamic law",
+      "target": "Shari'a",
+      "alternatives": [
+        "dokar Musulunci",
+        "shari’ar Musulunci"
+      ],
+      "note": "Drafts disagree; second draft: 'shari’ar Musulunci'. Needs native review.",
+      "confidence": "medium"
+    },
+    {
+      "en": "secular",
+      "target": "ƙasa da ba ta da addinin hukuma",
+      "alternatives": [
+        "secular",
+        "wanda ba shi da addini a hukumance"
+      ],
+      "note": "Second draft: 'wanda ba shi da addini a hukumance'. No settled term; both drafts paraphrase. Prefer explaining 'no official state religion'.",
+      "confidence": "low"
+    },
+    {
+      "en": "State religion",
+      "target": "addinin ƙasa",
+      "alternatives": [
+        "addinin hukuma"
+      ],
+      "note": "Two drafts agree.",
+      "confidence": "medium"
+    },
+    {
+      "en": "education",
+      "target": "ilimi",
+      "alternatives": [],
+      "note": "Two drafts agree.",
+      "confidence": "high"
+    },
+    {
+      "en": "Administration of Criminal Justice Act",
+      "target": "Administration of Criminal Justice Act",
+      "alternatives": [
+        "ACJA",
+        "Dokar Gudanar da Shari’ar Laifuka"
+      ],
+      "note": "Locked: keep the English form in answers (with any number or law name); local forms are listed only to recognise questions. Second draft used the local word 'Dokar Gudanar da Shari’ar Laifuka'.",
+      "confidence": "high",
+      "locked": true
+    },
+    {
+      "en": "Police Act",
+      "target": "Police Act",
+      "alternatives": [
+        "Dokar Ƴan Sanda"
+      ],
+      "note": "Locked: keep the English form in answers (with any number or law name); local forms are listed only to recognise questions. Second draft used the local word 'Dokar Ƴan Sanda'.",
+      "confidence": "high",
+      "locked": true
+    }
+  ]
+}

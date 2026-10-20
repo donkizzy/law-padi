@@ -1,0 +1,335 @@
+{
+  "version": "plain-language-retrieval-heldout-pcm-v1",
+  "language": "pcm",
+  "review_status": "draft",
+  "source": "plain-language-retrieval-heldout-v1",
+  "description": "Nigerian Pidgin (Naijá) translations of the 40 English held-out cases (same order, kind and expected_sections; source_query is the English case). Do not add topic-guide phrases from these cases; keep them for measuring. review_status 'draft': drafted and cross-checked without a native-speaker reviewer; do not treat as reviewed. Measure through the question-translation step (translate to English, then /api/v1/legal/search), and also raw for the folded keyword path. Enable gates: docs/multilingual-evaluation-plan.md.",
+  "cases": [
+    {
+      "query": "governor get immunity make nobody sue am while e dey office?",
+      "expected_sections": [
+        "constitution-1999:308"
+      ],
+      "kind": "everyday",
+      "source_query": "is the governor immune from being sued while in office"
+    },
+    {
+      "query": "how many years president fit stay for power?",
+      "expected_sections": [
+        "constitution-1999:135",
+        "constitution-1999:137"
+      ],
+      "kind": "everyday",
+      "source_query": "how many years can a president stay in power"
+    },
+    {
+      "query": "how long governor term be?",
+      "expected_sections": [
+        "constitution-1999:180"
+      ],
+      "kind": "everyday",
+      "source_query": "how long is a governor's term"
+    },
+    {
+      "query": "government fit take my land to build road?",
+      "expected_sections": [
+        "constitution-1999:44"
+      ],
+      "kind": "everyday",
+      "source_query": "can the government take my land for a road"
+    },
+    {
+      "query": "I fit be Nigerian and American citizen at the same time?",
+      "expected_sections": [
+        "constitution-1999:28"
+      ],
+      "kind": "everyday",
+      "source_query": "can i be a citizen of nigeria and america at the same time"
+    },
+    {
+      "query": "my papa na Nigerian but dem born me for abroad, I be Nigerian?",
+      "expected_sections": [
+        "constitution-1999:25"
+      ],
+      "kind": "everyday",
+      "source_query": "my father is nigerian but i was born abroad, am i nigerian"
+    },
+    {
+      "query": "foreign woman wey marry Nigerian fit become citizen?",
+      "expected_sections": [
+        "constitution-1999:26"
+      ],
+      "kind": "everyday",
+      "source_query": "can a foreign woman married to a nigerian become a citizen"
+    },
+    {
+      "query": "Nigeria get official religion?",
+      "expected_sections": [
+        "constitution-1999:10"
+      ],
+      "kind": "everyday",
+      "source_query": "is there an official religion in nigeria"
+    },
+    {
+      "query": "president fit pardon person wey court don convict?",
+      "expected_sections": [
+        "constitution-1999:175"
+      ],
+      "kind": "everyday",
+      "source_query": "can the president pardon a convicted person"
+    },
+    {
+      "query": "how una dey impeach president?",
+      "expected_sections": [
+        "constitution-1999:143"
+      ],
+      "kind": "everyday",
+      "source_query": "how do you impeach the president"
+    },
+    {
+      "query": "how dem dey remove governor from office?",
+      "expected_sections": [
+        "constitution-1999:188"
+      ],
+      "kind": "everyday",
+      "source_query": "how is a governor removed from office"
+    },
+    {
+      "query": "na who dey appoint the chief justice?",
+      "expected_sections": [
+        "constitution-1999:231"
+      ],
+      "kind": "everyday",
+      "source_query": "who appoints the chief justice"
+    },
+    {
+      "query": "dem fit sack judge?",
+      "expected_sections": [
+        "constitution-1999:292"
+      ],
+      "kind": "everyday",
+      "source_query": "can a judge be sacked"
+    },
+    {
+      "query": "I need lawyer before court fit try my case?",
+      "expected_sections": [
+        "constitution-1999:36"
+      ],
+      "kind": "everyday",
+      "source_query": "do i need a lawyer before the court can try me"
+    },
+    {
+      "query": "dem fit torture suspect make e confess?",
+      "expected_sections": [
+        "constitution-1999:34"
+      ],
+      "kind": "everyday",
+      "source_query": "can they torture a suspect to confess"
+    },
+    {
+      "query": "dem fit force me work without pay?",
+      "expected_sections": [
+        "constitution-1999:34"
+      ],
+      "kind": "everyday",
+      "source_query": "can i be forced to work without pay"
+    },
+    {
+      "query": "dem fit refuse me work because of my tribe?",
+      "expected_sections": [
+        "constitution-1999:42"
+      ],
+      "kind": "everyday",
+      "source_query": "can i be denied a job because of my tribe"
+    },
+    {
+      "query": "I fit live for any state wey I want?",
+      "expected_sections": [
+        "constitution-1999:41"
+      ],
+      "kind": "everyday",
+      "source_query": "can i live in any state i want"
+    },
+    {
+      "query": "I fit get house for Lagos if I come from Kano?",
+      "expected_sections": [
+        "constitution-1999:43"
+      ],
+      "kind": "everyday",
+      "source_query": "can i own a house in lagos if i am from kano"
+    },
+    {
+      "query": "I fit start newspaper?",
+      "expected_sections": [
+        "constitution-1999:39"
+      ],
+      "kind": "everyday",
+      "source_query": "can i start a newspaper"
+    },
+    {
+      "query": "I need permit before I fit protest?",
+      "expected_sections": [
+        "constitution-1999:40"
+      ],
+      "kind": "everyday",
+      "source_query": "do i need a permit to protest"
+    },
+    {
+      "query": "I fit change my religion abi dem no allow am?",
+      "expected_sections": [
+        "constitution-1999:38"
+      ],
+      "kind": "everyday",
+      "source_query": "can i change my religion"
+    },
+    {
+      "query": "when state of emergency fit suspend my rights?",
+      "expected_sections": [
+        "constitution-1999:45",
+        "constitution-1999:305"
+      ],
+      "kind": "everyday",
+      "source_query": "when can a state of emergency suspend my rights"
+    },
+    {
+      "query": "which age person must reach before e fit run for president?",
+      "expected_sections": [
+        "constitution-1999:131"
+      ],
+      "kind": "everyday",
+      "source_query": "what age must you be to run for president"
+    },
+    {
+      "query": "how dem dey amend constitution?",
+      "expected_sections": [
+        "constitution-1999:9"
+      ],
+      "kind": "everyday",
+      "source_query": "how is the constitution amended"
+    },
+    {
+      "query": "treaty dey become law automatically?",
+      "expected_sections": [
+        "constitution-1999:12"
+      ],
+      "kind": "everyday",
+      "source_query": "does a treaty become law automatically"
+    },
+    {
+      "query": "na who dey make law for the whole country?",
+      "expected_sections": [
+        "constitution-1999:4"
+      ],
+      "kind": "everyday",
+      "source_query": "who makes laws for the whole country"
+    },
+    {
+      "query": "wetin be my duty as citizen?",
+      "expected_sections": [
+        "constitution-1999:24"
+      ],
+      "kind": "everyday",
+      "source_query": "what are my duties as a citizen"
+    },
+    {
+      "query": "how dem dey share federation account money give states?",
+      "expected_sections": [
+        "constitution-1999:162"
+      ],
+      "kind": "everyday",
+      "source_query": "how is federation account money shared to states"
+    },
+    {
+      "query": "army fit kill person during riot?",
+      "expected_sections": [
+        "constitution-1999:33"
+      ],
+      "kind": "everyday",
+      "source_query": "can the army kill someone during a riot"
+    },
+    {
+      "query": "wetin be consolidated revenue fund of the federation",
+      "expected_sections": [
+        "constitution-1999:80"
+      ],
+      "kind": "keyword",
+      "source_query": "consolidated revenue fund of the federation"
+    },
+    {
+      "query": "wetin contingencies fund be",
+      "expected_sections": [
+        "constitution-1999:83",
+        "constitution-1999:123"
+      ],
+      "kind": "keyword",
+      "source_query": "contingencies fund"
+    },
+    {
+      "query": "the IG of police",
+      "expected_sections": [
+        "constitution-1999:215"
+      ],
+      "kind": "keyword",
+      "source_query": "inspector-general of police"
+    },
+    {
+      "query": "attorney-general of the federation",
+      "expected_sections": [
+        "constitution-1999:150"
+      ],
+      "kind": "keyword",
+      "source_query": "attorney-general of the federation"
+    },
+    {
+      "query": "how dem dey appoint auditor-general",
+      "expected_sections": [
+        "constitution-1999:86",
+        "constitution-1999:126"
+      ],
+      "kind": "keyword",
+      "source_query": "appointment of the auditor-general"
+    },
+    {
+      "query": "who get land for federal capital territory",
+      "expected_sections": [
+        "constitution-1999:297"
+      ],
+      "kind": "keyword",
+      "source_query": "ownership of lands in the federal capital territory"
+    },
+    {
+      "query": "grand kadi for sharia court of appeal",
+      "expected_sections": [
+        "constitution-1999:261",
+        "constitution-1999:276"
+      ],
+      "kind": "keyword",
+      "source_query": "grand kadi of the sharia court of appeal"
+    },
+    {
+      "query": "appeal from code of conduct tribunal",
+      "expected_sections": [
+        "constitution-1999:246"
+      ],
+      "kind": "keyword",
+      "source_query": "appeal from the code of conduct tribunal"
+    },
+    {
+      "query": "federal character for armed forces",
+      "expected_sections": [
+        "constitution-1999:219"
+      ],
+      "kind": "keyword",
+      "source_query": "federal character of the armed forces"
+    },
+    {
+      "query": "constitution na oga pass all other law",
+      "expected_sections": [
+        "constitution-1999:1"
+      ],
+      "kind": "keyword",
+      "source_query": "supremacy of the constitution"
+    }
+  ],
+  "reference_format": "instrument-slug:section"
+}

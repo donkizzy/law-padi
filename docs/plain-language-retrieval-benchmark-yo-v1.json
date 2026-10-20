@@ -1,0 +1,481 @@
+{
+  "version": "plain-language-retrieval-yo-v1",
+  "language": "yo",
+  "review_status": "draft",
+  "source": "plain-language-retrieval-v1",
+  "description": "Yorùbá translations of the 57 English plain-language benchmark cases (same order and expected_sections; source_query is the English case), plus 10 native citation phrasings with kind 'citation'. review_status 'draft': drafted and cross-checked without a native-speaker reviewer; do not treat as reviewed. Measure through the question-translation step (translate to English, then /api/v1/legal/search), and also raw for the folded keyword path. Enable gates: docs/multilingual-evaluation-plan.md.",
+  "cases": [
+    {
+      "query": "Ṣé ọlọ́pàá lè yẹ fóònù mi wò?",
+      "expected_sections": [
+        "constitution-1999:37"
+      ],
+      "source_query": "can police search my phone"
+    },
+    {
+      "query": "Ṣé ọlọ́pàá lè dá mi dúró lásán kí wọ́n yẹ fóònù mi wò?",
+      "expected_sections": [
+        "constitution-1999:37"
+      ],
+      "source_query": "can the police randomly search my phone"
+    },
+    {
+      "query": "Ṣé ìjọba lè ka àwọn àtẹ̀jíṣẹ́ mi?",
+      "expected_sections": [
+        "constitution-1999:37"
+      ],
+      "source_query": "can the government read my messages"
+    },
+    {
+      "query": "Ṣé ó bófin mu kí wọ́n máa tẹ́tí sí ìpè fóònù mi ní kọ̀rọ̀?",
+      "expected_sections": [
+        "constitution-1999:37"
+      ],
+      "source_query": "is it legal to tap my phone"
+    },
+    {
+      "query": "àṣírí ara ẹni",
+      "expected_sections": [
+        "constitution-1999:37"
+      ],
+      "source_query": "privacy"
+    },
+    {
+      "query": "Ṣé wọ́n lè mú mi láì sọ ìdí rẹ̀ fún mi?",
+      "expected_sections": [
+        "constitution-1999:35"
+      ],
+      "source_query": "can I be arrested without being told why"
+    },
+    {
+      "query": "Ọjọ́ mélòó ni ọlọ́pàá lè fi mí sí àhámọ́ kí wọ́n tó gbé mi lọ sí ilé ẹjọ́?",
+      "expected_sections": [
+        "constitution-1999:35"
+      ],
+      "source_query": "how long can police detain me before court"
+    },
+    {
+      "query": "Ọlọ́pàá tì mí mọ́lé fún ọjọ́ mẹ́ta láì fi ẹ̀sùn kàn mí",
+      "expected_sections": [
+        "constitution-1999:35"
+      ],
+      "source_query": "police detained me for 3 days without charge"
+    },
+    {
+      "query": "ẹ̀tọ́ sí béèlì",
+      "expected_sections": [
+        "constitution-1999:35"
+      ],
+      "source_query": "right to bail"
+    },
+    {
+      "query": "Ṣé mo ní ẹ̀tọ́ láti dákẹ́?",
+      "expected_sections": [
+        "constitution-1999:35"
+      ],
+      "source_query": "do I have the right to remain silent"
+    },
+    {
+      "query": "Ṣé mo ní ẹ̀tọ́ sí agbẹjọ́rò?",
+      "expected_sections": [
+        "constitution-1999:35",
+        "constitution-1999:36"
+      ],
+      "source_query": "do I have a right to a lawyer"
+    },
+    {
+      "query": "ìgbẹ́jọ́ tí kò ní ojúsàájú",
+      "expected_sections": [
+        "constitution-1999:36"
+      ],
+      "source_query": "fair trial"
+    },
+    {
+      "query": "aláìlẹ́ṣẹ̀ ni ènìyàn títí a ó fi fihàn pé ó jẹ̀bi",
+      "expected_sections": [
+        "constitution-1999:36"
+      ],
+      "source_query": "presumed innocent until proven guilty"
+    },
+    {
+      "query": "Ṣé ọlọ́pàá lè dá afurasí lóró?",
+      "expected_sections": [
+        "constitution-1999:34"
+      ],
+      "source_query": "can police torture a suspect"
+    },
+    {
+      "query": "Ṣé òfin gba ìfiniṣẹrú tàbí iṣẹ́ àfipáṣe láàyè?",
+      "expected_sections": [
+        "constitution-1999:34"
+      ],
+      "source_query": "is slavery or forced labour allowed"
+    },
+    {
+      "query": "Ṣé ọlọ́pàá lè pa ènìyàn nígbà tí wọ́n ń mú un?",
+      "expected_sections": [
+        "constitution-1999:33"
+      ],
+      "source_query": "can police kill someone during arrest"
+    },
+    {
+      "query": "ẹ̀tọ́ sí ìyè",
+      "expected_sections": [
+        "constitution-1999:33"
+      ],
+      "source_query": "right to life"
+    },
+    {
+      "query": "òmìnira ọ̀rọ̀ sísọ",
+      "expected_sections": [
+        "constitution-1999:39"
+      ],
+      "source_query": "freedom of speech"
+    },
+    {
+      "query": "Ṣé mo lè bẹnu àtẹ́ lu ìjọba lórí ìkànnì àjọlò?",
+      "expected_sections": [
+        "constitution-1999:39"
+      ],
+      "source_query": "can I criticise the government on social media"
+    },
+    {
+      "query": "Ṣé mo lè dá ilé iṣẹ́ ìwé ìròyìn tàbí ilé iṣẹ́ amóhùnmáwòrán sílẹ̀?",
+      "expected_sections": [
+        "constitution-1999:39"
+      ],
+      "source_query": "can I start a newspaper or TV station"
+    },
+    {
+      "query": "Ṣé mo lè yí ẹ̀sìn mi padà?",
+      "expected_sections": [
+        "constitution-1999:38"
+      ],
+      "source_query": "can I change my religion"
+    },
+    {
+      "query": "Ṣé ilé ìwé lè fi ipá mú ọmọ mi lọ sí kíláàsì ẹ̀kọ́ ẹ̀sìn?",
+      "expected_sections": [
+        "constitution-1999:38"
+      ],
+      "source_query": "can a school force my child to attend religious instruction"
+    },
+    {
+      "query": "Ṣé ó bófin mu láti ṣe ìwọ́de?",
+      "expected_sections": [
+        "constitution-1999:40"
+      ],
+      "source_query": "is it legal to protest"
+    },
+    {
+      "query": "Ṣé mo lè darapọ̀ mọ́ ẹgbẹ́ òṣìṣẹ́?",
+      "expected_sections": [
+        "constitution-1999:40"
+      ],
+      "source_query": "can I join a trade union"
+    },
+    {
+      "query": "Ṣé mo lè gbé ní ìpínlẹ̀ èyíkéyìí ní Nàìjíríà?",
+      "expected_sections": [
+        "constitution-1999:41"
+      ],
+      "source_query": "can I live in any state in Nigeria"
+    },
+    {
+      "query": "Ṣé ìjọba lè dí mi lọ́wọ́ láti kúrò ní Nàìjíríà?",
+      "expected_sections": [
+        "constitution-1999:41"
+      ],
+      "source_query": "can the government stop me from leaving Nigeria"
+    },
+    {
+      "query": "ìyàsọ́tọ̀ nítorí ẹ̀yà mi",
+      "expected_sections": [
+        "constitution-1999:42"
+      ],
+      "source_query": "discrimination because of my tribe"
+    },
+    {
+      "query": "Ṣé wọ́n lè ya obìnrin sọ́tọ̀ nítorí pé obìnrin ni?",
+      "expected_sections": [
+        "constitution-1999:42"
+      ],
+      "source_query": "can a woman be discriminated against because of her sex"
+    },
+    {
+      "query": "Ṣé mo lè ra ilẹ̀ ní ìpínlẹ̀ míràn?",
+      "expected_sections": [
+        "constitution-1999:43"
+      ],
+      "source_query": "can I buy land in another state"
+    },
+    {
+      "query": "Ṣé ìjọba lè gba ilẹ̀ mi láì sanwó fún mi?",
+      "expected_sections": [
+        "constitution-1999:44"
+      ],
+      "source_query": "can government take my land without paying"
+    },
+    {
+      "query": "Ibo ni mo lè lọ tí wọ́n bá tẹ ẹ̀tọ́ mi mọ́lẹ̀?",
+      "expected_sections": [
+        "constitution-1999:46"
+      ],
+      "source_query": "where do I go if my rights are violated"
+    },
+    {
+      "query": "Ọmọ ọdún mélòó ni ènìyàn gbọ́dọ̀ jẹ́ kí ó tó di Ààrẹ?",
+      "expected_sections": [
+        "constitution-1999:131"
+      ],
+      "source_query": "how old must you be to become president"
+    },
+    {
+      "query": "Ta ni ó lè du ipò Ààrẹ?",
+      "expected_sections": [
+        "constitution-1999:131"
+      ],
+      "source_query": "who can run for president"
+    },
+    {
+      "query": "Ọdún mélòó ni sáà Ààrẹ?",
+      "expected_sections": [
+        "constitution-1999:135"
+      ],
+      "source_query": "how long is the president's term"
+    },
+    {
+      "query": "Báwo ni wọ́n ṣe lè yọ Ààrẹ nípò?",
+      "expected_sections": [
+        "constitution-1999:143"
+      ],
+      "source_query": "how can a president be impeached"
+    },
+    {
+      "query": "àwọn àmúyẹ láti di Gómìnà",
+      "expected_sections": [
+        "constitution-1999:177"
+      ],
+      "source_query": "requirements to become governor"
+    },
+    {
+      "query": "Báwo ni wọ́n ṣe lè yọ Gómìnà kúrò nípò?",
+      "expected_sections": [
+        "constitution-1999:188"
+      ],
+      "source_query": "how can a governor be removed"
+    },
+    {
+      "query": "Ta ni ọmọ orílẹ̀-èdè Nàìjíríà?",
+      "expected_sections": [
+        "constitution-1999:25"
+      ],
+      "source_query": "who qualifies as a Nigerian citizen"
+    },
+    {
+      "query": "Ṣé mo lè jẹ́ ọmọ orílẹ̀-èdè méjì?",
+      "expected_sections": [
+        "constitution-1999:28"
+      ],
+      "source_query": "can I hold dual citizenship"
+    },
+    {
+      "query": "Ṣé mo lè kọ jíjẹ́ ọmọ orílẹ̀-èdè Nàìjíríà mi sílẹ̀?",
+      "expected_sections": [
+        "constitution-1999:29"
+      ],
+      "source_query": "can I give up my Nigerian citizenship"
+    },
+    {
+      "query": "Ṣé ìpínlẹ̀ lè ní ọlọ́pàá tirẹ̀?",
+      "expected_sections": [
+        "constitution-1999:214"
+      ],
+      "source_query": "can a state have its own police"
+    },
+    {
+      "query": "Ta ni ó ń darí ọlọ́pàá?",
+      "expected_sections": [
+        "constitution-1999:214",
+        "constitution-1999:215"
+      ],
+      "source_query": "who controls the police"
+    },
+    {
+      "query": "Ṣé wọ́n lè pe Gómìnà lẹ́jọ́ nígbà tí ó wà lórí àlééfà?",
+      "expected_sections": [
+        "constitution-1999:308"
+      ],
+      "source_query": "can the governor be sued while in office"
+    },
+    {
+      "query": "Ìgbà wo ni Ààrẹ lè kéde ipò pàjáwìrì?",
+      "expected_sections": [
+        "constitution-1999:305"
+      ],
+      "source_query": "when can the president declare a state of emergency"
+    },
+    {
+      "query": "Ṣé Nàìjíríà jẹ́ orílẹ̀-èdè tí kò ní ẹ̀sìn ìjọba?",
+      "expected_sections": [
+        "constitution-1999:10"
+      ],
+      "source_query": "is Nigeria a secular state"
+    },
+    {
+      "query": "Báwo ni wọ́n ṣe ń ṣàtúnṣe sí Ìwé òfin orílẹ̀-èdè?",
+      "expected_sections": [
+        "constitution-1999:9"
+      ],
+      "source_query": "how is the constitution amended"
+    },
+    {
+      "query": "Ìpínlẹ̀ mélòó ló wà ní Nàìjíríà?",
+      "expected_sections": [
+        "constitution-1999:3"
+      ],
+      "source_query": "how many states are in Nigeria"
+    },
+    {
+      "query": "Ṣé òfin míràn lè borí Ìwé òfin orílẹ̀-èdè?",
+      "expected_sections": [
+        "constitution-1999:1"
+      ],
+      "source_query": "can the constitution be overridden by another law"
+    },
+    {
+      "query": "ẹ̀tọ́ sí ẹ̀kọ́ ọ̀fẹ́",
+      "expected_sections": [
+        "constitution-1999:18"
+      ],
+      "source_query": "right to free education"
+    },
+    {
+      "query": "ojúṣe ọmọ orílẹ̀-èdè",
+      "expected_sections": [
+        "constitution-1999:24"
+      ],
+      "source_query": "duties of a citizen"
+    },
+    {
+      "query": "Báwo ni àwọn olùdìbò ṣe lè yọ sẹ́nétọ̀ wọn nípò?",
+      "expected_sections": [
+        "constitution-1999:69"
+      ],
+      "source_query": "how can I recall my senator"
+    },
+    {
+      "query": "Ta ni ó ń yan àwọn mínísítà?",
+      "expected_sections": [
+        "constitution-1999:147"
+      ],
+      "source_query": "who appoints ministers"
+    },
+    {
+      "query": "Ta ni ó ń yan Olórí adájọ́ Nàìjíríà?",
+      "expected_sections": [
+        "constitution-1999:231"
+      ],
+      "source_query": "who appoints the chief justice"
+    },
+    {
+      "query": "Kí ni Ìwé òfin orílẹ̀-èdè sọ nípa ọlọ́pàá tó ń yẹ fóònù mi wò?",
+      "expected_sections": [
+        "constitution-1999:37"
+      ],
+      "source_query": "wetin constitution talk about police checking my phone"
+    },
+    {
+      "query": "abala ọgbọ̀n-àti-nǹkan tó sọ nípa àṣírí ara ẹni",
+      "expected_sections": [
+        "constitution-1999:37"
+      ],
+      "source_query": "section thirty something about privacy"
+    },
+    {
+      "query": "Ṣé mo lè kọ̀ kí wọ́n yẹ fóònù mi wò tí wọn kò bá ní ìwé àṣẹ?",
+      "expected_sections": [
+        "constitution-1999:37"
+      ],
+      "source_query": "can I refuse a phone search without a warrant"
+    },
+    {
+      "query": "Ṣé dandan ni kí n ṣí fóònù mi fún ọlọ́pàá?",
+      "expected_sections": [
+        "constitution-1999:37"
+      ],
+      "source_query": "do I have to unlock my phone for police"
+    },
+    {
+      "query": "Kí ni abala 35 sọ?",
+      "expected_sections": [
+        "constitution-1999:35"
+      ],
+      "kind": "citation"
+    },
+    {
+      "query": "Ṣàlàyé abala 37 fún mi",
+      "expected_sections": [
+        "constitution-1999:37"
+      ],
+      "kind": "citation"
+    },
+    {
+      "query": "abala 33 nínú Ìwé òfin orílẹ̀-èdè",
+      "expected_sections": [
+        "constitution-1999:33"
+      ],
+      "kind": "citation"
+    },
+    {
+      "query": "Kí ni abala kẹtàdínlógójì sọ nípa àṣírí?",
+      "expected_sections": [
+        "constitution-1999:37"
+      ],
+      "kind": "citation"
+    },
+    {
+      "query": "abala 36: ìgbẹ́jọ́ tó tọ́",
+      "expected_sections": [
+        "constitution-1999:36"
+      ],
+      "kind": "citation"
+    },
+    {
+      "query": "Ṣé abala 39 ló ń sọ nípa òmìnira ọ̀rọ̀ sísọ?",
+      "expected_sections": [
+        "constitution-1999:39"
+      ],
+      "kind": "citation"
+    },
+    {
+      "query": "Kí ni abala 40 sọ nípa ìwọ́de?",
+      "expected_sections": [
+        "constitution-1999:40"
+      ],
+      "kind": "citation"
+    },
+    {
+      "query": "abala kejìlélógójì nípa ìyàsọ́tọ̀",
+      "expected_sections": [
+        "constitution-1999:42"
+      ],
+      "kind": "citation"
+    },
+    {
+      "query": "abala 44 nípa ilẹ̀",
+      "expected_sections": [
+        "constitution-1999:44"
+      ],
+      "kind": "citation"
+    },
+    {
+      "query": "sẹ́kṣọ̀n 46 ti Constitution",
+      "expected_sections": [
+        "constitution-1999:46"
+      ],
+      "kind": "citation"
+    }
+  ],
+  "reference_format": "instrument-slug:section"
+}

@@ -1,0 +1,481 @@
+{
+  "version": "plain-language-retrieval-ha-v1",
+  "language": "ha",
+  "review_status": "draft",
+  "source": "plain-language-retrieval-v1",
+  "description": "Hausa translations of the 57 English plain-language benchmark cases (same order and expected_sections; source_query is the English case), plus 10 native citation phrasings with kind 'citation'. review_status 'draft': drafted and cross-checked without a native-speaker reviewer; do not treat as reviewed. Measure through the question-translation step (translate to English, then /api/v1/legal/search), and also raw for the folded keyword path. Enable gates: docs/multilingual-evaluation-plan.md.",
+  "cases": [
+    {
+      "query": "'Yan sanda za su iya bincika wayata?",
+      "expected_sections": [
+        "constitution-1999:37"
+      ],
+      "source_query": "can police search my phone"
+    },
+    {
+      "query": "'Yan sanda za su iya tsayar da ni kawai su bincika wayata?",
+      "expected_sections": [
+        "constitution-1999:37"
+      ],
+      "source_query": "can the police randomly search my phone"
+    },
+    {
+      "query": "Gwamnati za ta iya karanta saƙonnina?",
+      "expected_sections": [
+        "constitution-1999:37"
+      ],
+      "source_query": "can the government read my messages"
+    },
+    {
+      "query": "Shin ya halatta a riƙa sauraren wayata a ɓoye?",
+      "expected_sections": [
+        "constitution-1999:37"
+      ],
+      "source_query": "is it legal to tap my phone"
+    },
+    {
+      "query": "sirri",
+      "expected_sections": [
+        "constitution-1999:37"
+      ],
+      "source_query": "privacy"
+    },
+    {
+      "query": "Za a iya kama ni ba tare da an faɗa min dalili ba?",
+      "expected_sections": [
+        "constitution-1999:35"
+      ],
+      "source_query": "can I be arrested without being told why"
+    },
+    {
+      "query": "Har tsawon wane lokaci 'yan sanda za su iya tsare ni kafin a kai ni kotu?",
+      "expected_sections": [
+        "constitution-1999:35"
+      ],
+      "source_query": "how long can police detain me before court"
+    },
+    {
+      "query": "'Yan sanda sun tsare ni kwana 3 ba tare da tuhuma ba",
+      "expected_sections": [
+        "constitution-1999:35"
+      ],
+      "source_query": "police detained me for 3 days without charge"
+    },
+    {
+      "query": "haƙƙin samun beli",
+      "expected_sections": [
+        "constitution-1999:35"
+      ],
+      "source_query": "right to bail"
+    },
+    {
+      "query": "Ina da haƙƙin yin shiru?",
+      "expected_sections": [
+        "constitution-1999:35"
+      ],
+      "source_query": "do I have the right to remain silent"
+    },
+    {
+      "query": "Ina da haƙƙin samun lauya?",
+      "expected_sections": [
+        "constitution-1999:35",
+        "constitution-1999:36"
+      ],
+      "source_query": "do I have a right to a lawyer"
+    },
+    {
+      "query": "shari'a ta adalci",
+      "expected_sections": [
+        "constitution-1999:36"
+      ],
+      "source_query": "fair trial"
+    },
+    {
+      "query": "ana ɗaukar mutum marar laifi har sai an tabbatar da laifinsa",
+      "expected_sections": [
+        "constitution-1999:36"
+      ],
+      "source_query": "presumed innocent until proven guilty"
+    },
+    {
+      "query": "'Yan sanda za su iya azabtar da wanda ake zargi?",
+      "expected_sections": [
+        "constitution-1999:34"
+      ],
+      "source_query": "can police torture a suspect"
+    },
+    {
+      "query": "Shin an yarda da bauta ko aikin dole?",
+      "expected_sections": [
+        "constitution-1999:34"
+      ],
+      "source_query": "is slavery or forced labour allowed"
+    },
+    {
+      "query": "'Yan sanda za su iya kashe mutum lokacin kama shi?",
+      "expected_sections": [
+        "constitution-1999:33"
+      ],
+      "source_query": "can police kill someone during arrest"
+    },
+    {
+      "query": "haƙƙin rayuwa",
+      "expected_sections": [
+        "constitution-1999:33"
+      ],
+      "source_query": "right to life"
+    },
+    {
+      "query": "'yancin faɗin albarkacin baki",
+      "expected_sections": [
+        "constitution-1999:39"
+      ],
+      "source_query": "freedom of speech"
+    },
+    {
+      "query": "Zan iya sukar gwamnati a kafafen sada zumunta?",
+      "expected_sections": [
+        "constitution-1999:39"
+      ],
+      "source_query": "can I criticise the government on social media"
+    },
+    {
+      "query": "Zan iya buɗe jarida ko gidan talabijin?",
+      "expected_sections": [
+        "constitution-1999:39"
+      ],
+      "source_query": "can I start a newspaper or TV station"
+    },
+    {
+      "query": "Zan iya canza addinina?",
+      "expected_sections": [
+        "constitution-1999:38"
+      ],
+      "source_query": "can I change my religion"
+    },
+    {
+      "query": "Makaranta za ta iya tilasta ɗana halartar karatun addini?",
+      "expected_sections": [
+        "constitution-1999:38"
+      ],
+      "source_query": "can a school force my child to attend religious instruction"
+    },
+    {
+      "query": "Shin zanga-zanga ta halatta?",
+      "expected_sections": [
+        "constitution-1999:40"
+      ],
+      "source_query": "is it legal to protest"
+    },
+    {
+      "query": "Zan iya shiga ƙungiyar ƙwadago?",
+      "expected_sections": [
+        "constitution-1999:40"
+      ],
+      "source_query": "can I join a trade union"
+    },
+    {
+      "query": "Zan iya zama a kowace jiha a Najeriya?",
+      "expected_sections": [
+        "constitution-1999:41"
+      ],
+      "source_query": "can I live in any state in Nigeria"
+    },
+    {
+      "query": "Gwamnati za ta iya hana ni fita daga Najeriya?",
+      "expected_sections": [
+        "constitution-1999:41"
+      ],
+      "source_query": "can the government stop me from leaving Nigeria"
+    },
+    {
+      "query": "nuna min wariya saboda ƙabilata",
+      "expected_sections": [
+        "constitution-1999:42"
+      ],
+      "source_query": "discrimination because of my tribe"
+    },
+    {
+      "query": "Za a iya nuna wa mace wariya saboda jinsinta?",
+      "expected_sections": [
+        "constitution-1999:42"
+      ],
+      "source_query": "can a woman be discriminated against because of her sex"
+    },
+    {
+      "query": "Zan iya sayen fili a wata jiha?",
+      "expected_sections": [
+        "constitution-1999:43"
+      ],
+      "source_query": "can I buy land in another state"
+    },
+    {
+      "query": "Gwamnati za ta iya ƙwace min fili ba tare da biya ba?",
+      "expected_sections": [
+        "constitution-1999:44"
+      ],
+      "source_query": "can government take my land without paying"
+    },
+    {
+      "query": "Ina zan je idan an take min haƙƙoƙi?",
+      "expected_sections": [
+        "constitution-1999:46"
+      ],
+      "source_query": "where do I go if my rights are violated"
+    },
+    {
+      "query": "Shekara nawa ake bukata kafin mutum ya zama Shugaban Ƙasa?",
+      "expected_sections": [
+        "constitution-1999:131"
+      ],
+      "source_query": "how old must you be to become president"
+    },
+    {
+      "query": "Wa zai iya tsayawa takarar Shugaban Ƙasa?",
+      "expected_sections": [
+        "constitution-1999:131"
+      ],
+      "source_query": "who can run for president"
+    },
+    {
+      "query": "Tsawon wa'adin Shugaban Ƙasa nawa ne?",
+      "expected_sections": [
+        "constitution-1999:135"
+      ],
+      "source_query": "how long is the president's term"
+    },
+    {
+      "query": "Ta yaya ake tsige Shugaban Ƙasa?",
+      "expected_sections": [
+        "constitution-1999:143"
+      ],
+      "source_query": "how can a president be impeached"
+    },
+    {
+      "query": "sharuɗɗan zama Gwamna",
+      "expected_sections": [
+        "constitution-1999:177"
+      ],
+      "source_query": "requirements to become governor"
+    },
+    {
+      "query": "Ta yaya za a cire Gwamna?",
+      "expected_sections": [
+        "constitution-1999:188"
+      ],
+      "source_query": "how can a governor be removed"
+    },
+    {
+      "query": "Wane ne ɗan ƙasar Najeriya?",
+      "expected_sections": [
+        "constitution-1999:25"
+      ],
+      "source_query": "who qualifies as a Nigerian citizen"
+    },
+    {
+      "query": "Zan iya zama ɗan ƙasa biyu?",
+      "expected_sections": [
+        "constitution-1999:28"
+      ],
+      "source_query": "can I hold dual citizenship"
+    },
+    {
+      "query": "Zan iya yin watsi da zama ɗan Najeriya?",
+      "expected_sections": [
+        "constitution-1999:29"
+      ],
+      "source_query": "can I give up my Nigerian citizenship"
+    },
+    {
+      "query": "Jiha za ta iya samun 'yan sandanta?",
+      "expected_sections": [
+        "constitution-1999:214"
+      ],
+      "source_query": "can a state have its own police"
+    },
+    {
+      "query": "Wa ke iko da 'yan sanda?",
+      "expected_sections": [
+        "constitution-1999:214",
+        "constitution-1999:215"
+      ],
+      "source_query": "who controls the police"
+    },
+    {
+      "query": "Za a iya kai Gwamna ƙara yana kan mulki?",
+      "expected_sections": [
+        "constitution-1999:308"
+      ],
+      "source_query": "can the governor be sued while in office"
+    },
+    {
+      "query": "Yaushe Shugaban Ƙasa zai iya ayyana dokar ta-ɓaci?",
+      "expected_sections": [
+        "constitution-1999:305"
+      ],
+      "source_query": "when can the president declare a state of emergency"
+    },
+    {
+      "query": "Shin Najeriya ƙasa ce da ba ruwanta da addini?",
+      "expected_sections": [
+        "constitution-1999:10"
+      ],
+      "source_query": "is Nigeria a secular state"
+    },
+    {
+      "query": "Ta yaya ake yi wa Kundin Tsarin Mulki gyara?",
+      "expected_sections": [
+        "constitution-1999:9"
+      ],
+      "source_query": "how is the constitution amended"
+    },
+    {
+      "query": "Jihohi nawa ne a Najeriya?",
+      "expected_sections": [
+        "constitution-1999:3"
+      ],
+      "source_query": "how many states are in Nigeria"
+    },
+    {
+      "query": "Wata doka za ta iya rinjayar Kundin Tsarin Mulki?",
+      "expected_sections": [
+        "constitution-1999:1"
+      ],
+      "source_query": "can the constitution be overridden by another law"
+    },
+    {
+      "query": "haƙƙin samun ilimi kyauta",
+      "expected_sections": [
+        "constitution-1999:18"
+      ],
+      "source_query": "right to free education"
+    },
+    {
+      "query": "wajiban ɗan ƙasa",
+      "expected_sections": [
+        "constitution-1999:24"
+      ],
+      "source_query": "duties of a citizen"
+    },
+    {
+      "query": "Ta yaya zan yi wa sanatana kiranye?",
+      "expected_sections": [
+        "constitution-1999:69"
+      ],
+      "source_query": "how can I recall my senator"
+    },
+    {
+      "query": "Wa ke naɗa ministoci?",
+      "expected_sections": [
+        "constitution-1999:147"
+      ],
+      "source_query": "who appoints ministers"
+    },
+    {
+      "query": "Wa ke naɗa Babban Jojin Najeriya?",
+      "expected_sections": [
+        "constitution-1999:231"
+      ],
+      "source_query": "who appoints the chief justice"
+    },
+    {
+      "query": "Me Kundin Tsarin Mulki ya ce game da 'yan sanda suna duba wayata?",
+      "expected_sections": [
+        "constitution-1999:37"
+      ],
+      "source_query": "wetin constitution talk about police checking my phone"
+    },
+    {
+      "query": "sashe na talatin da wani abu game da sirri",
+      "expected_sections": [
+        "constitution-1999:37"
+      ],
+      "source_query": "section thirty something about privacy"
+    },
+    {
+      "query": "Zan iya ƙin a bincika wayata idan babu takardar izini?",
+      "expected_sections": [
+        "constitution-1999:37"
+      ],
+      "source_query": "can I refuse a phone search without a warrant"
+    },
+    {
+      "query": "Dole ne in buɗe wayata wa 'yan sanda?",
+      "expected_sections": [
+        "constitution-1999:37"
+      ],
+      "source_query": "do I have to unlock my phone for police"
+    },
+    {
+      "query": "Me sashe na 35 ya ce?",
+      "expected_sections": [
+        "constitution-1999:35"
+      ],
+      "kind": "citation"
+    },
+    {
+      "query": "Bayyana min sashe na 37",
+      "expected_sections": [
+        "constitution-1999:37"
+      ],
+      "kind": "citation"
+    },
+    {
+      "query": "sashe na 33 na Kundin Tsarin Mulki",
+      "expected_sections": [
+        "constitution-1999:33"
+      ],
+      "kind": "citation"
+    },
+    {
+      "query": "sashe na talatin da shida",
+      "expected_sections": [
+        "constitution-1999:36"
+      ],
+      "kind": "citation"
+    },
+    {
+      "query": "sashe na 39 game da 'yancin faɗin albarkacin baki",
+      "expected_sections": [
+        "constitution-1999:39"
+      ],
+      "kind": "citation"
+    },
+    {
+      "query": "Me sashe na 40 ya ce game da zanga-zanga?",
+      "expected_sections": [
+        "constitution-1999:40"
+      ],
+      "kind": "citation"
+    },
+    {
+      "query": "sashe na 41 na Constitution",
+      "expected_sections": [
+        "constitution-1999:41"
+      ],
+      "kind": "citation"
+    },
+    {
+      "query": "sashe na arba'in da biyu",
+      "expected_sections": [
+        "constitution-1999:42"
+      ],
+      "kind": "citation"
+    },
+    {
+      "query": "sashe na 44 game da fili",
+      "expected_sections": [
+        "constitution-1999:44"
+      ],
+      "kind": "citation"
+    },
+    {
+      "query": "sashi na 46",
+      "expected_sections": [
+        "constitution-1999:46"
+      ],
+      "kind": "citation"
+    }
+  ],
+  "reference_format": "instrument-slug:section"
+}

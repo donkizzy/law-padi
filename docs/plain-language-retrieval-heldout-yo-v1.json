@@ -1,0 +1,335 @@
+{
+  "version": "plain-language-retrieval-heldout-yo-v1",
+  "language": "yo",
+  "review_status": "draft",
+  "source": "plain-language-retrieval-heldout-v1",
+  "description": "Yorùbá translations of the 40 English held-out cases (same order, kind and expected_sections; source_query is the English case). Do not add topic-guide phrases from these cases; keep them for measuring. review_status 'draft': drafted and cross-checked without a native-speaker reviewer; do not treat as reviewed. Measure through the question-translation step (translate to English, then /api/v1/legal/search), and also raw for the folded keyword path. Enable gates: docs/multilingual-evaluation-plan.md.",
+  "cases": [
+    {
+      "query": "Ṣé Gómìnà ní ààbò lọ́wọ́ ẹjọ́ nígbà tí ó wà lórí àlééfà?",
+      "expected_sections": [
+        "constitution-1999:308"
+      ],
+      "kind": "everyday",
+      "source_query": "is the governor immune from being sued while in office"
+    },
+    {
+      "query": "Ọdún mélòó ni Ààrẹ lè lò lórí àlééfà?",
+      "expected_sections": [
+        "constitution-1999:135",
+        "constitution-1999:137"
+      ],
+      "kind": "everyday",
+      "source_query": "how many years can a president stay in power"
+    },
+    {
+      "query": "Ọdún mélòó ni sáà Gómìnà?",
+      "expected_sections": [
+        "constitution-1999:180"
+      ],
+      "kind": "everyday",
+      "source_query": "how long is a governor's term"
+    },
+    {
+      "query": "Ṣé ìjọba lè gba ilẹ̀ mi láti fi ṣe ọ̀nà?",
+      "expected_sections": [
+        "constitution-1999:44"
+      ],
+      "kind": "everyday",
+      "source_query": "can the government take my land for a road"
+    },
+    {
+      "query": "Ṣé mo lè jẹ́ ọmọ orílẹ̀-èdè Nàìjíríà àti Amẹ́ríkà ní àkókò kan náà?",
+      "expected_sections": [
+        "constitution-1999:28"
+      ],
+      "kind": "everyday",
+      "source_query": "can i be a citizen of nigeria and america at the same time"
+    },
+    {
+      "query": "Ọmọ Nàìjíríà ni bàbá mi ṣùgbọ́n òkèèrè ni wọ́n ti bí mi, ṣé ọmọ Nàìjíríà ni mí?",
+      "expected_sections": [
+        "constitution-1999:25"
+      ],
+      "kind": "everyday",
+      "source_query": "my father is nigerian but i was born abroad, am i nigerian"
+    },
+    {
+      "query": "Ṣé obìnrin àjèjì tí ó fẹ́ ọmọ Nàìjíríà lè di ọmọ orílẹ̀-èdè?",
+      "expected_sections": [
+        "constitution-1999:26"
+      ],
+      "kind": "everyday",
+      "source_query": "can a foreign woman married to a nigerian become a citizen"
+    },
+    {
+      "query": "Ṣé Nàìjíríà ní ẹ̀sìn ìjọba?",
+      "expected_sections": [
+        "constitution-1999:10"
+      ],
+      "kind": "everyday",
+      "source_query": "is there an official religion in nigeria"
+    },
+    {
+      "query": "Ṣé Ààrẹ lè dárí ji ẹni tí ilé ẹjọ́ ti dá lẹ́bi?",
+      "expected_sections": [
+        "constitution-1999:175"
+      ],
+      "kind": "everyday",
+      "source_query": "can the president pardon a convicted person"
+    },
+    {
+      "query": "Báwo ni a ṣe ń yọ Ààrẹ nípò?",
+      "expected_sections": [
+        "constitution-1999:143"
+      ],
+      "kind": "everyday",
+      "source_query": "how do you impeach the president"
+    },
+    {
+      "query": "Báwo ni wọ́n ṣe ń yọ Gómìnà kúrò nípò?",
+      "expected_sections": [
+        "constitution-1999:188"
+      ],
+      "kind": "everyday",
+      "source_query": "how is a governor removed from office"
+    },
+    {
+      "query": "Ta ni ó ń yan Olórí adájọ́?",
+      "expected_sections": [
+        "constitution-1999:231"
+      ],
+      "kind": "everyday",
+      "source_query": "who appoints the chief justice"
+    },
+    {
+      "query": "Ṣé wọ́n lè lé adájọ́ kúrò lẹ́nu iṣẹ́?",
+      "expected_sections": [
+        "constitution-1999:292"
+      ],
+      "kind": "everyday",
+      "source_query": "can a judge be sacked"
+    },
+    {
+      "query": "Ṣé mo nílò agbẹjọ́rò kí ilé ẹjọ́ tó lè gbọ́ ẹjọ́ mi?",
+      "expected_sections": [
+        "constitution-1999:36"
+      ],
+      "kind": "everyday",
+      "source_query": "do i need a lawyer before the court can try me"
+    },
+    {
+      "query": "Ṣé wọ́n lè dá afurasí lóró kí ó lè jẹ́wọ́?",
+      "expected_sections": [
+        "constitution-1999:34"
+      ],
+      "kind": "everyday",
+      "source_query": "can they torture a suspect to confess"
+    },
+    {
+      "query": "Ṣé wọ́n lè fi ipá mú mi ṣiṣẹ́ láì sanwó?",
+      "expected_sections": [
+        "constitution-1999:34"
+      ],
+      "kind": "everyday",
+      "source_query": "can i be forced to work without pay"
+    },
+    {
+      "query": "Ṣé wọ́n lè kọ̀ láti gbà mí síṣẹ́ nítorí ẹ̀yà mi?",
+      "expected_sections": [
+        "constitution-1999:42"
+      ],
+      "kind": "everyday",
+      "source_query": "can i be denied a job because of my tribe"
+    },
+    {
+      "query": "Ṣé mo lè gbé ní ìpínlẹ̀ èyíkéyìí tí mo bá fẹ́?",
+      "expected_sections": [
+        "constitution-1999:41"
+      ],
+      "kind": "everyday",
+      "source_query": "can i live in any state i want"
+    },
+    {
+      "query": "Ṣé mo lè ní ilé ní Èkó tí mo bá jẹ́ ọmọ Kano?",
+      "expected_sections": [
+        "constitution-1999:43"
+      ],
+      "kind": "everyday",
+      "source_query": "can i own a house in lagos if i am from kano"
+    },
+    {
+      "query": "Ṣé mo lè dá ilé iṣẹ́ ìwé ìròyìn sílẹ̀?",
+      "expected_sections": [
+        "constitution-1999:39"
+      ],
+      "kind": "everyday",
+      "source_query": "can i start a newspaper"
+    },
+    {
+      "query": "Ṣé mo nílò ìwé àṣẹ kí n tó ṣe ìwọ́de?",
+      "expected_sections": [
+        "constitution-1999:40"
+      ],
+      "kind": "everyday",
+      "source_query": "do i need a permit to protest"
+    },
+    {
+      "query": "Ṣé ó ṣeé ṣe kí n yí ẹ̀sìn mi padà?",
+      "expected_sections": [
+        "constitution-1999:38"
+      ],
+      "kind": "everyday",
+      "source_query": "can i change my religion"
+    },
+    {
+      "query": "Ìgbà wo ni ipò pàjáwìrì lè dá ẹ̀tọ́ mi dúró?",
+      "expected_sections": [
+        "constitution-1999:45",
+        "constitution-1999:305"
+      ],
+      "kind": "everyday",
+      "source_query": "when can a state of emergency suspend my rights"
+    },
+    {
+      "query": "Ọmọ ọdún mélòó ni ènìyàn gbọ́dọ̀ jẹ́ láti du ipò Ààrẹ?",
+      "expected_sections": [
+        "constitution-1999:131"
+      ],
+      "kind": "everyday",
+      "source_query": "what age must you be to run for president"
+    },
+    {
+      "query": "Báwo ni wọ́n ṣe ń ṣàtúnṣe Ìwé òfin orílẹ̀-èdè?",
+      "expected_sections": [
+        "constitution-1999:9"
+      ],
+      "kind": "everyday",
+      "source_query": "how is the constitution amended"
+    },
+    {
+      "query": "Ṣé àdéhùn láàárín orílẹ̀-èdè máa ń di òfin fúnra rẹ̀?",
+      "expected_sections": [
+        "constitution-1999:12"
+      ],
+      "kind": "everyday",
+      "source_query": "does a treaty become law automatically"
+    },
+    {
+      "query": "Ta ni ó ń ṣe òfin fún gbogbo orílẹ̀-èdè?",
+      "expected_sections": [
+        "constitution-1999:4"
+      ],
+      "kind": "everyday",
+      "source_query": "who makes laws for the whole country"
+    },
+    {
+      "query": "Kí ni àwọn ojúṣe mi gẹ́gẹ́ bí ọmọ orílẹ̀-èdè?",
+      "expected_sections": [
+        "constitution-1999:24"
+      ],
+      "kind": "everyday",
+      "source_query": "what are my duties as a citizen"
+    },
+    {
+      "query": "Báwo ni wọ́n ṣe ń pín owó àpò àpapọ̀ fún àwọn ìpínlẹ̀?",
+      "expected_sections": [
+        "constitution-1999:162"
+      ],
+      "kind": "everyday",
+      "source_query": "how is federation account money shared to states"
+    },
+    {
+      "query": "Ṣé àwọn ológun lè pa ènìyàn nígbà rúkèrúdò?",
+      "expected_sections": [
+        "constitution-1999:33"
+      ],
+      "kind": "everyday",
+      "source_query": "can the army kill someone during a riot"
+    },
+    {
+      "query": "àpò owó àkójọpọ̀ ti ìjọba àpapọ̀",
+      "expected_sections": [
+        "constitution-1999:80"
+      ],
+      "kind": "keyword",
+      "source_query": "consolidated revenue fund of the federation"
+    },
+    {
+      "query": "àpò owó pàjáwìrì",
+      "expected_sections": [
+        "constitution-1999:83",
+        "constitution-1999:123"
+      ],
+      "kind": "keyword",
+      "source_query": "contingencies fund"
+    },
+    {
+      "query": "Ọ̀gá àgbà ọlọ́pàá",
+      "expected_sections": [
+        "constitution-1999:215"
+      ],
+      "kind": "keyword",
+      "source_query": "inspector-general of police"
+    },
+    {
+      "query": "Agbẹjọ́rò àgbà ti ìjọba àpapọ̀",
+      "expected_sections": [
+        "constitution-1999:150"
+      ],
+      "kind": "keyword",
+      "source_query": "attorney-general of the federation"
+    },
+    {
+      "query": "yíyan Olùṣàyẹ̀wò owó àgbà",
+      "expected_sections": [
+        "constitution-1999:86",
+        "constitution-1999:126"
+      ],
+      "kind": "keyword",
+      "source_query": "appointment of the auditor-general"
+    },
+    {
+      "query": "níní ilẹ̀ ní olú-ìlú ìjọba àpapọ̀",
+      "expected_sections": [
+        "constitution-1999:297"
+      ],
+      "kind": "keyword",
+      "source_query": "ownership of lands in the federal capital territory"
+    },
+    {
+      "query": "Grand Kadi ti ilé ẹjọ́ kòtẹ́milọ́rùn Sharia",
+      "expected_sections": [
+        "constitution-1999:261",
+        "constitution-1999:276"
+      ],
+      "kind": "keyword",
+      "source_query": "grand kadi of the sharia court of appeal"
+    },
+    {
+      "query": "kòtẹ́milọ́rùn láti ilé ẹjọ́ Code of Conduct",
+      "expected_sections": [
+        "constitution-1999:246"
+      ],
+      "kind": "keyword",
+      "source_query": "appeal from the code of conduct tribunal"
+    },
+    {
+      "query": "ìlànà federal character nínú ikọ̀ ológun",
+      "expected_sections": [
+        "constitution-1999:219"
+      ],
+      "kind": "keyword",
+      "source_query": "federal character of the armed forces"
+    },
+    {
+      "query": "ipò gíga jùlọ ti Ìwé òfin orílẹ̀-èdè",
+      "expected_sections": [
+        "constitution-1999:1"
+      ],
+      "kind": "keyword",
+      "source_query": "supremacy of the constitution"
+    }
+  ],
+  "reference_format": "instrument-slug:section"
+}

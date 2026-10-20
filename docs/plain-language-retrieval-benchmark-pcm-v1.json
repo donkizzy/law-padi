@@ -1,0 +1,481 @@
+{
+  "version": "plain-language-retrieval-pcm-v1",
+  "language": "pcm",
+  "review_status": "draft",
+  "source": "plain-language-retrieval-v1",
+  "description": "Nigerian Pidgin (Naijá) translations of the 57 English plain-language benchmark cases (same order and expected_sections; source_query is the English case), plus 10 native citation phrasings with kind 'citation'. review_status 'draft': drafted and cross-checked without a native-speaker reviewer; do not treat as reviewed. Measure through the question-translation step (translate to English, then /api/v1/legal/search), and also raw for the folded keyword path. Enable gates: docs/multilingual-evaluation-plan.md.",
+  "cases": [
+    {
+      "query": "police fit search my phone?",
+      "expected_sections": [
+        "constitution-1999:37"
+      ],
+      "source_query": "can police search my phone"
+    },
+    {
+      "query": "police fit just stop me anyhow come search my phone?",
+      "expected_sections": [
+        "constitution-1999:37"
+      ],
+      "source_query": "can the police randomly search my phone"
+    },
+    {
+      "query": "government fit read my messages?",
+      "expected_sections": [
+        "constitution-1999:37"
+      ],
+      "source_query": "can the government read my messages"
+    },
+    {
+      "query": "e legal make dem tap my phone?",
+      "expected_sections": [
+        "constitution-1999:37"
+      ],
+      "source_query": "is it legal to tap my phone"
+    },
+    {
+      "query": "my privacy",
+      "expected_sections": [
+        "constitution-1999:37"
+      ],
+      "source_query": "privacy"
+    },
+    {
+      "query": "dem fit arrest me without tell me why?",
+      "expected_sections": [
+        "constitution-1999:35"
+      ],
+      "source_query": "can I be arrested without being told why"
+    },
+    {
+      "query": "how long police fit hold me before dem carry me go court?",
+      "expected_sections": [
+        "constitution-1999:35"
+      ],
+      "source_query": "how long can police detain me before court"
+    },
+    {
+      "query": "police hold me for 3 days, dem no charge me",
+      "expected_sections": [
+        "constitution-1999:35"
+      ],
+      "source_query": "police detained me for 3 days without charge"
+    },
+    {
+      "query": "my right to bail",
+      "expected_sections": [
+        "constitution-1999:35"
+      ],
+      "source_query": "right to bail"
+    },
+    {
+      "query": "I get right to keep quiet?",
+      "expected_sections": [
+        "constitution-1999:35"
+      ],
+      "source_query": "do I have the right to remain silent"
+    },
+    {
+      "query": "I get right to get lawyer?",
+      "expected_sections": [
+        "constitution-1999:35",
+        "constitution-1999:36"
+      ],
+      "source_query": "do I have a right to a lawyer"
+    },
+    {
+      "query": "fair trial for court",
+      "expected_sections": [
+        "constitution-1999:36"
+      ],
+      "source_query": "fair trial"
+    },
+    {
+      "query": "dem go take me as innocent until dem prove say I guilty?",
+      "expected_sections": [
+        "constitution-1999:36"
+      ],
+      "source_query": "presumed innocent until proven guilty"
+    },
+    {
+      "query": "police fit torture suspect?",
+      "expected_sections": [
+        "constitution-1999:34"
+      ],
+      "source_query": "can police torture a suspect"
+    },
+    {
+      "query": "dem allow slavery or forced work?",
+      "expected_sections": [
+        "constitution-1999:34"
+      ],
+      "source_query": "is slavery or forced labour allowed"
+    },
+    {
+      "query": "police fit kill person when dem dey arrest am?",
+      "expected_sections": [
+        "constitution-1999:33"
+      ],
+      "source_query": "can police kill someone during arrest"
+    },
+    {
+      "query": "right to life",
+      "expected_sections": [
+        "constitution-1999:33"
+      ],
+      "source_query": "right to life"
+    },
+    {
+      "query": "freedom to talk",
+      "expected_sections": [
+        "constitution-1999:39"
+      ],
+      "source_query": "freedom of speech"
+    },
+    {
+      "query": "I fit yab government for social media?",
+      "expected_sections": [
+        "constitution-1999:39"
+      ],
+      "source_query": "can I criticise the government on social media"
+    },
+    {
+      "query": "I fit open newspaper or TV station?",
+      "expected_sections": [
+        "constitution-1999:39"
+      ],
+      "source_query": "can I start a newspaper or TV station"
+    },
+    {
+      "query": "I fit change my religion?",
+      "expected_sections": [
+        "constitution-1999:38"
+      ],
+      "source_query": "can I change my religion"
+    },
+    {
+      "query": "school fit force my pikin to attend religion class?",
+      "expected_sections": [
+        "constitution-1999:38"
+      ],
+      "source_query": "can a school force my child to attend religious instruction"
+    },
+    {
+      "query": "e legal to do protest?",
+      "expected_sections": [
+        "constitution-1999:40"
+      ],
+      "source_query": "is it legal to protest"
+    },
+    {
+      "query": "I fit join trade union?",
+      "expected_sections": [
+        "constitution-1999:40"
+      ],
+      "source_query": "can I join a trade union"
+    },
+    {
+      "query": "I fit live for any state for Nigeria?",
+      "expected_sections": [
+        "constitution-1999:41"
+      ],
+      "source_query": "can I live in any state in Nigeria"
+    },
+    {
+      "query": "government fit stop me make I no comot Nigeria?",
+      "expected_sections": [
+        "constitution-1999:41"
+      ],
+      "source_query": "can the government stop me from leaving Nigeria"
+    },
+    {
+      "query": "dem dey discriminate me because of my tribe",
+      "expected_sections": [
+        "constitution-1999:42"
+      ],
+      "source_query": "discrimination because of my tribe"
+    },
+    {
+      "query": "dem fit discriminate woman because she be woman?",
+      "expected_sections": [
+        "constitution-1999:42"
+      ],
+      "source_query": "can a woman be discriminated against because of her sex"
+    },
+    {
+      "query": "I fit buy land for another state?",
+      "expected_sections": [
+        "constitution-1999:43"
+      ],
+      "source_query": "can I buy land in another state"
+    },
+    {
+      "query": "government fit collect my land without pay me?",
+      "expected_sections": [
+        "constitution-1999:44"
+      ],
+      "source_query": "can government take my land without paying"
+    },
+    {
+      "query": "where I go go if dem violate my rights?",
+      "expected_sections": [
+        "constitution-1999:46"
+      ],
+      "source_query": "where do I go if my rights are violated"
+    },
+    {
+      "query": "how old person must be before e fit become president?",
+      "expected_sections": [
+        "constitution-1999:131"
+      ],
+      "source_query": "how old must you be to become president"
+    },
+    {
+      "query": "who fit run for president?",
+      "expected_sections": [
+        "constitution-1999:131"
+      ],
+      "source_query": "who can run for president"
+    },
+    {
+      "query": "how long president term be?",
+      "expected_sections": [
+        "constitution-1999:135"
+      ],
+      "source_query": "how long is the president's term"
+    },
+    {
+      "query": "how dem fit impeach president?",
+      "expected_sections": [
+        "constitution-1999:143"
+      ],
+      "source_query": "how can a president be impeached"
+    },
+    {
+      "query": "wetin person need before e fit become governor",
+      "expected_sections": [
+        "constitution-1999:177"
+      ],
+      "source_query": "requirements to become governor"
+    },
+    {
+      "query": "how dem fit remove governor?",
+      "expected_sections": [
+        "constitution-1999:188"
+      ],
+      "source_query": "how can a governor be removed"
+    },
+    {
+      "query": "who be Nigerian citizen?",
+      "expected_sections": [
+        "constitution-1999:25"
+      ],
+      "source_query": "who qualifies as a Nigerian citizen"
+    },
+    {
+      "query": "I fit get two citizenship?",
+      "expected_sections": [
+        "constitution-1999:28"
+      ],
+      "source_query": "can I hold dual citizenship"
+    },
+    {
+      "query": "I fit give up my Nigerian citizenship?",
+      "expected_sections": [
+        "constitution-1999:29"
+      ],
+      "source_query": "can I give up my Nigerian citizenship"
+    },
+    {
+      "query": "state fit get im own police?",
+      "expected_sections": [
+        "constitution-1999:214"
+      ],
+      "source_query": "can a state have its own police"
+    },
+    {
+      "query": "na who dey control police?",
+      "expected_sections": [
+        "constitution-1999:214",
+        "constitution-1999:215"
+      ],
+      "source_query": "who controls the police"
+    },
+    {
+      "query": "person fit sue governor when e still dey office?",
+      "expected_sections": [
+        "constitution-1999:308"
+      ],
+      "source_query": "can the governor be sued while in office"
+    },
+    {
+      "query": "when president fit declare state of emergency?",
+      "expected_sections": [
+        "constitution-1999:305"
+      ],
+      "source_query": "when can the president declare a state of emergency"
+    },
+    {
+      "query": "Nigeria na secular state?",
+      "expected_sections": [
+        "constitution-1999:10"
+      ],
+      "source_query": "is Nigeria a secular state"
+    },
+    {
+      "query": "how dem dey change constitution?",
+      "expected_sections": [
+        "constitution-1999:9"
+      ],
+      "source_query": "how is the constitution amended"
+    },
+    {
+      "query": "how many states dey Nigeria?",
+      "expected_sections": [
+        "constitution-1999:3"
+      ],
+      "source_query": "how many states are in Nigeria"
+    },
+    {
+      "query": "another law fit pass constitution?",
+      "expected_sections": [
+        "constitution-1999:1"
+      ],
+      "source_query": "can the constitution be overridden by another law"
+    },
+    {
+      "query": "I get right to free education?",
+      "expected_sections": [
+        "constitution-1999:18"
+      ],
+      "source_query": "right to free education"
+    },
+    {
+      "query": "wetin citizen suppose do for Nigeria",
+      "expected_sections": [
+        "constitution-1999:24"
+      ],
+      "source_query": "duties of a citizen"
+    },
+    {
+      "query": "how I fit recall my senator?",
+      "expected_sections": [
+        "constitution-1999:69"
+      ],
+      "source_query": "how can I recall my senator"
+    },
+    {
+      "query": "na who dey appoint ministers?",
+      "expected_sections": [
+        "constitution-1999:147"
+      ],
+      "source_query": "who appoints ministers"
+    },
+    {
+      "query": "na who dey appoint chief justice?",
+      "expected_sections": [
+        "constitution-1999:231"
+      ],
+      "source_query": "who appoints the chief justice"
+    },
+    {
+      "query": "wetin constitution talk about police wey dey check my phone",
+      "expected_sections": [
+        "constitution-1999:37"
+      ],
+      "source_query": "wetin constitution talk about police checking my phone"
+    },
+    {
+      "query": "section thirty-something wey talk about privacy",
+      "expected_sections": [
+        "constitution-1999:37"
+      ],
+      "source_query": "section thirty something about privacy"
+    },
+    {
+      "query": "I fit refuse make police search my phone if dem no get warrant?",
+      "expected_sections": [
+        "constitution-1999:37"
+      ],
+      "source_query": "can I refuse a phone search without a warrant"
+    },
+    {
+      "query": "I must open my phone give police?",
+      "expected_sections": [
+        "constitution-1999:37"
+      ],
+      "source_query": "do I have to unlock my phone for police"
+    },
+    {
+      "query": "wetin section 35 talk?",
+      "expected_sections": [
+        "constitution-1999:35"
+      ],
+      "kind": "citation"
+    },
+    {
+      "query": "abeg explain section 37 for me",
+      "expected_sections": [
+        "constitution-1999:37"
+      ],
+      "kind": "citation"
+    },
+    {
+      "query": "section 33 of the constitution, wetin e mean?",
+      "expected_sections": [
+        "constitution-1999:33"
+      ],
+      "kind": "citation"
+    },
+    {
+      "query": "make I see wetin sec 36 talk",
+      "expected_sections": [
+        "constitution-1999:36"
+      ],
+      "kind": "citation"
+    },
+    {
+      "query": "s. 41 na about wetin?",
+      "expected_sections": [
+        "constitution-1999:41"
+      ],
+      "kind": "citation"
+    },
+    {
+      "query": "section 39 dey talk about freedom to talk abi?",
+      "expected_sections": [
+        "constitution-1999:39"
+      ],
+      "kind": "citation"
+    },
+    {
+      "query": "section 40 and protest matter",
+      "expected_sections": [
+        "constitution-1999:40"
+      ],
+      "kind": "citation"
+    },
+    {
+      "query": "wetin section 42 talk about tribe",
+      "expected_sections": [
+        "constitution-1999:42"
+      ],
+      "kind": "citation"
+    },
+    {
+      "query": "section forty-four, land matter",
+      "expected_sections": [
+        "constitution-1999:44"
+      ],
+      "kind": "citation"
+    },
+    {
+      "query": "section 46, where I go report if dem violate my rights",
+      "expected_sections": [
+        "constitution-1999:46"
+      ],
+      "kind": "citation"
+    }
+  ],
+  "reference_format": "instrument-slug:section"
+}

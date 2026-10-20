@@ -1,0 +1,1465 @@
+{
+  "version": "glossary-ig-v1",
+  "language": "ig",
+  "review_status": "draft",
+  "description": "Draft legal glossary for translating verified English answers and understanding questions. Built from two independent drafts (different models) and cross-checked; no native-speaker review yet. 'confidence' is the lower of the two drafts' confidence after reconciliation. Entries marked 'locked' keep their English form in answers.",
+  "terms": [
+    {
+      "en": "What you can do:",
+      "target": "Ihe ị nwere ike ime:",
+      "alternatives": [
+        "Ihe ị ga-eme:"
+      ],
+      "note": "Fixed rendering of the answer heading 'What you can do:'. Two drafts agree.",
+      "confidence": "high"
+    },
+    {
+      "en": "right",
+      "target": "ikike",
+      "alternatives": [],
+      "note": "Two drafts agree.",
+      "confidence": "high"
+    },
+    {
+      "en": "rights",
+      "target": "ikike",
+      "alternatives": [
+        "ikike gị"
+      ],
+      "note": "Two drafts agree.",
+      "confidence": "high"
+    },
+    {
+      "en": "fundamental rights",
+      "target": "ikike ndị bụ isi",
+      "alternatives": [
+        "ikike ntọala",
+        "ikike ndabere"
+      ],
+      "note": "Drafts disagree; second draft: 'ikike ndabere'. Needs native review.",
+      "confidence": "medium"
+    },
+    {
+      "en": "human rights",
+      "target": "ikike mmadụ",
+      "alternatives": [],
+      "note": "Two drafts agree.",
+      "confidence": "high"
+    },
+    {
+      "en": "freedom",
+      "target": "nnwere onwe",
+      "alternatives": [],
+      "note": "Two drafts agree.",
+      "confidence": "high"
+    },
+    {
+      "en": "liberty",
+      "target": "nnwere onwe",
+      "alternatives": [],
+      "note": "Two drafts agree.",
+      "confidence": "high"
+    },
+    {
+      "en": "right to life",
+      "target": "ikike ịdị ndụ",
+      "alternatives": [
+        "ikike ibi ndụ"
+      ],
+      "note": "Minor wording difference; second draft: 'ikike ibi ndụ'.",
+      "confidence": "high"
+    },
+    {
+      "en": "right to dignity",
+      "target": "ikike nsọpụrụ mmadụ",
+      "alternatives": [
+        "ugwu mmadụ"
+      ],
+      "note": "Two drafts agree.",
+      "confidence": "medium"
+    },
+    {
+      "en": "torture",
+      "target": "ịta ahụhụ",
+      "alternatives": [
+        "mmekpa ahụ",
+        "mmegbu ahụ"
+      ],
+      "note": "Two drafts agree.",
+      "confidence": "medium"
+    },
+    {
+      "en": "inhuman or degrading treatment",
+      "target": "mmeso na-adịghị mma ma ọ bụ nke na-eweda mmadụ ala",
+      "alternatives": [
+        "ime mmadụ ihe na-abụghị nke mmadụ ma ọ bụ weda ya ala"
+      ],
+      "note": "Drafts disagree; second draft: 'ime mmadụ ihe na-abụghị nke mmadụ ma ọ bụ weda ya ala'. Needs native review.",
+      "confidence": "medium"
+    },
+    {
+      "en": "slavery",
+      "target": "ịgba ohu",
+      "alternatives": [
+        "ohu"
+      ],
+      "note": "Two drafts agree.",
+      "confidence": "high"
+    },
+    {
+      "en": "forced labour",
+      "target": "ọrụ mmanye",
+      "alternatives": [
+        "ọrụ a manyere mmadụ",
+        "ọrụ a manyere mmadụ ime"
+      ],
+      "note": "Drafts disagree; second draft: 'ọrụ a manyere mmadụ ime'. Needs native review.",
+      "confidence": "medium"
+    },
+    {
+      "en": "personal liberty",
+      "target": "nnwere onwe onye",
+      "alternatives": [
+        "nnwere onwe nke onwe onye"
+      ],
+      "note": "Minor wording difference; second draft: 'nnwere onwe nke onwe onye'.",
+      "confidence": "medium"
+    },
+    {
+      "en": "arrest",
+      "target": "njide",
+      "alternatives": [
+        "ijide",
+        "ijide mmadụ"
+      ],
+      "note": "Drafts disagree; second draft: 'ijide mmadụ'. Needs native review.",
+      "confidence": "medium"
+    },
+    {
+      "en": "arrested",
+      "target": "e jidere",
+      "alternatives": [
+        "ejidere",
+        "ejidere ya"
+      ],
+      "note": "Drafts disagree; second draft: 'ejidere ya'. Needs native review.",
+      "confidence": "medium"
+    },
+    {
+      "en": "warrant",
+      "target": "akwụkwọ ikike",
+      "alternatives": [
+        "warrant"
+      ],
+      "note": "Two drafts agree.",
+      "confidence": "medium"
+    },
+    {
+      "en": "arrest warrant",
+      "target": "akwụkwọ ikike njide",
+      "alternatives": [
+        "akwụkwọ ikike ijide mmadụ"
+      ],
+      "note": "Drafts disagree; second draft: 'akwụkwọ ikike ijide mmadụ'. Needs native review.",
+      "confidence": "medium"
+    },
+    {
+      "en": "search warrant",
+      "target": "akwụkwọ ikike nyocha",
+      "alternatives": [
+        "akwụkwọ ikike ịchọ ihe n’ụlọ"
+      ],
+      "note": "Drafts disagree; second draft: 'akwụkwọ ikike ịchọ ihe n’ụlọ'. Needs native review.",
+      "confidence": "medium"
+    },
+    {
+      "en": "search",
+      "target": "nyocha",
+      "alternatives": [
+        "chọgharịa",
+        "nchọ"
+      ],
+      "note": "Drafts disagree; second draft: 'nchọ'. Needs native review.",
+      "confidence": "medium"
+    },
+    {
+      "en": "seize",
+      "target": "weghara",
+      "alternatives": [
+        "nara",
+        "ịnara",
+        "iji ike were"
+      ],
+      "note": "Drafts disagree; second draft: 'ịnara'. Needs native review.",
+      "confidence": "medium"
+    },
+    {
+      "en": "detain",
+      "target": "jide",
+      "alternatives": [
+        "tụọ mkpọrọ",
+        "ịkpọchi",
+        "idebe n’aka ndị uwe ojii"
+      ],
+      "note": "Drafts disagree; second draft: 'ịkpọchi'. Needs native review.",
+      "confidence": "medium"
+    },
+    {
+      "en": "detained",
+      "target": "nọ n'njide",
+      "alternatives": [
+        "ejidere",
+        "akpọchiri ya"
+      ],
+      "note": "Drafts disagree; second draft: 'akpọchiri ya'. Needs native review.",
+      "confidence": "medium"
+    },
+    {
+      "en": "detention",
+      "target": "njide",
+      "alternatives": [
+        "mkpọrọ",
+        "nkpọchi"
+      ],
+      "note": "Drafts disagree; second draft: 'nkpọchi'. Needs native review.",
+      "confidence": "medium"
+    },
+    {
+      "en": "custody",
+      "target": "njide",
+      "alternatives": [
+        "n’aka ndị uwe ojii"
+      ],
+      "note": "Two drafts agree.",
+      "confidence": "medium"
+    },
+    {
+      "en": "police custody",
+      "target": "njide ndị uwe ojii",
+      "alternatives": [
+        "njide n’aka ndị uwe ojii"
+      ],
+      "note": "Minor wording difference; second draft: 'njide n’aka ndị uwe ojii'.",
+      "confidence": "medium"
+    },
+    {
+      "en": "police station",
+      "target": "ọdụ ndị uwe ojii",
+      "alternatives": [
+        "teshọn",
+        "ụlọ ọrụ ndị uwe ojii",
+        "ọfịs ndị uwe ojii"
+      ],
+      "note": "Minor wording difference; second draft: 'ụlọ ọrụ ndị uwe ojii'.",
+      "confidence": "high"
+    },
+    {
+      "en": "police",
+      "target": "ndị uwe ojii",
+      "alternatives": [
+        "pọlịsị"
+      ],
+      "note": "Two drafts agree.",
+      "confidence": "high"
+    },
+    {
+      "en": "police officer",
+      "target": "onye uwe ojii",
+      "alternatives": [],
+      "note": "Two drafts agree.",
+      "confidence": "high"
+    },
+    {
+      "en": "Inspector-General of Police",
+      "target": "Onyeisi ndị uwe ojii",
+      "alternatives": [
+        "IGP",
+        "Inspector-General of Police"
+      ],
+      "note": "Drafts overlap; second draft led with 'Inspector-General of Police'.",
+      "confidence": "medium"
+    },
+    {
+      "en": "suspect",
+      "target": "onye a na-enyo enyo",
+      "alternatives": [],
+      "note": "Two drafts agree.",
+      "confidence": "high"
+    },
+    {
+      "en": "accused person",
+      "target": "onye a na-ebo ebubo",
+      "alternatives": [
+        "onye a boro ebubo"
+      ],
+      "note": "Minor wording difference; second draft: 'onye a boro ebubo'.",
+      "confidence": "high"
+    },
+    {
+      "en": "charge",
+      "target": "ebubo",
+      "alternatives": [],
+      "note": "Two drafts agree.",
+      "confidence": "high"
+    },
+    {
+      "en": "charged",
+      "target": "e boro ebubo",
+      "alternatives": [
+        "a boro ya ebubo"
+      ],
+      "note": "Drafts disagree; second draft: 'a boro ya ebubo'. Needs native review.",
+      "confidence": "medium"
+    },
+    {
+      "en": "offence",
+      "target": "mmebi iwu",
+      "alternatives": [
+        "mpụ",
+        "mmejọ"
+      ],
+      "note": "Drafts disagree; second draft: 'mmejọ'. Needs native review.",
+      "confidence": "medium"
+    },
+    {
+      "en": "crime",
+      "target": "mpụ",
+      "alternatives": [],
+      "note": "Two drafts agree.",
+      "confidence": "high"
+    },
+    {
+      "en": "criminal",
+      "target": "onye omempụ",
+      "alternatives": [],
+      "note": "Two drafts agree.",
+      "confidence": "high"
+    },
+    {
+      "en": "bail",
+      "target": "mgbapụta",
+      "alternatives": [
+        "bail",
+        "nnapụta",
+        "ntọhapụ n’okpuru nkwa"
+      ],
+      "note": "Drafts overlap; second draft led with 'bail'.",
+      "confidence": "medium"
+    },
+    {
+      "en": "surety",
+      "target": "onye nkwado",
+      "alternatives": [
+        "onye mgbapụta",
+        "onye were ọnụ"
+      ],
+      "note": "Second draft: 'onye were ọnụ'. Second draft 'onye were ọnụ' (one who stands as guarantor) was low confidence; kept 'onye nkwado'.",
+      "confidence": "medium"
+    },
+    {
+      "en": "remand",
+      "target": "ịnọ n'ụlọ mkpọrọ ka ikpe na-aga",
+      "alternatives": [
+        "idowe n’ụlọ mkpọrọ ruo mgbe a ga-ekpe ikpe"
+      ],
+      "note": "Drafts disagree; second draft: 'idowe n’ụlọ mkpọrọ ruo mgbe a ga-ekpe ikpe'. Needs native review.",
+      "confidence": "low"
+    },
+    {
+      "en": "court",
+      "target": "ụlọikpe",
+      "alternatives": [],
+      "note": "Two drafts agree.",
+      "confidence": "high"
+    },
+    {
+      "en": "High Court",
+      "target": "Ụlọikpe Dị Elu",
+      "alternatives": [
+        "High Court",
+        "Ụlọikpe Elu"
+      ],
+      "note": "Minor wording difference; second draft: 'Ụlọikpe Elu'.",
+      "confidence": "high"
+    },
+    {
+      "en": "Federal High Court",
+      "target": "Ụlọikpe Dị Elu nke Gọọmenti Etiti",
+      "alternatives": [
+        "Federal High Court",
+        "Ụlọikpe Elu Gọọmentị Etiti"
+      ],
+      "note": "Minor wording difference; second draft: 'Ụlọikpe Elu Gọọmentị Etiti'.",
+      "confidence": "medium"
+    },
+    {
+      "en": "Magistrate Court",
+      "target": "Ụlọikpe Majistreti",
+      "alternatives": [
+        "Magistrate Court",
+        "Ụlọikpe Magistrate"
+      ],
+      "note": "Drafts disagree; second draft: 'Ụlọikpe Magistrate'. Needs native review.",
+      "confidence": "medium"
+    },
+    {
+      "en": "Court of Appeal",
+      "target": "Ụlọikpe Mkpegharị",
+      "alternatives": [
+        "Court of Appeal"
+      ],
+      "note": "Two drafts agree.",
+      "confidence": "medium"
+    },
+    {
+      "en": "Supreme Court",
+      "target": "Ụlọikpe Kachasị Elu",
+      "alternatives": [
+        "Supreme Court",
+        "Ụlọikpe Kasị Elu"
+      ],
+      "note": "Minor wording difference; second draft: 'Ụlọikpe Kasị Elu'.",
+      "confidence": "high"
+    },
+    {
+      "en": "Sharia Court of Appeal",
+      "target": "Ụlọikpe Mkpegharị Sharia",
+      "alternatives": [
+        "Sharia Court of Appeal",
+        "Ụlọikpe Mkpegharị Shariah"
+      ],
+      "note": "Minor wording difference; second draft: 'Ụlọikpe Mkpegharị Shariah'.",
+      "confidence": "medium"
+    },
+    {
+      "en": "Customary Court of Appeal",
+      "target": "Ụlọikpe Mkpegharị nke Omenala",
+      "alternatives": [
+        "Customary Court of Appeal",
+        "Ụlọikpe Mkpegharị Omenala"
+      ],
+      "note": "Minor wording difference; second draft: 'Ụlọikpe Mkpegharị Omenala'.",
+      "confidence": "medium"
+    },
+    {
+      "en": "judge",
+      "target": "onyeikpe",
+      "alternatives": [],
+      "note": "Two drafts agree.",
+      "confidence": "high"
+    },
+    {
+      "en": "magistrate",
+      "target": "majistreti",
+      "alternatives": [
+        "onyeikpe Magistrate"
+      ],
+      "note": "Drafts disagree; second draft: 'onyeikpe Magistrate'. Needs native review.",
+      "confidence": "medium"
+    },
+    {
+      "en": "Chief Justice of Nigeria",
+      "target": "Onyeisi ndị ikpe Naịjirịa",
+      "alternatives": [
+        "Chief Justice of Nigeria",
+        "CJN",
+        "Onyeikpe Ukwu nke Naịjirịa"
+      ],
+      "note": "Drafts disagree; second draft: 'Onyeikpe Ukwu nke Naịjirịa'. Needs native review.",
+      "confidence": "medium"
+    },
+    {
+      "en": "tribunal",
+      "target": "ụlọikpe pụrụ iche",
+      "alternatives": [
+        "tribunal",
+        "ọgbakọ ikpe pụrụ iche"
+      ],
+      "note": "Drafts disagree; second draft: 'ọgbakọ ikpe pụrụ iche'. Needs native review.",
+      "confidence": "medium"
+    },
+    {
+      "en": "trial",
+      "target": "ikpe",
+      "alternatives": [],
+      "note": "Two drafts agree.",
+      "confidence": "high"
+    },
+    {
+      "en": "fair hearing",
+      "target": "ịnụ ikpe n'ụzọ ziri ezi",
+      "alternatives": [
+        "ohere ikwu okwu gị"
+      ],
+      "note": "Two drafts agree.",
+      "confidence": "medium"
+    },
+    {
+      "en": "fair trial",
+      "target": "ikpe ziri ezi",
+      "alternatives": [],
+      "note": "Two drafts agree.",
+      "confidence": "high"
+    },
+    {
+      "en": "presumed innocent",
+      "target": "a na-ewere gị dị ka onye aka ya dị ọcha",
+      "alternatives": [
+        "a na-ewere ya dị ka onye aka ya dị ọcha"
+      ],
+      "note": "Minor wording difference; second draft: 'a na-ewere ya dị ka onye aka ya dị ọcha'.",
+      "confidence": "medium"
+    },
+    {
+      "en": "guilty",
+      "target": "ikpe mara",
+      "alternatives": [
+        "nwere ikpe",
+        "nwere mmejọ"
+      ],
+      "note": "Drafts disagree; second draft: 'nwere mmejọ'. Needs native review.",
+      "confidence": "medium"
+    },
+    {
+      "en": "innocent",
+      "target": "aka ya dị ọcha",
+      "alternatives": [
+        "ikpe amaghị",
+        "onye aka ya dị ọcha"
+      ],
+      "note": "Minor wording difference; second draft: 'onye aka ya dị ọcha'.",
+      "confidence": "high"
+    },
+    {
+      "en": "conviction",
+      "target": "ikpe ịma",
+      "alternatives": [
+        "ikpe mara ya"
+      ],
+      "note": "Drafts disagree; second draft: 'ikpe mara ya'. Needs native review.",
+      "confidence": "medium"
+    },
+    {
+      "en": "convicted",
+      "target": "ikpe mara ya",
+      "alternatives": [],
+      "note": "Two drafts agree.",
+      "confidence": "medium"
+    },
+    {
+      "en": "sentence",
+      "target": "ntaramahụhụ ụlọikpe",
+      "alternatives": [
+        "mkpebi ikpe",
+        "ikpe a kpere"
+      ],
+      "note": "Drafts disagree; second draft: 'ikpe a kpere'. Needs native review.",
+      "confidence": "medium"
+    },
+    {
+      "en": "punishment",
+      "target": "ntaramahụhụ",
+      "alternatives": [],
+      "note": "Two drafts agree.",
+      "confidence": "high"
+    },
+    {
+      "en": "appeal",
+      "target": "mkpegharị ikpe",
+      "alternatives": [],
+      "note": "Two drafts agree.",
+      "confidence": "high"
+    },
+    {
+      "en": "lawyer",
+      "target": "onye ọka iwu",
+      "alternatives": [
+        "loya",
+        "ọka iwu"
+      ],
+      "note": "Drafts overlap; second draft led with 'ọka iwu'.",
+      "confidence": "high"
+    },
+    {
+      "en": "legal representation",
+      "target": "onye ọka iwu ga-anọchite anya gị",
+      "alternatives": [
+        "onye ọka iwu na-anọchite anya ya"
+      ],
+      "note": "Minor wording difference; second draft: 'onye ọka iwu na-anọchite anya ya'.",
+      "confidence": "medium"
+    },
+    {
+      "en": "legal aid",
+      "target": "enyemaka iwu n'efu",
+      "alternatives": [
+        "onye ọka iwu n'efu",
+        "enyemaka iwu"
+      ],
+      "note": "Minor wording difference; second draft: 'enyemaka iwu'.",
+      "confidence": "medium"
+    },
+    {
+      "en": "interpreter",
+      "target": "onye ntụgharị okwu",
+      "alternatives": [
+        "ọkọwa okwu",
+        "onye nsụgharị"
+      ],
+      "note": "Drafts disagree; second draft: 'onye nsụgharị'. Needs native review.",
+      "confidence": "medium"
+    },
+    {
+      "en": "remain silent",
+      "target": "ịgba nkịtị",
+      "alternatives": [
+        "ịgbachi nkịtị"
+      ],
+      "note": "Drafts disagree; second draft: 'ịgbachi nkịtị'. Needs native review.",
+      "confidence": "medium"
+    },
+    {
+      "en": "confession",
+      "target": "nkwupụta",
+      "alternatives": [
+        "ikwupụta ihe e mere",
+        "nkwupụta mmejọ"
+      ],
+      "note": "Minor wording difference; second draft: 'nkwupụta mmejọ'.",
+      "confidence": "medium"
+    },
+    {
+      "en": "evidence",
+      "target": "ihe akaebe",
+      "alternatives": [],
+      "note": "Two drafts agree.",
+      "confidence": "high"
+    },
+    {
+      "en": "witness",
+      "target": "onye akaebe",
+      "alternatives": [],
+      "note": "Two drafts agree.",
+      "confidence": "high"
+    },
+    {
+      "en": "prosecution",
+      "target": "ndị na-ebo ebubo",
+      "alternatives": [
+        "ndị ọka iwu gọọmenti"
+      ],
+      "note": "Two drafts agree.",
+      "confidence": "medium"
+    },
+    {
+      "en": "prosecutor",
+      "target": "onye ọka iwu gọọmenti",
+      "alternatives": [
+        "onye na-ebo ebubo"
+      ],
+      "note": "Drafts overlap; second draft led with 'onye na-ebo ebubo'.",
+      "confidence": "medium"
+    },
+    {
+      "en": "Attorney-General",
+      "target": "Attorney-General",
+      "alternatives": [
+        "Onye ọka iwu ukwu nke gọọmenti",
+        "Onye Ọka Iwu Ukwu"
+      ],
+      "note": "Drafts overlap; second draft led with 'Onye Ọka Iwu Ukwu'.",
+      "confidence": "medium"
+    },
+    {
+      "en": "reasonable time",
+      "target": "oge kwesịrị ekwesị",
+      "alternatives": [],
+      "note": "Two drafts agree.",
+      "confidence": "high"
+    },
+    {
+      "en": "within a reasonable time",
+      "target": "n'ime oge kwesịrị ekwesị",
+      "alternatives": [],
+      "note": "Two drafts agree.",
+      "confidence": "high"
+    },
+    {
+      "en": "compensation",
+      "target": "ụgwọ nkwụghachi",
+      "alternatives": [
+        "ụgwọ mmebi"
+      ],
+      "note": "Drafts overlap; second draft led with 'ụgwọ mmebi'.",
+      "confidence": "medium"
+    },
+    {
+      "en": "apology",
+      "target": "ịrịọ mgbaghara",
+      "alternatives": [
+        "arịrịọ mgbaghara"
+      ],
+      "note": "Drafts disagree; second draft: 'arịrịọ mgbaghara'. Needs native review.",
+      "confidence": "medium"
+    },
+    {
+      "en": "privacy",
+      "target": "nzuzo",
+      "alternatives": [
+        "ndụ nzuzo"
+      ],
+      "note": "Two drafts agree.",
+      "confidence": "high"
+    },
+    {
+      "en": "private and family life",
+      "target": "ndụ nzuzo na ndụ ezinụlọ",
+      "alternatives": [
+        "ndụ nzuzo na nke ezinụlọ"
+      ],
+      "note": "Minor wording difference; second draft: 'ndụ nzuzo na nke ezinụlọ'.",
+      "confidence": "medium"
+    },
+    {
+      "en": "home",
+      "target": "ụlọ",
+      "alternatives": [],
+      "note": "Two drafts agree.",
+      "confidence": "high"
+    },
+    {
+      "en": "correspondence",
+      "target": "akwụkwọ ozi",
+      "alternatives": [
+        "leta"
+      ],
+      "note": "Two drafts agree.",
+      "confidence": "medium"
+    },
+    {
+      "en": "telephone conversations",
+      "target": "mkparịta ụka n'ekwentị",
+      "alternatives": [
+        "oku ekwentị"
+      ],
+      "note": "Two drafts agree.",
+      "confidence": "high"
+    },
+    {
+      "en": "messages",
+      "target": "ozi",
+      "alternatives": [],
+      "note": "Two drafts agree.",
+      "confidence": "high"
+    },
+    {
+      "en": "freedom of thought, conscience and religion",
+      "target": "nnwere onwe nke echiche, akọ na uche na okpukpe",
+      "alternatives": [
+        "nnwere onwe echiche, akọ na uche na okpukpe"
+      ],
+      "note": "Minor wording difference; second draft: 'nnwere onwe echiche, akọ na uche na okpukpe'.",
+      "confidence": "high"
+    },
+    {
+      "en": "religion",
+      "target": "okpukpe",
+      "alternatives": [],
+      "note": "Two drafts agree.",
+      "confidence": "high"
+    },
+    {
+      "en": "change religion",
+      "target": "gbanwee okpukpe",
+      "alternatives": [],
+      "note": "Two drafts agree.",
+      "confidence": "high"
+    },
+    {
+      "en": "freedom of expression",
+      "target": "nnwere onwe ikwu okwu",
+      "alternatives": [],
+      "note": "Two drafts agree.",
+      "confidence": "high"
+    },
+    {
+      "en": "freedom of the press",
+      "target": "nnwere onwe ndị nta akụkọ",
+      "alternatives": [
+        "nnwere onwe nke mgbasa ozi"
+      ],
+      "note": "Drafts disagree; second draft: 'nnwere onwe nke mgbasa ozi'. Needs native review.",
+      "confidence": "medium"
+    },
+    {
+      "en": "newspaper",
+      "target": "akwụkwọ akụkọ",
+      "alternatives": [],
+      "note": "Two drafts agree.",
+      "confidence": "high"
+    },
+    {
+      "en": "peaceful assembly",
+      "target": "nzukọ n'udo",
+      "alternatives": [],
+      "note": "Two drafts agree.",
+      "confidence": "high"
+    },
+    {
+      "en": "association",
+      "target": "otu",
+      "alternatives": [
+        "mkpakọrịta"
+      ],
+      "note": "Drafts overlap; second draft led with 'mkpakọrịta'.",
+      "confidence": "medium"
+    },
+    {
+      "en": "trade union",
+      "target": "otu ndị ọrụ",
+      "alternatives": [],
+      "note": "Two drafts agree.",
+      "confidence": "high"
+    },
+    {
+      "en": "political party",
+      "target": "otu ndọrọ ndọrọ ọchịchị",
+      "alternatives": [
+        "otu ndọrọndọrọ ọchịchị"
+      ],
+      "note": "Minor wording difference; second draft: 'otu ndọrọndọrọ ọchịchị'.",
+      "confidence": "high"
+    },
+    {
+      "en": "protest",
+      "target": "ngagharị iwe",
+      "alternatives": [],
+      "note": "Two drafts agree.",
+      "confidence": "high"
+    },
+    {
+      "en": "freedom of movement",
+      "target": "nnwere onwe ịgagharị",
+      "alternatives": [
+        "nnwere onwe ije ebe ọ bụla"
+      ],
+      "note": "Drafts disagree; second draft: 'nnwere onwe ije ebe ọ bụla'. Needs native review.",
+      "confidence": "medium"
+    },
+    {
+      "en": "leave Nigeria",
+      "target": "ịpụ na Naịjirịa",
+      "alternatives": [
+        "hapụ Naịjirịa",
+        "ịhapụ Naịjirịa"
+      ],
+      "note": "Drafts disagree; second draft: 'ịhapụ Naịjirịa'. Needs native review.",
+      "confidence": "medium"
+    },
+    {
+      "en": "discrimination",
+      "target": "ịkpa oke",
+      "alternatives": [],
+      "note": "Two drafts agree.",
+      "confidence": "high"
+    },
+    {
+      "en": "sex",
+      "target": "nwoke ma ọ bụ nwaanyị",
+      "alternatives": [
+        "okike",
+        "nwoke ma ọ bụ nwanyị"
+      ],
+      "note": "Second draft: 'nwoke ma ọ bụ nwanyị'. Spelling varies: nwaanyị / nwanyị. Means male or female; avoid wording that suggests intercourse.",
+      "confidence": "medium"
+    },
+    {
+      "en": "ethnic group",
+      "target": "agbụrụ",
+      "alternatives": [],
+      "note": "Two drafts agree.",
+      "confidence": "high"
+    },
+    {
+      "en": "place of origin",
+      "target": "ebe mmadụ si",
+      "alternatives": [
+        "steeti obodo",
+        "ebe a si"
+      ],
+      "note": "Minor wording difference; second draft: 'ebe a si'.",
+      "confidence": "medium"
+    },
+    {
+      "en": "circumstance of birth",
+      "target": "ọnọdụ ọmụmụ",
+      "alternatives": [],
+      "note": "Two drafts agree.",
+      "confidence": "medium"
+    },
+    {
+      "en": "property",
+      "target": "ihe onwunwe",
+      "alternatives": [
+        "akụ na ụba"
+      ],
+      "note": "Two drafts agree.",
+      "confidence": "high"
+    },
+    {
+      "en": "land",
+      "target": "ala",
+      "alternatives": [],
+      "note": "Two drafts agree.",
+      "confidence": "high"
+    },
+    {
+      "en": "compulsory acquisition",
+      "target": "gọọmenti iji ike were ala",
+      "alternatives": [
+        "ịnara ala n’ike site n’iwu"
+      ],
+      "note": "Drafts disagree; second draft: 'ịnara ala n’ike site n’iwu'. Needs native review.",
+      "confidence": "medium"
+    },
+    {
+      "en": "state of emergency",
+      "target": "ọnọdụ mberede",
+      "alternatives": [
+        "iwu mberede"
+      ],
+      "note": "Two drafts agree.",
+      "confidence": "medium"
+    },
+    {
+      "en": "citizen",
+      "target": "nwa amaala",
+      "alternatives": [],
+      "note": "Two drafts agree.",
+      "confidence": "high"
+    },
+    {
+      "en": "citizenship",
+      "target": "ịbụ nwa amaala",
+      "alternatives": [],
+      "note": "Two drafts agree.",
+      "confidence": "high"
+    },
+    {
+      "en": "citizen by birth",
+      "target": "nwa amaala site n'ọmụmụ",
+      "alternatives": [],
+      "note": "Two drafts agree.",
+      "confidence": "high"
+    },
+    {
+      "en": "citizen by registration",
+      "target": "nwa amaala site na ndebanye aha",
+      "alternatives": [
+        "nwa amaala site n’ide aha"
+      ],
+      "note": "Minor wording difference; second draft: 'nwa amaala site n’ide aha'.",
+      "confidence": "medium"
+    },
+    {
+      "en": "naturalisation",
+      "target": "ịghọ nwa amaala site n'arịrịọ",
+      "alternatives": [
+        "naturalisation",
+        "ịnata ịbụ nwa amaala"
+      ],
+      "note": "Drafts disagree; second draft: 'ịnata ịbụ nwa amaala'. Needs native review.",
+      "confidence": "low"
+    },
+    {
+      "en": "dual citizenship",
+      "target": "ịbụ nwa amaala obodo abụọ",
+      "alternatives": [],
+      "note": "Two drafts agree.",
+      "confidence": "medium"
+    },
+    {
+      "en": "renounce citizenship",
+      "target": "ịhapụ ịbụ nwa amaala",
+      "alternatives": [
+        "ịjụ ịbụ nwa amaala"
+      ],
+      "note": "Minor wording difference; second draft: 'ịjụ ịbụ nwa amaala'.",
+      "confidence": "medium"
+    },
+    {
+      "en": "deprive of citizenship",
+      "target": "ịnapụ mmadụ ịbụ nwa amaala",
+      "alternatives": [
+        "iwepụ ịbụ nwa amaala n’aka mmadụ"
+      ],
+      "note": "Minor wording difference; second draft: 'iwepụ ịbụ nwa amaala n’aka mmadụ'.",
+      "confidence": "medium"
+    },
+    {
+      "en": "duty",
+      "target": "ibu ọrụ",
+      "alternatives": [
+        "ọrụ",
+        "ọrụ e kwesịrị ime"
+      ],
+      "note": "Drafts disagree; second draft: 'ọrụ e kwesịrị ime'. Needs native review.",
+      "confidence": "medium"
+    },
+    {
+      "en": "duties of a citizen",
+      "target": "ibu ọrụ nwa amaala",
+      "alternatives": [
+        "ọrụ ndị nwa amaala"
+      ],
+      "note": "Minor wording difference; second draft: 'ọrụ ndị nwa amaala'.",
+      "confidence": "medium"
+    },
+    {
+      "en": "Constitution",
+      "target": "Constitution",
+      "alternatives": [
+        "Iwu Ntọala",
+        "Iwu Ndabere"
+      ],
+      "note": "Locked: keep the English form in answers (with any number or law name); local forms are listed only to recognise questions. Second draft used the local word 'Iwu Ndabere'.",
+      "confidence": "high",
+      "locked": true
+    },
+    {
+      "en": "section",
+      "target": "section",
+      "alternatives": [
+        "nkeji",
+        "akụkụ",
+        "nkebi"
+      ],
+      "note": "Locked: keep the English form in answers (with any number or law name); local forms are listed only to recognise questions. Native word unsettled: drafts gave 'nkeji', 'akụkụ' and 'nkebi' ('nkeji' also means minute/unit). Benchmarks test 'nkeji', 'akụkụ' and 'nkebi'. Needs native review.",
+      "confidence": "low",
+      "locked": true
+    },
+    {
+      "en": "subsection",
+      "target": "subsection",
+      "alternatives": [
+        "nkeji nta",
+        "obere nkebi"
+      ],
+      "note": "Locked: keep the English form in answers (with any number or law name); local forms are listed only to recognise questions. Second draft used the local word 'obere nkebi'.",
+      "confidence": "medium",
+      "locked": true
+    },
+    {
+      "en": "paragraph",
+      "target": "paragraph",
+      "alternatives": [
+        "paragraf"
+      ],
+      "note": "Locked: keep the English form in answers (with any number or law name); local forms are listed only to recognise questions. Second draft used the local word 'paragraf'.",
+      "confidence": "medium",
+      "locked": true
+    },
+    {
+      "en": "chapter",
+      "target": "chapter",
+      "alternatives": [
+        "isiakwụkwọ",
+        "isi"
+      ],
+      "note": "Locked: keep the English form in answers (with any number or law name); local forms are listed only to recognise questions. Second draft used the local word 'isi'.",
+      "confidence": "medium",
+      "locked": true
+    },
+    {
+      "en": "schedule",
+      "target": "schedule",
+      "alternatives": [
+        "mgbakwunye",
+        "ndepụta"
+      ],
+      "note": "Locked: keep the English form in answers (with any number or law name); local forms are listed only to recognise questions. Second draft used the local word 'ndepụta'.",
+      "confidence": "low",
+      "locked": true
+    },
+    {
+      "en": "law",
+      "target": "iwu",
+      "alternatives": [],
+      "note": "Two drafts agree.",
+      "confidence": "high"
+    },
+    {
+      "en": "Act",
+      "target": "Act",
+      "alternatives": [
+        "iwu"
+      ],
+      "note": "Locked: keep the English form in answers (with any number or law name); local forms are listed only to recognise questions. Second draft used the local word 'Iwu'.",
+      "confidence": "high",
+      "locked": true
+    },
+    {
+      "en": "Bill",
+      "target": "atụmatụ iwu",
+      "alternatives": [
+        "akwụkwọ iwu a tụrụ aro"
+      ],
+      "note": "Drafts disagree; second draft: 'akwụkwọ iwu a tụrụ aro'. Needs native review.",
+      "confidence": "medium"
+    },
+    {
+      "en": "amend",
+      "target": "mezigharịa",
+      "alternatives": [
+        "megharịa"
+      ],
+      "note": "Drafts overlap; second draft led with 'megharịa'.",
+      "confidence": "medium"
+    },
+    {
+      "en": "amendment",
+      "target": "mmezigharị",
+      "alternatives": [
+        "mmegharị"
+      ],
+      "note": "Drafts disagree; second draft: 'mmegharị'. Needs native review.",
+      "confidence": "medium"
+    },
+    {
+      "en": "government",
+      "target": "gọọmenti",
+      "alternatives": [
+        "ọchịchị"
+      ],
+      "note": "Two drafts agree.",
+      "confidence": "high"
+    },
+    {
+      "en": "Federal Government",
+      "target": "Gọọmenti Etiti",
+      "alternatives": [],
+      "note": "Two drafts agree.",
+      "confidence": "high"
+    },
+    {
+      "en": "State Government",
+      "target": "Gọọmenti Steeti",
+      "alternatives": [],
+      "note": "Two drafts agree.",
+      "confidence": "high"
+    },
+    {
+      "en": "Local Government",
+      "target": "Gọọmenti Ime Obodo",
+      "alternatives": [
+        "Ọchịchị Ime Obodo"
+      ],
+      "note": "Two drafts agree.",
+      "confidence": "high"
+    },
+    {
+      "en": "federation",
+      "target": "mba jikọrọ ọnụ",
+      "alternatives": [
+        "federation",
+        "Federeshọn",
+        "ọchịchị otu mba"
+      ],
+      "note": "Second draft: 'Federeshọn'. No settled term; both drafts low confidence. Prefer 'Gọọmenti Etiti' where the meaning is the federal government.",
+      "confidence": "low"
+    },
+    {
+      "en": "state",
+      "target": "steeti",
+      "alternatives": [],
+      "note": "Two drafts agree.",
+      "confidence": "high"
+    },
+    {
+      "en": "National Assembly",
+      "target": "Ụlọ Omebe Iwu Etiti",
+      "alternatives": [
+        "National Assembly",
+        "Ụlọ Omeiwu Mba"
+      ],
+      "note": "Drafts overlap; second draft led with 'Ụlọ Omeiwu Mba'.",
+      "confidence": "medium"
+    },
+    {
+      "en": "Senate",
+      "target": "Ụlọ Omebe Iwu Sineti",
+      "alternatives": [
+        "Senate",
+        "Sineti"
+      ],
+      "note": "Drafts disagree; second draft: 'Sineti'. Needs native review.",
+      "confidence": "medium"
+    },
+    {
+      "en": "House of Representatives",
+      "target": "Ụlọ Ndị Nnọchiteanya",
+      "alternatives": [
+        "House of Representatives"
+      ],
+      "note": "Two drafts agree.",
+      "confidence": "medium"
+    },
+    {
+      "en": "State House of Assembly",
+      "target": "Ụlọ Omebe Iwu Steeti",
+      "alternatives": [
+        "House of Assembly",
+        "Ụlọ Omeiwu Steeti"
+      ],
+      "note": "Drafts disagree; second draft: 'Ụlọ Omeiwu Steeti'. Needs native review.",
+      "confidence": "medium"
+    },
+    {
+      "en": "senator",
+      "target": "sineto",
+      "alternatives": [],
+      "note": "Two drafts agree.",
+      "confidence": "high"
+    },
+    {
+      "en": "recall",
+      "target": "ịkpọghachi onye nnọchite anya",
+      "alternatives": [
+        "recall",
+        "ịkpọghachi onye nnọchiteanya"
+      ],
+      "note": "Drafts disagree; second draft: 'ịkpọghachi onye nnọchiteanya'. Needs native review.",
+      "confidence": "low"
+    },
+    {
+      "en": "election",
+      "target": "ntuli aka",
+      "alternatives": [],
+      "note": "Two drafts agree.",
+      "confidence": "high"
+    },
+    {
+      "en": "vote",
+      "target": "votu",
+      "alternatives": [
+        "tụọ vootu",
+        "ịtụ vootu"
+      ],
+      "note": "Drafts disagree; second draft: 'ịtụ vootu'. Needs native review.",
+      "confidence": "medium"
+    },
+    {
+      "en": "President",
+      "target": "Onyeisi Ala",
+      "alternatives": [],
+      "note": "Two drafts agree.",
+      "confidence": "high"
+    },
+    {
+      "en": "Vice-President",
+      "target": "Osote Onyeisi Ala",
+      "alternatives": [],
+      "note": "Two drafts agree.",
+      "confidence": "high"
+    },
+    {
+      "en": "Governor",
+      "target": "Gọvanọ",
+      "alternatives": [],
+      "note": "Two drafts agree.",
+      "confidence": "high"
+    },
+    {
+      "en": "Deputy Governor",
+      "target": "Osote Gọvanọ",
+      "alternatives": [],
+      "note": "Two drafts agree.",
+      "confidence": "high"
+    },
+    {
+      "en": "Minister",
+      "target": "Minista",
+      "alternatives": [],
+      "note": "Two drafts agree.",
+      "confidence": "high"
+    },
+    {
+      "en": "Commissioner",
+      "target": "Kọmishọna",
+      "alternatives": [],
+      "note": "Two drafts agree.",
+      "confidence": "high"
+    },
+    {
+      "en": "impeach",
+      "target": "chụpụ n'ọchịchị",
+      "alternatives": [
+        "impeach",
+        "wepụ n’ọkwa site n’iwu"
+      ],
+      "note": "Drafts overlap; second draft led with 'wepụ n’ọkwa site n’iwu'.",
+      "confidence": "medium"
+    },
+    {
+      "en": "impeachment",
+      "target": "nchụpụ n'ọchịchị",
+      "alternatives": [
+        "ịwepụ n’ọkwa site n’iwu",
+        "impeachment"
+      ],
+      "note": "Drafts disagree; second draft: 'ịwepụ n’ọkwa site n’iwu'. Needs native review.",
+      "confidence": "medium"
+    },
+    {
+      "en": "remove from office",
+      "target": "wepụ n'ọkwa",
+      "alternatives": [],
+      "note": "Two drafts agree.",
+      "confidence": "high"
+    },
+    {
+      "en": "gross misconduct",
+      "target": "omume ọjọọ dị ukwuu",
+      "alternatives": [
+        "ime ihe n’ụzọ na-ezighị ezi nke ukwuu"
+      ],
+      "note": "Drafts disagree; second draft: 'ime ihe n’ụzọ na-ezighị ezi nke ukwuu'. Needs native review.",
+      "confidence": "medium"
+    },
+    {
+      "en": "immunity",
+      "target": "nchekwa pụọ n'ikpe",
+      "alternatives": [
+        "enweghị ike ịgba ya akwụkwọ",
+        "nchebe site n’iwu"
+      ],
+      "note": "Drafts disagree; second draft: 'nchebe site n’iwu'. Needs native review.",
+      "confidence": "low"
+    },
+    {
+      "en": "sue",
+      "target": "gbaa akwụkwọ",
+      "alternatives": [
+        "kpọọ n'ụlọikpe",
+        "ịkpọ n’ụlọikpe"
+      ],
+      "note": "Drafts disagree; second draft: 'ịkpọ n’ụlọikpe'. Needs native review.",
+      "confidence": "medium"
+    },
+    {
+      "en": "term of office",
+      "target": "oge ọchịchị",
+      "alternatives": [
+        "oge nọ n’ọkwa"
+      ],
+      "note": "Drafts disagree; second draft: 'oge nọ n’ọkwa'. Needs native review.",
+      "confidence": "medium"
+    },
+    {
+      "en": "qualification",
+      "target": "ntozu",
+      "alternatives": [
+        "ihe ntozu",
+        "ịkwesị ịbụ"
+      ],
+      "note": "Drafts disagree; second draft: 'ịkwesị ịbụ'. Needs native review.",
+      "confidence": "low"
+    },
+    {
+      "en": "pardon",
+      "target": "mgbaghara",
+      "alternatives": [],
+      "note": "Two drafts agree.",
+      "confidence": "high"
+    },
+    {
+      "en": "prerogative of mercy",
+      "target": "ikike ịgbaghara",
+      "alternatives": [
+        "ikike mgbaghara"
+      ],
+      "note": "Drafts disagree; second draft: 'ikike mgbaghara'. Needs native review.",
+      "confidence": "medium"
+    },
+    {
+      "en": "armed forces",
+      "target": "ndị agha",
+      "alternatives": [],
+      "note": "Two drafts agree.",
+      "confidence": "high"
+    },
+    {
+      "en": "soldier",
+      "target": "onye agha",
+      "alternatives": [
+        "sọja"
+      ],
+      "note": "Two drafts agree.",
+      "confidence": "high"
+    },
+    {
+      "en": "customary law",
+      "target": "iwu omenala",
+      "alternatives": [],
+      "note": "Two drafts agree.",
+      "confidence": "high"
+    },
+    {
+      "en": "Islamic law",
+      "target": "iwu Alakụba",
+      "alternatives": [
+        "Sharia",
+        "Iwu Shariah"
+      ],
+      "note": "Two drafts agree.",
+      "confidence": "medium"
+    },
+    {
+      "en": "secular",
+      "target": "gọọmenti na-enweghị okpukpe ọ bụla",
+      "alternatives": [
+        "secular",
+        "nke na-ejikọghị okpukpe na ọchịchị"
+      ],
+      "note": "Second draft: 'nke na-ejikọghị okpukpe na ọchịchị'. No settled term; both drafts paraphrase. Prefer explaining 'no official state religion'.",
+      "confidence": "low"
+    },
+    {
+      "en": "State religion",
+      "target": "okpukpe gọọmenti",
+      "alternatives": [
+        "okpukpe obodo"
+      ],
+      "note": "Two drafts agree.",
+      "confidence": "medium"
+    },
+    {
+      "en": "education",
+      "target": "agụmakwụkwọ",
+      "alternatives": [],
+      "note": "Two drafts agree.",
+      "confidence": "high"
+    },
+    {
+      "en": "Administration of Criminal Justice Act",
+      "target": "Administration of Criminal Justice Act",
+      "alternatives": [
+        "ACJA",
+        "Iwu Nchịkwa Ikpe Ziri Ezi Mpụ"
+      ],
+      "note": "Locked: keep the English form in answers (with any number or law name); local forms are listed only to recognise questions.",
+      "confidence": "medium",
+      "locked": true
+    },
+    {
+      "en": "Police Act",
+      "target": "Police Act",
+      "alternatives": [
+        "Iwu Ndị Uwe Ojii"
+      ],
+      "note": "Locked: keep the English form in answers (with any number or law name); local forms are listed only to recognise questions.",
+      "confidence": "medium",
+      "locked": true
+    }
+  ]
+}

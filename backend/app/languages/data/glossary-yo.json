@@ -1,0 +1,1509 @@
+{
+  "version": "glossary-yo-v1",
+  "language": "yo",
+  "review_status": "draft",
+  "description": "Draft legal glossary for translating verified English answers and understanding questions. Built from two independent drafts (different models) and cross-checked; no native-speaker review yet. 'confidence' is the lower of the two drafts' confidence after reconciliation. Entries marked 'locked' keep their English form in answers.",
+  "terms": [
+    {
+      "en": "What you can do:",
+      "target": "Ohun tí o lè ṣe:",
+      "alternatives": [
+        "Ohun tí o lè ṣe báyìí:"
+      ],
+      "note": "Fixed rendering of the answer heading 'What you can do:'. Two drafts agree.",
+      "confidence": "high"
+    },
+    {
+      "en": "right",
+      "target": "ẹ̀tọ́",
+      "alternatives": [],
+      "note": "Two drafts agree.",
+      "confidence": "high"
+    },
+    {
+      "en": "rights",
+      "target": "àwọn ẹ̀tọ́",
+      "alternatives": [
+        "ẹ̀tọ́"
+      ],
+      "note": "Two drafts agree.",
+      "confidence": "high"
+    },
+    {
+      "en": "fundamental rights",
+      "target": "ẹ̀tọ́ ìpìlẹ̀",
+      "alternatives": [
+        "ẹ̀tọ́ ọmọnìyàn pàtàkì"
+      ],
+      "note": "Two drafts agree.",
+      "confidence": "medium"
+    },
+    {
+      "en": "human rights",
+      "target": "ẹ̀tọ́ ọmọnìyàn",
+      "alternatives": [],
+      "note": "Two drafts agree.",
+      "confidence": "high"
+    },
+    {
+      "en": "freedom",
+      "target": "òmìnira",
+      "alternatives": [],
+      "note": "Two drafts agree.",
+      "confidence": "high"
+    },
+    {
+      "en": "liberty",
+      "target": "òmìnira",
+      "alternatives": [],
+      "note": "Two drafts agree.",
+      "confidence": "high"
+    },
+    {
+      "en": "right to life",
+      "target": "ẹ̀tọ́ sí ìyè",
+      "alternatives": [
+        "ẹ̀tọ́ láti wà láàyè",
+        "ẹ̀tọ́ sí ẹ̀mí"
+      ],
+      "note": "Minor wording difference; second draft: 'ẹ̀tọ́ sí ẹ̀mí'.",
+      "confidence": "high"
+    },
+    {
+      "en": "right to dignity",
+      "target": "ẹ̀tọ́ sí iyì ènìyàn",
+      "alternatives": [
+        "ẹ̀tọ́ sí ọ̀wọ̀",
+        "ẹ̀tọ́ sí iyì ọmọnìyàn",
+        "ẹ̀tọ́ sí ọlá"
+      ],
+      "note": "Minor wording difference; second draft: 'ẹ̀tọ́ sí iyì ọmọnìyàn'.",
+      "confidence": "medium"
+    },
+    {
+      "en": "torture",
+      "target": "ìdálóró",
+      "alternatives": [
+        "fìyà jẹ ènìyàn"
+      ],
+      "note": "Two drafts agree.",
+      "confidence": "high"
+    },
+    {
+      "en": "inhuman or degrading treatment",
+      "target": "ìwà àìláàánú tàbí ìwà ìtìjú",
+      "alternatives": [
+        "ìhùwàsí tí kò bá ọmọnìyàn mu",
+        "ìlòkulò tí kò bá ọmọnìyàn mu tàbí tí ó ń tàbùkù ènìyàn"
+      ],
+      "note": "Drafts disagree; second draft: 'ìlòkulò tí kò bá ọmọnìyàn mu tàbí tí ó ń tàbùkù ènìyàn'. Needs native review.",
+      "confidence": "medium"
+    },
+    {
+      "en": "slavery",
+      "target": "ìfiniṣẹrú",
+      "alternatives": [
+        "ẹrú",
+        "oko ẹrú",
+        "ìsìnrú"
+      ],
+      "note": "Drafts disagree; second draft: 'oko ẹrú'. Needs native review.",
+      "confidence": "medium"
+    },
+    {
+      "en": "forced labour",
+      "target": "iṣẹ́ àfipáṣe",
+      "alternatives": [
+        "iṣẹ́ ipá"
+      ],
+      "note": "Two drafts agree.",
+      "confidence": "high"
+    },
+    {
+      "en": "personal liberty",
+      "target": "òmìnira ara ẹni",
+      "alternatives": [],
+      "note": "Two drafts agree.",
+      "confidence": "high"
+    },
+    {
+      "en": "arrest",
+      "target": "ìmúni",
+      "alternatives": [
+        "fi panpẹ́ ọba mú",
+        "mú",
+        "ìfàṣẹ ọba mú"
+      ],
+      "note": "Drafts overlap; second draft led with 'ìfàṣẹ ọba mú'.",
+      "confidence": "medium"
+    },
+    {
+      "en": "arrested",
+      "target": "wọ́n mú",
+      "alternatives": [
+        "fi panpẹ́ ọba mú",
+        "tí wọ́n mú",
+        "tí wọ́n fàṣẹ ọba mú"
+      ],
+      "note": "Minor wording difference; second draft: 'tí wọ́n mú'.",
+      "confidence": "high"
+    },
+    {
+      "en": "warrant",
+      "target": "ìwé àṣẹ",
+      "alternatives": [
+        "warrant"
+      ],
+      "note": "Two drafts agree.",
+      "confidence": "high"
+    },
+    {
+      "en": "arrest warrant",
+      "target": "ìwé àṣẹ láti múni",
+      "alternatives": [
+        "ìwé àṣẹ ìmúni",
+        "ìwé àṣẹ láti mú ènìyàn"
+      ],
+      "note": "Drafts overlap; second draft led with 'ìwé àṣẹ ìmúni'.",
+      "confidence": "medium"
+    },
+    {
+      "en": "search warrant",
+      "target": "ìwé àṣẹ láti yẹ̀wò",
+      "alternatives": [
+        "ìwé àṣẹ ìwáàrí",
+        "ìwé àṣẹ láti yẹ ilé wò",
+        "ìwé àṣẹ ìwárí"
+      ],
+      "note": "Drafts disagree; second draft: 'ìwé àṣẹ láti yẹ ilé wò'. Needs native review.",
+      "confidence": "medium"
+    },
+    {
+      "en": "search",
+      "target": "yẹ̀wò",
+      "alternatives": [
+        "ṣàwárí",
+        "ìyẹ̀wò",
+        "ìwárí"
+      ],
+      "note": "Drafts overlap; second draft led with 'ìyẹ̀wò'.",
+      "confidence": "medium"
+    },
+    {
+      "en": "seize",
+      "target": "gbà lọ́wọ́ ẹni",
+      "alternatives": [
+        "fi ipá gbà",
+        "gbà"
+      ],
+      "note": "Drafts overlap; second draft led with 'gbà'.",
+      "confidence": "medium"
+    },
+    {
+      "en": "detain",
+      "target": "tì mọ́lé",
+      "alternatives": [
+        "fi sí àhámọ́",
+        "dá dúró"
+      ],
+      "note": "Two drafts agree.",
+      "confidence": "high"
+    },
+    {
+      "en": "detained",
+      "target": "wà ní àhámọ́",
+      "alternatives": [
+        "wọ́n tì mọ́lé",
+        "tí wọ́n tì mọ́lé"
+      ],
+      "note": "Drafts disagree; second draft: 'tí wọ́n tì mọ́lé'. Needs native review.",
+      "confidence": "medium"
+    },
+    {
+      "en": "detention",
+      "target": "àhámọ́",
+      "alternatives": [
+        "ìtìmọ́lé",
+        "ìfàmọ́lé"
+      ],
+      "note": "Drafts overlap; second draft led with 'ìtìmọ́lé'.",
+      "confidence": "high"
+    },
+    {
+      "en": "custody",
+      "target": "àhámọ́",
+      "alternatives": [
+        "àtìmọ́lé"
+      ],
+      "note": "Two drafts agree.",
+      "confidence": "high"
+    },
+    {
+      "en": "police custody",
+      "target": "àhámọ́ ọlọ́pàá",
+      "alternatives": [
+        "àtìmọ́lé ọlọ́pàá"
+      ],
+      "note": "Two drafts agree.",
+      "confidence": "high"
+    },
+    {
+      "en": "police station",
+      "target": "àgọ́ ọlọ́pàá",
+      "alternatives": [
+        "teṣan ọlọ́pàá",
+        "ilé iṣẹ́ ọlọ́pàá",
+        "ọ́fíìsì ọlọ́pàá"
+      ],
+      "note": "Drafts disagree; second draft: 'ilé iṣẹ́ ọlọ́pàá'. Needs native review.",
+      "confidence": "medium"
+    },
+    {
+      "en": "police",
+      "target": "ọlọ́pàá",
+      "alternatives": [],
+      "note": "Two drafts agree.",
+      "confidence": "high"
+    },
+    {
+      "en": "police officer",
+      "target": "ọlọ́pàá",
+      "alternatives": [
+        "òṣìṣẹ́ ọlọ́pàá"
+      ],
+      "note": "Two drafts agree.",
+      "confidence": "high"
+    },
+    {
+      "en": "Inspector-General of Police",
+      "target": "Ọ̀gá àgbà ọlọ́pàá",
+      "alternatives": [
+        "Inspector-General of Police",
+        "IGP"
+      ],
+      "note": "Two drafts agree.",
+      "confidence": "medium"
+    },
+    {
+      "en": "suspect",
+      "target": "afurasí",
+      "alternatives": [
+        "ẹni tí a fura sí"
+      ],
+      "note": "Two drafts agree.",
+      "confidence": "high"
+    },
+    {
+      "en": "accused person",
+      "target": "olùjẹ́jọ́",
+      "alternatives": [
+        "ẹni tí wọ́n fi ẹ̀sùn kàn"
+      ],
+      "note": "Drafts overlap; second draft led with 'ẹni tí wọ́n fi ẹ̀sùn kàn'.",
+      "confidence": "high"
+    },
+    {
+      "en": "charge",
+      "target": "ẹ̀sùn",
+      "alternatives": [],
+      "note": "Two drafts agree.",
+      "confidence": "high"
+    },
+    {
+      "en": "charged",
+      "target": "wọ́n fi ẹ̀sùn kàn",
+      "alternatives": [
+        "gbé lọ sí ilé ẹjọ́",
+        "tí wọ́n fi ẹ̀sùn kàn"
+      ],
+      "note": "Minor wording difference; second draft: 'tí wọ́n fi ẹ̀sùn kàn'.",
+      "confidence": "high"
+    },
+    {
+      "en": "offence",
+      "target": "ẹ̀ṣẹ̀",
+      "alternatives": [
+        "ìwà ọ̀daràn"
+      ],
+      "note": "Two drafts agree.",
+      "confidence": "medium"
+    },
+    {
+      "en": "crime",
+      "target": "ìwà ọ̀daràn",
+      "alternatives": [
+        "ẹ̀ṣẹ̀"
+      ],
+      "note": "Two drafts agree.",
+      "confidence": "high"
+    },
+    {
+      "en": "criminal",
+      "target": "ọ̀daràn",
+      "alternatives": [],
+      "note": "Two drafts agree.",
+      "confidence": "high"
+    },
+    {
+      "en": "bail",
+      "target": "béèlì",
+      "alternatives": [
+        "ìdúró"
+      ],
+      "note": "Two drafts agree.",
+      "confidence": "medium"
+    },
+    {
+      "en": "surety",
+      "target": "onídùúró",
+      "alternatives": [
+        "ẹni tó dúró fún ẹni",
+        "onídúró"
+      ],
+      "note": "Second draft: 'onídúró'. Spelling differs: 'onídùúró' (first) vs 'onídúró' (second); both seen in print.",
+      "confidence": "medium"
+    },
+    {
+      "en": "remand",
+      "target": "àtìmọ́lé nígbà tí ẹjọ́ ń lọ",
+      "alternatives": [
+        "fi sí àhámọ́ ẹ̀wọ̀n",
+        "àtìmọ́lé ilé ẹjọ́"
+      ],
+      "note": "Drafts disagree; second draft: 'àtìmọ́lé ilé ẹjọ́'. Needs native review.",
+      "confidence": "low"
+    },
+    {
+      "en": "court",
+      "target": "ilé ẹjọ́",
+      "alternatives": [],
+      "note": "Two drafts agree.",
+      "confidence": "high"
+    },
+    {
+      "en": "High Court",
+      "target": "Ilé ẹjọ́ gíga",
+      "alternatives": [
+        "High Court"
+      ],
+      "note": "Two drafts agree.",
+      "confidence": "high"
+    },
+    {
+      "en": "Federal High Court",
+      "target": "Ilé ẹjọ́ gíga ti ìjọba àpapọ̀",
+      "alternatives": [
+        "Federal High Court",
+        "Ilé Ẹjọ́ Gíga Àpapọ̀"
+      ],
+      "note": "Minor wording difference; second draft: 'Ilé Ẹjọ́ Gíga Àpapọ̀'.",
+      "confidence": "medium"
+    },
+    {
+      "en": "Magistrate Court",
+      "target": "Ilé ẹjọ́ Májísírétì",
+      "alternatives": [
+        "Magistrate Court",
+        "Ilé Ẹjọ́ Májísíréètì"
+      ],
+      "note": "Minor wording difference; second draft: 'Ilé Ẹjọ́ Májísíréètì'.",
+      "confidence": "medium"
+    },
+    {
+      "en": "Court of Appeal",
+      "target": "Ilé ẹjọ́ kòtẹ́milọ́rùn",
+      "alternatives": [
+        "Court of Appeal",
+        "Ilé Ẹjọ́ Àpéèlì"
+      ],
+      "note": "Second draft: 'Ilé Ẹjọ́ Àpéèlì'. Calque 'kòtẹ́milọ́rùn' and loanword 'Àpéèlì' are both used in Yorùbá media.",
+      "confidence": "medium"
+    },
+    {
+      "en": "Supreme Court",
+      "target": "Ilé ẹjọ́ tó ga jùlọ",
+      "alternatives": [
+        "Supreme Court",
+        "Ilé Ẹjọ́ Gíga Jùlọ"
+      ],
+      "note": "Minor wording difference; second draft: 'Ilé Ẹjọ́ Gíga Jùlọ'.",
+      "confidence": "high"
+    },
+    {
+      "en": "Sharia Court of Appeal",
+      "target": "Ilé ẹjọ́ kòtẹ́milọ́rùn ti Sharia",
+      "alternatives": [
+        "Sharia Court of Appeal",
+        "Ilé Ẹjọ́ Àpéèlì Ṣáríà"
+      ],
+      "note": "Drafts disagree; second draft: 'Ilé Ẹjọ́ Àpéèlì Ṣáríà'. Needs native review.",
+      "confidence": "medium"
+    },
+    {
+      "en": "Customary Court of Appeal",
+      "target": "Ilé ẹjọ́ kòtẹ́milọ́rùn ti àṣà ìbílẹ̀",
+      "alternatives": [
+        "Customary Court of Appeal",
+        "Ilé Ẹjọ́ Àpéèlì Ìbílẹ̀"
+      ],
+      "note": "Drafts disagree; second draft: 'Ilé Ẹjọ́ Àpéèlì Ìbílẹ̀'. Needs native review.",
+      "confidence": "medium"
+    },
+    {
+      "en": "judge",
+      "target": "adájọ́",
+      "alternatives": [],
+      "note": "Two drafts agree.",
+      "confidence": "high"
+    },
+    {
+      "en": "magistrate",
+      "target": "májísírétì",
+      "alternatives": [
+        "adájọ́ ilé ẹjọ́ Májísírétì",
+        "májísíréètì",
+        "adájọ́ ilé ẹjọ́ kékeré"
+      ],
+      "note": "Drafts disagree; second draft: 'májísíréètì'. Needs native review.",
+      "confidence": "medium"
+    },
+    {
+      "en": "Chief Justice of Nigeria",
+      "target": "Olórí adájọ́ Nàìjíríà",
+      "alternatives": [
+        "Chief Justice of Nigeria",
+        "CJN",
+        "Adájọ́ Àgbà Orílẹ̀-èdè Nàìjíríà"
+      ],
+      "note": "Drafts disagree; second draft: 'Adájọ́ Àgbà Orílẹ̀-èdè Nàìjíríà'. Needs native review.",
+      "confidence": "medium"
+    },
+    {
+      "en": "tribunal",
+      "target": "ìgbìmọ̀ ìdájọ́",
+      "alternatives": [
+        "tribunal"
+      ],
+      "note": "Two drafts agree.",
+      "confidence": "medium"
+    },
+    {
+      "en": "trial",
+      "target": "ìgbẹ́jọ́",
+      "alternatives": [],
+      "note": "Two drafts agree.",
+      "confidence": "high"
+    },
+    {
+      "en": "fair hearing",
+      "target": "ìgbẹ́jọ́ tó tọ́",
+      "alternatives": [
+        "ẹ̀tọ́ láti sọ tẹnu ẹni",
+        "ìgbẹ́jọ́ òdodo",
+        "ìgbẹ́jọ́ tí ó tọ́"
+      ],
+      "note": "Drafts disagree; second draft: 'ìgbẹ́jọ́ òdodo'. Needs native review.",
+      "confidence": "medium"
+    },
+    {
+      "en": "fair trial",
+      "target": "ìgbẹ́jọ́ tí kò ní ojúsàájú",
+      "alternatives": [
+        "ìgbẹ́jọ́ tó tọ́",
+        "ìgbẹ́jọ́ òdodo"
+      ],
+      "note": "Drafts disagree; second draft: 'ìgbẹ́jọ́ òdodo'. Needs native review.",
+      "confidence": "medium"
+    },
+    {
+      "en": "presumed innocent",
+      "target": "a ka ẹni sí aláìlẹ́ṣẹ̀",
+      "alternatives": [
+        "aláìmọwọ́mẹsẹ̀ títí a ó fi fihàn",
+        "a ó kà á sí aláìṣẹ̀ títí a ó fi dá a lẹ́bi"
+      ],
+      "note": "Drafts disagree; second draft: 'a ó kà á sí aláìṣẹ̀ títí a ó fi dá a lẹ́bi'. Needs native review.",
+      "confidence": "medium"
+    },
+    {
+      "en": "guilty",
+      "target": "jẹ̀bi",
+      "alternatives": [
+        "ẹlẹ́bi"
+      ],
+      "note": "Two drafts agree.",
+      "confidence": "high"
+    },
+    {
+      "en": "innocent",
+      "target": "aláìlẹ́ṣẹ̀",
+      "alternatives": [
+        "aláìmọwọ́mẹsẹ̀",
+        "kò jẹ̀bi",
+        "aláìlẹ́bi",
+        "aláìṣẹ̀"
+      ],
+      "note": "Drafts disagree; second draft: 'aláìlẹ́bi'. Needs native review.",
+      "confidence": "medium"
+    },
+    {
+      "en": "conviction",
+      "target": "ìdálẹ́bi",
+      "alternatives": [],
+      "note": "Two drafts agree.",
+      "confidence": "high"
+    },
+    {
+      "en": "convicted",
+      "target": "wọ́n dá lẹ́bi",
+      "alternatives": [
+        "tí a dá lẹ́bi"
+      ],
+      "note": "Drafts disagree; second draft: 'tí a dá lẹ́bi'. Needs native review.",
+      "confidence": "medium"
+    },
+    {
+      "en": "sentence",
+      "target": "ìdájọ́",
+      "alternatives": [
+        "ìjìyà tí ilé ẹjọ́ dá",
+        "ìdájọ́ ìjìyà"
+      ],
+      "note": "Two drafts agree.",
+      "confidence": "medium"
+    },
+    {
+      "en": "punishment",
+      "target": "ìjìyà",
+      "alternatives": [
+        "ìyà"
+      ],
+      "note": "Two drafts agree.",
+      "confidence": "high"
+    },
+    {
+      "en": "appeal",
+      "target": "kòtẹ́milọ́rùn",
+      "alternatives": [
+        "pe ẹjọ́ kòtẹ́milọ́rùn",
+        "àpéèlì"
+      ],
+      "note": "Second draft: 'àpéèlì'. Calque 'kòtẹ́milọ́rùn' and loanword 'àpéèlì' are both used.",
+      "confidence": "medium"
+    },
+    {
+      "en": "lawyer",
+      "target": "agbẹjọ́rò",
+      "alternatives": [
+        "lọ́ọ́yà"
+      ],
+      "note": "Two drafts agree.",
+      "confidence": "high"
+    },
+    {
+      "en": "legal representation",
+      "target": "agbẹjọ́rò tí yóò ṣojú ẹni",
+      "alternatives": [
+        "aṣojú lábẹ́ òfin",
+        "agbẹjọ́rò tí ń gbèjà ẹni"
+      ],
+      "note": "Drafts disagree; second draft: 'agbẹjọ́rò tí ń gbèjà ẹni'. Needs native review.",
+      "confidence": "medium"
+    },
+    {
+      "en": "legal aid",
+      "target": "agbẹjọ́rò ọ̀fẹ́",
+      "alternatives": [
+        "ìrànlọ́wọ́ òfin",
+        "ìrànlọ́wọ́ lórí ọ̀rọ̀ òfin"
+      ],
+      "note": "Drafts disagree; second draft: 'ìrànlọ́wọ́ lórí ọ̀rọ̀ òfin'. Needs native review.",
+      "confidence": "medium"
+    },
+    {
+      "en": "interpreter",
+      "target": "ògbufọ̀",
+      "alternatives": [
+        "atúmọ̀ èdè"
+      ],
+      "note": "Drafts overlap; second draft led with 'atúmọ̀ èdè'.",
+      "confidence": "high"
+    },
+    {
+      "en": "remain silent",
+      "target": "dákẹ́",
+      "alternatives": [
+        "ẹ̀tọ́ láti dákẹ́",
+        "dákẹ́ jẹ́ẹ́"
+      ],
+      "note": "Two drafts agree.",
+      "confidence": "high"
+    },
+    {
+      "en": "confession",
+      "target": "ìjẹ́wọ́",
+      "alternatives": [],
+      "note": "Two drafts agree.",
+      "confidence": "high"
+    },
+    {
+      "en": "evidence",
+      "target": "ẹ̀rí",
+      "alternatives": [],
+      "note": "Two drafts agree.",
+      "confidence": "high"
+    },
+    {
+      "en": "witness",
+      "target": "ẹlẹ́rìí",
+      "alternatives": [],
+      "note": "Two drafts agree.",
+      "confidence": "high"
+    },
+    {
+      "en": "prosecution",
+      "target": "olùpẹ̀jọ́",
+      "alternatives": [
+        "ẹ̀ka agbefọ̀",
+        "ìpẹjọ́"
+      ],
+      "note": "Drafts disagree; second draft: 'ìpẹjọ́'. Needs native review.",
+      "confidence": "medium"
+    },
+    {
+      "en": "prosecutor",
+      "target": "agbẹjọ́rò ìjọba",
+      "alternatives": [
+        "olùpẹ̀jọ́"
+      ],
+      "note": "Drafts overlap; second draft led with 'olùpẹjọ́'.",
+      "confidence": "medium"
+    },
+    {
+      "en": "Attorney-General",
+      "target": "Agbẹjọ́rò àgbà",
+      "alternatives": [
+        "Attorney-General",
+        "Kọmíṣọ́nà fún ètò ìdájọ́"
+      ],
+      "note": "Two drafts agree.",
+      "confidence": "high"
+    },
+    {
+      "en": "reasonable time",
+      "target": "àkókò tó bọ́gbọ́nmu",
+      "alternatives": [
+        "àkókò tí ó bọ́gbọ́n mu"
+      ],
+      "note": "Drafts disagree; second draft: 'àkókò tí ó bọ́gbọ́n mu'. Needs native review.",
+      "confidence": "medium"
+    },
+    {
+      "en": "within a reasonable time",
+      "target": "láàárín àkókò tó bọ́gbọ́nmu",
+      "alternatives": [
+        "láàrin àkókò tí ó bọ́gbọ́n mu"
+      ],
+      "note": "Drafts disagree; second draft: 'láàrin àkókò tí ó bọ́gbọ́n mu'. Needs native review.",
+      "confidence": "medium"
+    },
+    {
+      "en": "compensation",
+      "target": "ìsanpadà",
+      "alternatives": [
+        "owó gbà-máà-bínú",
+        "ẹ̀san owó"
+      ],
+      "note": "Second draft: 'ìsanpadà'. Chose second draft 'ìsanpadà' (repayment/compensation) over the idiomatic 'owó gbà-máà-bínú'.",
+      "confidence": "medium"
+    },
+    {
+      "en": "apology",
+      "target": "ìtọrọ àforíjìn",
+      "alternatives": [],
+      "note": "Second draft: 'àforíjì'. Second draft 'àforíjì' means forgiveness, not apology; kept 'ìtọrọ àforíjìn'.",
+      "confidence": "medium"
+    },
+    {
+      "en": "privacy",
+      "target": "àṣírí ara ẹni",
+      "alternatives": [
+        "ìkọ̀kọ̀",
+        "ìpamọ́ àṣírí"
+      ],
+      "note": "Two drafts agree.",
+      "confidence": "medium"
+    },
+    {
+      "en": "private and family life",
+      "target": "ìgbésí ayé ara ẹni àti ti ẹbí",
+      "alternatives": [],
+      "note": "Two drafts agree.",
+      "confidence": "medium"
+    },
+    {
+      "en": "home",
+      "target": "ilé",
+      "alternatives": [],
+      "note": "Two drafts agree.",
+      "confidence": "high"
+    },
+    {
+      "en": "correspondence",
+      "target": "lẹ́tà àti ìfiránṣẹ́",
+      "alternatives": [
+        "ìwé tí a kọ síni",
+        "ìbánisọ̀rọ̀ nípa lẹ́tà"
+      ],
+      "note": "Drafts disagree; second draft: 'ìbánisọ̀rọ̀ nípa lẹ́tà'. Needs native review.",
+      "confidence": "medium"
+    },
+    {
+      "en": "telephone conversations",
+      "target": "ìjíròrò lórí fóònù",
+      "alternatives": [
+        "ìpè fóònù",
+        "ìbánisọ̀rọ̀ lórí fóònù"
+      ],
+      "note": "Minor wording difference; second draft: 'ìbánisọ̀rọ̀ lórí fóònù'.",
+      "confidence": "high"
+    },
+    {
+      "en": "messages",
+      "target": "àtẹ̀jíṣẹ́",
+      "alternatives": [
+        "ọ̀rọ̀ ìfiránṣẹ́",
+        "àwọn ìfiránṣẹ́"
+      ],
+      "note": "Second draft: 'àwọn ìfiránṣẹ́'. 'àtẹ̀jíṣẹ́' is text messages specifically; 'ìfiránṣẹ́' is any message.",
+      "confidence": "medium"
+    },
+    {
+      "en": "freedom of thought, conscience and religion",
+      "target": "òmìnira èrò, ẹ̀rí ọkàn àti ẹ̀sìn",
+      "alternatives": [
+        "òmìnira èrò, ẹ̀rí-ọkàn àti ẹ̀sìn"
+      ],
+      "note": "Minor wording difference; second draft: 'òmìnira èrò, ẹ̀rí-ọkàn àti ẹ̀sìn'.",
+      "confidence": "high"
+    },
+    {
+      "en": "religion",
+      "target": "ẹ̀sìn",
+      "alternatives": [],
+      "note": "Two drafts agree.",
+      "confidence": "high"
+    },
+    {
+      "en": "change religion",
+      "target": "yí ẹ̀sìn padà",
+      "alternatives": [],
+      "note": "Two drafts agree.",
+      "confidence": "high"
+    },
+    {
+      "en": "freedom of expression",
+      "target": "òmìnira ọ̀rọ̀ sísọ",
+      "alternatives": [
+        "òmìnira láti sọ̀rọ̀",
+        "òmìnira láti sọ èrò ẹni"
+      ],
+      "note": "Drafts overlap; second draft led with 'òmìnira láti sọ èrò ẹni'.",
+      "confidence": "high"
+    },
+    {
+      "en": "freedom of the press",
+      "target": "òmìnira àwọn oníròyìn",
+      "alternatives": [
+        "òmìnira ilé iṣẹ́ ìròyìn",
+        "òmìnira ìwé ìròyìn"
+      ],
+      "note": "Drafts overlap; second draft led with 'òmìnira ìwé ìròyìn'.",
+      "confidence": "high"
+    },
+    {
+      "en": "newspaper",
+      "target": "ìwé ìròyìn",
+      "alternatives": [],
+      "note": "Two drafts agree.",
+      "confidence": "high"
+    },
+    {
+      "en": "peaceful assembly",
+      "target": "ìpéjọpọ̀ ní àlàáfíà",
+      "alternatives": [
+        "ìpéjọ ní àlàáfíà"
+      ],
+      "note": "Minor wording difference; second draft: 'ìpéjọ ní àlàáfíà'.",
+      "confidence": "high"
+    },
+    {
+      "en": "association",
+      "target": "ẹgbẹ́",
+      "alternatives": [
+        "ìdarapọ̀ ẹgbẹ́"
+      ],
+      "note": "Drafts overlap; second draft led with 'ìdarapọ̀ ẹgbẹ́'.",
+      "confidence": "medium"
+    },
+    {
+      "en": "trade union",
+      "target": "ẹgbẹ́ òṣìṣẹ́",
+      "alternatives": [],
+      "note": "Two drafts agree.",
+      "confidence": "high"
+    },
+    {
+      "en": "political party",
+      "target": "ẹgbẹ́ òṣèlú",
+      "alternatives": [
+        "ẹgbẹ́ olóṣèlú"
+      ],
+      "note": "Drafts disagree; second draft: 'ẹgbẹ́ olóṣèlú'. Needs native review.",
+      "confidence": "medium"
+    },
+    {
+      "en": "protest",
+      "target": "ìwọ́de",
+      "alternatives": [
+        "ìfẹ̀hónúhàn"
+      ],
+      "note": "Drafts overlap; second draft led with 'ìfẹ̀hónúhàn'.",
+      "confidence": "high"
+    },
+    {
+      "en": "freedom of movement",
+      "target": "òmìnira láti rìn kiri",
+      "alternatives": [
+        "òmìnira ìrìnkèrindò",
+        "òmìnira láti rìn káàkiri"
+      ],
+      "note": "Minor wording difference; second draft: 'òmìnira láti rìn káàkiri'.",
+      "confidence": "high"
+    },
+    {
+      "en": "leave Nigeria",
+      "target": "kúrò ní Nàìjíríà",
+      "alternatives": [
+        "jáde kúrò ní Nàìjíríà"
+      ],
+      "note": "Two drafts agree.",
+      "confidence": "high"
+    },
+    {
+      "en": "discrimination",
+      "target": "ìyàsọ́tọ̀",
+      "alternatives": [
+        "ẹlẹ́yàmẹ̀yà"
+      ],
+      "note": "Two drafts agree.",
+      "confidence": "medium"
+    },
+    {
+      "en": "sex",
+      "target": "akọ tàbí abo",
+      "alternatives": [
+        "jíjẹ́ akọ tàbí abo"
+      ],
+      "note": "Means male or female. Never use 'ìbálòpọ̀' (sexual intercourse).",
+      "confidence": "medium"
+    },
+    {
+      "en": "ethnic group",
+      "target": "ẹ̀yà",
+      "alternatives": [],
+      "note": "Two drafts agree.",
+      "confidence": "high"
+    },
+    {
+      "en": "place of origin",
+      "target": "ibi tí ẹni ti wá",
+      "alternatives": [
+        "ìpínlẹ̀ abínibí",
+        "ibi ìbílẹ̀",
+        "ibi tí a ti wá"
+      ],
+      "note": "Drafts disagree; second draft: 'ibi ìbílẹ̀'. Needs native review.",
+      "confidence": "medium"
+    },
+    {
+      "en": "circumstance of birth",
+      "target": "ipò ìbí",
+      "alternatives": [
+        "bí a ṣe bí ẹni"
+      ],
+      "note": "Two drafts agree.",
+      "confidence": "medium"
+    },
+    {
+      "en": "property",
+      "target": "dúkìá",
+      "alternatives": [
+        "ohun ìní"
+      ],
+      "note": "Drafts overlap; second draft led with 'ohun ìní'.",
+      "confidence": "high"
+    },
+    {
+      "en": "land",
+      "target": "ilẹ̀",
+      "alternatives": [],
+      "note": "Two drafts agree.",
+      "confidence": "high"
+    },
+    {
+      "en": "compulsory acquisition",
+      "target": "gbígba ilẹ̀ lọ́nà ipá",
+      "alternatives": [
+        "ìjọba fi agbára gba ilẹ̀",
+        "gbígba ohun ìní ní ipá lábẹ́ òfin"
+      ],
+      "note": "Drafts disagree; second draft: 'gbígba ohun ìní ní ipá lábẹ́ òfin'. Needs native review.",
+      "confidence": "medium"
+    },
+    {
+      "en": "state of emergency",
+      "target": "ipò pàjáwìrì",
+      "alternatives": [
+        "òfin pàjáwìrì"
+      ],
+      "note": "Two drafts agree.",
+      "confidence": "high"
+    },
+    {
+      "en": "citizen",
+      "target": "ọmọ orílẹ̀-èdè",
+      "alternatives": [
+        "aráàlú"
+      ],
+      "note": "Second draft: 'aráàlú'. Second draft used 'aráàlú', which also means 'member of the public / townsperson'; kept 'ọmọ orílẹ̀-èdè' for the legal sense. Needs native review.",
+      "confidence": "medium"
+    },
+    {
+      "en": "citizenship",
+      "target": "jíjẹ́ ọmọ orílẹ̀-èdè",
+      "alternatives": [
+        "ẹ̀tọ́ ọmọ orílẹ̀-èdè",
+        "ìjẹ́ aráàlú"
+      ],
+      "note": "Drafts disagree; second draft: 'ìjẹ́ aráàlú'. Needs native review.",
+      "confidence": "medium"
+    },
+    {
+      "en": "citizen by birth",
+      "target": "ọmọ orílẹ̀-èdè nípa ìbí",
+      "alternatives": [
+        "aráàlú nípa ìbí"
+      ],
+      "note": "Drafts disagree; second draft: 'aráàlú nípa ìbí'. Needs native review.",
+      "confidence": "medium"
+    },
+    {
+      "en": "citizen by registration",
+      "target": "ọmọ orílẹ̀-èdè nípa ìforúkọsílẹ̀",
+      "alternatives": [
+        "aráàlú nípa ìforúkọsílẹ̀"
+      ],
+      "note": "Drafts disagree; second draft: 'aráàlú nípa ìforúkọsílẹ̀'. Needs native review.",
+      "confidence": "medium"
+    },
+    {
+      "en": "naturalisation",
+      "target": "ọmọ orílẹ̀-èdè nípa ìgbàwọlé",
+      "alternatives": [
+        "naturalisation",
+        "ìfi ẹni ṣe aráàlú"
+      ],
+      "note": "Drafts disagree; second draft: 'ìfi ẹni ṣe aráàlú'. Needs native review.",
+      "confidence": "low"
+    },
+    {
+      "en": "dual citizenship",
+      "target": "jíjẹ́ ọmọ orílẹ̀-èdè méjì",
+      "alternatives": [
+        "ìjẹ́ aráàlú ilẹ̀ méjì"
+      ],
+      "note": "Drafts disagree; second draft: 'ìjẹ́ aráàlú ilẹ̀ méjì'. Needs native review.",
+      "confidence": "medium"
+    },
+    {
+      "en": "renounce citizenship",
+      "target": "kọ jíjẹ́ ọmọ orílẹ̀-èdè sílẹ̀",
+      "alternatives": [
+        "kọ ìjẹ́ aráàlú sílẹ̀"
+      ],
+      "note": "Drafts disagree; second draft: 'kọ ìjẹ́ aráàlú sílẹ̀'. Needs native review.",
+      "confidence": "medium"
+    },
+    {
+      "en": "deprive of citizenship",
+      "target": "gba jíjẹ́ ọmọ orílẹ̀-èdè lọ́wọ́ ẹni",
+      "alternatives": [
+        "gba ìjẹ́ aráàlú lọ́wọ́ ẹni"
+      ],
+      "note": "Drafts disagree; second draft: 'gba ìjẹ́ aráàlú lọ́wọ́ ẹni'. Needs native review.",
+      "confidence": "medium"
+    },
+    {
+      "en": "duty",
+      "target": "ojúṣe",
+      "alternatives": [],
+      "note": "Two drafts agree.",
+      "confidence": "high"
+    },
+    {
+      "en": "duties of a citizen",
+      "target": "ojúṣe ọmọ orílẹ̀-èdè",
+      "alternatives": [
+        "ojúṣe aráàlú"
+      ],
+      "note": "Drafts disagree; second draft: 'ojúṣe aráàlú'. Needs native review.",
+      "confidence": "medium"
+    },
+    {
+      "en": "Constitution",
+      "target": "Constitution",
+      "alternatives": [
+        "Ìwé òfin orílẹ̀-èdè",
+        "Òfin ìpìlẹ̀"
+      ],
+      "note": "Locked: keep the English form in answers (with any number or law name); local forms are listed only to recognise questions. Second draft used the local word 'Ìwé Òfin Orílẹ̀-èdè'.",
+      "confidence": "high",
+      "locked": true
+    },
+    {
+      "en": "section",
+      "target": "section",
+      "alternatives": [
+        "abala"
+      ],
+      "note": "Locked: keep the English form in answers (with any number or law name); local forms are listed only to recognise questions. Second draft used the local word 'abala'.",
+      "confidence": "high",
+      "locked": true
+    },
+    {
+      "en": "subsection",
+      "target": "subsection",
+      "alternatives": [
+        "abala kékeré"
+      ],
+      "note": "Locked: keep the English form in answers (with any number or law name); local forms are listed only to recognise questions. Second draft used the local word 'abala kékeré'.",
+      "confidence": "medium",
+      "locked": true
+    },
+    {
+      "en": "paragraph",
+      "target": "paragraph",
+      "alternatives": [
+        "ìpínrọ̀"
+      ],
+      "note": "Locked: keep the English form in answers (with any number or law name); local forms are listed only to recognise questions. Second draft used the local word 'ìpínrọ̀'.",
+      "confidence": "medium",
+      "locked": true
+    },
+    {
+      "en": "chapter",
+      "target": "chapter",
+      "alternatives": [
+        "orí"
+      ],
+      "note": "Locked: keep the English form in answers (with any number or law name); local forms are listed only to recognise questions. Second draft used the local word 'orí'.",
+      "confidence": "medium",
+      "locked": true
+    },
+    {
+      "en": "schedule",
+      "target": "schedule",
+      "alternatives": [
+        "àfikún",
+        "àtòjọ"
+      ],
+      "note": "Locked: keep the English form in answers (with any number or law name); local forms are listed only to recognise questions. Second draft used the local word 'àtòjọ'.",
+      "confidence": "medium",
+      "locked": true
+    },
+    {
+      "en": "law",
+      "target": "òfin",
+      "alternatives": [],
+      "note": "Two drafts agree.",
+      "confidence": "high"
+    },
+    {
+      "en": "Act",
+      "target": "Act",
+      "alternatives": [
+        "òfin"
+      ],
+      "note": "Locked: keep the English form in answers (with any number or law name); local forms are listed only to recognise questions. Second draft used the local word 'Òfin'.",
+      "confidence": "high",
+      "locked": true
+    },
+    {
+      "en": "Bill",
+      "target": "àbá òfin",
+      "alternatives": [
+        "ìwé àbá òfin"
+      ],
+      "note": "Two drafts agree.",
+      "confidence": "medium"
+    },
+    {
+      "en": "amend",
+      "target": "ṣàtúnṣe",
+      "alternatives": [
+        "ṣe àtúnṣe sí"
+      ],
+      "note": "Drafts disagree; second draft: 'ṣe àtúnṣe sí'. Needs native review.",
+      "confidence": "medium"
+    },
+    {
+      "en": "amendment",
+      "target": "àtúnṣe",
+      "alternatives": [],
+      "note": "Two drafts agree.",
+      "confidence": "high"
+    },
+    {
+      "en": "government",
+      "target": "ìjọba",
+      "alternatives": [],
+      "note": "Two drafts agree.",
+      "confidence": "high"
+    },
+    {
+      "en": "Federal Government",
+      "target": "Ìjọba àpapọ̀",
+      "alternatives": [],
+      "note": "Two drafts agree.",
+      "confidence": "high"
+    },
+    {
+      "en": "State Government",
+      "target": "Ìjọba ìpínlẹ̀",
+      "alternatives": [],
+      "note": "Two drafts agree.",
+      "confidence": "high"
+    },
+    {
+      "en": "Local Government",
+      "target": "Ìjọba ìbílẹ̀",
+      "alternatives": [],
+      "note": "Two drafts agree.",
+      "confidence": "high"
+    },
+    {
+      "en": "federation",
+      "target": "orílẹ̀-èdè àpapọ̀",
+      "alternatives": [
+        "àpapọ̀",
+        "federation"
+      ],
+      "note": "Two drafts agree.",
+      "confidence": "medium"
+    },
+    {
+      "en": "state",
+      "target": "ìpínlẹ̀",
+      "alternatives": [],
+      "note": "Two drafts agree.",
+      "confidence": "high"
+    },
+    {
+      "en": "National Assembly",
+      "target": "Ilé ìgbìmọ̀ aṣòfin àpapọ̀",
+      "alternatives": [
+        "National Assembly",
+        "Ilé Aṣòfin Àpapọ̀"
+      ],
+      "note": "Drafts overlap; second draft led with 'Ilé Aṣòfin Àpapọ̀'.",
+      "confidence": "high"
+    },
+    {
+      "en": "Senate",
+      "target": "Ilé ìgbìmọ̀ aṣòfin àgbà",
+      "alternatives": [
+        "Senate",
+        "Sẹ́nétì",
+        "Ilé Aṣòfin Àgbà"
+      ],
+      "note": "Drafts disagree; second draft: 'Sẹ́nétì'. Needs native review.",
+      "confidence": "medium"
+    },
+    {
+      "en": "House of Representatives",
+      "target": "Ilé ìgbìmọ̀ aṣojúṣòfin",
+      "alternatives": [
+        "House of Representatives",
+        "Ilé Aṣojú Ṣòfin"
+      ],
+      "note": "Drafts overlap; second draft led with 'Ilé Aṣojú Ṣòfin'.",
+      "confidence": "medium"
+    },
+    {
+      "en": "State House of Assembly",
+      "target": "Ilé ìgbìmọ̀ aṣòfin ìpínlẹ̀",
+      "alternatives": [
+        "House of Assembly",
+        "Ilé Aṣòfin Ìpínlẹ̀"
+      ],
+      "note": "Minor wording difference; second draft: 'Ilé Aṣòfin Ìpínlẹ̀'.",
+      "confidence": "high"
+    },
+    {
+      "en": "senator",
+      "target": "sẹ́nétọ̀",
+      "alternatives": [
+        "aṣòfin àgbà"
+      ],
+      "note": "Two drafts agree.",
+      "confidence": "high"
+    },
+    {
+      "en": "recall",
+      "target": "yíyọ aṣòfin nípò láti ọwọ́ àwọn olùdìbò",
+      "alternatives": [
+        "recall",
+        "ìpè aṣojú padà"
+      ],
+      "note": "Drafts disagree; second draft: 'ìpè aṣojú padà'. Needs native review.",
+      "confidence": "low"
+    },
+    {
+      "en": "election",
+      "target": "ìdìbò",
+      "alternatives": [],
+      "note": "Two drafts agree.",
+      "confidence": "high"
+    },
+    {
+      "en": "vote",
+      "target": "ìbò",
+      "alternatives": [
+        "dìbò"
+      ],
+      "note": "Two drafts agree.",
+      "confidence": "high"
+    },
+    {
+      "en": "President",
+      "target": "Ààrẹ",
+      "alternatives": [],
+      "note": "Two drafts agree.",
+      "confidence": "high"
+    },
+    {
+      "en": "Vice-President",
+      "target": "Igbákejì Ààrẹ",
+      "alternatives": [],
+      "note": "Two drafts agree.",
+      "confidence": "high"
+    },
+    {
+      "en": "Governor",
+      "target": "Gómìnà",
+      "alternatives": [],
+      "note": "Two drafts agree.",
+      "confidence": "high"
+    },
+    {
+      "en": "Deputy Governor",
+      "target": "Igbákejì Gómìnà",
+      "alternatives": [],
+      "note": "Two drafts agree.",
+      "confidence": "high"
+    },
+    {
+      "en": "Minister",
+      "target": "Mínísítà",
+      "alternatives": [],
+      "note": "Two drafts agree.",
+      "confidence": "high"
+    },
+    {
+      "en": "Commissioner",
+      "target": "Kọmíṣọ́nà",
+      "alternatives": [
+        "Kọmísánà"
+      ],
+      "note": "Second draft: 'Kọmísánà'. Loanword spelling varies: Kọmíṣọ́nà / Kọmísánà.",
+      "confidence": "medium"
+    },
+    {
+      "en": "impeach",
+      "target": "yọ nípò",
+      "alternatives": [
+        "impeach",
+        "yọ kúrò nípò"
+      ],
+      "note": "Drafts overlap; second draft led with 'yọ kúrò nípò'.",
+      "confidence": "medium"
+    },
+    {
+      "en": "impeachment",
+      "target": "ìyọnípò",
+      "alternatives": [
+        "ìyọ kúrò nípò",
+        "impeachment"
+      ],
+      "note": "Drafts disagree; second draft: 'ìyọ kúrò nípò'. Needs native review.",
+      "confidence": "medium"
+    },
+    {
+      "en": "remove from office",
+      "target": "yọ kúrò nípò",
+      "alternatives": [],
+      "note": "Two drafts agree.",
+      "confidence": "high"
+    },
+    {
+      "en": "gross misconduct",
+      "target": "ìwà àìtọ́ tó burú jáì",
+      "alternatives": [],
+      "note": "Two drafts agree.",
+      "confidence": "medium"
+    },
+    {
+      "en": "immunity",
+      "target": "ààbò lọ́wọ́ ẹjọ́",
+      "alternatives": [
+        "àìlèpẹ̀jọ́",
+        "ààbò lábẹ́ òfin"
+      ],
+      "note": "Drafts overlap; second draft led with 'ààbò lábẹ́ òfin'.",
+      "confidence": "low"
+    },
+    {
+      "en": "sue",
+      "target": "pẹ̀jọ́",
+      "alternatives": [
+        "gbé lọ sí ilé ẹjọ́",
+        "pe ẹnì kan lẹ́jọ́"
+      ],
+      "note": "Drafts disagree; second draft: 'pe ẹnì kan lẹ́jọ́'. Needs native review.",
+      "confidence": "medium"
+    },
+    {
+      "en": "term of office",
+      "target": "sáà",
+      "alternatives": [
+        "sáà ipò"
+      ],
+      "note": "Minor wording difference; second draft: 'sáà ipò'.",
+      "confidence": "medium"
+    },
+    {
+      "en": "qualification",
+      "target": "àmúyẹ",
+      "alternatives": [
+        "ohun tí a nílò láti dupò",
+        "ìtóótun"
+      ],
+      "note": "Drafts disagree; second draft: 'ìtóótun'. Needs native review.",
+      "confidence": "medium"
+    },
+    {
+      "en": "pardon",
+      "target": "ìdáríjì",
+      "alternatives": [
+        "foríjì"
+      ],
+      "note": "Two drafts agree.",
+      "confidence": "high"
+    },
+    {
+      "en": "prerogative of mercy",
+      "target": "agbára ìdáríjì",
+      "alternatives": [],
+      "note": "Two drafts agree.",
+      "confidence": "medium"
+    },
+    {
+      "en": "armed forces",
+      "target": "àwọn ológun",
+      "alternatives": [
+        "ikọ̀ ológun",
+        "àwọn ọmọ ogun"
+      ],
+      "note": "Drafts disagree; second draft: 'àwọn ọmọ ogun'. Needs native review.",
+      "confidence": "medium"
+    },
+    {
+      "en": "soldier",
+      "target": "ṣọ́jà",
+      "alternatives": [
+        "ológun",
+        "ọmọ ogun"
+      ],
+      "note": "Drafts disagree; second draft: 'ọmọ ogun'. Needs native review.",
+      "confidence": "medium"
+    },
+    {
+      "en": "customary law",
+      "target": "òfin àṣà ìbílẹ̀",
+      "alternatives": [
+        "òfin ìbílẹ̀"
+      ],
+      "note": "Minor wording difference; second draft: 'òfin ìbílẹ̀'.",
+      "confidence": "high"
+    },
+    {
+      "en": "Islamic law",
+      "target": "òfin Islam",
+      "alternatives": [
+        "Sharia",
+        "òfin Ìsìlámù",
+        "òfin Ṣáríà"
+      ],
+      "note": "Drafts disagree; second draft: 'òfin Ìsìlámù'. Needs native review.",
+      "confidence": "medium"
+    },
+    {
+      "en": "secular",
+      "target": "ìjọba tí kò ní ẹ̀sìn kan pàtó",
+      "alternatives": [
+        "secular",
+        "tí ẹ̀sìn kò dá sí ìṣèjọba"
+      ],
+      "note": "Second draft: 'tí ẹ̀sìn kò dá sí ìṣèjọba'. No settled term; both drafts paraphrase. Prefer explaining 'no official state religion'.",
+      "confidence": "low"
+    },
+    {
+      "en": "State religion",
+      "target": "ẹ̀sìn ìjọba",
+      "alternatives": [
+        "ẹ̀sìn orílẹ̀-èdè"
+      ],
+      "note": "Two drafts agree.",
+      "confidence": "medium"
+    },
+    {
+      "en": "education",
+      "target": "ẹ̀kọ́",
+      "alternatives": [],
+      "note": "Two drafts agree.",
+      "confidence": "high"
+    },
+    {
+      "en": "Administration of Criminal Justice Act",
+      "target": "Administration of Criminal Justice Act",
+      "alternatives": [
+        "ACJA",
+        "Òfin Ìṣàkóso Ìdájọ́ Ọ̀daràn"
+      ],
+      "note": "Locked: keep the English form in answers (with any number or law name); local forms are listed only to recognise questions.",
+      "confidence": "medium",
+      "locked": true
+    },
+    {
+      "en": "Police Act",
+      "target": "Police Act",
+      "alternatives": [
+        "Òfin Ọlọ́pàá"
+      ],
+      "note": "Locked: keep the English form in answers (with any number or law name); local forms are listed only to recognise questions.",
+      "confidence": "medium",
+      "locked": true
+    }
+  ]
+}

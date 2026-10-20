@@ -1,0 +1,1513 @@
+{
+  "version": "glossary-pcm-v1",
+  "language": "pcm",
+  "review_status": "draft",
+  "description": "Draft legal glossary for translating verified English answers and understanding questions. Built from two independent drafts (different models) and cross-checked; no native-speaker review yet. 'confidence' is the lower of the two drafts' confidence after reconciliation. Entries marked 'locked' keep their English form in answers.",
+  "terms": [
+    {
+      "en": "What you can do:",
+      "target": "Wetin you fit do:",
+      "alternatives": [
+        "Wetin you fit do sef:"
+      ],
+      "note": "Fixed rendering of the answer heading 'What you can do:'. Two drafts agree.",
+      "confidence": "high"
+    },
+    {
+      "en": "right",
+      "target": "right",
+      "alternatives": [
+        "your right"
+      ],
+      "note": "Two drafts agree.",
+      "confidence": "high"
+    },
+    {
+      "en": "rights",
+      "target": "rights",
+      "alternatives": [
+        "your rights"
+      ],
+      "note": "Two drafts agree.",
+      "confidence": "high"
+    },
+    {
+      "en": "fundamental rights",
+      "target": "fundamental rights",
+      "alternatives": [
+        "basic rights wey Constitution give you",
+        "basic rights"
+      ],
+      "note": "Drafts overlap; second draft led with 'basic rights'.",
+      "confidence": "high"
+    },
+    {
+      "en": "human rights",
+      "target": "human rights",
+      "alternatives": [],
+      "note": "Two drafts agree.",
+      "confidence": "high"
+    },
+    {
+      "en": "freedom",
+      "target": "freedom",
+      "alternatives": [
+        "free to"
+      ],
+      "note": "Two drafts agree.",
+      "confidence": "high"
+    },
+    {
+      "en": "liberty",
+      "target": "freedom",
+      "alternatives": [
+        "liberty"
+      ],
+      "note": "Two drafts agree.",
+      "confidence": "high"
+    },
+    {
+      "en": "right to life",
+      "target": "right to life",
+      "alternatives": [
+        "right to dey alive"
+      ],
+      "note": "Two drafts agree.",
+      "confidence": "high"
+    },
+    {
+      "en": "right to dignity",
+      "target": "right to respect as person",
+      "alternatives": [
+        "right to dignity",
+        "right to respect"
+      ],
+      "note": "Drafts overlap; second draft led with 'right to respect'.",
+      "confidence": "medium"
+    },
+    {
+      "en": "torture",
+      "target": "torture",
+      "alternatives": [
+        "beat person to confess",
+        "wicked beating"
+      ],
+      "note": "Two drafts agree.",
+      "confidence": "high"
+    },
+    {
+      "en": "inhuman or degrading treatment",
+      "target": "wicked or disgraceful treatment",
+      "alternatives": [
+        "treat person like animal",
+        "wicked or shameful treatment",
+        "treatment wey no dey human",
+        "inhuman or degrading treatment"
+      ],
+      "note": "Minor wording difference; second draft: 'wicked or shameful treatment'.",
+      "confidence": "medium"
+    },
+    {
+      "en": "slavery",
+      "target": "slavery",
+      "alternatives": [
+        "make person slave",
+        "slave work"
+      ],
+      "note": "Two drafts agree.",
+      "confidence": "high"
+    },
+    {
+      "en": "forced labour",
+      "target": "forced labour",
+      "alternatives": [
+        "forced work",
+        "work wey dem force you do",
+        "work wey dem force person do"
+      ],
+      "note": "Second draft: 'forced labour'. Both kept: 'forced labour' is understood as-is; 'forced work' is plainer.",
+      "confidence": "medium"
+    },
+    {
+      "en": "personal liberty",
+      "target": "your freedom",
+      "alternatives": [
+        "personal liberty",
+        "personal freedom",
+        "freedom of your body"
+      ],
+      "note": "Drafts disagree; second draft: 'personal freedom'. Needs native review.",
+      "confidence": "medium"
+    },
+    {
+      "en": "arrest",
+      "target": "arrest",
+      "alternatives": [
+        "carry person",
+        "catch"
+      ],
+      "note": "Two drafts agree.",
+      "confidence": "high"
+    },
+    {
+      "en": "arrested",
+      "target": "dem arrest am",
+      "alternatives": [
+        "arrest",
+        "dem carry am",
+        "arrested",
+        "dem don catch am"
+      ],
+      "note": "Second draft: 'arrested'. Same meaning in both drafts; chose the spoken Pidgin form over the English participle.",
+      "confidence": "medium"
+    },
+    {
+      "en": "warrant",
+      "target": "warrant",
+      "alternatives": [
+        "paper from court"
+      ],
+      "note": "Two drafts agree.",
+      "confidence": "high"
+    },
+    {
+      "en": "arrest warrant",
+      "target": "arrest warrant",
+      "alternatives": [
+        "court paper to arrest",
+        "court paper to arrest person"
+      ],
+      "note": "Two drafts agree.",
+      "confidence": "high"
+    },
+    {
+      "en": "search warrant",
+      "target": "search warrant",
+      "alternatives": [
+        "court paper to search",
+        "court paper to search house"
+      ],
+      "note": "Two drafts agree.",
+      "confidence": "high"
+    },
+    {
+      "en": "search",
+      "target": "search",
+      "alternatives": [
+        "check"
+      ],
+      "note": "Two drafts agree.",
+      "confidence": "high"
+    },
+    {
+      "en": "seize",
+      "target": "seize",
+      "alternatives": [
+        "collect by force",
+        "carry",
+        "take by force"
+      ],
+      "note": "Two drafts agree.",
+      "confidence": "medium"
+    },
+    {
+      "en": "detain",
+      "target": "hold",
+      "alternatives": [
+        "lock up",
+        "detain"
+      ],
+      "note": "Two drafts agree.",
+      "confidence": "high"
+    },
+    {
+      "en": "detained",
+      "target": "dem hold am",
+      "alternatives": [
+        "dey hold",
+        "lock up",
+        "detain",
+        "dem lock am up",
+        "detained"
+      ],
+      "note": "Second draft: 'dem hold am'. Same meaning in both drafts; chose the spoken Pidgin form over the English participle.",
+      "confidence": "medium"
+    },
+    {
+      "en": "detention",
+      "target": "detention",
+      "alternatives": [
+        "lock-up",
+        "lock up"
+      ],
+      "note": "Two drafts agree.",
+      "confidence": "high"
+    },
+    {
+      "en": "custody",
+      "target": "custody",
+      "alternatives": [
+        "dem hold you",
+        "police hold"
+      ],
+      "note": "Two drafts agree.",
+      "confidence": "medium"
+    },
+    {
+      "en": "police custody",
+      "target": "police custody",
+      "alternatives": [
+        "police cell"
+      ],
+      "note": "Two drafts agree.",
+      "confidence": "high"
+    },
+    {
+      "en": "police station",
+      "target": "police station",
+      "alternatives": [
+        "station"
+      ],
+      "note": "Two drafts agree.",
+      "confidence": "high"
+    },
+    {
+      "en": "police",
+      "target": "police",
+      "alternatives": [
+        "olopa"
+      ],
+      "note": "Two drafts agree.",
+      "confidence": "high"
+    },
+    {
+      "en": "police officer",
+      "target": "police officer",
+      "alternatives": [
+        "policeman",
+        "olopa"
+      ],
+      "note": "Two drafts agree.",
+      "confidence": "high"
+    },
+    {
+      "en": "Inspector-General of Police",
+      "target": "Inspector-General of Police",
+      "alternatives": [
+        "IG",
+        "IGP",
+        "head of police"
+      ],
+      "note": "Two drafts agree.",
+      "confidence": "high"
+    },
+    {
+      "en": "suspect",
+      "target": "suspect",
+      "alternatives": [
+        "person wey dem suspect"
+      ],
+      "note": "Two drafts agree.",
+      "confidence": "high"
+    },
+    {
+      "en": "accused person",
+      "target": "person wey dem accuse",
+      "alternatives": [
+        "accused",
+        "accused person"
+      ],
+      "note": "Drafts overlap; second draft led with 'accused person'.",
+      "confidence": "high"
+    },
+    {
+      "en": "charge",
+      "target": "charge",
+      "alternatives": [
+        "case wey dem file",
+        "accuse"
+      ],
+      "note": "Two drafts agree.",
+      "confidence": "high"
+    },
+    {
+      "en": "charged",
+      "target": "dem charge am",
+      "alternatives": [
+        "charge",
+        "dem charge am to court",
+        "charged",
+        "dem don charge am"
+      ],
+      "note": "Second draft: 'charged'. Same meaning in both drafts; chose the spoken Pidgin form over the English participle.",
+      "confidence": "medium"
+    },
+    {
+      "en": "offence",
+      "target": "offence",
+      "alternatives": [
+        "wrong wey law no allow",
+        "wrong thing wey person do"
+      ],
+      "note": "Two drafts agree.",
+      "confidence": "high"
+    },
+    {
+      "en": "crime",
+      "target": "crime",
+      "alternatives": [],
+      "note": "Two drafts agree.",
+      "confidence": "high"
+    },
+    {
+      "en": "criminal",
+      "target": "criminal",
+      "alternatives": [],
+      "note": "Two drafts agree.",
+      "confidence": "high"
+    },
+    {
+      "en": "bail",
+      "target": "bail",
+      "alternatives": [],
+      "note": "Two drafts agree.",
+      "confidence": "high"
+    },
+    {
+      "en": "surety",
+      "target": "surety",
+      "alternatives": [
+        "person wey stand for you",
+        "person wey go stand for am"
+      ],
+      "note": "Drafts overlap; second draft led with 'person wey go stand for am'.",
+      "confidence": "medium"
+    },
+    {
+      "en": "remand",
+      "target": "remand",
+      "alternatives": [
+        "keep for prison while case dey go",
+        "keep for prison wey court talk"
+      ],
+      "note": "Two drafts agree.",
+      "confidence": "medium"
+    },
+    {
+      "en": "court",
+      "target": "court",
+      "alternatives": [
+        "kotu"
+      ],
+      "note": "Two drafts agree.",
+      "confidence": "high"
+    },
+    {
+      "en": "High Court",
+      "target": "High Court",
+      "alternatives": [],
+      "note": "Two drafts agree.",
+      "confidence": "high"
+    },
+    {
+      "en": "Federal High Court",
+      "target": "Federal High Court",
+      "alternatives": [],
+      "note": "Two drafts agree.",
+      "confidence": "high"
+    },
+    {
+      "en": "Magistrate Court",
+      "target": "Magistrate Court",
+      "alternatives": [],
+      "note": "Two drafts agree.",
+      "confidence": "high"
+    },
+    {
+      "en": "Court of Appeal",
+      "target": "Court of Appeal",
+      "alternatives": [],
+      "note": "Two drafts agree.",
+      "confidence": "high"
+    },
+    {
+      "en": "Supreme Court",
+      "target": "Supreme Court",
+      "alternatives": [],
+      "note": "Two drafts agree.",
+      "confidence": "high"
+    },
+    {
+      "en": "Sharia Court of Appeal",
+      "target": "Sharia Court of Appeal",
+      "alternatives": [],
+      "note": "Two drafts agree.",
+      "confidence": "high"
+    },
+    {
+      "en": "Customary Court of Appeal",
+      "target": "Customary Court of Appeal",
+      "alternatives": [],
+      "note": "Two drafts agree.",
+      "confidence": "high"
+    },
+    {
+      "en": "judge",
+      "target": "judge",
+      "alternatives": [
+        "oga for court"
+      ],
+      "note": "Two drafts agree.",
+      "confidence": "high"
+    },
+    {
+      "en": "magistrate",
+      "target": "magistrate",
+      "alternatives": [],
+      "note": "Two drafts agree.",
+      "confidence": "high"
+    },
+    {
+      "en": "Chief Justice of Nigeria",
+      "target": "Chief Justice of Nigeria",
+      "alternatives": [
+        "CJN"
+      ],
+      "note": "Two drafts agree.",
+      "confidence": "high"
+    },
+    {
+      "en": "tribunal",
+      "target": "tribunal",
+      "alternatives": [],
+      "note": "Two drafts agree.",
+      "confidence": "high"
+    },
+    {
+      "en": "trial",
+      "target": "trial",
+      "alternatives": [
+        "case for court",
+        "court case"
+      ],
+      "note": "Two drafts agree.",
+      "confidence": "high"
+    },
+    {
+      "en": "fair hearing",
+      "target": "fair hearing",
+      "alternatives": [
+        "make dem hear your side",
+        "make dem hear you well"
+      ],
+      "note": "Two drafts agree.",
+      "confidence": "high"
+    },
+    {
+      "en": "fair trial",
+      "target": "fair trial",
+      "alternatives": [
+        "correct trial"
+      ],
+      "note": "Two drafts agree.",
+      "confidence": "high"
+    },
+    {
+      "en": "presumed innocent",
+      "target": "dem go take you as innocent until dem prove say you guilty",
+      "alternatives": [
+        "dem go take you as innocent",
+        "presumed innocent",
+        "dem go think say you no do am until dem prove am",
+        "innocent until dem prove say you guilty"
+      ],
+      "note": "Drafts overlap; second draft led with 'dem go think say you no do am until dem prove am'.",
+      "confidence": "medium"
+    },
+    {
+      "en": "guilty",
+      "target": "guilty",
+      "alternatives": [
+        "e do am"
+      ],
+      "note": "Two drafts agree.",
+      "confidence": "high"
+    },
+    {
+      "en": "innocent",
+      "target": "innocent",
+      "alternatives": [
+        "e no do am",
+        "no do anything"
+      ],
+      "note": "Two drafts agree.",
+      "confidence": "high"
+    },
+    {
+      "en": "conviction",
+      "target": "conviction",
+      "alternatives": [
+        "court don find you guilty",
+        "when court say you guilty"
+      ],
+      "note": "Two drafts agree.",
+      "confidence": "medium"
+    },
+    {
+      "en": "convicted",
+      "target": "court don convict am",
+      "alternatives": [
+        "convict",
+        "court don find am guilty",
+        "convicted",
+        "court don say you guilty"
+      ],
+      "note": "Second draft: 'convicted'. Same meaning in both drafts; chose the spoken Pidgin form over the English participle.",
+      "confidence": "medium"
+    },
+    {
+      "en": "sentence",
+      "target": "sentence",
+      "alternatives": [
+        "punishment wey court give"
+      ],
+      "note": "Two drafts agree.",
+      "confidence": "high"
+    },
+    {
+      "en": "punishment",
+      "target": "punishment",
+      "alternatives": [],
+      "note": "Two drafts agree.",
+      "confidence": "high"
+    },
+    {
+      "en": "appeal",
+      "target": "appeal",
+      "alternatives": [
+        "carry case go higher court"
+      ],
+      "note": "Two drafts agree.",
+      "confidence": "high"
+    },
+    {
+      "en": "lawyer",
+      "target": "lawyer",
+      "alternatives": [],
+      "note": "Two drafts agree.",
+      "confidence": "high"
+    },
+    {
+      "en": "legal representation",
+      "target": "lawyer to defend you",
+      "alternatives": [
+        "legal representation",
+        "lawyer to stand for you"
+      ],
+      "note": "Drafts overlap; second draft led with 'lawyer to stand for you'.",
+      "confidence": "medium"
+    },
+    {
+      "en": "legal aid",
+      "target": "free lawyer",
+      "alternatives": [
+        "legal aid",
+        "free lawyer help"
+      ],
+      "note": "Drafts overlap; second draft led with 'legal aid'.",
+      "confidence": "high"
+    },
+    {
+      "en": "interpreter",
+      "target": "interpreter",
+      "alternatives": [
+        "person wey go translate"
+      ],
+      "note": "Two drafts agree.",
+      "confidence": "high"
+    },
+    {
+      "en": "remain silent",
+      "target": "keep quiet",
+      "alternatives": [
+        "no talk anything",
+        "remain silent"
+      ],
+      "note": "Drafts overlap; second draft led with 'no talk anything'.",
+      "confidence": "high"
+    },
+    {
+      "en": "confession",
+      "target": "confession",
+      "alternatives": [
+        "statement wey you confess"
+      ],
+      "note": "Two drafts agree.",
+      "confidence": "high"
+    },
+    {
+      "en": "evidence",
+      "target": "evidence",
+      "alternatives": [
+        "proof"
+      ],
+      "note": "Two drafts agree.",
+      "confidence": "high"
+    },
+    {
+      "en": "witness",
+      "target": "witness",
+      "alternatives": [],
+      "note": "Two drafts agree.",
+      "confidence": "high"
+    },
+    {
+      "en": "prosecution",
+      "target": "prosecution",
+      "alternatives": [
+        "people wey carry case against you"
+      ],
+      "note": "Two drafts agree.",
+      "confidence": "high"
+    },
+    {
+      "en": "prosecutor",
+      "target": "prosecutor",
+      "alternatives": [
+        "government lawyer",
+        "lawyer wey dey accuse person for court"
+      ],
+      "note": "Two drafts agree.",
+      "confidence": "high"
+    },
+    {
+      "en": "Attorney-General",
+      "target": "Attorney-General",
+      "alternatives": [
+        "AG"
+      ],
+      "note": "Two drafts agree.",
+      "confidence": "high"
+    },
+    {
+      "en": "reasonable time",
+      "target": "reasonable time",
+      "alternatives": [
+        "time wey make sense",
+        "correct time"
+      ],
+      "note": "Drafts overlap; second draft led with 'correct time'.",
+      "confidence": "medium"
+    },
+    {
+      "en": "within a reasonable time",
+      "target": "quick quick, no long delay",
+      "alternatives": [
+        "within reasonable time",
+        "no too long"
+      ],
+      "note": "Drafts overlap; second draft led with 'within reasonable time'.",
+      "confidence": "medium"
+    },
+    {
+      "en": "compensation",
+      "target": "compensation",
+      "alternatives": [
+        "money to pay for damage",
+        "money for wetin dem do you"
+      ],
+      "note": "Two drafts agree.",
+      "confidence": "high"
+    },
+    {
+      "en": "apology",
+      "target": "apology",
+      "alternatives": [
+        "sorry"
+      ],
+      "note": "Two drafts agree.",
+      "confidence": "high"
+    },
+    {
+      "en": "privacy",
+      "target": "privacy",
+      "alternatives": [
+        "your private matter"
+      ],
+      "note": "Two drafts agree.",
+      "confidence": "high"
+    },
+    {
+      "en": "private and family life",
+      "target": "your private life and family life",
+      "alternatives": [
+        "private life and family life"
+      ],
+      "note": "Minor wording difference; second draft: 'private life and family life'.",
+      "confidence": "medium"
+    },
+    {
+      "en": "home",
+      "target": "house",
+      "alternatives": [
+        "home"
+      ],
+      "note": "Two drafts agree.",
+      "confidence": "high"
+    },
+    {
+      "en": "correspondence",
+      "target": "letters and messages",
+      "alternatives": [
+        "correspondence"
+      ],
+      "note": "Two drafts agree.",
+      "confidence": "medium"
+    },
+    {
+      "en": "telephone conversations",
+      "target": "phone calls",
+      "alternatives": [
+        "phone talk",
+        "wetin you dey talk for phone"
+      ],
+      "note": "Two drafts agree.",
+      "confidence": "high"
+    },
+    {
+      "en": "messages",
+      "target": "messages",
+      "alternatives": [
+        "chats"
+      ],
+      "note": "Two drafts agree.",
+      "confidence": "high"
+    },
+    {
+      "en": "freedom of thought, conscience and religion",
+      "target": "freedom to think, believe and choose religion",
+      "alternatives": [
+        "freedom to think, to believe, and to follow any religion you want",
+        "freedom of thought, conscience and religion"
+      ],
+      "note": "Minor wording difference; second draft: 'freedom to think, to believe, and to follow any religion you want'.",
+      "confidence": "medium"
+    },
+    {
+      "en": "religion",
+      "target": "religion",
+      "alternatives": [],
+      "note": "Two drafts agree.",
+      "confidence": "high"
+    },
+    {
+      "en": "change religion",
+      "target": "change religion",
+      "alternatives": [
+        "change your religion"
+      ],
+      "note": "Minor wording difference; second draft: 'change your religion'.",
+      "confidence": "high"
+    },
+    {
+      "en": "freedom of expression",
+      "target": "freedom to talk",
+      "alternatives": [
+        "freedom of speech",
+        "freedom to talk wetin you think",
+        "freedom of expression"
+      ],
+      "note": "Minor wording difference; second draft: 'freedom to talk wetin you think'.",
+      "confidence": "high"
+    },
+    {
+      "en": "freedom of the press",
+      "target": "press freedom",
+      "alternatives": [
+        "freedom of the press",
+        "freedom for journalists"
+      ],
+      "note": "Drafts overlap; second draft led with 'freedom of the press'.",
+      "confidence": "high"
+    },
+    {
+      "en": "newspaper",
+      "target": "newspaper",
+      "alternatives": [
+        "paper"
+      ],
+      "note": "Two drafts agree.",
+      "confidence": "high"
+    },
+    {
+      "en": "peaceful assembly",
+      "target": "gather peacefully",
+      "alternatives": [
+        "peaceful meeting",
+        "peaceful gathering",
+        "peaceful assembly"
+      ],
+      "note": "Drafts disagree; second draft: 'peaceful gathering'. Needs native review.",
+      "confidence": "medium"
+    },
+    {
+      "en": "association",
+      "target": "association",
+      "alternatives": [
+        "group",
+        "join group"
+      ],
+      "note": "Two drafts agree.",
+      "confidence": "high"
+    },
+    {
+      "en": "trade union",
+      "target": "trade union",
+      "alternatives": [
+        "union",
+        "workers union"
+      ],
+      "note": "Two drafts agree.",
+      "confidence": "high"
+    },
+    {
+      "en": "political party",
+      "target": "political party",
+      "alternatives": [
+        "party"
+      ],
+      "note": "Two drafts agree.",
+      "confidence": "high"
+    },
+    {
+      "en": "protest",
+      "target": "protest",
+      "alternatives": [
+        "demonstration"
+      ],
+      "note": "Two drafts agree.",
+      "confidence": "high"
+    },
+    {
+      "en": "freedom of movement",
+      "target": "freedom to move",
+      "alternatives": [
+        "go anywhere",
+        "freedom to waka go anywhere",
+        "freedom of movement"
+      ],
+      "note": "Drafts disagree; second draft: 'freedom to waka go anywhere'. Needs native review.",
+      "confidence": "medium"
+    },
+    {
+      "en": "leave Nigeria",
+      "target": "comot Nigeria",
+      "alternatives": [
+        "leave Nigeria",
+        "comot for Nigeria"
+      ],
+      "note": "Drafts overlap; second draft led with 'comot for Nigeria'.",
+      "confidence": "high"
+    },
+    {
+      "en": "discrimination",
+      "target": "discrimination",
+      "alternatives": [
+        "treat you bad because of who you be",
+        "treat person bad because of who dem be"
+      ],
+      "note": "Two drafts agree.",
+      "confidence": "high"
+    },
+    {
+      "en": "sex",
+      "target": "sex",
+      "alternatives": [
+        "man or woman"
+      ],
+      "note": "Second draft: 'man or woman'. 'sex' here means being a man or woman; prefer 'man or woman' in answers to avoid the sexual sense.",
+      "confidence": "medium"
+    },
+    {
+      "en": "ethnic group",
+      "target": "tribe",
+      "alternatives": [
+        "ethnic group"
+      ],
+      "note": "Two drafts agree.",
+      "confidence": "high"
+    },
+    {
+      "en": "place of origin",
+      "target": "where you come from",
+      "alternatives": [
+        "state of origin",
+        "place of origin"
+      ],
+      "note": "Two drafts agree.",
+      "confidence": "high"
+    },
+    {
+      "en": "circumstance of birth",
+      "target": "how dem born you",
+      "alternatives": [
+        "circumstance of birth"
+      ],
+      "note": "Two drafts agree.",
+      "confidence": "medium"
+    },
+    {
+      "en": "property",
+      "target": "property",
+      "alternatives": [
+        "your things"
+      ],
+      "note": "Two drafts agree.",
+      "confidence": "high"
+    },
+    {
+      "en": "land",
+      "target": "land",
+      "alternatives": [
+        "plot"
+      ],
+      "note": "Two drafts agree.",
+      "confidence": "high"
+    },
+    {
+      "en": "compulsory acquisition",
+      "target": "government take land by force",
+      "alternatives": [
+        "compulsory acquisition",
+        "when government take your property by force"
+      ],
+      "note": "Drafts overlap; second draft led with 'when government take your property by force'.",
+      "confidence": "medium"
+    },
+    {
+      "en": "state of emergency",
+      "target": "state of emergency",
+      "alternatives": [],
+      "note": "Two drafts agree.",
+      "confidence": "high"
+    },
+    {
+      "en": "citizen",
+      "target": "citizen",
+      "alternatives": [
+        "Nigerian"
+      ],
+      "note": "Two drafts agree.",
+      "confidence": "high"
+    },
+    {
+      "en": "citizenship",
+      "target": "citizenship",
+      "alternatives": [],
+      "note": "Two drafts agree.",
+      "confidence": "high"
+    },
+    {
+      "en": "citizen by birth",
+      "target": "citizen by birth",
+      "alternatives": [
+        "Nigerian by birth"
+      ],
+      "note": "Two drafts agree.",
+      "confidence": "high"
+    },
+    {
+      "en": "citizen by registration",
+      "target": "citizen by registration",
+      "alternatives": [],
+      "note": "Two drafts agree.",
+      "confidence": "high"
+    },
+    {
+      "en": "naturalisation",
+      "target": "naturalisation",
+      "alternatives": [
+        "become citizen through application",
+        "become citizen as foreigner"
+      ],
+      "note": "Two drafts agree.",
+      "confidence": "medium"
+    },
+    {
+      "en": "dual citizenship",
+      "target": "dual citizenship",
+      "alternatives": [
+        "two citizenship",
+        "citizen of two countries"
+      ],
+      "note": "Two drafts agree.",
+      "confidence": "high"
+    },
+    {
+      "en": "renounce citizenship",
+      "target": "give up citizenship",
+      "alternatives": [
+        "renounce citizenship",
+        "give up your citizenship"
+      ],
+      "note": "Drafts overlap; second draft led with 'give up your citizenship'.",
+      "confidence": "high"
+    },
+    {
+      "en": "deprive of citizenship",
+      "target": "collect citizenship back",
+      "alternatives": [
+        "take away citizenship",
+        "remove your citizenship",
+        "take citizenship from person"
+      ],
+      "note": "Drafts disagree; second draft: 'remove your citizenship'. Needs native review.",
+      "confidence": "medium"
+    },
+    {
+      "en": "duty",
+      "target": "duty",
+      "alternatives": [
+        "wetin you suppose do"
+      ],
+      "note": "Two drafts agree.",
+      "confidence": "high"
+    },
+    {
+      "en": "duties of a citizen",
+      "target": "duties of citizen",
+      "alternatives": [
+        "wetin citizen suppose do",
+        "duties of a citizen"
+      ],
+      "note": "Minor wording difference; second draft: 'duties of a citizen'.",
+      "confidence": "high"
+    },
+    {
+      "en": "Constitution",
+      "target": "Constitution",
+      "alternatives": [],
+      "note": "Locked: keep the English form in answers (with any number or law name); local forms are listed only to recognise questions.",
+      "confidence": "high",
+      "locked": true
+    },
+    {
+      "en": "section",
+      "target": "section",
+      "alternatives": [],
+      "note": "Locked: keep the English form in answers (with any number or law name); local forms are listed only to recognise questions.",
+      "confidence": "high",
+      "locked": true
+    },
+    {
+      "en": "subsection",
+      "target": "subsection",
+      "alternatives": [],
+      "note": "Locked: keep the English form in answers (with any number or law name); local forms are listed only to recognise questions.",
+      "confidence": "high",
+      "locked": true
+    },
+    {
+      "en": "paragraph",
+      "target": "paragraph",
+      "alternatives": [],
+      "note": "Locked: keep the English form in answers (with any number or law name); local forms are listed only to recognise questions.",
+      "confidence": "high",
+      "locked": true
+    },
+    {
+      "en": "chapter",
+      "target": "chapter",
+      "alternatives": [],
+      "note": "Locked: keep the English form in answers (with any number or law name); local forms are listed only to recognise questions.",
+      "confidence": "high",
+      "locked": true
+    },
+    {
+      "en": "schedule",
+      "target": "schedule",
+      "alternatives": [],
+      "note": "Locked: keep the English form in answers (with any number or law name); local forms are listed only to recognise questions.",
+      "confidence": "high",
+      "locked": true
+    },
+    {
+      "en": "law",
+      "target": "law",
+      "alternatives": [],
+      "note": "Two drafts agree.",
+      "confidence": "high"
+    },
+    {
+      "en": "Act",
+      "target": "Act",
+      "alternatives": [
+        "law wey National Assembly make"
+      ],
+      "note": "Locked: keep the English form in answers (with any number or law name); local forms are listed only to recognise questions.",
+      "confidence": "high",
+      "locked": true
+    },
+    {
+      "en": "Bill",
+      "target": "bill",
+      "alternatives": [
+        "law wey never pass",
+        "proposed law"
+      ],
+      "note": "Two drafts agree.",
+      "confidence": "high"
+    },
+    {
+      "en": "amend",
+      "target": "amend",
+      "alternatives": [
+        "change",
+        "fix"
+      ],
+      "note": "Two drafts agree.",
+      "confidence": "high"
+    },
+    {
+      "en": "amendment",
+      "target": "amendment",
+      "alternatives": [
+        "change",
+        "change to the law"
+      ],
+      "note": "Two drafts agree.",
+      "confidence": "high"
+    },
+    {
+      "en": "government",
+      "target": "government",
+      "alternatives": [],
+      "note": "Two drafts agree.",
+      "confidence": "high"
+    },
+    {
+      "en": "Federal Government",
+      "target": "Federal Government",
+      "alternatives": [
+        "FG"
+      ],
+      "note": "Two drafts agree.",
+      "confidence": "high"
+    },
+    {
+      "en": "State Government",
+      "target": "State Government",
+      "alternatives": [],
+      "note": "Two drafts agree.",
+      "confidence": "high"
+    },
+    {
+      "en": "Local Government",
+      "target": "Local Government",
+      "alternatives": [
+        "LG"
+      ],
+      "note": "Two drafts agree.",
+      "confidence": "high"
+    },
+    {
+      "en": "federation",
+      "target": "federation",
+      "alternatives": [
+        "union of states"
+      ],
+      "note": "Two drafts agree.",
+      "confidence": "medium"
+    },
+    {
+      "en": "state",
+      "target": "state",
+      "alternatives": [],
+      "note": "Two drafts agree.",
+      "confidence": "high"
+    },
+    {
+      "en": "National Assembly",
+      "target": "National Assembly",
+      "alternatives": [],
+      "note": "Two drafts agree.",
+      "confidence": "high"
+    },
+    {
+      "en": "Senate",
+      "target": "Senate",
+      "alternatives": [],
+      "note": "Two drafts agree.",
+      "confidence": "high"
+    },
+    {
+      "en": "House of Representatives",
+      "target": "House of Representatives",
+      "alternatives": [
+        "House of Reps"
+      ],
+      "note": "Two drafts agree.",
+      "confidence": "high"
+    },
+    {
+      "en": "State House of Assembly",
+      "target": "State House of Assembly",
+      "alternatives": [],
+      "note": "Two drafts agree.",
+      "confidence": "high"
+    },
+    {
+      "en": "senator",
+      "target": "senator",
+      "alternatives": [],
+      "note": "Two drafts agree.",
+      "confidence": "high"
+    },
+    {
+      "en": "recall",
+      "target": "recall",
+      "alternatives": [
+        "remove your representative",
+        "remove am wey dem vote for"
+      ],
+      "note": "Two drafts agree.",
+      "confidence": "medium"
+    },
+    {
+      "en": "election",
+      "target": "election",
+      "alternatives": [],
+      "note": "Two drafts agree.",
+      "confidence": "high"
+    },
+    {
+      "en": "vote",
+      "target": "vote",
+      "alternatives": [],
+      "note": "Two drafts agree.",
+      "confidence": "high"
+    },
+    {
+      "en": "President",
+      "target": "President",
+      "alternatives": [],
+      "note": "Two drafts agree.",
+      "confidence": "high"
+    },
+    {
+      "en": "Vice-President",
+      "target": "Vice-President",
+      "alternatives": [
+        "VP"
+      ],
+      "note": "Two drafts agree.",
+      "confidence": "high"
+    },
+    {
+      "en": "Governor",
+      "target": "Governor",
+      "alternatives": [],
+      "note": "Two drafts agree.",
+      "confidence": "high"
+    },
+    {
+      "en": "Deputy Governor",
+      "target": "Deputy Governor",
+      "alternatives": [],
+      "note": "Two drafts agree.",
+      "confidence": "high"
+    },
+    {
+      "en": "Minister",
+      "target": "Minister",
+      "alternatives": [],
+      "note": "Two drafts agree.",
+      "confidence": "high"
+    },
+    {
+      "en": "Commissioner",
+      "target": "Commissioner",
+      "alternatives": [],
+      "note": "Two drafts agree.",
+      "confidence": "high"
+    },
+    {
+      "en": "impeach",
+      "target": "impeach",
+      "alternatives": [
+        "remove from office"
+      ],
+      "note": "Two drafts agree.",
+      "confidence": "high"
+    },
+    {
+      "en": "impeachment",
+      "target": "impeachment",
+      "alternatives": [],
+      "note": "Two drafts agree.",
+      "confidence": "high"
+    },
+    {
+      "en": "remove from office",
+      "target": "remove from office",
+      "alternatives": [
+        "commot am for office",
+        "comot am from office"
+      ],
+      "note": "Drafts overlap; second draft led with 'comot am from office'.",
+      "confidence": "high"
+    },
+    {
+      "en": "gross misconduct",
+      "target": "serious misconduct",
+      "alternatives": [
+        "gross misconduct",
+        "very bad bad behaviour for office"
+      ],
+      "note": "Drafts overlap; second draft led with 'gross misconduct'.",
+      "confidence": "medium"
+    },
+    {
+      "en": "immunity",
+      "target": "immunity",
+      "alternatives": [
+        "dem no fit sue am",
+        "protection from court case"
+      ],
+      "note": "Two drafts agree.",
+      "confidence": "high"
+    },
+    {
+      "en": "sue",
+      "target": "sue",
+      "alternatives": [
+        "carry am go court"
+      ],
+      "note": "Two drafts agree.",
+      "confidence": "high"
+    },
+    {
+      "en": "term of office",
+      "target": "term of office",
+      "alternatives": [
+        "term",
+        "how long e go stay for office",
+        "how long person go stay for office"
+      ],
+      "note": "Second draft: 'term of office'. Same meaning; kept the full phrase.",
+      "confidence": "medium"
+    },
+    {
+      "en": "qualification",
+      "target": "qualification",
+      "alternatives": [
+        "wetin you need",
+        "wetin you need to get"
+      ],
+      "note": "Two drafts agree.",
+      "confidence": "high"
+    },
+    {
+      "en": "pardon",
+      "target": "pardon",
+      "alternatives": [
+        "forgive"
+      ],
+      "note": "Two drafts agree.",
+      "confidence": "high"
+    },
+    {
+      "en": "prerogative of mercy",
+      "target": "power to pardon",
+      "alternatives": [
+        "prerogative of mercy",
+        "power to forgive"
+      ],
+      "note": "Drafts overlap; second draft led with 'power to forgive'.",
+      "confidence": "medium"
+    },
+    {
+      "en": "armed forces",
+      "target": "armed forces",
+      "alternatives": [
+        "army, navy and air force",
+        "soja dem"
+      ],
+      "note": "Two drafts agree.",
+      "confidence": "high"
+    },
+    {
+      "en": "soldier",
+      "target": "soldier",
+      "alternatives": [
+        "soja"
+      ],
+      "note": "Two drafts agree.",
+      "confidence": "high"
+    },
+    {
+      "en": "customary law",
+      "target": "customary law",
+      "alternatives": [
+        "native law"
+      ],
+      "note": "Two drafts agree.",
+      "confidence": "high"
+    },
+    {
+      "en": "Islamic law",
+      "target": "Islamic law",
+      "alternatives": [
+        "Sharia"
+      ],
+      "note": "Two drafts agree.",
+      "confidence": "high"
+    },
+    {
+      "en": "secular",
+      "target": "no official religion",
+      "alternatives": [
+        "secular",
+        "no religion for government"
+      ],
+      "note": "Drafts overlap; second draft led with 'secular'.",
+      "confidence": "medium"
+    },
+    {
+      "en": "State religion",
+      "target": "official religion",
+      "alternatives": [
+        "state religion"
+      ],
+      "note": "Drafts overlap; second draft led with 'State religion'.",
+      "confidence": "medium"
+    },
+    {
+      "en": "education",
+      "target": "education",
+      "alternatives": [
+        "school"
+      ],
+      "note": "Two drafts agree.",
+      "confidence": "high"
+    },
+    {
+      "en": "Administration of Criminal Justice Act",
+      "target": "Administration of Criminal Justice Act",
+      "alternatives": [
+        "ACJA"
+      ],
+      "note": "Locked: keep the English form in answers (with any number or law name); local forms are listed only to recognise questions.",
+      "confidence": "high",
+      "locked": true
+    },
+    {
+      "en": "Police Act",
+      "target": "Police Act",
+      "alternatives": [],
+      "note": "Locked: keep the English form in answers (with any number or law name); local forms are listed only to recognise questions.",
+      "confidence": "high",
+      "locked": true
+    }
+  ]
+}
