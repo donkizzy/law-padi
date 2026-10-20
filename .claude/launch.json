@@ -1,0 +1,44 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "dev",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": [
+        "run",
+        "dev"
+      ],
+      "port": 3000
+    },
+    {
+      "name": "frontend-5181",
+      "runtimeExecutable": "bunx",
+      "runtimeArgs": [
+        "vite",
+        "frontend",
+        "--port",
+        "5181",
+        "--strictPort"
+      ],
+      "port": 5181,
+      "autoPort": false
+    },
+    {
+      "name": "api",
+      "runtimeExecutable": "env",
+      "runtimeArgs": [
+        "FRONTEND_HOST=http://localhost:5181",
+        "RATE_LIMIT_ENABLED=false",
+        "uv",
+        "run",
+        "--directory",
+        "backend",
+        "fastapi",
+        "dev",
+        "--port",
+        "8000"
+      ],
+      "port": 8000
+    }
+  ]
+}
