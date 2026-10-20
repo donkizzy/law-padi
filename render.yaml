@@ -38,11 +38,11 @@ services:
       - key: CHAT_WORKER_CONCURRENCY
         value: "1"
       - key: CHAT_DAILY_BUDGET_USD
-        value: "0.12"
-      - key: CHAT_MONTHLY_BUDGET_USD
-        value: "4"
-      - key: AI_MONTHLY_BUDGET_USD
         value: "5"
+      - key: CHAT_MONTHLY_BUDGET_USD
+        value: "155"
+      - key: AI_MONTHLY_BUDGET_USD
+        value: "155"
       - key: EMBEDDING_QUERY_ENABLED
         value: "false"
       - key: CHAT_GUEST_DAILY_LIMIT
