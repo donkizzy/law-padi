@@ -15,9 +15,24 @@ from app.ingestion.ocr import (
     OcrError,
     OcrPageInput,
     TesseractOcrProvider,
+    _tesseract_line_text,
     managed_ocr_provider_from_settings,
 )
 from app.ingestion.rendering import render_page_thumbnail
+
+
+def test_act_ocr_keeps_line_and_block_boundaries_including_quotes() -> None:
+    tsv = "level\tpage_num\tblock_num\tpar_num\tline_num\tword_num\tleft\ttop\twidth\theight\tconf\ttext\n"
+    for block, line, word, value in [
+        (1, 1, 1, "9."),
+        (1, 1, 2, '"Search"'),
+        (1, 2, 1, "(1)"),
+        (1, 2, 2, "Synthetic"),
+        (2, 1, 1, "10."),
+        (2, 1, 2, "Inventory"),
+    ]:
+        tsv += f"5\t1\t{block}\t1\t{line}\t{word}\t10\t10\t10\t10\t95\t{value}\n"
+    assert _tesseract_line_text(tsv) == '9. "Search"\n(1) Synthetic\n10. Inventory'
 
 
 @pytest.mark.skipif(

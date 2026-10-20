@@ -12,6 +12,7 @@ from typing import Any, Protocol, cast
 import httpx
 
 LOCAL_OCR_PROVIDER_VERSION = "tesseract-local-v1"
+LOCAL_LAYOUT_OCR_PROVIDER_VERSION = "tesseract-local-lines-v2"
 GOOGLE_DOCUMENT_AI_PROVIDER_VERSION = "google-document-ai-rest-v1"
 AZURE_DOCUMENT_INTELLIGENCE_PROVIDER_VERSION = "azure-document-intelligence-rest-v1"
 
@@ -64,9 +65,16 @@ class ManagedOcrProvider(Protocol):
 
 
 class TesseractOcrProvider:
-    def __init__(self, *, executable: str | None = None, language: str = "eng") -> None:
+    def __init__(
+        self,
+        *,
+        executable: str | None = None,
+        language: str = "eng",
+        preserve_lines: bool = False,
+    ) -> None:
         self.executable = executable or shutil.which("tesseract")
         self.language = language
+        self.preserve_lines = preserve_lines
 
     def extract_page(self, page: OcrPageInput) -> OcrPageResult:
         if not self.executable:
@@ -101,7 +109,11 @@ class TesseractOcrProvider:
             detail = completed.stderr.strip() or completed.stdout.strip()
             raise OcrError(f"Local OCR failed: {detail}")
         words = _parse_tesseract_tsv(completed.stdout)
-        text = _join_words(words)
+        text = (
+            _tesseract_line_text(completed.stdout)
+            if self.preserve_lines
+            else _join_words(words)
+        )
         confidence = _average_confidence(words)
         timing_ms = (perf_counter() - started_at) * 1000
         return OcrPageResult(
@@ -110,7 +122,9 @@ class TesseractOcrProvider:
             words=words,
             method="local_ocr",
             provider="tesseract",
-            provider_version=LOCAL_OCR_PROVIDER_VERSION,
+            provider_version=LOCAL_LAYOUT_OCR_PROVIDER_VERSION
+            if self.preserve_lines
+            else LOCAL_OCR_PROVIDER_VERSION,
             confidence=confidence,
             timing_ms=round(timing_ms, 3),
             cost_usd=0,
@@ -119,6 +133,7 @@ class TesseractOcrProvider:
                 "word_count": len(words),
                 "low_confidence": confidence < 0.75,
                 "requires_managed_ocr": confidence < 0.75,
+                "line_boundaries_preserved": self.preserve_lines,
             },
         )
 
@@ -470,7 +485,7 @@ def _parse_float_like(value: Any) -> float:
 
 
 def _parse_tesseract_tsv(output: str) -> list[OcrWord]:
-    reader = csv.DictReader(StringIO(output), delimiter="\t")
+    reader = csv.DictReader(StringIO(output), delimiter="\t", quoting=csv.QUOTE_NONE)
     words: list[OcrWord] = []
     for row in reader:
         text = (row.get("text") or "").strip()
@@ -497,6 +512,19 @@ def _parse_tesseract_tsv(output: str) -> list[OcrWord]:
             )
         )
     return words
+
+
+def _tesseract_line_text(output: str) -> str:
+    lines: dict[tuple[str | None, ...], list[str]] = {}
+    for row in csv.DictReader(StringIO(output), delimiter="\t", quoting=csv.QUOTE_NONE):
+        text = (row.get("text") or "").strip()
+        if text and _parse_confidence(row.get("conf")) >= 0:
+            key = tuple(
+                row.get(field)
+                for field in ("page_num", "block_num", "par_num", "line_num")
+            )
+            lines.setdefault(key, []).append(text)
+    return "\n".join(" ".join(words) for words in lines.values())
 
 
 def _join_words(words: list[OcrWord]) -> str:

@@ -6,8 +6,11 @@ corrupt files, and excluded front/back matter. Full 300-page perf runs are
 opt-in via LAW_PADI_PERF=1.
 """
 
+import hashlib
+import json
 import os
 from io import BytesIO
+from pathlib import Path
 
 import pytest
 from pypdf import PdfReader, PdfWriter
@@ -20,9 +23,11 @@ from pypdf.generic import (
 )
 
 from app.ingestion.extraction import NativePdfExtractor
+from app.ingestion.normalization import normalize_page_text
 from app.ingestion.pdf import profile_pdf_pages
 from app.legal.instrument_parser import parse_instrument_pages
 from app.legal.parser import SourcePage as ParserSourcePage
+from app.legal.titles import title_catalog
 
 
 def _pdf_with_text_pages(texts: list[str], rotation: int = 0) -> bytes:
@@ -195,3 +200,108 @@ def test_golden_mixed_text_and_empty_pages_split_ocr_routing() -> None:
     assert "37." in by_page[1].text
     assert not by_page[1].quality_flags.get("needs_ocr")
     assert by_page[2].quality_flags.get("needs_ocr")
+
+
+@pytest.mark.parametrize(
+    "slug,number,next_number,title",
+    [
+        ("acja-2015", "9", "10", "Search of arrested suspect"),
+        ("police-act-2020", "49", "50", "Power to stop and search"),
+    ],
+)
+def test_golden_synthetic_act_excerpt_preserves_pdf_structure(
+    slug: str, number: str, next_number: str, title: str
+) -> None:
+    """Synthetic PDF layout check; it does not certify real Act wording."""
+    pdf = _pdf_with_text_pages(
+        [
+            "ARRANGEMENT OF SECTIONS",
+            f"{number}. {title}.",
+            f"{next_number}. Next heading.",
+            "ENACTED by the National Assembly",
+            "PART II - POWERS",
+            f"{number}. (1) Synthetic search clause.",
+            "(2) Synthetic second clause.",
+            f"{next_number}. Synthetic next section.",
+        ]
+    )
+    graph = parse_instrument_pages(
+        instrument_type="act",
+        instrument_slug=slug,
+        pages=[
+            ParserSourcePage(i + 1, text) for i, text in enumerate(_extract_texts(pdf))
+        ],
+    )
+    section = graph.node_by_path[f"{slug}.part2.section{number}"]
+    assert section.heading == title + "."
+    assert section.text == "(1) Synthetic search clause.\n(2) Synthetic second clause."
+    assert section.page_start == 6 and section.page_end == 7
+    assert (
+        len([node for node in graph.nodes if node.kind == "section"])
+        == len(graph.metadata["arrangement_sections"])
+        == 2
+    )
+
+
+@pytest.mark.skipif(
+    not os.environ.get("LAW_PADI_STATUTE_REVIEW_DIR"),
+    reason="Full scanned-Act gold check requires the retained PDFs and coordinate OCR review artifacts",
+)
+@pytest.mark.parametrize(
+    "slug,filename,section_count,number,needle",
+    [
+        (
+            "acja-2015",
+            "Administration-of-Justice-Criminal-Act-2015.pdf",
+            495,
+            "9",
+            "may search the suspect",
+        ),
+        (
+            "police-act-2020",
+            "Police-Act-2020.pdf",
+            142,
+            "49",
+            "reasonable grounds for suspicion exist",
+        ),
+    ],
+)
+def test_full_statute_pdf_matches_arrangement_and_search_text(
+    slug: str, filename: str, section_count: int, number: str, needle: str
+) -> None:
+    """Opt-in acceptance check; failures remain blockers until source review."""
+    root = Path(os.environ["LAW_PADI_STATUTE_REVIEW_DIR"]) / slug
+    assert (
+        hashlib.sha256((root / filename).read_bytes()).hexdigest()
+        == title_catalog(slug)["source"]["sha256"]
+    )
+    payload = json.loads((root / "ocr-layout-pages-v2.json").read_text())
+    graph = parse_instrument_pages(
+        instrument_type="act",
+        instrument_slug=slug,
+        pages=[
+            ParserSourcePage(
+                page["page_number"], normalize_page_text(page["text"]).text
+            )
+            for page in payload["pages"]
+        ],
+    )
+    sections = [node for node in graph.nodes if node.kind == "section"]
+    actual = {node.number for node in sections}
+    expected = set(graph.metadata["expected_sections"])
+    findings = {
+        "section_count": len(sections),
+        "missing_sections": sorted(expected - actual),
+        "unexpected_sections": sorted(actual - expected),
+        "matching_search_sections": sum(
+            node.number == number
+            and needle in " ".join((node.text or "").split()).casefold()
+            for node in sections
+        ),
+    }
+    assert findings == {
+        "section_count": section_count,
+        "missing_sections": [],
+        "unexpected_sections": [],
+        "matching_search_sections": 1,
+    }

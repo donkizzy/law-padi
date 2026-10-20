@@ -1,6 +1,6 @@
 """Instrument-type plugin boundary for structural parsing.
 
-V1 supports Constitution PDFs only. Parsers accept normalized page spans and
+Parsers accept normalized page spans and
 return a provider-neutral DocumentGraph so pipeline stages never depend on a
 single parser implementation.
 """
@@ -8,6 +8,7 @@ single parser implementation.
 from dataclasses import dataclass, field
 from typing import Any, Protocol
 
+from app.legal.act_parser import ACT_PARSER_VERSION, parse_act_pages
 from app.legal.parser import (
     PARSER_VERSION,
     ParsedProvision,
@@ -16,6 +17,7 @@ from app.legal.parser import (
 from app.legal.parser import (
     SourcePage as ParserSourcePage,
 )
+from app.legal.titles import catalogue_titles, title_catalog
 
 
 @dataclass(frozen=True)
@@ -86,7 +88,59 @@ class ConstitutionParser:
         )
 
 
-_PARSERS: tuple[InstrumentParser, ...] = (ConstitutionParser(),)
+class ActParser:
+    instrument_types: tuple[str, ...] = ("act",)
+
+    def parse(
+        self, pages: list[ParserSourcePage], instrument_slug: str
+    ) -> DocumentGraph:
+        result = parse_act_pages(pages, instrument_slug)
+        catalogue = title_catalog(instrument_slug)
+        headings = catalogue_titles(instrument_slug, "sections")
+        for node in result.nodes:
+            if node.kind == "section" and not node.heading and node.number in headings:
+                node.heading = headings[str(node.number)]
+                node.parser_metadata["heading_source"] = "source_arrangement_catalogue"
+        expected_count = catalogue.get("expected_section_count")
+        expected = (
+            [str(number) for number in range(1, expected_count + 1)]
+            if isinstance(expected_count, int) and 0 < expected_count <= 5000
+            else list(result.arrangement)
+        )
+        return DocumentGraph(
+            instrument_slug=instrument_slug,
+            instrument_type="act",
+            parser_version=ACT_PARSER_VERSION,
+            nodes=[
+                DocumentNode(
+                    kind=str(node.kind),
+                    number=node.number,
+                    heading=node.heading,
+                    canonical_path=node.canonical_path,
+                    sort_key=node.sort_key,
+                    parent_path=node.parent_path,
+                    page_start=node.page_start or 1,
+                    page_end=node.page_end or node.page_start or 1,
+                    text=node.text,
+                    parser_confidence=node.parser_confidence,
+                    parser_metadata=node.parser_metadata,
+                )
+                for node in result.nodes
+            ],
+            metadata={
+                "node_count": len(result.nodes),
+                "arrangement_sections": result.arrangement,
+                "expected_sections": expected,
+                "arrangement_pages": result.arrangement_pages,
+                "parser_issues": result.issues,
+                "heading_review_status": (catalogue.get("source") or {}).get(
+                    "review_status", "needs_review"
+                ),
+            },
+        )
+
+
+_PARSERS: tuple[InstrumentParser, ...] = (ConstitutionParser(), ActParser())
 
 
 def instrument_parser_for(instrument_type: str) -> InstrumentParser:
@@ -96,7 +150,7 @@ def instrument_parser_for(instrument_type: str) -> InstrumentParser:
             return parser
     raise ValueError(
         f"No instrument parser registered for type: {instrument_type!r}. "
-        f"V1 supports: constitution."
+        f"Supported types: constitution, act."
     )
 
 

@@ -5,6 +5,7 @@ returns blocking or non-blocking issues. Validators never rewrite authoritative
 wording; they only flag candidates for review.
 """
 
+from collections import Counter
 from dataclasses import dataclass
 from typing import Any
 
@@ -41,7 +42,69 @@ def validate_document_graph(
     issues.extend(_unbalanced_punctuation(graph))
     issues.extend(_suspicious_ocr_substitutions(graph))
     issues.extend(_source_span_coverage(graph))
+    if graph.instrument_type == "act":
+        issues.extend(_act_arrangement_reconciliation(graph))
     return issues
+
+
+def _act_arrangement_reconciliation(graph: DocumentGraph) -> list[DocumentIssue]:
+    arrangement = set(graph.metadata.get("arrangement_sections", {}))
+    expected = set(
+        graph.metadata.get("expected_sections")
+        or graph.metadata.get("arrangement_sections", {})
+    )
+    actual = {
+        node.number
+        for node in graph.nodes
+        if node.kind == "section" and node.number is not None
+    }
+    repeated = sorted(
+        number
+        for number, count in Counter(
+            node.number
+            for node in graph.nodes
+            if node.kind == "section" and node.number is not None
+        ).items()
+        if count > 1
+    )
+    missing = sorted(expected - actual)
+    unexpected = sorted(actual - expected)
+    missing_arrangement = sorted(expected - arrangement)
+    unexpected_arrangement = sorted(arrangement - expected)
+    parser_issues = graph.metadata.get("parser_issues", [])
+    if (
+        expected
+        and arrangement
+        and not missing
+        and not unexpected
+        and not missing_arrangement
+        and not unexpected_arrangement
+        and not parser_issues
+        and not repeated
+    ):
+        return []
+    return [
+        DocumentIssue(
+            canonical_path=None,
+            issue_type="act_arrangement_reconciliation",
+            blocking=True,
+            message="Act sections must match the Arrangement of Sections before approval.",
+            evidence={
+                "arrangement_count": len(expected),
+                "parsed_arrangement_count": len(
+                    graph.metadata.get("arrangement_sections", {})
+                ),
+                "body_count": len(actual),
+                "missing_sections": missing,
+                "unexpected_sections": unexpected,
+                "missing_arrangement_sections": missing_arrangement,
+                "unexpected_arrangement_sections": unexpected_arrangement,
+                "repeated_section_numbers": repeated,
+                "parser_issues": parser_issues,
+                "arrangement_missing": not arrangement,
+            },
+        )
+    ]
 
 
 def _duplicate_paths(graph: DocumentGraph) -> list[DocumentIssue]:

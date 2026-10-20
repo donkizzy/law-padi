@@ -87,7 +87,7 @@ def extract_source_pages(source: SourceDocument) -> list[SourcePage]:
     if not source.storage_key:
         raise ParserError("Source document does not have a stored file")
     if source.mime_type != "application/pdf":
-        raise ParserError("V1 ingestion accepts Constitution PDF sources only")
+        raise ParserError("Ingestion accepts PDF sources only")
 
     store = LocalBlobStore(Path(settings.INGESTION_STORAGE_DIR))
     try:

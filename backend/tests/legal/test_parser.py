@@ -380,7 +380,7 @@ def test_extract_source_pages_rejects_missing_or_unsupported_sources(
 
     with pytest.raises(ParserError, match="does not have a stored file"):
         extract_source_pages(missing)
-    with pytest.raises(ParserError, match="Constitution PDF"):
+    with pytest.raises(ParserError, match="PDF sources only"):
         extract_source_pages(unsupported)
 
 
