@@ -16,9 +16,11 @@ import { useSavedProvisions } from "@/hooks/useSavedProvisions"
 import {
   copyText,
   editionName,
+  instrumentSlug,
   provisionTitle,
   provisionUrl,
   readableText,
+  shortCitation,
   statusLabel,
 } from "@/lib/legal-provisions"
 import { EditionNotice } from "./EditionNotice"
@@ -34,7 +36,8 @@ export function ProvisionLink({
     return (
       <Link
         className="text-sm font-semibold text-primary hover:underline"
-        to="/constitution"
+        to="/laws/$instrument"
+        params={{ instrument: instrumentSlug(provision) }}
         search={{ parent: provision.canonical_path, release }}
       >
         {provision.citation}
@@ -43,8 +46,11 @@ export function ProvisionLink({
   return (
     <Link
       className="sq-sm text-sm font-semibold text-primary hover:underline focus-visible:ring-2 focus-visible:ring-ring"
-      to="/constitution/$sectionId"
-      params={{ sectionId: provision.canonical_path }}
+      to="/laws/$instrument/$sectionId"
+      params={{
+        instrument: instrumentSlug(provision),
+        sectionId: provision.canonical_path,
+      }}
       search={{ release }}
     >
       {provision.citation}
@@ -100,7 +106,14 @@ export function ProvisionView({
     (item) => item.kind === "section",
   )
   return (
-    <article aria-label="Constitutional provision" className="grid gap-5">
+    <article
+      aria-label={
+        instrumentSlug(provision) === "constitution-1999"
+          ? "Constitutional provision"
+          : "Legal provision"
+      }
+      className="grid gap-5"
+    >
       <div className="flex flex-wrap items-center justify-between gap-3">
         <StatusBadge
           status={
@@ -110,7 +123,11 @@ export function ProvisionView({
                 ? "proposed"
                 : "historical"
           }
-          label={statusLabel(provision.legal_status, provision.edition_label)}
+          label={statusLabel(
+            provision.legal_status,
+            provision.edition_label,
+            provision,
+          )}
         />
         <div className="flex gap-1">
           <IconButton
@@ -154,7 +171,9 @@ export function ProvisionView({
             <span aria-hidden>→</span>
           </span>
         ))}
-        <CitationChip onClick={onOpenSource}>{provision.citation}</CitationChip>
+        <CitationChip onClick={onOpenSource}>
+          {shortCitation(provision)}
+        </CitationChip>
       </nav>
       <div>
         <Heading className="font-display text-title-3 sm:text-title-2">
@@ -162,7 +181,7 @@ export function ProvisionView({
         </Heading>
         <p className="mt-3 text-body text-muted-foreground">
           {provision.title ? `${provision.citation} · ` : ""}
-          {editionName(provision.edition_label)}
+          {editionName(provision.edition_label, provision)}
         </p>
       </div>
       <OfficialTextBlock title={`What ${provision.citation} says`}>
@@ -172,6 +191,7 @@ export function ProvisionView({
       </OfficialTextBlock>
       <EditionNotice
         label={provision.edition_label}
+        instrument={provision}
         historical={provision.legal_status === "historical"}
       />
       <p className="text-sm text-muted-foreground">
@@ -274,8 +294,11 @@ export function ProvisionView({
                   <Link
                     key={version.provision_version_id}
                     className="text-sm text-primary hover:underline"
-                    to="/constitution/$sectionId"
-                    params={{ sectionId: version.canonical_path }}
+                    to="/laws/$instrument/$sectionId"
+                    params={{
+                      instrument: instrumentSlug(version),
+                      sectionId: version.canonical_path,
+                    }}
                     search={{ release: version.release_version }}
                   >
                     {version.citation} ·{" "}

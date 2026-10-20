@@ -5,7 +5,7 @@ export const publicBenchmark = benchmark
 export const faqs = [
   {
     q: "Is this legal advice?",
-    a: "No. constitution.ng explains what the Constitution says and shows you the exact section. If you are facing a court case, an arrest or a dispute, speak to a lawyer or the Legal Aid Council. Bring the sections you found here with you.",
+    a: "No. constitution.ng explains published Nigerian legal sources and shows you the exact section. If you are facing a court case, an arrest or a dispute, speak to a lawyer or the Legal Aid Council. Bring the sections you found here with you.",
   },
   {
     q: "Is it free?",
@@ -20,12 +20,16 @@ export const faqs = [
     a: "It is the 1999 Constitution as published in 2004. Amendments passed after that are not included yet, so a section may have changed since. Every answer tells you this so you can check before you rely on it.",
   },
   {
+    q: "Which laws can I read?",
+    a: "The law picker lists the laws in the selected published release. A law under review is not available there. Each provision identifies its source edition. Acts labelled as enacted may have been amended; check the original source and later changes before relying on them.",
+  },
+  {
     q: "Can I ask in Pidgin?",
     a: "Yes. Ask the way you would say it, in English or Pidgin, and we will find the section. Answers are written in plain English, and the official wording is always the English text.",
   },
   {
     q: "How do you choose the section?",
-    a: "Your question is matched against every section, using both the words you typed and what you mean. Citations come from the text itself, never guessed, and every answer lists the sections it used so you can read them yourself.",
+    a: "Your question is matched against published sections, using both the words you typed and what you mean. Citations come from the text itself, never guessed, and every answer lists the sections it used so you can read them yourself.",
   },
   {
     q: "Can I quote an answer?",

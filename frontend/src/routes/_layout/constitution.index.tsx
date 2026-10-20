@@ -15,7 +15,7 @@ export const Route = createFileRoute("/_layout/constitution/")({
   loader: async ({ deps }) => {
     try {
       return await queryClient.fetchQuery(
-        treeQueryOptions(deps.parent, deps.release),
+        treeQueryOptions(deps.parent, deps.release, "constitution-1999"),
       )
     } catch {
       return null

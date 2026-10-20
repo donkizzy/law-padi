@@ -49,14 +49,30 @@ const env = {
 	ORIGIN_PROXY_SECRET: "test-secret",
 	PUBLIC_SITE_URL: origin,
 };
+const instruments = {
+	data: [
+		{
+			slug: "constitution-1999",
+			title: "Constitution",
+			short_title: "Constitution",
+			edition_label: provision.edition_label,
+			edition_note: "Later amendments are not included.",
+		},
+	],
+	release_version: provision.release_version,
+	count: 1,
+};
 function backend(request: Request): Promise<Response> {
 	const url = new URL(request.url);
 	expect(request.headers.get("cookie")).toBeNull();
 	expect(request.headers.get("authorization")).toBeNull();
 	expect(request.headers.get("x-origin-proxy-secret")).toBe("test-secret");
+	if (url.pathname.endsWith("/instruments"))
+		return Promise.resolve(Response.json(instruments));
 	if (url.pathname.endsWith("/tree"))
 		return Promise.resolve(
 			Response.json({
+				instrument_slug: "constitution-1999",
 				data: url.searchParams.has("all_nodes")
 					? [chapter, section]
 					: [section],
@@ -91,7 +107,7 @@ describe("public reading and discovery responses", () => {
 		expect(response.headers.get("content-type")).toContain("application/json");
 		const data = await response.json();
 		expect(data.version).toBe("plain-language-retrieval-v1");
-		expect(data.cases.length).toBe(55);
+		expect(data.cases.length).toBe(57);
 	});
 
 	test("serves landing text, identity and exactly one metadata set before JavaScript", async () => {
@@ -110,7 +126,7 @@ describe("public reading and discovery responses", () => {
 		const alias = await get(`/constitution/${sectionPath}`);
 		expect(alias.status).toBe(302);
 		expect(alias.headers.get("location")).toBe(
-			`${origin}/constitution/${sectionPath}?release=published-2004`,
+			`${origin}/laws/constitution-1999/${sectionPath}?release=published-2004`,
 		);
 		const response = await get(
 			`/constitution/${sectionPath}?release=published-2004`,
@@ -128,7 +144,7 @@ describe("public reading and discovery responses", () => {
 			`/constitution?parent=${chapter.canonical_path}&release=published-2004`,
 		);
 		expect(await response.text()).toContain(
-			`href="/constitution/${sectionPath}?release=published-2004"`,
+			`href="/laws/constitution-1999/${sectionPath}?release=published-2004"`,
 		);
 		expect(response.status).toBe(200);
 	});
@@ -239,4 +255,80 @@ describe("public reading and discovery responses", () => {
 			"private, no-store",
 		);
 	});
+});
+
+test("Act routes render law-specific metadata and sitemap membership from the published release", async () => {
+	const actPath = "acja-2015.section9";
+	const act = {
+		...provision,
+		canonical_path: actPath,
+		citation: "Section 9, ACJA 2015",
+		instrument_slug: "acja-2015",
+		instrument_short_title: "ACJA 2015",
+		instrument_title: "Administration of Criminal Justice Act 2015",
+		edition_label: "As enacted, 2015",
+		title: "Synthetic section",
+		authoritative_text: "Synthetic Act wording.",
+		ancestors: [],
+	};
+	const law = {
+		slug: "acja-2015",
+		title: act.instrument_title,
+		short_title: "ACJA 2015",
+		edition_label: act.edition_label,
+		edition_note: "As enacted, may have been amended.",
+	};
+	const fetcher = async (request: Request) => {
+		const url = new URL(request.url);
+		if (url.pathname.endsWith("/instruments"))
+			return Response.json({
+				...instruments,
+				data: [...instruments.data, law],
+				count: 2,
+			});
+		if (
+			url.pathname.endsWith("/tree") &&
+			url.searchParams.get("instrument") === law.slug
+		) {
+			expect(url.searchParams.get("release_version")).toBe(
+				provision.release_version,
+			);
+			return Response.json({
+				data: [{ ...section, canonical_path: actPath, citation: act.citation }],
+				scope: url.searchParams.has("all_nodes") ? "all" : "children",
+				parent: null,
+				release_version: provision.release_version,
+				edition_label: act.edition_label,
+				instrument_slug: law.slug,
+			});
+		}
+		if (url.pathname.endsWith(actPath)) return Response.json({ data: [act] });
+		return backend(request);
+	};
+	const html = await (
+		await get(`/laws/acja-2015/${actPath}?release=published-2004`, fetcher)
+	).text();
+	expect(html).toContain("ACJA 2015 (as enacted)");
+	expect(html).toContain("As enacted, may have been amended.");
+	expect(html).not.toContain("1999 Constitution (2015 edition)");
+	expect(html).toContain(
+		`rel="canonical" href="${origin}/laws/acja-2015/${actPath}?release=published-2004"`,
+	);
+	const tree = await get("/laws/acja-2015?release=published-2004", fetcher);
+	expect(tree.status).toBe(200);
+	expect(await tree.text()).toContain("Browse ACJA 2015");
+	const sitemap = await (await get("/sitemap.xml", fetcher)).text();
+	expect(sitemap).toContain(
+		`/laws/acja-2015/${actPath}?release=published-2004`,
+	);
+	expect(sitemap).not.toContain("unpublished-act");
+	for (const path of [
+		`/laws/police-act-2020/${actPath}?release=published-2004`,
+		`/constitution/${actPath}?release=published-2004`,
+		"/laws/unpublished-act?release=published-2004",
+	]) {
+		const response = await get(path, fetcher);
+		expect(response.status).toBe(404);
+		expect(response.headers.get("x-robots-tag")).toContain("noindex");
+	}
 });

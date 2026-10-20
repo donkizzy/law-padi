@@ -1,17 +1,21 @@
 import { FiInfo } from "react-icons/fi"
-import { editionNote } from "@/lib/legal-provisions"
+import { editionNote, type InstrumentContext } from "@/lib/legal-provisions"
 import { cn } from "@/lib/utils"
 
 export function EditionNotice({
   label,
   historical = true,
   className,
+  notice,
+  instrument,
 }: {
   label?: string | null
   historical?: boolean
   className?: string
+  notice?: string | null
+  instrument?: InstrumentContext | string
 }) {
-  if (!historical) return null
+  if (!historical && !notice) return null
   return (
     <p
       className={cn(
@@ -20,7 +24,9 @@ export function EditionNotice({
       )}
     >
       <FiInfo aria-hidden className="mt-0.5 size-4 shrink-0" />
-      <span>{editionNote(label)}</span>
+      <span className="whitespace-pre-line">
+        {notice || editionNote(label, instrument)}
+      </span>
     </p>
   )
 }

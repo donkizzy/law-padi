@@ -60,7 +60,13 @@ if (initial?.textContent) {
       )
     if (data.kind === "tree")
       queryClient.setQueryData(
-        ["legal", "tree", data.parent ?? undefined, data.release],
+        [
+          "legal",
+          "tree",
+          data.parent ?? undefined,
+          data.release,
+          data.instrument,
+        ],
         data.data,
       )
   } catch {

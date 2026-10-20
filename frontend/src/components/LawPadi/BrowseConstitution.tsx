@@ -1,6 +1,7 @@
 import { Link, useNavigate } from "@tanstack/react-router"
 import { useState } from "react"
 import type { ProvisionReference } from "@/client"
+import { LawPicker } from "@/components/LawPadi/LawPicker"
 import {
   ErrorState,
   InlineAction,
@@ -8,17 +9,34 @@ import {
   SkeletonBlock,
   SquircleButton,
 } from "@/components/LawPadi/primitives"
-import { legalError, useProvisionTree } from "@/hooks/useLegalCorpus"
-import { editionName } from "@/lib/legal-provisions"
+import {
+  legalError,
+  useLegalInstruments,
+  useProvisionTree,
+} from "@/hooks/useLegalCorpus"
+import {
+  editionName,
+  instrumentSlug,
+  lawName,
+  sectionQuery,
+} from "@/lib/legal-provisions"
+import { EditionNotice } from "./EditionNotice"
 
 export function BrowseConstitution({
   parent,
   release,
+  instrument = "constitution-1999",
 }: {
   parent?: string
   release?: string
+  instrument?: string
 }) {
-  const root = useProvisionTree(parent, release)
+  const root = useProvisionTree(parent, release, instrument)
+  const edition = root.data?.release_version ?? release
+  const instruments = useLegalInstruments(edition)
+  const selected = instruments.data?.data.find(
+    (item) => item.slug === instrument,
+  )
   const [query, setQuery] = useState("")
   const navigate = useNavigate()
   return (
@@ -28,20 +46,41 @@ export function BrowseConstitution({
         title={
           root.data?.parent
             ? `${root.data.parent.citation}: ${root.data.parent.title || root.data.parent.heading || "Published provisions"}`
-            : "Browse the Constitution."
+            : `Browse ${selected?.short_title || selected?.title || lawName(instrument)}.`
         }
       >
-        Explore the available chapters and sections of the{" "}
-        {editionName(root.data?.edition_label)}. Later amendments are not
-        included.
+        Explore the available parts and sections of{" "}
+        {editionName(root.data?.edition_label, instrument)}.
       </SectionHeading>
+      <LawPicker
+        value={instrument}
+        release={edition}
+        onChange={(slug) =>
+          void navigate({
+            to: "/laws/$instrument",
+            params: { instrument: slug },
+            search: { release: edition },
+          })
+        }
+      />
+      <EditionNotice
+        label={selected?.edition_label || root.data?.edition_label}
+        instrument={instrument}
+        className="mb-6"
+      />
+      {selected && (
+        <p className="mb-5 text-label font-normal text-muted-foreground">
+          {selected.section_count} published sections · {selected.edition_note}
+        </p>
+      )}
       {parent && (
         <Link
           className="mb-5 inline-block text-primary underline"
-          to="/constitution"
-          search={{ release: root.data?.release_version ?? release }}
+          to="/laws/$instrument"
+          params={{ instrument }}
+          search={{ release: edition }}
         >
-          All chapters and schedules
+          All parts and sections
         </Link>
       )}
       <form
@@ -51,12 +90,18 @@ export function BrowseConstitution({
           if (query.trim())
             void navigate({
               to: "/",
-              search: { q: query.trim(), mode: "auto", intent: "find" },
+              search: {
+                q: sectionQuery(query),
+                mode: "auto",
+                intent: "find",
+                instrument,
+                release: edition,
+              },
             })
         }}
       >
         <input
-          aria-label="Search the Constitution"
+          aria-label="Search this law"
           className="sq-md min-w-0 flex-1 border border-border bg-card px-4 text-sm"
           placeholder="Search a topic or a section number"
           value={query}
@@ -71,7 +116,7 @@ export function BrowseConstitution({
         <SkeletonBlock />
       ) : root.isError ? (
         <ErrorState
-          title="Couldn't load the Constitution"
+          title="Couldn't load this law"
           action={
             <InlineAction onClick={() => root.refetch()} type="button">
               Try again
@@ -80,7 +125,7 @@ export function BrowseConstitution({
         >
           {legalError(root.error)}
         </ErrorState>
-      ) : (
+      ) : root.data.data.length ? (
         <ul className="grid gap-3">
           {root.data.data.map((node) => (
             <li key={node.id}>
@@ -88,6 +133,8 @@ export function BrowseConstitution({
             </li>
           ))}
         </ul>
+      ) : (
+        <p>No sections are available at this level in this edition.</p>
       )}
       <Link
         className="mt-8 inline-block text-sm text-primary underline"
@@ -106,7 +153,7 @@ function ReadingLink({
   node: ProvisionReference
   release: string
 }) {
-  const document = node.has_text
+  const instrument = instrumentSlug(node)
   const contents = (
     <>
       <span className="font-bold text-primary">{node.citation}</span>
@@ -117,10 +164,10 @@ function ReadingLink({
   )
   const className =
     "sq-md block border border-border bg-card p-4 text-sm hover:border-primary focus-visible:ring-2 focus-visible:ring-ring"
-  return document ? (
+  return node.has_text ? (
     <Link
-      to="/constitution/$sectionId"
-      params={{ sectionId: node.canonical_path }}
+      to="/laws/$instrument/$sectionId"
+      params={{ instrument, sectionId: node.canonical_path }}
       search={{ release }}
       className={className}
     >
@@ -128,7 +175,8 @@ function ReadingLink({
     </Link>
   ) : (
     <Link
-      to="/constitution"
+      to="/laws/$instrument"
+      params={{ instrument }}
       search={{ parent: node.canonical_path, release }}
       className={className}
     >

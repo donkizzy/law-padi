@@ -6,28 +6,35 @@ import {
 import { conversationHeaders } from "@/hooks/useConversations"
 import { preferencesKey } from "@/hooks/useWorkspacePreferences"
 import { editionName, editionNote } from "./legal-provisions"
+import { referencePath } from "./seo"
 
 export function evidenceUrl(
   item: Pick<EvidenceItem, "canonical_path" | "release_version">,
 ) {
-  return `${window.location.origin}/constitution/${encodeURIComponent(item.canonical_path)}?release=${encodeURIComponent(item.release_version)}`
+  return `${window.location.origin}${referencePath(item.canonical_path, item.release_version)}`
 }
 
-export type CopySource = Pick<
-  EvidenceItem,
-  | "canonical_path"
-  | "release_version"
-  | "citation"
-  | "title"
-  | "authoritative_text"
-  | "edition_label"
-  | "legal_status"
-  | "source_authority"
-  | "source_title"
-  | "source_page_start"
->
+export type CopySource = Partial<
+  Pick<
+    EvidenceItem,
+    "instrument_slug" | "instrument_title" | "instrument_short_title"
+  >
+> &
+  Pick<
+    EvidenceItem,
+    | "canonical_path"
+    | "release_version"
+    | "citation"
+    | "title"
+    | "authoritative_text"
+    | "edition_label"
+    | "legal_status"
+    | "source_authority"
+    | "source_title"
+    | "source_page_start"
+  >
 export function evidenceCopy(item: CopySource) {
-  return `${item.citation}${item.title ? ` — ${item.title}` : ""}\n${item.authoritative_text}\n\n${editionName(item.edition_label)}\n${item.legal_status === "historical" ? `${editionNote(item.edition_label)}\n` : ""}${item.source_authority} · ${item.source_title}${item.source_page_start ? ` · page ${item.source_page_start}` : ""}\n${evidenceUrl(item)}`
+  return `${item.citation}${item.title ? ` — ${item.title}` : ""}\n${item.authoritative_text}\n\n${editionName(item.edition_label, item)}\n${item.legal_status === "historical" ? `${editionNote(item.edition_label, item)}\n` : ""}${item.source_authority} · ${item.source_title}${item.source_page_start ? ` · page ${item.source_page_start}` : ""}\n${evidenceUrl(item)}`
 }
 
 export function downloadResearch(name: string, data: unknown) {

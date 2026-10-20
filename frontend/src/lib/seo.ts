@@ -4,7 +4,7 @@ export const DEFAULT_SITE_URL =
 export const REPOSITORY_URL = "https://github.com/donkizzy/law-padi"
 export const CORRECTIONS_URL = `${REPOSITORY_URL}/issues`
 export const SITE_DESCRIPTION =
-  "Find sections of Nigeria's 1999 Constitution, read the 2004 source edition and check citations against the original document. Free and independent."
+  "Explore Nigeria's Constitution and published laws with precise citations, source-edition notices and original documents. Free and independent."
 export const EDITION_CAVEAT =
   "This is the 1999 Constitution as published in 2004. Later amendments aren't included yet, so a section may have changed since."
 
@@ -12,16 +12,16 @@ export const publicPages = {
   "/about": {
     title: "About, sources and corrections | constitution.ng",
     description:
-      "Who publishes constitution.ng, which Constitution edition it uses, how sources and explanations are checked, and how to report a correction.",
+      "Who publishes constitution.ng, which source editions it uses, how sources and explanations are checked, and how to report a correction.",
     heading: "About constitution.ng",
     sections: [
       {
-        heading: "An independent constitutional reference",
-        text: "constitution.ng publishes a searchable reading edition of Nigeria's Constitution and a tool for finding and explaining provisions. The publisher is constitution.ng. This is an independent project, not a government publication or a service affiliated with the National Assembly. Explanations are information, not legal advice.",
+        heading: "An independent legal reference",
+        text: "constitution.ng publishes a searchable source editions of Nigeria's Constitution and published laws, and a tool for finding and explaining provisions. The publisher is constitution.ng. This is an independent project, not a government publication or a service affiliated with the National Assembly. Explanations are information, not legal advice.",
       },
       {
         heading: "Source edition and scope",
-        text: `${EDITION_CAVEAT} The reading pages identify the exact release and link to the source document and printed page. The public corpus contains known source gaps, including a missing Section 168 and two Section 189 identities distinguished by their source locations. Do not assume this is a complete or current consolidated edition.`,
+        text: `${EDITION_CAVEAT} Only laws in the selected published release appear in the law picker. Acts are shown as enacted and may have been amended. The reading pages identify the exact release and link to the source document and printed page. The Constitution source contains known gaps, including a missing Section 168 and two Section 189 identities distinguished by their source locations. Do not assume this is a complete or current consolidated edition.`,
       },
       {
         heading: "How wording and explanations are handled",
@@ -41,7 +41,7 @@ export const publicPages = {
     sections: [
       {
         heading: "What was measured",
-        text: "The plain-language-retrieval-v1 benchmark contains 55 everyday English and Pidgin-style questions and expected sections. The recorded 12 October 2026 result reports a 0.98 top-one hit rate and 1.0 top-five hit rate after adding the topic guide. This is a retained retrieval result, not a new test of the current deployment.",
+        text: "The downloadable plain-language-retrieval-v1 benchmark contains 57 everyday English and Pidgin-style questions and expected sections. The recorded 12 October 2026 run used the original 55 cases; its result reports a 0.98 top-one hit rate and 1.0 top-five hit rate after adding the topic guide. This is a retained retrieval result, not a new test of the current deployment.",
       },
       {
         heading: "What the result does not establish",
@@ -79,14 +79,18 @@ export function siteOrigin(value = DEFAULT_SITE_URL): string {
 }
 
 export function referencePath(path: string, release: string) {
-  return `/constitution/${encodeURIComponent(path)}?${new URLSearchParams({ release })}`
+  return `/laws/${encodeURIComponent(path.split(".")[0])}/${encodeURIComponent(path)}?${new URLSearchParams({ release })}`
 }
 
-export function browsePath(parent?: string, release?: string) {
+export function browsePath(
+  parent?: string,
+  release?: string,
+  instrument = parent?.split(".")[0] || "constitution-1999",
+) {
   const query = new URLSearchParams()
   if (parent) query.set("parent", parent)
   if (release) query.set("release", release)
-  return `/constitution${query.size ? `?${query}` : ""}`
+  return `/laws/${encodeURIComponent(instrument)}${query.size ? `?${query}` : ""}`
 }
 
 export function websiteSchema(origin: string) {
@@ -159,6 +163,9 @@ export function provisionMetadata(
     canonical_path: string
     release_version: string
     edition_label?: string | null
+    instrument_slug?: string
+    instrument_title?: string
+    instrument_short_title?: string | null
     ancestors?: {
       canonical_path: string
       citation: string
@@ -168,12 +175,20 @@ export function provisionMetadata(
   origin: string,
 ): SeoMetadata {
   const years = provision.edition_label?.match(/\b(?:19|20)\d{2}\b/g)
-  const edition = years?.length
-    ? `${years[years.length - 1]} source edition`
-    : "source edition"
+  const slug =
+    provision.instrument_slug || provision.canonical_path.split(".")[0]
+  const constitution = slug === "constitution-1999"
+  const law = constitution
+    ? "Nigeria's Constitution"
+    : provision.instrument_short_title || provision.instrument_title || slug
+  const edition = !constitution
+    ? "as-enacted edition"
+    : years?.length
+      ? `${years[years.length - 1]} source edition`
+      : "source edition"
   const title = `${provision.citation}${provision.title ? `: ${provision.title}` : ""} | ${edition} | constitution.ng`
   const canonical = `${origin}${referencePath(provision.canonical_path, provision.release_version)}`
-  const description = `Read ${provision.citation}${provision.title ? ` (${provision.title})` : ""} in Nigeria's Constitution, ${edition}, with its citation and original source. Later amendments may differ.`
+  const description = `Read ${provision.citation}${provision.title ? ` (${provision.title})` : ""} in ${law}, ${edition}, with its citation and original source. Later amendments may differ.`
   return {
     title,
     description,
@@ -187,8 +202,9 @@ export function provisionMetadata(
         "@type": "BreadcrumbList",
         itemListElement: [
           {
-            name: "Browse Constitution",
-            item: origin + browsePath(undefined, provision.release_version),
+            name: `Browse ${law}`,
+            item:
+              origin + browsePath(undefined, provision.release_version, slug),
           },
           ...(provision.ancestors ?? []).map((node) => ({
             name: node.citation,

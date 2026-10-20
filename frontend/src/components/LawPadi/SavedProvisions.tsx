@@ -12,7 +12,11 @@ import {
 import useAuth from "@/hooks/useAuth"
 import { legalError, type useProvision } from "@/hooks/useLegalCorpus"
 import { type Bookmark, useSavedProvisions } from "@/hooks/useSavedProvisions"
-import { provisionTitle, statusLabel } from "@/lib/legal-provisions"
+import {
+  instrumentSlug,
+  provisionTitle,
+  statusLabel,
+} from "@/lib/legal-provisions"
 import { downloadResearch } from "@/lib/research"
 import { useSessionStatus } from "@/lib/session"
 import { EditionNotice } from "./EditionNotice"
@@ -85,7 +89,7 @@ export function SavedProvisions() {
       </SectionHeading>
       <div className="mb-5 flex flex-wrap gap-2">
         <InlineAction asChild>
-          <Link to="/constitution">Browse sections</Link>
+          <Link to="/laws">Browse sections</Link>
         </InlineAction>
         {bookmarks.length > 0 && (
           <InlineAction
@@ -176,18 +180,26 @@ function SavedCard({
             status={
               provision.legal_status === "current" ? "current" : "historical"
             }
-            label={statusLabel(provision.legal_status, provision.edition_label)}
+            label={statusLabel(
+              provision.legal_status,
+              provision.edition_label,
+              provision,
+            )}
           />
           <h2 className="font-display text-xl">{provisionTitle(provision)}</h2>
           {provision.title && <p className="text-sm">{provision.citation}</p>}
           <EditionNotice
             label={provision.edition_label}
+            instrument={provision}
             historical={provision.legal_status === "historical"}
           />
           <Link
             className="text-sm font-semibold text-primary hover:underline"
-            to="/constitution/$sectionId"
-            params={{ sectionId: bookmark.canonical_path }}
+            to="/laws/$instrument/$sectionId"
+            params={{
+              instrument: instrumentSlug(bookmark),
+              sectionId: bookmark.canonical_path,
+            }}
             search={{ release: bookmark.release_version }}
           >
             Open section

@@ -11,6 +11,7 @@ export const Route = createFileRoute("/_layout/constitution/$sectionId")({
   loaderDeps: ({ search }) => ({ release: search.release }),
   loader: async ({ params, deps }) => {
     try {
+      if (!params.sectionId.startsWith("constitution-1999.")) return null
       return await queryClient.fetchQuery(
         provisionQueryOptions(params.sectionId, deps.release),
       )
@@ -37,6 +38,7 @@ function ProvisionRoute() {
   return (
     <ProvisionDetail
       key={`${sectionId}:${release}`}
+      instrument="constitution-1999"
       sectionId={sectionId}
       release={release}
     />

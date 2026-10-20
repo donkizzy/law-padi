@@ -85,6 +85,23 @@ async function mockCorpus(page: Page) {
   )
   await page.route("**/api/v1/legal/**", async (route) => {
     const url = new URL(route.request().url())
+    if (url.pathname.endsWith("/instruments"))
+      return route.fulfill({
+        json: {
+          data: [
+            {
+              slug: "constitution-1999",
+              title: "Constitution",
+              short_title: "Constitution",
+              edition_label: edition,
+              edition_note: "Later amendments may differ.",
+              section_count: 320,
+            },
+          ],
+          count: 1,
+          release_version: release,
+        },
+      })
     if (url.pathname.endsWith("/releases/current"))
       return route.fulfill({
         json: {
@@ -219,7 +236,7 @@ for (const mobile of [false, true]) {
       page.getByRole("link", { name: "Chapter 4", exact: true }),
     ).toHaveAttribute(
       "href",
-      `/constitution?parent=constitution-1999.chapter4&release=${release}`,
+      `/laws/constitution-1999?parent=constitution-1999.chapter4&release=${release}`,
     )
     await page.getByRole("button", { name: "Copy text" }).click()
     await expect
@@ -263,7 +280,7 @@ for (const mobile of [false, true]) {
     await page.goto("/saved")
     await page.getByRole("link", { name: "Open section" }).click()
     await expect(page).toHaveURL(
-      new RegExp(`/constitution/.*release=${release}`),
+      new RegExp(`/laws/constitution-1999/.*release=${release}`),
     )
     await expect(page.getByRole("article")).toContainText(
       provision.authoritative_text,
@@ -470,7 +487,7 @@ test("Obsolete responses cannot replace a newer search; New clears results", asy
     return route.fulfill({ json: response() })
   })
   await page.goto("/?q=slow")
-  await expect(page.getByText("Searching the Constitution…")).toBeVisible()
+  await expect(page.getByText("Searching the published laws…")).toBeVisible()
   await submit(page, "Section 33(2)(a)")
   await expect(page.getByRole("article")).toBeVisible()
   finish?.()
@@ -587,7 +604,7 @@ test("Browse search always finds sections even when chat is available", async ({
   })
   await page.goto("/constitution")
   await page
-    .getByRole("textbox", { name: "Search the Constitution" })
+    .getByRole("textbox", { name: "Search this law" })
     .fill("Section 33(2)(a)")
   await page.getByRole("button", { name: "Search", exact: true }).click()
   await expect(
@@ -618,7 +635,7 @@ for (const mobile of [false, true]) {
     })
     await page.goto("/?q=Section%2033(2)(a)&intent=find")
     await expect(
-      page.getByText("Searching the Constitution…", { exact: true }),
+      page.getByText("Searching the published laws…", { exact: true }),
     ).toBeVisible()
     finishSearch()
     await expect(

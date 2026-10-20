@@ -33,7 +33,7 @@ function Layout() {
             <Logo variant="full" />
           </div>
           <div className="hidden min-w-0 items-center gap-2 text-xs font-semibold text-muted-foreground sm:flex">
-            <span>Explore the Constitution</span>
+            <span>Explore published laws</span>
             <span aria-hidden className="sq-xs size-1.5 bg-primary" />
             <span>Every answer shows its source</span>
           </div>

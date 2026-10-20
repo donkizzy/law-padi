@@ -11,7 +11,8 @@ import {
   SheetDescription,
   SheetTitle,
 } from "@/components/ui/sheet"
-import { readableText, statusLabel } from "@/lib/legal-provisions"
+import { lawName, readableText, statusLabel } from "@/lib/legal-provisions"
+import { referencePath } from "@/lib/seo"
 import { EditionNotice } from "./EditionNotice"
 import { SourceActions } from "./SourceActions"
 
@@ -53,16 +54,21 @@ function SourceContent({
           status={
             evidence.legal_status === "current" ? "current" : "historical"
           }
-          label={statusLabel(evidence.legal_status, evidence.edition_label)}
+          label={statusLabel(
+            evidence.legal_status,
+            evidence.edition_label,
+            evidence,
+          )}
         />
         <EditionNotice
           label={evidence.edition_label}
+          instrument={evidence}
           historical={evidence.legal_status === "historical"}
         />
       </div>
       <section>
         <h3 className="mb-3 text-overline uppercase text-muted-foreground">
-          What the Constitution says
+          What {lawName(evidence)} says
         </h3>
         <p className="whitespace-pre-wrap font-legal text-statute-sm">
           {readableText(evidence.authoritative_text)}
@@ -84,7 +90,10 @@ function SourceContent({
         </InlineAction>
         <InlineAction asChild>
           <a
-            href={`/constitution/${encodeURIComponent(evidence.canonical_path)}?release=${encodeURIComponent(evidence.release_version)}`}
+            href={referencePath(
+              evidence.canonical_path,
+              evidence.release_version,
+            )}
           >
             Open full section
           </a>

@@ -12,14 +12,38 @@ export function useLegalRelease() {
   })
 }
 
+export function useLegalInstruments(releaseVersion?: string) {
+  return useQuery({
+    queryKey: ["legal", "instruments", releaseVersion],
+    queryFn: async ({ signal }) =>
+      (
+        await LegalService.readLegalInstruments({
+          query: { release_version: releaseVersion },
+          signal,
+        })
+      ).data,
+    retry: false,
+    staleTime: 30_000,
+  })
+}
+
 export function useLegalSearch(
   query: string,
   mode: "auto" | "semantic" = "auto",
   attempt = 0,
   releaseVersion?: string,
+  instrument?: string,
 ) {
   return useQuery({
-    queryKey: ["legal", "search", query, mode, attempt, releaseVersion],
+    queryKey: [
+      "legal",
+      "search",
+      query,
+      mode,
+      attempt,
+      releaseVersion,
+      instrument,
+    ],
     queryFn: async ({ signal }) =>
       (
         await LegalService.searchLegal({
@@ -29,6 +53,7 @@ export function useLegalSearch(
             top_k: 10,
             index_kind: "enacted",
             release_version: releaseVersion,
+            instrument,
           },
           signal,
         })
@@ -61,13 +86,17 @@ export function useProvision(path: string, release?: string) {
   })
 }
 
-export function treeQueryOptions(parent?: string, release?: string) {
+export function treeQueryOptions(
+  parent?: string,
+  release?: string,
+  instrument?: string,
+) {
   return {
-    queryKey: ["legal", "tree", parent, release],
+    queryKey: ["legal", "tree", parent, release, instrument],
     queryFn: async ({ signal }: { signal: AbortSignal }) =>
       (
         await LegalService.readProvisionTree({
-          query: { parent_path: parent, release_version: release },
+          query: { parent_path: parent, release_version: release, instrument },
           signal,
         })
       ).data,
@@ -76,8 +105,12 @@ export function treeQueryOptions(parent?: string, release?: string) {
   }
 }
 
-export function useProvisionTree(parent?: string, release?: string) {
-  return useQuery(treeQueryOptions(parent, release))
+export function useProvisionTree(
+  parent?: string,
+  release?: string,
+  instrument?: string,
+) {
+  return useQuery(treeQueryOptions(parent, release, instrument))
 }
 
 export function useProvisionHistory(
@@ -103,7 +136,7 @@ export function legalError(error: unknown): string {
   if (error instanceof AxiosError) {
     if (error.response?.status === 404) return "We couldn't find that section."
     if (error.response?.status === 503)
-      return "The Constitution can't be loaded right now. Please try again in a moment."
+      return "The published laws can't be loaded right now. Please try again in a moment."
   }
   return "Something went wrong loading this. Check your connection and try again."
 }

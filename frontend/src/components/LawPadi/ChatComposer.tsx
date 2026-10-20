@@ -24,7 +24,7 @@ export function ChatComposer({
   value,
   onChange,
   onSubmit,
-  placeholder = "Ask anything about Nigeria's Constitution…",
+  placeholder = "Ask about Nigeria's Constitution and published laws…",
   compact = false,
   contextLabel,
   loading = false,
@@ -108,7 +108,7 @@ export function ChatComposer({
           <span className="sq-sm bg-secondary px-3 py-2 text-label text-muted-foreground">
             {purpose === "explanation"
               ? "Answers in plain English"
-              : "Search the Constitution"}
+              : "Search published laws"}
           </span>
           {contextLabel ? (
             <span className="text-label font-normal text-muted-foreground">

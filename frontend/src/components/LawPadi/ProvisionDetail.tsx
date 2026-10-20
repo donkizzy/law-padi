@@ -8,15 +8,19 @@ import {
 } from "@/components/LawPadi/primitives"
 import { SourcePanel } from "@/components/LawPadi/SourcePanel"
 import { legalError, useProvision } from "@/hooks/useLegalCorpus"
+import { instrumentSlug } from "@/lib/legal-provisions"
 
 export function ProvisionDetail({
   sectionId = "",
   release,
+  instrument,
 }: {
   sectionId?: string
   release?: string
+  instrument?: string
 }) {
-  const detail = useProvision(sectionId, release)
+  const validPath = !instrument || sectionId.startsWith(`${instrument}.`)
+  const detail = useProvision(validPath ? sectionId : "", release)
   const [sourceOpen, setSourceOpen] = useState(false)
   const navigate = useNavigate()
   return (
@@ -28,11 +32,20 @@ export function ProvisionDetail({
       <section className="mx-auto w-full max-w-4xl px-4 py-8 sm:px-8 lg:px-12 lg:py-12">
         <Link
           className="mb-7 inline-block text-sm text-primary hover:underline"
-          to="/constitution"
+          to="/laws/$instrument"
+          params={{
+            instrument:
+              instrument || instrumentSlug({ canonical_path: sectionId }),
+          }}
+          search={{ release: detail.data?.release_version || release }}
         >
           Back to browse
         </Link>
-        {detail.isPending ? (
+        {!validPath ? (
+          <ErrorState title="Provision unavailable">
+            The section link names a different law.
+          </ErrorState>
+        ) : detail.isPending ? (
           <SkeletonBlock />
         ) : detail.isError || !detail.data ? (
           <ErrorState
@@ -52,7 +65,16 @@ export function ProvisionDetail({
             provision={detail.data}
             onOpenSource={() => setSourceOpen(true)}
             onRelated={(q) => {
-              void navigate({ to: "/", search: { q, mode: "semantic" } })
+              void navigate({
+                to: "/",
+                search: {
+                  q,
+                  mode: "semantic",
+                  intent: "find",
+                  instrument: instrumentSlug(detail.data),
+                  release: detail.data.release_version,
+                },
+              })
             }}
           />
         )}

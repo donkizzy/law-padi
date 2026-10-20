@@ -27,7 +27,12 @@ import { conversationHeaders } from "@/hooks/useConversations"
 import { useLegalRelease } from "@/hooks/useLegalCorpus"
 import { useSavedProvisions } from "@/hooks/useSavedProvisions"
 import { useWorkspacePreferences } from "@/hooks/useWorkspacePreferences"
-import { editionName, readableText } from "@/lib/legal-provisions"
+import {
+  editionNote,
+  readableText,
+  releaseEditionName,
+  shortCitation,
+} from "@/lib/legal-provisions"
 import {
   downloadResearch,
   evidenceCopy,
@@ -56,19 +61,20 @@ type ExplanationAnswer = {
   follow_up_questions?: string[]
   citation_outcomes: CitationOutcome[]
   evidence: EvidenceItem[]
+  related_laws?: string[]
   notice?: string | null
 }
 
-// Messages are owned here so earlier conversations read the same way.
+// Fallbacks for older answers that have no server-provided notice.
 const outcomeMessages: Record<string, string> = {
   clarification_required:
-    "That question covers a lot of the Constitution at once. Try asking about one section or one issue.",
+    "That question covers a lot at once. Try asking about one law, section or issue.",
   validation_failed:
-    "We couldn't write an explanation we were confident matches the Constitution's text, so here is the section itself.",
+    "We couldn't confirm that the explanation matches the published provisions, so here are the sections themselves.",
   provider_failure:
-    "Explanations aren't available right now. Here is the relevant text of the Constitution.",
+    "Explanations aren't available right now. Here are the relevant published sections.",
   budget_exhausted:
-    "We've reached today's limit for explanations. Here is the relevant text of the Constitution.",
+    "We've reached today's limit for explanations. Here are the relevant published sections.",
   capacity_exhausted:
     "A lot of people are asking questions right now. Here is the relevant text; try again in a minute.",
   cancelled: "You stopped this answer.",
@@ -115,10 +121,13 @@ function AnswerActions({ answer }: { answer: ExplanationAnswer }) {
         )
         .join("\n\n")
       const facts = answer.missing_facts.length
-        ? `\n\nWhat could change this for you:\n${answer.missing_facts.join("\n")}`
+        ? `\n\nThe answer may depend on:\n${answer.missing_facts.join("\n")}`
+        : ""
+      const laws = answer.related_laws?.length
+        ? `\n\nOther laws also apply:\n${answer.related_laws.join("\n")}`
         : ""
       await navigator.clipboard.writeText(
-        `${explanation || statusMessage(answer)}${facts}\n\nSources:\n${answer.evidence.map(evidenceCopy).join("\n\n")}\n\nThis explanation is not legal advice.`,
+        `${explanation || statusMessage(answer)}${facts}${laws}\n\nSources:\n${answer.evidence.map(evidenceCopy).join("\n\n")}\n\nThis explanation is not legal advice.`,
       )
       toast.success("Answer and citations copied")
     } catch {
@@ -166,19 +175,35 @@ function AnswerActions({ answer }: { answer: ExplanationAnswer }) {
 }
 
 function statusMessage(answer: ExplanationAnswer) {
-  if (answer.outcome === "clarification_required" && answer.notice)
-    return answer.notice
+  if (answer.notice) return answer.notice
   const gap = answer.citation_outcomes.find((row) => row.status !== "resolved")
   if (answer.outcome === "insufficient_evidence") {
     if (gap?.message) return gap.message
     return answer.evidence.length
-      ? "The Constitution doesn't seem to answer this directly. Here are the closest sections we found."
-      : "We couldn't find a part of the Constitution that answers this. Try rephrasing, or ask about a specific right, office or section."
+      ? "The published provisions don't seem to answer this directly. Here are the closest sections we found."
+      : "We couldn't find a published section that answers this. Try rephrasing, or name a law and section."
   }
   return (
     outcomeMessages[answer.outcome] ??
-    "We couldn't finish this answer. Here is the relevant text of the Constitution."
+    "We couldn't finish this answer. Here are the relevant published sections."
   )
+}
+
+function answerEditionNotice(answer: ExplanationAnswer) {
+  if (answer.blocks.length && answer.notice) return answer.notice
+  const instruments = new Map<string, EvidenceItem>()
+  for (const item of answer.evidence) {
+    if (item.legal_status !== "historical") continue
+    const slug = item.instrument_slug || item.canonical_path.split(".")[0]
+    if (!instruments.has(slug)) instruments.set(slug, item)
+  }
+  return [...instruments.entries()]
+    .map(([slug, item]) =>
+      slug === "constitution-1999"
+        ? editionNote(item.edition_label)
+        : `${item.instrument_short_title || item.instrument_title || slug}: As enacted, may have been amended.`,
+    )
+    .join("\n\n")
 }
 
 /** Drop sources whose text sits inside another listed source (35(3) in 35). */
@@ -215,6 +240,11 @@ function splitSources(answer: ExplanationAnswer) {
     ),
   )
   return { cited, others }
+}
+
+function newCitations(blocks: ExplanationAnswer["blocks"], index: number) {
+  const previous = new Set(blocks[index - 1]?.evidence_ids ?? [])
+  return blocks[index].evidence_ids.filter((id) => !previous.has(id))
 }
 
 /** Paragraphs, with lines starting "- " grouped into a list. */
@@ -264,9 +294,10 @@ function SourceChip({
       className="sq-sm min-h-11 border border-primary/25 px-3 py-2 text-label text-primary hover:bg-primary/5 focus-visible:ring-2 focus-visible:ring-ring"
       onClick={() => onSelect(item)}
       title={item.title ?? undefined}
+      aria-label={item.citation}
       type="button"
     >
-      {item.citation}
+      {shortCitation(item)}
     </button>
   )
 }
@@ -338,6 +369,31 @@ function LookupGaps({ outcomes }: { outcomes: CitationOutcome[] }) {
   )
 }
 
+/** Curated names of other laws on the subject; not part of the answer. */
+function RelatedLaws({
+  laws,
+  className,
+}: {
+  laws?: string[]
+  className?: string
+}) {
+  if (!laws?.length) return null
+  return (
+    <section aria-label="Other laws also apply" className={className}>
+      <h3 className="text-body font-semibold">Other laws also apply</h3>
+      <p className="mt-1 text-body text-muted-foreground">
+        These Nigerian laws also cover this. They aren't included here yet, so
+        check them or ask a lawyer before relying on this answer.
+      </p>
+      <ul className="mt-2 ml-5 grid list-disc gap-1 text-body">
+        {laws.map((law) => (
+          <li key={law}>{law}</li>
+        ))}
+      </ul>
+    </section>
+  )
+}
+
 function FollowUps({
   questions,
   onAsk,
@@ -391,9 +447,11 @@ function AnswerView({
         <p className="sq-md bg-secondary p-4 text-body" role="status">
           {statusMessage(answer)}
         </p>
+        <RelatedLaws laws={answer.related_laws} />
         <EditionNotice
           label={historical?.edition_label}
           historical={Boolean(historical)}
+          notice={answerEditionNotice(answer)}
         />
         <AnswerActions answer={answer} />
         <LookupGaps outcomes={answer.citation_outcomes} />
@@ -439,8 +497,9 @@ function AnswerView({
           {answer.blocks.map((block, index) => (
             <div key={`${index}:${block.text.slice(0, 24)}`}>
               <BlockText lead={index === 0} text={block.text} />
-              <div className="mt-2 flex flex-wrap gap-2">
-                {block.evidence_ids.map((id) => {
+              <div className="mt-2 flex flex-wrap gap-2 empty:hidden">
+                {/* A section already shown on the block above isn't repeated. */}
+                {newCitations(answer.blocks, index).map((id) => {
                   const item = byId.get(id)
                   return item ? (
                     <SourceChip item={item} key={id} onSelect={onSelect} />
@@ -453,7 +512,7 @@ function AnswerView({
         {answer.missing_facts.length > 0 && (
           <div className="mt-6 border-t border-border pt-4">
             <h3 className="text-body font-semibold">
-              What could change this for you
+              The answer may depend on
             </h3>
             <ul className="mt-2 ml-5 grid list-disc gap-1 text-body">
               {answer.missing_facts.map((fact) => (
@@ -462,9 +521,14 @@ function AnswerView({
             </ul>
           </div>
         )}
+        <RelatedLaws
+          className="mt-6 border-t border-border pt-4"
+          laws={answer.related_laws}
+        />
         <EditionNotice
           label={historical?.edition_label}
           historical={Boolean(historical)}
+          notice={answerEditionNotice(answer)}
           className="mt-5 border-t border-border pt-4"
         />
       </div>
@@ -884,9 +948,7 @@ export function ChatHome() {
             if (event.event === "generation.started")
               setProgress("Writing a plain-English answer…")
             if (event.event === "verification.started")
-              setProgress(
-                "Double-checking the answer against the Constitution…",
-              )
+              setProgress("Double-checking the answer against its sources…")
             if (event.event === "answer.complete") {
               terminal = true
               if (data.answer && typeof data.answer === "object") {
@@ -1097,7 +1159,7 @@ export function ChatHome() {
                   {conversation.data?.title || "Conversation"}
                 </h1>
                 <p className="mt-1 text-label font-normal text-muted-foreground">
-                  {editionName(
+                  {releaseEditionName(
                     conversation.data?.edition_label ??
                       release.data?.edition_label,
                   )}
@@ -1167,7 +1229,7 @@ export function ChatHome() {
               The law, made easy
             </p>
             <h1 className="font-display text-title-1 sm:text-display">
-              Ask about Nigeria&apos;s Constitution.
+              Ask about Nigeria&apos;s laws.
             </h1>
             <p className="mt-4 max-w-xl text-body-lg text-muted-foreground">
               Ask in your own words. You&apos;ll get a plain-English answer and
@@ -1351,7 +1413,7 @@ export function ChatHome() {
           {!capabilities.data?.explanations_enabled && (
             <p role="status" className="mb-3 text-body text-muted-foreground">
               Explanations are paused. Find a section to keep reading the
-              Constitution.
+              published laws.
             </p>
           )}
           <ChatComposer
@@ -1366,7 +1428,7 @@ export function ChatHome() {
               Boolean(activeRunId) || !capabilities.data?.explanations_enabled
             }
             compact={Boolean(search.c)}
-            contextLabel={editionName(
+            contextLabel={releaseEditionName(
               conversation.data?.edition_label ?? release.data?.edition_label,
             )}
           />
@@ -1387,7 +1449,7 @@ export function ChatHome() {
             </div>
           )}
           <p className="mt-3 text-label font-normal text-muted-foreground">
-            Answers explain the Constitution in plain language and can miss
+            Answers explain published laws in plain language and can miss
             details. Check the sections they link to, and talk to a lawyer about
             your own situation.
           </p>

@@ -21,12 +21,17 @@ import { Route as LayoutAboutRouteImport } from './routes/_layout/about'
 import { Route as LayoutAdminRouteImport } from './routes/_layout/admin'
 import { Route as LayoutAmendmentsRouteImport } from './routes/_layout/amendments'
 import { Route as LayoutConstitutionRouteImport } from './routes/_layout/constitution'
+import { Route as LayoutLawsRouteImport } from './routes/_layout/laws'
 import { Route as LayoutMethodologyRouteImport } from './routes/_layout/methodology'
 import { Route as LayoutPrivacyRouteImport } from './routes/_layout/privacy'
 import { Route as LayoutSavedRouteImport } from './routes/_layout/saved'
 import { Route as LayoutSettingsRouteImport } from './routes/_layout/settings'
 import { Route as LayoutConstitutionIndexRouteImport } from './routes/_layout/constitution.index'
 import { Route as LayoutConstitutionSectionIdRouteImport } from './routes/_layout/constitution.$sectionId'
+import { Route as LayoutLawsIndexRouteImport } from './routes/_layout/laws.index'
+import { Route as LayoutLawsInstrumentRouteImport } from './routes/_layout/laws.$instrument'
+import { Route as LayoutLawsInstrumentIndexRouteImport } from './routes/_layout/laws.$instrument.index'
+import { Route as LayoutLawsInstrumentSectionIdRouteImport } from './routes/_layout/laws.$instrument.$sectionId'
 
 const LayoutRoute = LayoutRouteImport.update({
   id: '/_layout',
@@ -87,6 +92,11 @@ const LayoutConstitutionRoute = LayoutConstitutionRouteImport.update({
   path: '/constitution',
   getParentRoute: () => LayoutRoute,
 } as any)
+const LayoutLawsRoute = LayoutLawsRouteImport.update({
+  id: '/laws',
+  path: '/laws',
+  getParentRoute: () => LayoutRoute,
+} as any)
 const LayoutMethodologyRoute = LayoutMethodologyRouteImport.update({
   id: '/methodology',
   path: '/methodology',
@@ -118,6 +128,28 @@ const LayoutConstitutionSectionIdRoute =
     path: '/$sectionId',
     getParentRoute: () => LayoutConstitutionRoute,
   } as any)
+const LayoutLawsIndexRoute = LayoutLawsIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => LayoutLawsRoute,
+} as any)
+const LayoutLawsInstrumentRoute = LayoutLawsInstrumentRouteImport.update({
+  id: '/$instrument',
+  path: '/$instrument',
+  getParentRoute: () => LayoutLawsRoute,
+} as any)
+const LayoutLawsInstrumentIndexRoute =
+  LayoutLawsInstrumentIndexRouteImport.update({
+    id: '/',
+    path: '/',
+    getParentRoute: () => LayoutLawsInstrumentRoute,
+  } as any)
+const LayoutLawsInstrumentSectionIdRoute =
+  LayoutLawsInstrumentSectionIdRouteImport.update({
+    id: '/$sectionId',
+    path: '/$sectionId',
+    getParentRoute: () => LayoutLawsInstrumentRoute,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof LayoutIndexRoute
@@ -131,12 +163,17 @@ export interface FileRoutesByFullPath {
   '/admin': typeof LayoutAdminRoute
   '/amendments': typeof LayoutAmendmentsRoute
   '/constitution': typeof LayoutConstitutionRouteWithChildren
+  '/laws': typeof LayoutLawsRouteWithChildren
   '/methodology': typeof LayoutMethodologyRoute
   '/privacy': typeof LayoutPrivacyRoute
   '/saved': typeof LayoutSavedRoute
   '/settings': typeof LayoutSettingsRoute
   '/constitution/$sectionId': typeof LayoutConstitutionSectionIdRoute
+  '/laws/$instrument': typeof LayoutLawsInstrumentRouteWithChildren
   '/constitution/': typeof LayoutConstitutionIndexRoute
+  '/laws/': typeof LayoutLawsIndexRoute
+  '/laws/$instrument/$sectionId': typeof LayoutLawsInstrumentSectionIdRoute
+  '/laws/$instrument/': typeof LayoutLawsInstrumentIndexRoute
 }
 export interface FileRoutesByTo {
   '/login': typeof LoginRoute
@@ -155,6 +192,9 @@ export interface FileRoutesByTo {
   '/': typeof LayoutIndexRoute
   '/constitution/$sectionId': typeof LayoutConstitutionSectionIdRoute
   '/constitution': typeof LayoutConstitutionIndexRoute
+  '/laws': typeof LayoutLawsIndexRoute
+  '/laws/$instrument/$sectionId': typeof LayoutLawsInstrumentSectionIdRoute
+  '/laws/$instrument': typeof LayoutLawsInstrumentIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -169,13 +209,18 @@ export interface FileRoutesById {
   '/_layout/admin': typeof LayoutAdminRoute
   '/_layout/amendments': typeof LayoutAmendmentsRoute
   '/_layout/constitution': typeof LayoutConstitutionRouteWithChildren
+  '/_layout/laws': typeof LayoutLawsRouteWithChildren
   '/_layout/methodology': typeof LayoutMethodologyRoute
   '/_layout/privacy': typeof LayoutPrivacyRoute
   '/_layout/saved': typeof LayoutSavedRoute
   '/_layout/settings': typeof LayoutSettingsRoute
   '/_layout/': typeof LayoutIndexRoute
   '/_layout/constitution/$sectionId': typeof LayoutConstitutionSectionIdRoute
+  '/_layout/laws/$instrument': typeof LayoutLawsInstrumentRouteWithChildren
   '/_layout/constitution/': typeof LayoutConstitutionIndexRoute
+  '/_layout/laws/': typeof LayoutLawsIndexRoute
+  '/_layout/laws/$instrument/$sectionId': typeof LayoutLawsInstrumentSectionIdRoute
+  '/_layout/laws/$instrument/': typeof LayoutLawsInstrumentIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -191,12 +236,17 @@ export interface FileRouteTypes {
     | '/admin'
     | '/amendments'
     | '/constitution'
+    | '/laws'
     | '/methodology'
     | '/privacy'
     | '/saved'
     | '/settings'
     | '/constitution/$sectionId'
+    | '/laws/$instrument'
     | '/constitution/'
+    | '/laws/'
+    | '/laws/$instrument/$sectionId'
+    | '/laws/$instrument/'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/login'
@@ -215,6 +265,9 @@ export interface FileRouteTypes {
     | '/'
     | '/constitution/$sectionId'
     | '/constitution'
+    | '/laws'
+    | '/laws/$instrument/$sectionId'
+    | '/laws/$instrument'
   id:
     | '__root__'
     | '/_layout'
@@ -228,13 +281,18 @@ export interface FileRouteTypes {
     | '/_layout/admin'
     | '/_layout/amendments'
     | '/_layout/constitution'
+    | '/_layout/laws'
     | '/_layout/methodology'
     | '/_layout/privacy'
     | '/_layout/saved'
     | '/_layout/settings'
     | '/_layout/'
     | '/_layout/constitution/$sectionId'
+    | '/_layout/laws/$instrument'
     | '/_layout/constitution/'
+    | '/_layout/laws/'
+    | '/_layout/laws/$instrument/$sectionId'
+    | '/_layout/laws/$instrument/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -333,6 +391,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof LayoutConstitutionRouteImport
       parentRoute: typeof LayoutRoute
     }
+    '/_layout/laws': {
+      id: '/_layout/laws'
+      path: '/laws'
+      fullPath: '/laws'
+      preLoaderRoute: typeof LayoutLawsRouteImport
+      parentRoute: typeof LayoutRoute
+    }
     '/_layout/methodology': {
       id: '/_layout/methodology'
       path: '/methodology'
@@ -375,6 +440,34 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof LayoutConstitutionSectionIdRouteImport
       parentRoute: typeof LayoutConstitutionRoute
     }
+    '/_layout/laws/': {
+      id: '/_layout/laws/'
+      path: '/'
+      fullPath: '/laws/'
+      preLoaderRoute: typeof LayoutLawsIndexRouteImport
+      parentRoute: typeof LayoutLawsRoute
+    }
+    '/_layout/laws/$instrument': {
+      id: '/_layout/laws/$instrument'
+      path: '/$instrument'
+      fullPath: '/laws/$instrument'
+      preLoaderRoute: typeof LayoutLawsInstrumentRouteImport
+      parentRoute: typeof LayoutLawsRoute
+    }
+    '/_layout/laws/$instrument/': {
+      id: '/_layout/laws/$instrument/'
+      path: '/'
+      fullPath: '/laws/$instrument/'
+      preLoaderRoute: typeof LayoutLawsInstrumentIndexRouteImport
+      parentRoute: typeof LayoutLawsInstrumentRoute
+    }
+    '/_layout/laws/$instrument/$sectionId': {
+      id: '/_layout/laws/$instrument/$sectionId'
+      path: '/$sectionId'
+      fullPath: '/laws/$instrument/$sectionId'
+      preLoaderRoute: typeof LayoutLawsInstrumentSectionIdRouteImport
+      parentRoute: typeof LayoutLawsInstrumentRoute
+    }
   }
 }
 
@@ -391,11 +484,39 @@ const LayoutConstitutionRouteChildren: LayoutConstitutionRouteChildren = {
 const LayoutConstitutionRouteWithChildren =
   LayoutConstitutionRoute._addFileChildren(LayoutConstitutionRouteChildren)
 
+interface LayoutLawsInstrumentRouteChildren {
+  LayoutLawsInstrumentSectionIdRoute: typeof LayoutLawsInstrumentSectionIdRoute
+  LayoutLawsInstrumentIndexRoute: typeof LayoutLawsInstrumentIndexRoute
+}
+
+const LayoutLawsInstrumentRouteChildren: LayoutLawsInstrumentRouteChildren = {
+  LayoutLawsInstrumentSectionIdRoute: LayoutLawsInstrumentSectionIdRoute,
+  LayoutLawsInstrumentIndexRoute: LayoutLawsInstrumentIndexRoute,
+}
+
+const LayoutLawsInstrumentRouteWithChildren =
+  LayoutLawsInstrumentRoute._addFileChildren(LayoutLawsInstrumentRouteChildren)
+
+interface LayoutLawsRouteChildren {
+  LayoutLawsInstrumentRoute: typeof LayoutLawsInstrumentRouteWithChildren
+  LayoutLawsIndexRoute: typeof LayoutLawsIndexRoute
+}
+
+const LayoutLawsRouteChildren: LayoutLawsRouteChildren = {
+  LayoutLawsInstrumentRoute: LayoutLawsInstrumentRouteWithChildren,
+  LayoutLawsIndexRoute: LayoutLawsIndexRoute,
+}
+
+const LayoutLawsRouteWithChildren = LayoutLawsRoute._addFileChildren(
+  LayoutLawsRouteChildren,
+)
+
 interface LayoutRouteChildren {
   LayoutAboutRoute: typeof LayoutAboutRoute
   LayoutAdminRoute: typeof LayoutAdminRoute
   LayoutAmendmentsRoute: typeof LayoutAmendmentsRoute
   LayoutConstitutionRoute: typeof LayoutConstitutionRouteWithChildren
+  LayoutLawsRoute: typeof LayoutLawsRouteWithChildren
   LayoutMethodologyRoute: typeof LayoutMethodologyRoute
   LayoutPrivacyRoute: typeof LayoutPrivacyRoute
   LayoutSavedRoute: typeof LayoutSavedRoute
@@ -408,6 +529,7 @@ const LayoutRouteChildren: LayoutRouteChildren = {
   LayoutAdminRoute: LayoutAdminRoute,
   LayoutAmendmentsRoute: LayoutAmendmentsRoute,
   LayoutConstitutionRoute: LayoutConstitutionRouteWithChildren,
+  LayoutLawsRoute: LayoutLawsRouteWithChildren,
   LayoutMethodologyRoute: LayoutMethodologyRoute,
   LayoutPrivacyRoute: LayoutPrivacyRoute,
   LayoutSavedRoute: LayoutSavedRoute,

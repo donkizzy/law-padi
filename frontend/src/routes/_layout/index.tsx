@@ -10,6 +10,10 @@ export const Route = createFileRoute("/_layout/")({
     c: z.uuid().optional(),
     q: z.string().trim().max(2000).optional(),
     mode: z.enum(["auto", "semantic"]).optional(),
+    instrument: z
+      .string()
+      .regex(/^[a-z0-9]+(?:-[a-z0-9]+)*$/)
+      .optional(),
     release: z.string().max(128).optional(),
     selected: z.uuid().optional(),
     intent: z.enum(["ask", "find"]).optional(),
@@ -27,7 +31,8 @@ export const Route = createFileRoute("/_layout/")({
   head: () => ({
     meta: [
       {
-        title: "constitution.ng - Explore Nigeria's Constitution",
+        title:
+          "constitution.ng - Explore Nigeria's Constitution and published laws",
       },
     ],
   }),

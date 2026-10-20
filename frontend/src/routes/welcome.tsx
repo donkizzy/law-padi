@@ -7,7 +7,7 @@ export const Route = createFileRoute("/welcome")({
   component: LandingPage,
   head: () =>
     seoHead({
-      title: "Nigeria's Constitution in plain English | constitution.ng",
+      title: "Nigeria's Constitution and published laws | constitution.ng",
       description: SITE_DESCRIPTION,
       canonical: `${publicOrigin}/welcome`,
       index: true,
@@ -23,7 +23,7 @@ export const Route = createFileRoute("/welcome")({
         },
         websiteSchema(publicOrigin),
         pageSchema(
-          "Nigeria's Constitution in plain English",
+          "Nigeria's Constitution and published laws",
           `${publicOrigin}/welcome`,
           SITE_DESCRIPTION,
         ),

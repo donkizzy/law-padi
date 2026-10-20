@@ -23,6 +23,7 @@ import { Appearance } from "@/components/Common/Appearance"
 import { Logo } from "@/components/Common/Logo"
 import { SquircleButton } from "@/components/LawPadi/primitives"
 import { useInView } from "@/hooks/useInView"
+import { useLegalInstruments } from "@/hooks/useLegalCorpus"
 import { faqs } from "@/lib/public-content"
 import { cn } from "@/lib/utils"
 
@@ -407,6 +408,7 @@ function QuestionLink({
 /* Hero */
 
 function Hero() {
+  const instruments = useLegalInstruments()
   return (
     <section
       aria-labelledby="hero-title"
@@ -415,7 +417,7 @@ function Hero() {
       <div className="min-w-0">
         <Reveal>
           <p className="mb-4 text-overline uppercase text-primary">
-            Nigeria&apos;s Constitution, in plain English
+            Nigeria&apos;s Constitution and published laws
           </p>
           <h1
             className="max-w-[680px] font-display text-title-1 text-balance text-foreground sm:text-display"
@@ -425,13 +427,22 @@ function Hero() {
             <span className="block text-balance">Get the exact section.</span>
           </h1>
           <p className="mt-6 max-w-[680px] text-body-lg text-pretty text-muted-foreground">
-            Type your question the way you would say it. We find the part of the
-            Constitution that answers it, explain it in plain English and show
-            you the official wording beside it.
+            Type your question the way you would say it. We find relevant
+            sections in the published sources, explain them in plain English and
+            show you the original wording beside them.
           </p>
         </Reveal>
         <Reveal className="mt-8" delay={120}>
           <QuestionForm id="start" />
+          {instruments.data && (
+            <p className="mt-4 text-label font-normal text-muted-foreground">
+              Available in this release:{" "}
+              {instruments.data.data
+                .map((law) => law.short_title || law.title)
+                .join(", ")}
+              . Check each source edition before relying on it.
+            </p>
+          )}
           <ul
             aria-label="Free to use"
             className="mt-5 flex flex-wrap gap-x-5 gap-y-2 text-label font-normal text-muted-foreground"
@@ -646,7 +657,7 @@ const benefits = [
   {
     icon: FiBookOpen,
     title: "The official wording, every time",
-    body: "Every answer shows the exact text of the sections it relies on, with citations taken from the Constitution itself.",
+    body: "Every answer shows the exact text of the sections it relies on, with citations taken from the published source.",
   },
   {
     icon: FiBookmark,
@@ -892,13 +903,13 @@ function FinalCta() {
           Ask your first question
         </h2>
         <p className="mt-4 text-body-lg text-pretty text-muted-foreground">
-          Find out what the Constitution says about the thing on your mind, in
-          under a minute.
+          Find the published sections about the thing on your mind, and read
+          their source wording.
         </p>
         <QuestionForm className="mt-8 text-left" />
         <RouterLink
           className="sq-sm mt-6 inline-flex items-center gap-1.5 px-2 py-1 text-sm font-semibold text-[color:var(--legal-blue)] hover:underline focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-ring/25"
-          to="/constitution"
+          to="/laws"
         >
           Or browse the published sections
           <FiArrowRight aria-hidden className="size-3.5" />
@@ -914,7 +925,7 @@ const footerLinks = [
   { label: "Ask a question", to: "/" },
   { label: "About and corrections", to: "/about" },
   { label: "Retrieval methodology", to: "/methodology" },
-  { label: "Browse the Constitution", to: "/constitution" },
+  { label: "Browse published laws", to: "/laws" },
   { label: "Saved sections", to: "/saved" },
   { label: "Sign in", to: "/login" },
   { label: "Privacy", to: "/privacy" },
@@ -927,8 +938,8 @@ function SiteFooter() {
         <div>
           <Logo asLink={false} className="h-5" />
           <p className="mt-4 max-w-md text-body text-pretty text-muted-foreground">
-            Nigeria&apos;s Constitution in plain English. Independent, and not a
-            government publication. Explanations are not legal advice.
+            Nigeria&apos;s Constitution and published laws. Independent, and not
+            a government publication. Explanations are not legal advice.
           </p>
         </div>
         <nav aria-label="Footer">

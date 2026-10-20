@@ -1,3 +1,4 @@
+import { readFile } from "node:fs/promises"
 import { expect, type Page, test } from "@playwright/test"
 import { mockSignedIn } from "./utils/session.ts"
 
@@ -243,7 +244,7 @@ for (const mobile of [false, true]) {
     const mock = await mockChat(page)
     await page.goto("/?intent=ask")
     await expect(
-      page.getByRole("heading", { name: "Ask about Nigeria's Constitution." }),
+      page.getByRole("heading", { name: "Ask about Nigeria's laws." }),
     ).toBeVisible()
     await page.getByRole("textbox", { name: "Your question" }).fill(question)
     await page.getByRole("button", { name: "Send question" }).click()
@@ -284,7 +285,7 @@ for (const mobile of [false, true]) {
       page.getByRole("link", { name: "Open full section" }),
     ).toHaveAttribute(
       "href",
-      `/constitution/${evidence.canonical_path}?release=${releaseVersion}`,
+      `/laws/constitution-1999/${evidence.canonical_path}?release=${releaseVersion}`,
     )
     await page.getByRole("button", { name: "Explain this section" }).click()
     await expect.poll(() => mock.submissions.length).toBe(2)
@@ -333,7 +334,7 @@ test("A withheld topic explanation leads with complete parent source wording", a
   await page.getByRole("button", { name: "Send question" }).click()
   const region = page.getByRole("region", { name: "Answer", exact: true })
   await expect(region.getByRole("status")).toContainText(
-    "confident matches the Constitution's text",
+    "We couldn't write an explanation.",
   )
   await expect(region).toContainText("Section 131")
   await expect(region).toContainText("citizen of Nigeria by birth")
@@ -350,7 +351,7 @@ test("An answer leads with plain English, lists items, and offers follow-ups", a
     ...answer,
     blocks: [
       {
-        text: "Generally, no. The Constitution protects your privacy.",
+        text: "Generally, yes. The Constitution protects your privacy.",
         evidence_ids: ["E1"],
         quotation: null,
       },
@@ -361,6 +362,7 @@ test("An answer leads with plain English, lists items, and offers follow-ups", a
       },
     ],
     missing_facts: ["Whether a court order allowed the search"],
+    related_laws: ["Police Act 2020 (police powers, including searches)"],
     follow_up_questions: [followUp],
   })
   await page.goto("/?intent=ask")
@@ -372,8 +374,16 @@ test("An answer leads with plain English, lists items, and offers follow-ups", a
     "your correspondence",
     "your phone conversations",
     "Whether a court order allowed the search",
+    "Police Act 2020 (police powers, including searches)",
   ])
-  await expect(region).toContainText("What could change this for you")
+  await expect(region).toContainText("The answer may depend on")
+  await expect(
+    region.getByRole("region", { name: "Other laws also apply" }),
+  ).toBeVisible()
+  // Both blocks cite Section 37; its button shows once.
+  await expect(
+    region.getByRole("button", { name: "Section 37", exact: true }),
+  ).toHaveCount(1)
   await region.getByRole("button", { name: followUp }).click()
   await expect.poll(() => mock.submissions.length).toBe(2)
   expect(mock.submissions[1].question).toBe(followUp)
@@ -564,7 +574,7 @@ test("A history failure does not change Ask into Find", async ({ page }) => {
   await mockChat(page, answer, { historyFailures: 2 })
   await page.goto("/?intent=ask")
   await expect(
-    page.getByRole("heading", { name: "Ask about Nigeria's Constitution." }),
+    page.getByRole("heading", { name: "Ask about Nigeria's laws." }),
   ).toBeVisible()
   await expect(page.getByRole("alert")).toContainText("History couldn't load")
   await expect(
@@ -625,4 +635,150 @@ test("A fallback keeps the edition caveat and a source can be saved inside chat"
   ).toHaveAttribute("aria-pressed", "true")
   await page.reload()
   await expect(region).toContainText("Later amendments aren't included yet")
+})
+
+function statuteNoticeSources() {
+  const acja = {
+    ...evidence,
+    evidence_id: "E2",
+    canonical_path: "acja-2015.section9",
+    citation: "Section 9, ACJA 2015",
+    short_citation: "ACJA s.9",
+    instrument_slug: "acja-2015",
+    instrument_title: "Administration of Criminal Justice Act 2015",
+    instrument_short_title: "ACJA 2015",
+    instrument_type: "act",
+    edition_label: "As enacted, may have been amended.",
+    authoritative_text: "Synthetic ACJA provision for notice-display testing.",
+    source_title: "Synthetic ACJA fixture",
+  }
+  const police = {
+    ...acja,
+    evidence_id: "E3",
+    canonical_path: "police-act-2020.section49",
+    citation: "Section 49, Police Act 2020",
+    short_citation: "Police Act s.49",
+    instrument_slug: "police-act-2020",
+    instrument_title: "Nigeria Police Act 2020",
+    instrument_short_title: "Police Act 2020",
+    authoritative_text:
+      "Synthetic Police Act provision for notice-display testing.",
+    source_title: "Synthetic Police Act fixture",
+  }
+  return [acja, police]
+}
+
+test("Chat preserves server coverage and each law's edition notice", async ({
+  page,
+}) => {
+  const [acja, police] = statuteNoticeSources()
+  const notice =
+    "The published provisions don't seem to answer this directly. This edition includes Constitution, ACJA 2015 and Police Act 2020."
+  await mockChat(page, {
+    ...answer,
+    outcome: "insufficient_evidence",
+    blocks: [],
+    citation_outcomes: [],
+    evidence: [evidence, acja, police],
+    notice,
+  })
+  await page.goto("/?intent=ask")
+  await sendQuestion(page)
+  const region = page.getByRole("region", { name: "Answer", exact: true })
+  await expect(region.getByRole("status")).toHaveText(notice)
+  await expect(region).toContainText(
+    "ACJA 2015: As enacted, may have been amended.",
+  )
+  await expect(region).toContainText(
+    "Police Act 2020: As enacted, may have been amended.",
+  )
+  await expect(region).toContainText("Constitution as published in 2004")
+  await page.screenshot({
+    path: "../output/playwright/statute-phase5-law-notices.png",
+    fullPage: true,
+  })
+})
+
+test("A completed answer displays the server's separate law caveats", async ({
+  page,
+}) => {
+  const notice =
+    "Based on the 1999 Constitution as published in 2004. Later amendments aren't included yet.\n\nACJA 2015: As enacted, may have been amended.\n\nPolice Act 2020: As enacted, may have been amended."
+  await mockChat(page, {
+    ...answer,
+    notice,
+    evidence: [evidence, ...statuteNoticeSources()],
+    blocks: [
+      ...answer.blocks,
+      {
+        text: "Synthetic Act explanation for notice-display testing.",
+        evidence_ids: ["E2", "E3"],
+        quotation: null,
+      },
+    ],
+  })
+  await page.goto("/?intent=ask")
+  await sendQuestion(page)
+  const region = page.getByRole("region", { name: "Answer", exact: true })
+  await expect(region).toContainText(
+    "ACJA 2015: As enacted, may have been amended.",
+  )
+  await expect(region).toContainText(
+    "Police Act 2020: As enacted, may have been amended.",
+  )
+  await expect(region).toContainText("Constitution as published in 2004")
+  await region
+    .getByRole("button", { name: "Section 9, ACJA 2015", exact: true })
+    .click()
+  const sources = page.getByRole("complementary", {
+    name: "Section details",
+    exact: true,
+  })
+  await expect(sources).toContainText("What ACJA 2015 says")
+  await expect(
+    sources.getByRole("link", { name: "Open full section" }),
+  ).toHaveAttribute(
+    "href",
+    `/laws/acja-2015/acja-2015.section9?release=${releaseVersion}`,
+  )
+  await expect(sources).toContainText(
+    "ACJA 2015: As enacted, may have been amended.",
+  )
+})
+
+test("Exported Act answers retain the law, source caveat and canonical URL", async ({
+  page,
+}) => {
+  const acja = statuteNoticeSources()[0]
+  await mockChat(page, {
+    ...answer,
+    evidence: [acja],
+    blocks: [
+      {
+        text: "Synthetic Act answer for export testing.",
+        evidence_ids: ["E2"],
+        quotation: null,
+      },
+    ],
+  })
+  await page.goto("/?intent=ask")
+  await sendQuestion(page)
+  const region = page.getByRole("region", { name: "Answer", exact: true })
+  await expect(
+    region.getByRole("button", { name: "Section 9, ACJA 2015", exact: true }),
+  ).toHaveText("ACJA s.9")
+  const downloading = page.waitForEvent("download")
+  await region
+    .getByRole("button", { name: "Export answer", exact: true })
+    .click()
+  const download = await downloading
+  const exported = JSON.parse(await readFile((await download.path())!, "utf8"))
+  expect(exported.answer.evidence[0].instrument_slug).toBe("acja-2015")
+  expect(exported.sources[0]).toContain("ACJA 2015 (as enacted)")
+  expect(exported.sources[0]).toContain(
+    "ACJA 2015: As enacted, may have been amended.",
+  )
+  expect(exported.sources[0]).toContain(
+    `/laws/acja-2015/acja-2015.section9?release=${releaseVersion}`,
+  )
 })

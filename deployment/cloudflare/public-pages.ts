@@ -1,5 +1,6 @@
 import { faqs, publicBenchmark } from "../../frontend/src/lib/public-content";
 import type {
+	LegalInstrumentsPublic,
 	LegalSearchResponse,
 	LegalSearchResult,
 	ProvisionReference,
@@ -8,6 +9,7 @@ import type {
 import {
 	editionName,
 	editionNote,
+	lawName,
 	readableText,
 } from "../../frontend/src/lib/legal-provisions";
 import {
@@ -81,7 +83,7 @@ function referenceList(nodes: ProvisionReference[], release: string) {
 	return `<ul class="mt-5 grid gap-3">${nodes.map((node) => `<li class="sq-md border border-border bg-card p-4">${anchor(documentPath(node, release), `${node.citation}${node.title ? `: ${node.title}` : ""}`)}</li>`).join("")}</ul>`;
 }
 function layout(body: string) {
-	return `<main class="mx-auto max-w-4xl px-4 py-8 sm:px-8"><nav aria-label="Public navigation" class="flex flex-wrap gap-4 text-sm">${anchor("/welcome", "constitution.ng")} ${anchor("/constitution", "Browse the Constitution")} ${anchor("/about", "Sources and corrections")}</nav>${body}<footer class="mt-8 border-t border-border py-8 text-sm">${anchor("/about", "About constitution.ng")} · ${anchor("/methodology", "Retrieval methodology")} · ${anchor(CORRECTIONS_URL, "Corrections on GitHub (repository access required)")}<p class="mt-4">Independent. Not a government publication. Explanations are not legal advice.</p></footer></main>`;
+	return `<main class="mx-auto max-w-4xl px-4 py-8 sm:px-8"><nav aria-label="Public navigation" class="flex flex-wrap gap-4 text-sm">${anchor("/welcome", "constitution.ng")} ${anchor("/laws", "Browse published laws")} ${anchor("/about", "Sources and corrections")}</nav>${body}<footer class="mt-8 border-t border-border py-8 text-sm">${anchor("/about", "About constitution.ng")} · ${anchor("/methodology", "Retrieval methodology")} · ${anchor(CORRECTIONS_URL, "Corrections on GitHub (repository access required)")}<p class="mt-4">Independent. Not a government publication. Explanations are not legal advice.</p></footer></main>`;
 }
 function staticPage(path: keyof typeof publicPages, origin: string) {
 	const page = publicPages[path];
@@ -102,9 +104,9 @@ function staticPage(path: keyof typeof publicPages, origin: string) {
 	};
 }
 function landing(origin: string) {
-	const title = "Nigeria's Constitution in plain English | constitution.ng";
+	const title = "Nigeria's Constitution and published laws | constitution.ng";
 	const canonical = `${origin}/welcome`;
-	const body = `<h1 class="mt-8 font-display text-title-1">Ask about your rights. Get the exact section.</h1><p class="${textClass}">${escapeHtml(SITE_DESCRIPTION)}</p><p class="${textClass}">${escapeHtml(EDITION_CAVEAT)}</p><form action="/" method="get" class="mt-8"><label for="public-question">Your question about the Constitution</label><input id="public-question" name="q" required maxlength="2000" class="sq-md mt-4 block w-full border border-border bg-card p-4"><input type="hidden" name="intent" value="find"><button class="sq-sm mt-4 bg-primary px-4 py-2 text-primary-foreground" type="submit">Find a section</button></form><h2 class="${headingClass}">Read the original wording</h2><ul class="mt-4 grid gap-3"><li>${anchor("/constitution/constitution-1999.chapter4.section37", "Section 37: Right to private and family life")}</li><li>${anchor("/constitution/constitution-1999.chapter4.section35", "Section 35: Right to personal liberty")}</li><li>${anchor("/constitution", "Browse published chapters, sections and schedules")}</li></ul><h2 class="${headingClass}">Check every answer against its source</h2><p class="${textClass}">Questions can be phrased in English or Pidgin; explanations are in English. Read the cited source wording and its edition before relying on an explanation. The source edition has known gaps and does not include later amendments.</p><p class="${textClass}">${anchor("/methodology", "Read the dated retrieval test and its limits")} and ${anchor("/about", "how sources, review and corrections work")}.</p>`;
+	const body = `<h1 class="mt-8 font-display text-title-1">Ask about your rights. Get the exact section.</h1><p class="${textClass}">${escapeHtml(SITE_DESCRIPTION)}</p><p class="${textClass}">${escapeHtml(EDITION_CAVEAT)}</p><form action="/" method="get" class="mt-8"><label for="public-question">Your question about published laws</label><input id="public-question" name="q" required maxlength="2000" class="sq-md mt-4 block w-full border border-border bg-card p-4"><input type="hidden" name="intent" value="find"><button class="sq-sm mt-4 bg-primary px-4 py-2 text-primary-foreground" type="submit">Find a section</button></form><h2 class="${headingClass}">Read the original wording</h2><ul class="mt-4 grid gap-3"><li>${anchor("/constitution/constitution-1999.chapter4.section37", "Section 37: Right to private and family life")}</li><li>${anchor("/constitution/constitution-1999.chapter4.section35", "Section 35: Right to personal liberty")}</li><li>${anchor("/laws", "Browse published laws, sections and schedules")}</li></ul><h2 class="${headingClass}">Check every answer against its source</h2><p class="${textClass}">Questions can be phrased in English or Pidgin; explanations are in English. Read the cited source wording and its edition before relying on an explanation. The source edition has known gaps and does not include later amendments.</p><p class="${textClass}">${anchor("/methodology", "Read the dated retrieval test and its limits")} and ${anchor("/about", "how sources, review and corrections work")}.</p>`;
 	return {
 		body:
 			body +
@@ -147,11 +149,17 @@ async function apiJson<T>(readApi: ReadApi, path: string): Promise<T> {
 		throw new PublicError(503);
 	}
 }
-function treePath(parent?: string, release?: string, all = false) {
+function treePath(
+	parent?: string,
+	release?: string,
+	all = false,
+	instrument = "constitution-1999",
+) {
 	const query = new URLSearchParams({ index_kind: "enacted" });
 	if (parent) query.set("parent_path", parent);
 	if (release) query.set("release_version", release);
 	if (all) query.set("all_nodes", "true");
+	query.set("instrument", instrument);
 	return `/api/v1/legal/provisions/tree?${query}`;
 }
 function validateTree(tree: ProvisionTreePublic) {
@@ -222,7 +230,7 @@ function searchRobots(origin: string) {
 	return `User-agent: *\nUser-agent: OAI-SearchBot\nUser-agent: Claude-SearchBot\nUser-agent: PerplexityBot\nAllow: /\nDisallow: /api/\n\nSitemap: ${origin}/sitemap.xml\n`;
 }
 function llmsDirectory(origin: string) {
-	return `# constitution.ng\n\n> Independent Nigerian constitutional reference. Published historical/source edition, not certified current consolidated law.\n\n${EDITION_CAVEAT}\n\n## Reading and provenance\n- [Browse the source edition](${origin}/constitution): Chapter and provision links, pinned to the published release.\n- [Sources and corrections](${origin}/about): Publisher, review boundaries, known corpus gaps and corrections.\n- [Retrieval methodology](${origin}/methodology): Dated retrieval benchmark; not a measure of answer correctness.\n\n## Citation guidance\nCite a provision's release-pinned canonical URL, edition, citation and original source. Do not describe historical wording as current consolidated law. Explanations are not legal advice.\n`;
+	return `# constitution.ng\n\n> Independent Nigerian legal reference. Published source editions, not certified current consolidated law.\n\n${EDITION_CAVEAT}\n\n## Reading and provenance\n- [Browse the source edition](${origin}/laws): Law and provision links, pinned to the published release.\n- [Sources and corrections](${origin}/about): Publisher, review boundaries, known corpus gaps and corrections.\n- [Retrieval methodology](${origin}/methodology): Dated retrieval benchmark; not a measure of answer correctness.\n\n## Citation guidance\nCite a provision's release-pinned canonical URL, edition, citation and original source. Do not describe historical wording as current consolidated law. Explanations are not legal advice.\n`;
 }
 export async function publicRequest(
 	request: Request,
@@ -253,21 +261,40 @@ export async function publicRequest(
 		return plain(request, llmsDirectory(origin), "text/plain");
 	if (path === "/sitemap.xml") {
 		try {
-			const tree = await apiJson<ProvisionTreePublic>(
+			const instruments = await apiJson<LegalInstrumentsPublic>(
 				readApi,
-				treePath(undefined, undefined, true),
+				"/api/v1/legal/instruments",
 			);
-			validateTree(tree);
-			if (tree.scope !== "all") throw new PublicError(503); // Old API must not silently publish a partial sitemap.
-			const paths = new Set([
-				"/welcome",
-				"/about",
-				"/methodology",
-				browsePath(undefined, tree.release_version),
-			]);
-			for (const node of tree.data)
-				if (!["subsection", "paragraph"].includes(node.kind))
-					paths.add(documentPath(node, tree.release_version));
+			if (!instruments.release_version || !instruments.data?.length)
+				throw new PublicError(503);
+			const trees = await Promise.all(
+				instruments.data.map(async (law) => {
+					const tree = await apiJson<ProvisionTreePublic>(
+						readApi,
+						treePath(undefined, instruments.release_version, true, law.slug),
+					);
+					validateTree(tree);
+					if (
+						tree.scope !== "all" ||
+						tree.release_version !== instruments.release_version ||
+						tree.instrument_slug !== law.slug ||
+						tree.data.some(
+							(node) => !node.canonical_path.startsWith(law.slug + "."),
+						)
+					)
+						throw new PublicError(503);
+					return tree;
+				}),
+			);
+			const paths = new Set(["/welcome", "/about", "/methodology"]);
+			for (const tree of trees) {
+				paths.add(
+					browsePath(undefined, tree.release_version, tree.instrument_slug),
+				);
+				for (const node of tree.data)
+					if (!["subsection", "paragraph"].includes(node.kind))
+						paths.add(documentPath(node, tree.release_version));
+			}
 			if (paths.size > 50000) throw new PublicError(503);
 			const xml = `<?xml version="1.0" encoding="UTF-8"?><urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">${[...paths].map((item) => `<url><loc>${escapeHtml(origin + item)}</loc></url>`).join("")}</urlset>`;
 			return plain(request, xml, "application/xml");
@@ -330,30 +357,56 @@ export async function publicRequest(
 				page.body,
 			);
 		}
-		if (path === "/constitution") {
+		const lawRoute = path.match(
+			/^\/laws\/([a-z0-9]+(?:-[a-z0-9]+)*)(?:\/(.+))?$/,
+		);
+		if (
+			path === "/constitution" ||
+			path === "/laws" ||
+			(lawRoute && !lawRoute[2])
+		) {
+			const instrument = lawRoute?.[1] || "constitution-1999";
+			const instruments = await apiJson<LegalInstrumentsPublic>(
+				readApi,
+				`/api/v1/legal/instruments${release ? `?${new URLSearchParams({ release_version: release })}` : ""}`,
+			);
+			const law = instruments.data?.find((item) => item.slug === instrument);
+			if (!law) throw new PublicError(404);
+			if (
+				!instruments.release_version ||
+				(release && instruments.release_version !== release)
+			)
+				throw new PublicError(503);
 			const tree = await apiJson<ProvisionTreePublic>(
 				readApi,
-				treePath(parent, release),
+				treePath(parent, instruments.release_version, false, instrument),
 			);
 			validateTree(tree);
 			if (
 				tree.scope !== "children" ||
+				tree.instrument_slug !== instrument ||
 				(parent && tree.parent?.canonical_path !== parent) ||
-				(release && tree.release_version !== release)
+				tree.data.some(
+					(node) => !node.canonical_path.startsWith(instrument + "."),
+				) ||
+				tree.release_version !== instruments.release_version
 			)
 				throw new PublicError(503);
-			if (!release)
+			if (!release || path === "/laws")
 				return new Response(null, {
 					status: 302,
 					headers: {
-						location: origin + browsePath(parent, tree.release_version),
+						location:
+							origin + browsePath(parent, tree.release_version, instrument),
 						"cache-control": "no-store",
 					},
 				});
-			const title = `${tree.parent?.citation ?? "Browse Nigeria's Constitution"}${tree.parent?.title ? `: ${tree.parent.title}` : ""} | source edition | constitution.ng`;
-			const canonical = origin + browsePath(parent, tree.release_version);
-			const description = `Read the published chapters and sections in ${tree.edition_label}. Later amendments are not included.`;
-			const body = `<h1 class="mt-8 font-display text-title-2">${escapeHtml(tree.parent ? `${tree.parent.citation}: ${tree.parent.title || tree.parent.heading || "Published provisions"}` : "Browse the Constitution.")}</h1><p class="${textClass}">${escapeHtml(tree.edition_label)}. Later amendments are not included.</p>${parent ? `<p class="${textClass}">${anchor(browsePath(undefined, tree.release_version), "All chapters and schedules")}</p>` : ""}${referenceList(tree.data, tree.release_version)}`;
+			const name = law.short_title || law.title;
+			const title = `${tree.parent?.citation ?? `Browse ${name}`}${tree.parent?.title ? `: ${tree.parent.title}` : ""} | source edition | constitution.ng`;
+			const canonical =
+				origin + browsePath(parent, tree.release_version, instrument);
+			const description = `Read the published parts and sections of ${name}. ${law.edition_note}`;
+			const body = `<nav aria-label="Published laws" class="mt-8 flex flex-wrap gap-3">${instruments.data.map((item) => anchor(browsePath(undefined, tree.release_version, item.slug), item.short_title || item.title)).join(" · ")}</nav><h1 class="mt-8 font-display text-title-2">${escapeHtml(tree.parent ? `${tree.parent.citation}: ${tree.parent.title || tree.parent.heading || "Published provisions"}` : `Browse ${name}`)}</h1><p class="${textClass}">${escapeHtml(tree.edition_label)}. ${escapeHtml(law.edition_note)}</p>${parent ? `<p class="${textClass}">${anchor(browsePath(undefined, tree.release_version, instrument), "All parts and sections")}</p>` : ""}${referenceList(tree.data, tree.release_version)}`;
 			return htmlResponse(
 				request,
 				env,
@@ -366,15 +419,16 @@ export async function publicRequest(
 				},
 				body,
 				200,
-				{ kind: "tree", parent, release, data: tree },
+				{ kind: "tree", parent, release, instrument, data: tree },
 			);
 		}
-		if (path.startsWith("/constitution/")) {
+		if (path.startsWith("/constitution/") || lawRoute?.[2]) {
 			const provisionPath = decodeURIComponent(
-				path.slice("/constitution/".length),
+				lawRoute?.[2] || path.slice("/constitution/".length),
 			);
 			if (
 				!provisionPath ||
+				!provisionPath.startsWith(`${lawRoute?.[1] || "constitution-1999"}.`) ||
 				provisionPath.length > 512 ||
 				/[\/\\\x00-\x1f]/.test(provisionPath)
 			)
@@ -408,7 +462,7 @@ export async function publicRequest(
 			const source =
 				safeSource(provision.source_url, origin) ??
 				safeSource(provision.source_content_url, origin);
-			const body = `<nav aria-label="Provision hierarchy" class="mt-8 flex flex-wrap gap-3">${provision.ancestors.map((node) => anchor(documentPath(node, provision.release_version), node.citation)).join(" · ")}</nav><h1 class="mt-8 font-display text-title-2">${escapeHtml(provision.title || provision.citation)}</h1><p class="${textClass}">${escapeHtml(provision.citation)} · ${escapeHtml(editionName(provision.edition_label))}</p><h2 class="${headingClass}">What ${escapeHtml(provision.citation)} says</h2><p class="mt-4 whitespace-pre-wrap font-legal text-statute">${escapeHtml(readableText(provision.authoritative_text))}</p><p class="${textClass}">${escapeHtml(provision.legal_status === "historical" ? editionNote(provision.edition_label) : provision.edition_label)}</p><h2 class="${headingClass}">Original source</h2><p class="${textClass}">${escapeHtml(provision.source_authority)} · ${escapeHtml(provision.source_title)}${provision.source_page_start ? ` · printed page ${provision.source_page_start}${provision.source_page_end && provision.source_page_end !== provision.source_page_start ? `–${provision.source_page_end}` : ""}` : ""}. ${source ? anchor(source, "Original document") : ""}</p><p class="${textClass}">Release: ${escapeHtml(provision.release_version)}. ${anchor("/about", "Source scope, review and corrections")}</p>${provision.children.length ? `<h2 class="${headingClass}">Within this provision</h2>${referenceList(provision.children, provision.release_version)}` : ""}`;
+			const body = `<nav aria-label="Provision hierarchy" class="mt-8 flex flex-wrap gap-3">${provision.ancestors.map((node) => anchor(documentPath(node, provision.release_version), node.citation)).join(" · ")}</nav><h1 class="mt-8 font-display text-title-2">${escapeHtml(provision.title || provision.citation)}</h1><p class="${textClass}">${escapeHtml(provision.citation)} · ${escapeHtml(editionName(provision.edition_label, provision))}</p><h2 class="${headingClass}">What ${escapeHtml(lawName(provision))} says</h2><p class="mt-4 whitespace-pre-wrap font-legal text-statute">${escapeHtml(readableText(provision.authoritative_text))}</p><p class="${textClass}">${escapeHtml(provision.legal_status === "historical" ? editionNote(provision.edition_label, provision) : provision.edition_label)}</p><h2 class="${headingClass}">Original source</h2><p class="${textClass}">${escapeHtml(provision.source_authority)} · ${escapeHtml(provision.source_title)}${provision.source_page_start ? ` · printed page ${provision.source_page_start}${provision.source_page_end && provision.source_page_end !== provision.source_page_start ? `–${provision.source_page_end}` : ""}` : ""}. ${source ? anchor(source, "Original document") : ""}</p><p class="${textClass}">Release: ${escapeHtml(provision.release_version)}. ${anchor("/about", "Source scope, review and corrections")}</p>${provision.children.length ? `<h2 class="${headingClass}">Within this provision</h2>${referenceList(provision.children, provision.release_version)}` : ""}`;
 			return htmlResponse(
 				request,
 				env,

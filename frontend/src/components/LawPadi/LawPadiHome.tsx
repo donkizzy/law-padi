@@ -2,6 +2,7 @@ import { useNavigate, useSearch } from "@tanstack/react-router"
 import { useEffect, useRef, useState } from "react"
 import { ChatComposer } from "@/components/LawPadi/ChatComposer"
 import { ChatHome } from "@/components/LawPadi/ChatHome"
+import { LawPicker } from "@/components/LawPadi/LawPicker"
 import { ProvisionView } from "@/components/LawPadi/ProvisionView"
 import {
   ErrorState,
@@ -15,11 +16,12 @@ import { useChatCapabilities } from "@/hooks/useChatCapabilities"
 import { useChatDraft } from "@/hooks/useChatDraft"
 import {
   legalError,
+  useLegalInstruments,
   useLegalRelease,
   useLegalSearch,
   useProvision,
 } from "@/hooks/useLegalCorpus"
-import { editionName } from "@/lib/legal-provisions"
+import { editionName, sectionQuery } from "@/lib/legal-provisions"
 import { bestContainingSource } from "@/lib/source-ranking"
 import { EditionNotice } from "./EditionNotice"
 
@@ -110,6 +112,10 @@ function SearchHome({
   const inputRef = useRef<HTMLTextAreaElement | null>(null)
   const [attempt, setAttempt] = useState(0)
   const release = useLegalRelease()
+  const instruments = useLegalInstruments(search.release)
+  const selectedLaw = instruments.data?.data.find(
+    (item) => item.slug === search.instrument,
+  )
   useEffect(() => {
     if (search.q) setQuestion(search.q)
   }, [search.q, setQuestion])
@@ -118,7 +124,13 @@ function SearchHome({
     setAttempt((current) => current + 1)
     void navigate({
       to: "/",
-      search: { q: query.trim(), mode, intent: "find" },
+      search: {
+        q: mode === "auto" ? sectionQuery(query) : query.trim(),
+        mode,
+        intent: "find",
+        release: search.release,
+        instrument: search.instrument,
+      },
     })
   }
   return (
@@ -130,7 +142,7 @@ function SearchHome({
               The law, made easy
             </p>
             <h1 className="font-display text-title-1 sm:text-display">
-              Explore Nigeria&apos;s Constitution.
+              Explore Nigeria&apos;s published laws.
             </h1>
             <p className="mt-4 max-w-xl text-body-lg text-muted-foreground">
               Find a section by number or describe the issue in your own words.
@@ -154,6 +166,23 @@ function SearchHome({
             </InlineAction>
           </div>
         )}
+        <div className="mt-5">
+          <LawPicker
+            allowAll
+            value={search.instrument || ""}
+            release={search.release}
+            onChange={(instrument) =>
+              void navigate({
+                to: "/",
+                search: {
+                  ...search,
+                  instrument: instrument || undefined,
+                  intent: "find",
+                },
+              })
+            }
+          />
+        </div>
         <ChatComposer
           autoFocus={Boolean(search.fresh)}
           className="mt-5"
@@ -162,8 +191,14 @@ function SearchHome({
           onChange={setQuestion}
           onSubmit={() => submit()}
           compact={Boolean(search.q)}
-          contextLabel={editionName(release.data?.edition_label)}
-          placeholder="Find a topic or a section, e.g. Section 37…"
+          contextLabel={
+            selectedLaw
+              ? editionName(selectedLaw.edition_label, selectedLaw.slug)
+              : instruments.data && instruments.data.count > 1
+                ? "All published source editions"
+                : editionName(release.data?.edition_label)
+          }
+          placeholder="Find a topic or a reference, e.g. Section 37 or ACJA s.9…"
         />
         {!search.q && (
           <fieldset className="mt-4 flex flex-wrap gap-2">
@@ -185,7 +220,7 @@ function SearchHome({
         {!search.q && release.isError && (
           <div className="mt-6">
             <ErrorState
-              title="Couldn't load the Constitution"
+              title="Couldn't load the published laws"
               action={
                 <InlineAction type="button" onClick={() => release.refetch()}>
                   Try again
@@ -198,17 +233,25 @@ function SearchHome({
         )}
         {!search.q && !release.isError && (
           <EditionNotice
-            label={release.data?.edition_label}
+            label={selectedLaw?.edition_label || release.data?.edition_label}
+            instrument={selectedLaw?.slug}
+            historical={
+              Boolean(selectedLaw) ||
+              !instruments.data ||
+              instruments.data.count === 1
+            }
             className="mt-6 border-t border-border pt-5"
           />
         )}
       </div>
       {search.q && (
         <SearchResults
-          key={`${search.q}:${search.mode}:${attempt}`}
+          key={`${search.q}:${search.mode}:${search.instrument}:${search.release}:${attempt}`}
           query={search.q}
           mode={search.mode ?? "auto"}
           attempt={attempt}
+          release={search.release}
+          instrument={search.instrument}
           onRelated={(query) => submit(query, "semantic")}
         />
       )}
@@ -221,14 +264,18 @@ function SearchResults({
   mode,
   attempt,
   onRelated,
+  release,
+  instrument,
 }: {
   query: string
   mode: "auto" | "semantic"
   attempt: number
   onRelated: (query: string) => void
+  release?: string
+  instrument?: string
 }) {
   const resultsRef = useRef<HTMLElement | null>(null)
-  const search = useLegalSearch(query, mode, attempt)
+  const search = useLegalSearch(query, mode, attempt, release, instrument)
   useEffect(() => {
     if (search.isPending) return
     const frame = requestAnimationFrame(() => {
@@ -282,7 +329,7 @@ function SearchResults({
         {search.isPending ? (
           <div role="status">
             <p className="mb-4 text-sm text-muted-foreground">
-              Searching the Constitution…
+              Searching the published laws…
             </p>
             <SkeletonBlock />
           </div>

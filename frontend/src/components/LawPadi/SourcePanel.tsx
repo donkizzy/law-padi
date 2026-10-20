@@ -12,6 +12,7 @@ import {
   SheetTitle,
 } from "@/components/ui/sheet"
 import {
+  lawName,
   provisionTitle,
   readableText,
   sourceUrl,
@@ -101,16 +102,21 @@ export function SourcePanelContent({
       </div>
       <StatusBadge
         status={provision.legal_status === "current" ? "current" : "historical"}
-        label={statusLabel(provision.legal_status, provision.edition_label)}
+        label={statusLabel(
+          provision.legal_status,
+          provision.edition_label,
+          provision,
+        )}
       />
       <EditionNotice
         label={provision.edition_label}
+        instrument={provision}
         historical={provision.legal_status === "historical"}
       />
       <SourceActions source={provision} />
       <section>
         <h3 className="mb-3 text-xs font-bold uppercase text-muted-foreground">
-          What the Constitution says
+          What {lawName(provision)} says
         </h3>
         <p className="whitespace-pre-wrap font-legal text-sm leading-7">
           {readableText(provision.authoritative_text)}

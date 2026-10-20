@@ -639,8 +639,8 @@ export const sidebarSections = [
       { icon: FiMessageSquare, title: "Ask a question", path: "/" },
       {
         icon: FiBookOpen,
-        title: "Browse Constitution",
-        path: "/constitution",
+        title: "Browse laws",
+        path: "/laws",
       },
       {
         icon: FiClock,
