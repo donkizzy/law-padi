@@ -14,3 +14,11 @@ backend/storage/
 /.env
 /.env.*
 !/.env.example
+
+# Generated browser QA artifacts
+/output/
+/constitution.ng-audit/screenshots/
+/.playwright-cli/
+/.playwright-mcp/
+/docs/ux-audit-*/**/*.png
+/docs/ux-audit-*/**/*.jpg

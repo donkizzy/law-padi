@@ -1,5 +1,8 @@
 # constitution.ng SEO audit
 
+Screenshot retention note (20 October 2026): generated Playwright and computer-use screenshots were removed at the user's request. Screenshot paths below are historical references; textual audit records are retained.
+
+
 **16 October 2026 · Africa/Lagos · Read-only audit**
 
 The product has clear, useful positioning and good source-edition disclosures, but its public deployment needs foundational SEO work before organic acquisition. Prioritize truthful public content, crawlable provision pages, document identity and correct HTTP responses ahead of additional marketing content or AI discovery formats.
