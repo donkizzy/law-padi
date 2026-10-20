@@ -70,3 +70,19 @@ def test_english_is_always_an_enabled_language() -> None:
         {"CHAT_LANGUAGES_ENABLED": ["yo", "en", "pcm"]}
     ).CHAT_LANGUAGES_ENABLED
     assert enabled == [Language.ENGLISH, Language.YORUBA, Language.PIDGIN]
+
+
+@pytest.mark.parametrize(
+    "question",
+    ["Sections 37 and 33", "Explain ACJA s.9", "Explain it", "I don't know"],
+)
+def test_questions_without_nigerian_language_signals_are_english(
+    question: str,
+) -> None:
+    assert detect(question) == detect("Can police search my phone?")
+
+
+def test_one_pidgin_marker_outweighs_english_loanwords() -> None:
+    detection = detect("wetin constitution talk about police checking my phone?")
+    assert detection.language == Language.PIDGIN
+    assert not detection.confident

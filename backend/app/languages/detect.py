@@ -38,12 +38,19 @@ _LEXICONS: dict[Language, frozenset[str]] = {
         "ochie gomenti nwere bu ga enwe".split()
     ),
 }
+# Pidgin borrows most of its words from English, so one of these is enough.
+_PIDGIN_MARKERS = frozenset(
+    "wetin dey abeg una wey sabi pikin wahala comot abi sef shey oga waka "
+    "chop wan don".split()
+)
 # Words that collide with English ("e", "make", "go", "na") are ignored when
 # deciding that a question is English.
 _ENGLISH = frozenset(
     "the a an is are was were do does did can could should would will what "
-    "which who when where why how of to in on for with my your police "
-    "section constitution right rights law court arrest search".split()
+    "which who when where why how of to in on for with my your i me you it "
+    "they them this that there any and or if about say says mean explain "
+    "without before after under police section sections constitution right "
+    "rights law laws court arrest search phone hold detain detained".split()
 )
 
 
@@ -59,9 +66,10 @@ def detect(text: str) -> Detection:
     for language, letters in _SIGNATURE_LETTERS.items():
         if any(ch in letters for ch in composed):
             return Detection(language, confident=False)
-    words = _WORD.findall(fold(composed).lower())
-    if not words:
-        return Detection(None, confident=False)
+    # "don't" stays one word, so it never reads as Pidgin "don".
+    words = _WORD.findall(fold(composed).lower().replace("'", ""))
+    if any(word in _PIDGIN_MARKERS for word in words):
+        return Detection(Language.PIDGIN, confident=False)
     scores = {
         language: sum(word in lexicon for word in words)
         for language, lexicon in _LEXICONS.items()
@@ -70,7 +78,9 @@ def detect(text: str) -> Detection:
     english = sum(word in _ENGLISH for word in words)
     if hits >= 2 and hits >= english:
         return Detection(best, confident=False)
-    if hits == 0 and english:
+    # No signature letters and no Nigerian-language words: treat as English,
+    # including citation-only questions such as "ACJA s.9".
+    if hits == 0:
         return Detection(Language.ENGLISH, confident=True)
     if english >= 2 * hits + 2:
         return Detection(Language.ENGLISH, confident=True)

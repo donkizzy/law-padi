@@ -36,7 +36,9 @@ def test_capabilities_are_available_when_history_is_disabled(
     assert response.status_code == 200
     assert response.json()["conversations_enabled"] == chat
     assert response.json()["explanations_enabled"] == enabled
-    assert response.json()["supported_languages"] == ["English"]
+    # Every reader language is on by default; English is always first.
+    assert response.json()["answer_languages"] == ["en", "pcm", "yo", "ha", "ig"]
+    assert response.json()["supported_languages"][0] == "English"
     assert response.json()["question_max_length"] == 2000
     assert "key" not in response.json()
 

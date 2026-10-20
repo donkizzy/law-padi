@@ -122,9 +122,12 @@ class Settings(BaseSettings):
     # redispatches a run that is still thinking.
     CHAT_RUN_TIMEOUT_SECONDS: int = Field(default=270, ge=60)
     # Reader languages whose answers are enabled. English answers are always
-    # produced; other languages are translated from the verified English answer
-    # and switched on one at a time as each passes its evaluation gate.
-    CHAT_LANGUAGES_ENABLED: list[Language] = [Language.ENGLISH]
+    # produced; other languages are translated from the verified English answer.
+    # Translations stay labelled as beta until native-speaker review.
+    CHAT_LANGUAGES_ENABLED: list[Language] = list(Language)
+    # Search queries longer than this are searched as typed, untranslated.
+    SEARCH_TRANSLATION_MAX_CHARS: int = Field(default=300, ge=1, le=2000)
+    SEARCH_TRANSLATION_MAX_OUTPUT_TOKENS: int = Field(default=600, ge=1)
     TRANSLATION_PROVIDER: Literal["deepseek"] = "deepseek"
     # Yorùbá and Igbo tone marks use far more tokens than the English answer.
     TRANSLATION_MAX_OUTPUT_TOKENS: int = Field(default=6000, ge=1)
