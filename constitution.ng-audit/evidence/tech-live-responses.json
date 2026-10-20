@@ -1,0 +1,66 @@
+[
+  {
+    "name": "welcome",
+    "path": "/welcome",
+    "response": "200 text/html",
+    "error": "",
+    "bytes": 3670,
+    "sha256": "7d03863adba826f4965b1a384926da1097062625c9afd1950f5c04b32aaf3639"
+  },
+  {
+    "name": "robots",
+    "path": "/robots.txt",
+    "response": "200 text/html",
+    "error": "",
+    "bytes": 3670,
+    "sha256": "7d03863adba826f4965b1a384926da1097062625c9afd1950f5c04b32aaf3639"
+  },
+  {
+    "name": "sitemap",
+    "path": "/sitemap.xml",
+    "response": "200 text/html",
+    "error": "",
+    "bytes": 3670,
+    "sha256": "7d03863adba826f4965b1a384926da1097062625c9afd1950f5c04b32aaf3639"
+  },
+  {
+    "name": "sitemap-index",
+    "path": "/sitemap_index.xml",
+    "response": "200 text/html",
+    "error": "",
+    "bytes": 3670,
+    "sha256": "7d03863adba826f4965b1a384926da1097062625c9afd1950f5c04b32aaf3639"
+  },
+  {
+    "name": "random",
+    "path": "/seo-audit-does-not-exist-20261016",
+    "response": "200 text/html",
+    "error": "",
+    "bytes": 3670,
+    "sha256": "7d03863adba826f4965b1a384926da1097062625c9afd1950f5c04b32aaf3639"
+  },
+  {
+    "name": "section37",
+    "path": "/constitution/constitution-1999.chapter4.section37",
+    "response": "200 text/html",
+    "error": "",
+    "bytes": 3670,
+    "sha256": "7d03863adba826f4965b1a384926da1097062625c9afd1950f5c04b32aaf3639"
+  },
+  {
+    "name": "missing-section",
+    "path": "/constitution/seo-audit-does-not-exist",
+    "response": "200 text/html",
+    "error": "",
+    "bytes": 3670,
+    "sha256": "7d03863adba826f4965b1a384926da1097062625c9afd1950f5c04b32aaf3639"
+  },
+  {
+    "name": "api-section37",
+    "path": "/api/v1/legal/provisions/constitution-1999.chapter4.section37",
+    "response": "200 application/json",
+    "error": "",
+    "bytes": 1708,
+    "sha256": "c5eac1c56c916b7982bebda0c5d1a9dba7f917685786dd8b93a8bea615b8f8ee"
+  }
+]
