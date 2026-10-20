@@ -145,6 +145,17 @@ def disable_rate_limits() -> Generator[None]:
         yield
 
 
+@pytest.fixture(autouse=True)
+def no_live_search_translation() -> Generator[None]:
+    """Search never calls a real provider; tests opt in with a fake."""
+    from app.chat import search_language
+
+    search_language.clear_cache()
+    with patch.object(settings, "DEEPSEEK_API_KEY", None):
+        yield
+    search_language.clear_cache()
+
+
 @pytest.fixture(scope="module")
 def client() -> Generator[TestClient]:
     with TestClient(app) as c:

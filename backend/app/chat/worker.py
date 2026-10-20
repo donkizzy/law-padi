@@ -40,6 +40,7 @@ from app.legal.evidence import (
     default_embedding_provider,
     evidence_item,
     exact_lookup,
+    message_code,
     semantic_lookup,
 )
 from app.legal.instruments import ACJA_SLUG, instrument_label
@@ -1301,7 +1302,11 @@ async def process_run(
                     citation_outcomes=prepared.lookup.citation_outcomes,
                     related_laws=prepared.related_laws,
                     **(
-                        {"notice": _with_coverage(prepared.lookup.message, prepared)}
+                        {
+                            **_notice_fields("no_match", prepared),
+                            "notice": _with_coverage(prepared.lookup.message, prepared),
+                            "notice_code": message_code(prepared.lookup.message),
+                        }
                         if prepared.lookup.message
                         else _notice_fields("no_match", prepared)
                     ),

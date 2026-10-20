@@ -154,7 +154,8 @@
     "surroundingFailed": "Ba a iya buɗe sashen da ke kewaye da shi ba.",
     "matchesLabel": "Abubuwan da suka dace da binciken",
     "ambiguous": "Wanne kake nufi?",
-    "otherMatches": "Wasu sassan da suka dace"
+    "otherMatches": "Wasu sassan da suka dace",
+    "searchedFor": "An bincika da Turanci kamar haka: {{query}}"
   },
   "notices": {
     "cancelled": "Ka dakatar da wannan amsar.",
@@ -167,7 +168,13 @@
     "unavailable": "Ba a samun bayani a yanzu. Ga sassan da aka wallafa waɗanda suka shafi wannan.",
     "stalled": "Wannan amsar ta ɗauki lokaci mai tsawo. Don Allah ka sake gwadawa.",
     "clarify_section": "Wane sashe kake nufi: {{choices}}?",
-    "coverage": "Wannan bugun ya ƙunshi {{laws}}."
+    "coverage": "Wannan bugun ya ƙunshi {{laws}}.",
+    "ambiguous_section": "Lambar wannan sashe ta bayyana fiye da sau ɗaya a wannan bugun. Zaɓi wanda kake nufi.",
+    "section_not_found": "Ba mu sami wannan sashe a wannan bugun Kundin Tsarin Mulki ba.",
+    "partial_sections": "Mun sami wasu daga cikin waɗannan sassan, amma ba duka ba.",
+    "simpler_search": "Bincike yana aiki a hanya mai sauƙi yanzu, don haka waɗannan sakamakon bazai yi daidai sosai ba.",
+    "reference_format": "Gwada ishara kamar Section 35, Section 35(1) ko Section 35(1)(c). Jeri da kewayo za su iya ƙunsar har sassa 20.",
+    "unknown_law": "Dokokin da muka sani su ne Kundin Tsarin Mulkin Najeriya, ACJA 2015 da Police Act 2020. Dole ne doka ta kasance cikin bugun da aka wallafa da ka zaɓa kafin a iya nuna sassanta."
   },
   "translation": {
     "label": "An fassara daga Turanci",

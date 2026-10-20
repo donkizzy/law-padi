@@ -27,7 +27,13 @@ from app.legal.instruments import CONSTITUTION_SLUG, instrument_label
 from app.legal.models import CorpusRelease, EmbeddingProfile
 from app.legal.parser import legal_text_sha256
 from app.legal.public_corpus import PublicCorpus, load_ranked_corpus
-from app.legal.references import ReferenceParse, SectionReference, matches_reference
+from app.legal.references import (
+    REFERENCE_FORMAT_MESSAGE,
+    UNKNOWN_LAW_MESSAGE,
+    ReferenceParse,
+    SectionReference,
+    matches_reference,
+)
 from app.legal.release_scope import release_instruments
 from app.legal.schemas import (
     CitationOutcome,
@@ -36,6 +42,26 @@ from app.legal.schemas import (
     LegalSearchResult,
 )
 from app.legal.topics import demoted_sections, rights_question
+
+AMBIGUOUS_MESSAGE = "This section number appears more than once in this edition. Choose the one you mean."
+NOT_IN_CONSTITUTION_MESSAGE = (
+    "We couldn't find this section in this edition of the Constitution."
+)
+PARTIAL_MESSAGE = "We found some of these sections, but not all of them."
+SIMPLER_SEARCH_MESSAGE = "Search is running in a simpler mode right now, so these keyword matches may be less precise."
+# Stable keys for the fixed messages, so clients can show them in any language.
+_MESSAGE_CODES = {
+    AMBIGUOUS_MESSAGE: "ambiguous_section",
+    NOT_IN_CONSTITUTION_MESSAGE: "section_not_found",
+    PARTIAL_MESSAGE: "partial_sections",
+    SIMPLER_SEARCH_MESSAGE: "simpler_search",
+    REFERENCE_FORMAT_MESSAGE: "reference_format",
+    UNKNOWN_LAW_MESSAGE: "unknown_law",
+}
+
+
+def message_code(message: str | None) -> str | None:
+    return _MESSAGE_CODES.get(message) if message else None
 
 
 @dataclass(frozen=True)
@@ -169,7 +195,7 @@ def exact_lookup(
                     reference=reference.citation,
                     status=status,
                     evidence_ids=refs,
-                    message="This section number appears more than once in this edition. Choose the one you mean."
+                    message=AMBIGUOUS_MESSAGE
                     if status == "ambiguous"
                     else _missing_reference_message(corpus, reference)
                     if status == "missing"
@@ -182,11 +208,11 @@ def exact_lookup(
         message = None
     elif statuses == {"ambiguous"}:
         outcome = "ambiguous"
-        message = "This section number appears more than once in this edition. Choose the one you mean."
+        message = AMBIGUOUS_MESSAGE
     elif statuses == {"missing"}:
         outcome = "not_found"
         message = (
-            "We couldn't find this section in this edition of the Constitution."
+            NOT_IN_CONSTITUTION_MESSAGE
             if all(
                 ref.instrument_slug == CONSTITUTION_SLUG for ref in parsed.references
             )
@@ -197,7 +223,7 @@ def exact_lookup(
         message = parsed.error
     else:
         outcome = "partial"
-        message = "We found some of these sections, but not all of them."
+        message = PARTIAL_MESSAGE
     return ExactLookup(
         LegalSearchResponse(
             data=results,
@@ -246,7 +272,7 @@ def semantic_lookup(
         )
     except EmbeddingProviderError, httpx.HTTPError:
         retrieval_mode = "lexical"
-        message = "Search is running in a simpler mode right now, so these keyword matches may be less precise."
+        message = SIMPLER_SEARCH_MESSAGE
         ranked = fuse_rankings(
             lexical=lexical_search(
                 session,

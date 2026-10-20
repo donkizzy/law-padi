@@ -8,6 +8,7 @@ from sqlalchemy.exc import SQLAlchemyError
 from sqlmodel import Session, col, select
 
 from app.api.deps import SessionDep
+from app.chat.search_language import search_query
 from app.core.config import settings
 from app.ingestion.blob_store import BlobStoreError
 from app.ingestion.embedding import DenseEmbeddingProvider
@@ -18,7 +19,12 @@ from app.ingestion.pgvector_repository import (
 from app.ingestion.r2_blob_store import R2BlobStore
 from app.ingestion.service import get_blob_store
 from app.legal.enums import InstrumentType, ProvisionKind, VectorIndexStatus
-from app.legal.evidence import default_embedding_provider, exact_lookup, semantic_lookup
+from app.legal.evidence import (
+    default_embedding_provider,
+    exact_lookup,
+    message_code,
+    semantic_lookup,
+)
 from app.legal.models import CorpusRelease, EmbeddingProfile, RetrievalIndexBuild
 from app.legal.public_corpus import (
     PUBLIC_RELEASE_STATUSES,
@@ -119,9 +125,22 @@ def search_legal(
             status_code=503,
             detail="Production legal search is not configured for pgvector",
         )
+    reader_query = search_query(body.query)
+    response = _search(body, session, reader_query.text)
+    response.message_code = message_code(response.message)
+    response.query_language = (
+        reader_query.language.value if reader_query.language else None
+    )
+    response.searched_query = reader_query.text if reader_query.translated else None
+    return response
+
+
+def _search(
+    body: LegalSearchRequest, session: Session, query: str
+) -> LegalSearchResponse:
     parsed = (
         parse_section_reference(
-            body.query, default_instrument_slug=body.instrument or CONSTITUTION_SLUG
+            query, default_instrument_slug=body.instrument or CONSTITUTION_SLUG
         )
         if body.mode == "auto"
         else None
@@ -140,7 +159,7 @@ def search_legal(
                 status_code=404,
                 detail="This law isn't included in the selected published edition",
             )
-        return exact_lookup(corpus, parsed, body.query).response
+        return exact_lookup(corpus, parsed, query).response
     release = published_release(
         session, index_kind=body.index_kind, release_version=body.release_version
     )
@@ -188,7 +207,7 @@ def search_legal(
         release,
         profile=profile,
         embedding_run_id=embedding_run_id,
-        query=body.query,
+        query=query,
         top_k=body.top_k,
         index_kind=body.index_kind,
         embedding_provider=_query_embedding_provider,

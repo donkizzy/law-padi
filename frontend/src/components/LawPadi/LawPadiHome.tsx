@@ -23,6 +23,7 @@ import {
   useProvision,
 } from "@/hooks/useLegalCorpus"
 import { editionName, pageLabel, sectionQuery } from "@/lib/legal-provisions"
+import { serverMessage } from "@/lib/server-messages"
 import { bestContainingSource } from "@/lib/source-ranking"
 import { EditionNotice } from "./EditionNotice"
 
@@ -342,9 +343,16 @@ function SearchResults({
           </ErrorState>
         ) : (
           <>
+            {search.data.searched_query && (
+              <p className="text-sm text-muted-foreground">
+                {t("results.searchedFor", {
+                  query: search.data.searched_query,
+                })}
+              </p>
+            )}
             {search.data.message && (
               <p role="status" className="sq-md bg-secondary p-4 text-sm">
-                {search.data.message}
+                {serverMessage(search.data.message, search.data.message_code)}
               </p>
             )}
             {search.data.data.length === 0 ? (

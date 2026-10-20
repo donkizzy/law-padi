@@ -860,10 +860,16 @@ class LegalSearchResponse(SQLModel):
     ] = "matches"
     retrieval_mode: Literal["exact", "hybrid", "lexical"] = "exact"
     message: str | None = None
+    # Stable key for message, so clients can show it in the reader's language.
+    message_code: str | None = None
     release_version: str
     edition_label: str
     citation_outcomes: list[CitationOutcome] = Field(default_factory=list)
     evidence: list[EvidenceItem] = Field(default_factory=list)
+    # Language detected in the query, and the English text searched when the
+    # query was translated.
+    query_language: str | None = None
+    searched_query: str | None = None
 
 
 class LegalReleasePublic(SQLModel):

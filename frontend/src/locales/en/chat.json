@@ -154,7 +154,8 @@
     "surroundingFailed": "The surrounding section couldn't be loaded.",
     "matchesLabel": "Search matches",
     "ambiguous": "Which one do you mean?",
-    "otherMatches": "Other matching sections"
+    "otherMatches": "Other matching sections",
+    "searchedFor": "Searched in English for: {{query}}"
   },
   "notices": {
     "cancelled": "You stopped this answer.",
@@ -167,7 +168,13 @@
     "unavailable": "Explanations aren't available right now. Here are the relevant published sections.",
     "stalled": "This answer took too long. Please try again.",
     "clarify_section": "Which section do you mean: {{choices}}?",
-    "coverage": "This edition includes {{laws}}."
+    "coverage": "This edition includes {{laws}}.",
+    "ambiguous_section": "This section number appears more than once in this edition. Choose the one you mean.",
+    "section_not_found": "We couldn't find this section in this edition of the Constitution.",
+    "partial_sections": "We found some of these sections, but not all of them.",
+    "simpler_search": "Search is running in a simpler mode right now, so these keyword matches may be less precise.",
+    "reference_format": "Try a reference like Section 35, Section 35(1) or Section 35(1)(c). Lists and ranges can include up to 20 sections.",
+    "unknown_law": "Recognised laws are Nigeria's Constitution, ACJA 2015 and Police Act 2020. A law must also be included in the selected published edition before its sections can be served."
   },
   "translation": {
     "label": "Translated from English",

@@ -154,7 +154,8 @@
     "surroundingFailed": "Enweghị ike imepe nkebi gbara ya gburugburu.",
     "matchesLabel": "Ihe dabara na nchọ",
     "ambiguous": "Kedu nke ị na-ekwu?",
-    "otherMatches": "Nkebi ndị ọzọ dabara"
+    "otherMatches": "Nkebi ndị ọzọ dabara",
+    "searchedFor": "Anyị chọrọ ya na Bekee dị ka: {{query}}"
   },
   "notices": {
     "cancelled": "I kwụsịrị azịza a.",
@@ -167,7 +168,13 @@
     "unavailable": "Nkọwa adịghị ugbu a. Ndị a bụ nkebi e bipụtara metụtara ya.",
     "stalled": "Azịza a were ogologo oge. Biko gbalịa ọzọ.",
     "clarify_section": "Kedu nkebi ị na-ekwu maka ya: {{choices}}?",
-    "coverage": "Mbipụta a gụnyere {{laws}}."
+    "coverage": "Mbipụta a gụnyere {{laws}}.",
+    "ambiguous_section": "Nọmba nkebi a pụtara ihe karịrị otu ugboro na mbipụta a. Họrọ nke ị na-ekwu maka ya.",
+    "section_not_found": "Anyị ahụghị nkebi a na mbipụta Iwu Obodo a.",
+    "partial_sections": "Anyị hụrụ ụfọdụ n'ime nkebi ndị a, mana ọ bụghị ha niile.",
+    "simpler_search": "Nchọta na-arụ ọrụ n'ụzọ dị mfe ugbu a, ya mere nsonaazụ ndị a nwere ike ọ gaghị adị nkenke.",
+    "reference_format": "Gbalịa ntụaka dị ka Section 35, Section 35(1) ma ọ bụ Section 35(1)(c). Ndepụta na oke nwere ike ịgụnye ruo nkebi 20.",
+    "unknown_law": "Iwu anyị maara bụ Iwu Obodo Naịjirịa, ACJA 2015 na Police Act 2020. Iwu ga-adịrịrị na mbipụta e bipụtara ị họọrọ tupu e nwee ike igosi nkebi ya."
   },
   "translation": {
     "label": "Atụgharịrị ya site na Bekee",

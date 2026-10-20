@@ -740,3 +740,57 @@ test("Amendments and publisher pages disclose their actual public scope", async 
     fullPage: true,
   })
 })
+
+test("A translated search says what was searched and translates server messages", async ({
+  page,
+}) => {
+  await page.addInitScript(() =>
+    localStorage.setItem(
+      "law-padi.preferences.v1",
+      JSON.stringify({ language: "yoruba" }),
+    ),
+  )
+  await mockCorpus(page)
+  await page.route("**/api/v1/legal/search", (route) =>
+    route.fulfill({
+      json: {
+        ...response("matches"),
+        retrieval_mode: "lexical",
+        message:
+          "Search is running in a simpler mode right now, so these keyword matches may be less precise.",
+        message_code: "simpler_search",
+        query_language: "yo",
+        searched_query: "Can police search my phone?",
+      },
+    }),
+  )
+  await page.goto(`/?q=${encodeURIComponent("Ṣé ọlọ́pàá lè yẹ fóònù mi wò?")}`)
+  await expect(
+    page.getByText("A wá a ní èdè Gẹ̀ẹ́sì báyìí: Can police search my phone?"),
+  ).toBeVisible()
+  await expect(
+    page.getByText(
+      "Ìwádìí ń ṣiṣẹ́ ní ọ̀nà tó rọrùn báyìí, nítorí náà àwọn èsì wọ̀nyí lè má péye tó.",
+    ),
+  ).toBeVisible()
+})
+
+test("An English search shows the server message as sent", async ({ page }) => {
+  await mockCorpus(page)
+  await page.route("**/api/v1/legal/search", (route) =>
+    route.fulfill({
+      json: {
+        ...response("matches"),
+        message: "We found some of these sections, but not all of them.",
+        message_code: "partial_sections",
+        query_language: "en",
+        searched_query: null,
+      },
+    }),
+  )
+  await page.goto("/?q=privacy")
+  await expect(
+    page.getByText("We found some of these sections, but not all of them."),
+  ).toBeVisible()
+  await expect(page.getByText(/Searched in English for/)).toHaveCount(0)
+})

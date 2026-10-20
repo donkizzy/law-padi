@@ -1962,6 +1962,10 @@ export type LegalSearchResponse = {
      */
     message?: string | null;
     /**
+     * Message Code
+     */
+    message_code?: string | null;
+    /**
      * Release Version
      */
     release_version: string;
@@ -1977,6 +1981,14 @@ export type LegalSearchResponse = {
      * Evidence
      */
     evidence?: Array<EvidenceItem>;
+    /**
+     * Query Language
+     */
+    query_language?: string | null;
+    /**
+     * Searched Query
+     */
+    searched_query?: string | null;
 };
 
 /**

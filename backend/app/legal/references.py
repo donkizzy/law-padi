@@ -190,16 +190,16 @@ def _expand(
     return None
 
 
+REFERENCE_FORMAT_MESSAGE = "Try a reference like Section 35, Section 35(1) or Section 35(1)(c). Lists and ranges can include up to 20 sections."
+UNKNOWN_LAW_MESSAGE = "Recognised laws are Nigeria's Constitution, ACJA 2015 and Police Act 2020. A law must also be included in the selected published edition before its sections can be served."
+
+
 def _unsupported() -> ReferenceParse:
-    return ReferenceParse(
-        error="Try a reference like Section 35, Section 35(1) or Section 35(1)(c). Lists and ranges can include up to 20 sections."
-    )
+    return ReferenceParse(error=REFERENCE_FORMAT_MESSAGE)
 
 
 def _unknown_law() -> ReferenceParse:
-    return ReferenceParse(
-        error="Recognised laws are Nigeria's Constitution, ACJA 2015 and Police Act 2020. A law must also be included in the selected published edition before its sections can be served."
-    )
+    return ReferenceParse(error=UNKNOWN_LAW_MESSAGE)
 
 
 def _reference_markers(

@@ -154,7 +154,8 @@
     "surroundingFailed": "A kò lè ṣí abala tó yí i ká.",
     "matchesLabel": "Àwọn tó bá ìwádìí mu",
     "ambiguous": "Èwo ni o ní lọ́kàn?",
-    "otherMatches": "Àwọn abala míì tó bá a mu"
+    "otherMatches": "Àwọn abala míì tó bá a mu",
+    "searchedFor": "A wá a ní èdè Gẹ̀ẹ́sì báyìí: {{query}}"
   },
   "notices": {
     "cancelled": "O ti dá ìdáhùn yìí dúró.",
@@ -167,7 +168,13 @@
     "unavailable": "Àlàyé kò sí báyìí. Àwọn abala tí a tẹ̀jáde tí ó kàn án nìyí.",
     "stalled": "Ìdáhùn yìí pẹ́ jù. Jọ̀wọ́ gbìyànjú lẹ́ẹ̀kan sí i.",
     "clarify_section": "Abala wo ni o ní lọ́kàn: {{choices}}?",
-    "coverage": "Ẹ̀dà yìí ní {{laws}} nínú."
+    "coverage": "Ẹ̀dà yìí ní {{laws}} nínú.",
+    "ambiguous_section": "Nọ́mbà abala yìí farahàn ju ẹ̀ẹ̀kan lọ nínú ẹ̀dà yìí. Yan èyí tí o ní lọ́kàn.",
+    "section_not_found": "A kò rí abala yìí nínú ẹ̀dà Òfin-Ìpìlẹ̀ yìí.",
+    "partial_sections": "A rí díẹ̀ nínú àwọn abala wọ̀nyí, ṣùgbọ́n kì í ṣe gbogbo wọn.",
+    "simpler_search": "Ìwádìí ń ṣiṣẹ́ ní ọ̀nà tó rọrùn báyìí, nítorí náà àwọn èsì wọ̀nyí lè má péye tó.",
+    "reference_format": "Gbìyànjú ìtọ́kasí bíi Section 35, Section 35(1) tàbí Section 35(1)(c). Àkójọ àti ààlà lè ní tó abala 20.",
+    "unknown_law": "Àwọn òfin tí a mọ̀ ni Òfin-Ìpìlẹ̀ Nàìjíríà, ACJA 2015 àti Police Act 2020. Òfin kan gbọ́dọ̀ wà nínú ẹ̀dà tí a tẹ̀jáde tí o yàn kí a tó lè fi àwọn abala rẹ̀ hàn."
   },
   "translation": {
     "label": "A túmọ̀ rẹ̀ láti èdè Gẹ̀ẹ́sì",

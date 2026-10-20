@@ -70,7 +70,7 @@ def _month_ledger(session: Session, month: date) -> GenerationBudgetMonth:
 def reserve(
     session: Session,
     *,
-    run_id: uuid.UUID,
+    run_id: uuid.UUID | None,
     purpose: str,
     prompt_chars: int,
     max_output_tokens: int,

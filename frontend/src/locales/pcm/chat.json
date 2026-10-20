@@ -154,7 +154,8 @@
     "surroundingFailed": "Di section wey surround am no load.",
     "matchesLabel": "Wetin match di search",
     "ambiguous": "Which one you mean?",
-    "otherMatches": "Other sections wey match"
+    "otherMatches": "Other sections wey match",
+    "searchedFor": "We search am for English as: {{query}}"
   },
   "notices": {
     "cancelled": "You don stop dis answer.",
@@ -167,7 +168,13 @@
     "unavailable": "Explanation no dey available now. Na the published sections wey concern am be dis.",
     "stalled": "Dis answer take too long. Abeg try again.",
     "clarify_section": "Which section you mean: {{choices}}?",
-    "coverage": "Dis edition get {{laws}}."
+    "coverage": "Dis edition get {{laws}}.",
+    "ambiguous_section": "Dis section number show pass one time for dis edition. Choose the one wey you mean.",
+    "section_not_found": "We no fit find dis section for dis edition of the Constitution.",
+    "partial_sections": "We find some of these sections, but no be all of dem.",
+    "simpler_search": "Search dey run for simple mode now, so these keyword results fit no too correct.",
+    "reference_format": "Try reference like Section 35, Section 35(1) or Section 35(1)(c). List and range fit carry reach 20 sections.",
+    "unknown_law": "The laws wey we sabi na Naija Constitution, ACJA 2015 and Police Act 2020. The law must dey inside the published edition wey you choose before we fit show im sections."
   },
   "translation": {
     "label": "We translate am from English",
