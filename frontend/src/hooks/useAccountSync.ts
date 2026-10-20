@@ -3,6 +3,7 @@ import { useEffect } from "react"
 import { toast } from "sonner"
 
 import { startAccountSync } from "@/lib/account-sync"
+import i18n from "@/lib/i18n"
 import useAuth from "./useAuth"
 
 /** Bring this browser's research into a confirmed account, once per load. */
@@ -16,15 +17,11 @@ export function useAccountSync() {
     startAccountSync(user)
       .then(({ claimedConversations: count }) => {
         if (count === 0) return
-        toast.success(
-          `Your ${count === 1 ? "chat is" : `${count} chats are`} now in your account.`,
-        )
+        toast.success(i18n.t("sync.chatsClaimed", { count }))
         void queryClient.invalidateQueries({ queryKey: ["conversations"] })
       })
       .catch(() => {
-        toast.error(
-          "Couldn't sync your saved sections. We'll try again next time.",
-        )
+        toast.error(i18n.t("sync.savedFailed"))
       })
   }, [user, verified, queryClient])
 }

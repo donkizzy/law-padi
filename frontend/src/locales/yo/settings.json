@@ -1,0 +1,119 @@
+{
+  "kicker": "Ètò",
+  "title": "Ṣe constitution.ng bí o ṣe fẹ́.",
+  "intro": "Ṣàkóso àkọọ́lẹ̀ rẹ, bí o ṣe ń kàwé, àti ìwádìí tí o fipamọ́.",
+  "tabs": {
+    "label": "Àwọn apá ètò",
+    "profile": "Ìwífún nípa rẹ",
+    "preferences": "Ohun tí o fẹ́",
+    "security": "Ààbò"
+  },
+  "guest": {
+    "loading": "Àkọọ́lẹ̀ rẹ ń ṣí…",
+    "body": "Ò ń lò ó bí àlejò. O lè béèrè ìbéèrè kí o sì fi àwọn abala pamọ́ láìní àkọọ́lẹ̀.",
+    "signInBenefit": "Wọlé kí àwọn ìjíròrò rẹ àti àwọn abala tí o fipamọ́ lè wà lórí gbogbo ẹ̀rọ rẹ. Ohunkóhun tí o ti fipamọ́ níbí yóò bá ọ lọ."
+  },
+  "available": {
+    "title": "Ohun tó wà níbí",
+    "account": "Àkọọ́lẹ̀",
+    "signedIn": "O ti wọlé",
+    "guest": "Àlejò",
+    "edition": "Ẹ̀dà orísun",
+    "editionUnavailable": "Ẹ̀dà kò sí",
+    "explanations": "Àlàyé",
+    "unknown": "A kò mọ̀ bóyá ó wà",
+    "on": "Ó wà",
+    "paused": "Ó ti dúró"
+  },
+  "reading": {
+    "title": "Kíkà àti bíbéèrè",
+    "enterToSend": "Enter láti fi ránṣẹ́",
+    "enterToSendHint": "Lo Shift+Enter fún ìlà tuntun. Ctrl/Cmd+Enter máa ń fi ránṣẹ́ nígbà gbogbo.",
+    "followLatest": "Tẹ̀lé ìdáhùn tó kẹ́yìn",
+    "followLatestHint": "Lọ sí àwọn ìfiránṣẹ́ tuntun nígbà tí o bá wà nítòsí òpin ìjíròrò.",
+    "openSources": "Ṣí orísun lẹ́gbẹ̀ẹ́ ìdáhùn",
+    "openSourcesHint": "Lórí kọ̀ǹpútà, ṣí orísun àkọ́kọ́ tí a tọ́ka sí lẹ́yìn tí àlàyé bá parí.",
+    "syncedToAccount": "Àwọn ètò yìí yóò tẹ̀lé àkọọ́lẹ̀ rẹ lọ sí ẹ̀rọ èyíkéyìí.",
+    "savedOnBrowser": "A fi àwọn ètò yìí pamọ́ sórí aṣàwákiri yìí.",
+    "save": "Fi àwọn àyípadà pamọ́",
+    "saved": "A ti fi ètò pamọ́"
+  },
+  "language": {
+    "title": "Èdè",
+    "official": "Ọ̀rọ̀ gangan Òfin-Ìpìlẹ̀ àti àwọn òfin míì máa ń wà ní èdè Gẹ̀ẹ́sì nígbà gbogbo.",
+    "savedOnBrowser": "A fi èdè rẹ pamọ́ sórí aṣàwákiri yìí."
+  },
+  "privacy": {
+    "title": "Àṣírí àti ìwádìí",
+    "keptInAccount": "A ń tọ́jú àwọn abala àti ètò tí o fipamọ́ sínú àkọọ́lẹ̀ rẹ.",
+    "keptOnBrowser": "Àwọn abala àti ètò tí o fipamọ́ wà lórí aṣàwákiri yìí.",
+    "retention": "Àwọn àkọsílẹ̀ àkọ́kọ́ yóò wà nínú táàbù yìí títí o fi pa á dé. A ń tọ́jú àwọn ìjíròrò sínú àkọọ́lẹ̀ rẹ, tàbí sórí aṣàwákiri yìí fún ọgbọ̀n ọjọ́ tí o bá jẹ́ àlejò.",
+    "provider": "Nígbà tí àlàyé bá wà, a máa ń fi ìbéèrè rẹ àti ọ̀rọ̀ Òfin-Ìpìlẹ̀ tó jẹmọ́ ọ ránṣẹ́ sí DeepSeek láti kọ ìdáhùn kí ó sì ṣàyẹ̀wò rẹ̀. Má fi ìwífún ara ẹni tí o kò nílò láti sọ kún un.",
+    "exportFirst": "Gbé àwọn àmì-ìwé, ètò àti ìjíròrò tó wà jáde kí o tó pa ìwádìí orí ẹ̀rọ yìí rẹ́. Àwọn ẹ̀dà orísun àti ìtọ́ka yóò wà nínú ohun tí o gbé jáde.",
+    "readMore": "Ka bí a ṣe ń tọ́jú dátà rẹ",
+    "export": "Gbé ìwádìí mi jáde",
+    "exported": "A ti gbé ìwádìí jáde",
+    "clear": "Pa àwọn àmì-ìwé àti àkọsílẹ̀ rẹ́"
+  },
+  "security": {
+    "title": "Ààbò ìwọlé"
+  },
+  "data": {
+    "title": "Dátà àkọọ́lẹ̀ rẹ",
+    "downloading": "Dátà àkọọ́lẹ̀ rẹ ń wọlẹ̀",
+    "deleted": "A ti pa àkọọ́lẹ̀ rẹ rẹ́",
+    "downloadTitle": "Gba dátà rẹ sílẹ̀",
+    "downloadBody": "Ẹ̀dà gbogbo ohun tó wà nínú àkọọ́lẹ̀ rẹ: ìwífún nípa rẹ, àwọn abala tí o fipamọ́, ètò, àti gbogbo ìjíròrò pẹ̀lú àwọn ìfiránṣẹ́ wọn.",
+    "download": "Gba dátà mi sílẹ̀",
+    "deleteTitle": "Pa àkọọ́lẹ̀ rẹ rẹ́",
+    "adminCannotDelete": "Àkọọ́lẹ̀ alábòójútó kò lè pa ara rẹ̀ rẹ́. Ní kí alábòójútó míì yọ àkọọ́lẹ̀ yìí kúrò.",
+    "deleteBody": "Èyí yóò pa àkọọ́lẹ̀ rẹ, àwọn ìjíròrò rẹ, àwọn abala àti ètò tí o fipamọ́ rẹ́ pátápátá. Gba dátà rẹ sílẹ̀ ná tí o bá fẹ́ ẹ̀dà rẹ̀.",
+    "delete": "Pa àkọọ́lẹ̀ mi rẹ́",
+    "confirmTitle": "Ṣé kí a pa àkọọ́lẹ̀ rẹ rẹ́?",
+    "confirmBody": "A ó pa àkọọ́lẹ̀ rẹ, àwọn ìjíròrò, àwọn abala tí o fipamọ́ àti ètò rẹ́ títí láé. A kò ní lè dá a padà.",
+    "keep": "Fi àkọọ́lẹ̀ mi sílẹ̀"
+  },
+  "qualitySignals": "Àmì dídára ìdáhùn",
+  "support": {
+    "title": "Ìwífún fún ìrànlọ́wọ́",
+    "appBuild": "Ẹ̀dà áàpù",
+    "serviceBuild": "Ẹ̀dà iṣẹ́",
+    "sourceRelease": "Ẹ̀dà orísun",
+    "unavailable": "Kò sí"
+  },
+  "clear": {
+    "title": "Ṣé kí a pa àwọn àmì-ìwé àti àkọsílẹ̀ orí ẹ̀rọ yìí rẹ́?",
+    "body": "Èyí yóò yọ àwọn àmì-ìwé rẹ kúrò lórí aṣàwákiri yìí àti àwọn àkọsílẹ̀ kúrò nínú táàbù yìí. Àkọọ́lẹ̀ rẹ àti àwọn ìjíròrò tí o fipamọ́ ṣì máa wà. Gbé ìwádìí rẹ jáde ná tí o bá fẹ́ ẹ̀dà rẹ̀.",
+    "keep": "Fi ìwádìí mi sílẹ̀",
+    "done": "A ti pa àwọn àmì-ìwé àti àkọsílẹ̀ orí ẹ̀rọ yìí rẹ́",
+    "confirm": "Pa ìwádìí orí ẹ̀rọ yìí rẹ́"
+  },
+  "errors": {
+    "saveFailed": "Aṣàwákiri rẹ kò lè fi àwọn ètò yìí pamọ́. Jọ̀wọ́ gbìyànjú lẹ́ẹ̀kan sí i.",
+    "exportFailed": "A kò lè gbé gbogbo ìwádìí rẹ jáde. Ṣàyẹ̀wò ìsopọ̀ rẹ kí o sì gbìyànjú lẹ́ẹ̀kan sí i.",
+    "clearFailed": "A kò lè pa àwọn ìwádìí kan rẹ́ lórí ẹ̀rọ yìí. Jọ̀wọ́ ṣàyẹ̀wò ibi ìpamọ́ aṣàwákiri rẹ."
+  },
+  "password": {
+    "title": "Yí ọ̀rọ̀ aṣínà padà",
+    "current": "Ọ̀rọ̀ aṣínà lọ́wọ́lọ́wọ́",
+    "new": "Ọ̀rọ̀ aṣínà tuntun",
+    "confirm": "Fìdí ọ̀rọ̀ aṣínà múlẹ̀",
+    "submit": "Ṣe àtúnṣe ọ̀rọ̀ aṣínà",
+    "updated": "A ti yí ọ̀rọ̀ aṣínà padà"
+  },
+  "profile": {
+    "title": "Ìwífún nípa rẹ",
+    "fullName": "Orúkọ ní kíkún",
+    "email": "Ímeèlì",
+    "notSet": "Kò sí",
+    "updated": "A ti ṣe àtúnṣe ìwífún rẹ"
+  },
+  "verify": {
+    "title": "Fìdí àdírẹ́sì ímeèlì rẹ múlẹ̀",
+    "body": "A ti fi ìjápọ̀ ránṣẹ́ sí {{email}}. Àwọn abala àti ìjíròrò tí o fipamọ́ yóò bẹ̀rẹ̀ sí í ṣọ̀kan ní kété tí o bá fìdí rẹ̀ múlẹ̀.",
+    "sentTo": "A ti fi ìjápọ̀ tuntun ránṣẹ́ sí {{email}}.",
+    "sent": "A ti fi ìjápọ̀ tuntun ránṣẹ́ sí ímeèlì rẹ.",
+    "sending": "Ó ń lọ…",
+    "resend": "Fi ìjápọ̀ tuntun ránṣẹ́"
+  }
+}

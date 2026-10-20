@@ -1,4 +1,5 @@
 import { useNavigate } from "@tanstack/react-router"
+import { useTranslation } from "react-i18next"
 import { FiMessageSquare } from "react-icons/fi"
 import { useSidebar } from "@/components/ui/sidebar"
 import { draftPrefix } from "@/hooks/useWorkspacePreferences"
@@ -15,6 +16,7 @@ export function NewConversationButton({
   compact?: boolean
   className?: string
 }) {
+  const { t } = useTranslation()
   const navigate = useNavigate()
   const { setOpenMobile, isMobile } = useSidebar()
   return (
@@ -22,7 +24,7 @@ export function NewConversationButton({
       className={className}
       size={compact ? "sm" : "md"}
       variant={compact ? "ghost" : "primary"}
-      aria-label="New conversation"
+      aria-label={t("nav.newConversation")}
       type="button"
       onClick={() => {
         cancelChatRequests()
@@ -54,7 +56,7 @@ export function NewConversationButton({
           compact ? undefined : "group-data-[collapsible=icon]:sr-only"
         }
       >
-        {compact ? "New" : "New conversation"}
+        {compact ? t("nav.new") : t("nav.newConversation")}
       </span>
     </SquircleButton>
   )

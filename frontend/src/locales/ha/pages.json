@@ -1,0 +1,48 @@
+{
+  "about": {
+    "heading": "Game da constitution.ng",
+    "sections": [
+      {
+        "heading": "Madogarar doka mai zaman kanta",
+        "text": "constitution.ng tana wallafa bugu-bugun tushe na Kundin Tsarin Mulkin Najeriya da dokokin da aka wallafa waɗanda za a iya bincika, tare da kayan aiki don nemo tanade-tanade da bayyana su. constitution.ng ce mai wallafawa. Wannan aiki ne mai zaman kansa, ba wallafar gwamnati ba ce kuma ba sabis ne da ke da alaƙa da National Assembly ba. Bayani bayanai ne, ba shawarar doka ba."
+      },
+      {
+        "heading": "Bugun tushe da iyakarsa",
+        "text": "{{caveat}} Dokokin da ke cikin fitarwar da aka zaɓa kawai ne ke bayyana a mai zaɓar doka. Ana nuna Act-Act yadda aka kafa su, kuma wataƙila an yi musu gyara. Shafukan karatu suna nuna ainihin fitarwar kuma suna da mahaɗi zuwa takardar tushe da shafin da aka buga. Tushen Kundin Tsarin Mulki yana da giɓi da aka sani, ciki har da Section 168 da ya ɓace da Section 189 guda biyu da aka bambanta ta wurin da suke a tushe. Kada ka ɗauka cewa wannan cikakken bugu ne ko na yanzu da aka haɗa duk gyare-gyare."
+      },
+      {
+        "heading": "Yadda ake kula da kalmomin doka da bayani",
+        "text": "Shafukan karatu suna nuna kalmomin tushe da aka wallafa daban da bayanan da aka samar. Madogaru suna fitowa daga tsararrun alamomin tanadi. Bayanai suna amfani da shaidar da aka samo da bincike na atomatik, amma har yanzu za su iya rasa mahallin magana ko wasu bayanai. Wannan shafi ba ya tabbatar da cewa lauya ya duba kowane bayani. Duba kalmomin da aka ambata da tushensu, kuma ka tuntuɓi ƙwararren lauya don yanke shawara ta doka."
+      },
+      {
+        "heading": "Sabuntawa da gyare-gyare",
+        "text": "Fitarwa tana nuna bugun da ake karantawa; sabon ginin shafin yanar gizo ba yana nufin doka ta canja ba. Ana bin diddigin gyare-gyare a ma'ajiyar GitHub. A yanzu ana buƙatar izinin shiga ma'ajiyar; mahaɗin zai iya kasa buɗewa ga waɗanda ba su shiga ba. Lokacin da kake ba da rahoton matsala, saka mahaɗin tanadin, fitarwa da shafin da aka buga idan kana da su. Kada ka saka bayanan shari'a na sirri, bayanan tuntuɓa ko takardun sirri a cikin matsalar da kowa zai gani."
+      }
+    ]
+  },
+  "methodology": {
+    "heading": "Yadda muke duba nemo sashe",
+    "sections": [
+      {
+        "heading": "Abin da aka auna",
+        "text": "Gwajin plain-language-retrieval-v1 da za a iya saukewa yana ɗauke da tambayoyi 57 na yau da kullum cikin Turanci da salon Pidgin, tare da sassan da ake sa ran samu. Gwajin da aka rubuta a 12 October 2026 ya yi amfani da asalin tambayoyi 55; sakamakonsa ya nuna kashi 0.98 na nasara a matsayi na farko da 1.0 a matsayi biyar na farko bayan an ƙara jagorar batutuwa. Wannan sakamakon nemo ne da aka adana, ba sabon gwajin aikin da ke gudana yanzu ba."
+      },
+      {
+        "heading": "Abin da sakamakon bai tabbatar ba",
+        "text": "Nasarar nemo tana nufin wani sashe da ake sa ran samu ya bayyana a matsayin binciken da aka auna. Ba ta auna ko bayanan da aka samar daidai ne, ingancin shawarar doka, ko tarin dokokin cikakke ne, ko ya ƙunshi dokar yanzu, ko yadda yake aiki a kan tambayoyin da ba sa cikin gwajin ba. Tambayoyin ƙaramin zaɓaɓɓen rukuni ne, ba samfurin da ke wakiltar duk masu amfani ba."
+      },
+      {
+        "heading": "Iyakar da za a iya maimaitawa",
+        "text": "Fayil ɗin gwaji mai sigar yana rubuta kowace tambaya da sassan da ake sa ran samu. Maimaita gwaji ya kamata ya rubuta sigar da aka tura, fitarwar tarin dokoki, tsarin nemo, kwanan wata da sakamakon kowace tambaya. Kwatanta rukunin bayanai iri ɗaya kafin ka ba da rahoton canji. Kalmomin tushe da gyare-gyaren da suka biyo baya suna buƙatar tabbatarwa daban."
+      }
+    ]
+  },
+  "links": {
+    "label": "Tushe da gyare-gyare",
+    "source": "Karanta bugun tushe",
+    "about": "Game da mu da gyare-gyare",
+    "methodology": "Yadda muke gwada nemo",
+    "corrections": "Gyare-gyare a GitHub (ana buƙatar izinin shiga ma'ajiya)",
+    "benchmark": "Gwajin nemo mai siga"
+  }
+}

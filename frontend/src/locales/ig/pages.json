@@ -1,0 +1,48 @@
+{
+  "about": {
+    "heading": "Gbasara constitution.ng",
+    "sections": [
+      {
+        "heading": "Ntụaka iwu nọ onwe ya",
+        "text": "constitution.ng na-ebipụta mbipụta isi mmalite nke Iwu Obodo Naịjirịa na iwu e bipụtara nke enwere ike ịchọ ihe n'ime ha, ya na ngwa iji chọta ndokwa ma kọwaa ha. constitution.ng bụ onye mbipụta. Nke a bụ ọrụ nọ onwe ya, ọ bụghị mbipụta gọọmentị ma ọ bụ ọrụ jikọrọ na National Assembly. Nkọwa bụ ozi, ọ bụghị ndụmọdụ iwu."
+      },
+      {
+        "heading": "Mbipụta isi mmalite na oke ya",
+        "text": "{{caveat}} Naanị iwu dị na mwepụta i họọrọ na-apụta na onye nhọrọ iwu. A na-egosi Act dị ka e si mee ha, enwere ike ịmezigharị ha. Ibe ịgụ ihe na-egosi kpọmkwem mwepụta ahụ ma jikọọ na akwụkwọ isi mmalite na ibe e bipụtara. Isi mmalite Iwu Obodo nwere oghere a maara, gụnyere Section 168 na-efu na Section 189 abụọ e ji ebe ha dị n'isi mmalite mata ọdịiche ha. Echela na nke a bụ mbipụta zuru ezu ma ọ bụ nke ugbu a e jikọtara ọnụ."
+      },
+      {
+        "heading": "Otú a si elekọta okwu iwu na nkọwa",
+        "text": "Ibe ịgụ ihe na-egosi okwu isi mmalite e bipụtara iche na nkọwa e mepụtara. Ntụaka na-esi na njirimara ndokwa a haziri ahazi. Nkọwa na-eji ihe akaebe a chọtara na nyocha akpaaka, mana ha ka nwere ike ịhapụ ọnọdụ okwu ma ọ bụ nkọwa ụfọdụ. Saịtị a anaghị ekwenye na ọkàiwu nyochara nkọwa ọ bụla. Lelee okwu a zoro aka na ya na isi mmalite ya, ma gakwuru ọkàiwu ruru eru maka mkpebi iwu."
+      },
+      {
+        "heading": "Mmelite na ndozi",
+        "text": "Mwepụta na-egosi mbipụta a na-agụ; mmepụta weebụsaịtị ọhụrụ apụtaghị na iwu agbanweela. A na-esochi ndozi na nchekwa GitHub. Ugbu a, ị chọrọ ohere ịbanye na nchekwa ahụ; njikọ ahụ nwere ike ọ gaghị emepe maka ndị na-abanyeghị. Mgbe ị na-akọ nsogbu, tinye njikọ ndokwa ahụ, mwepụta na ibe e bipụtara ma ọ bụrụ na i nwere ha. Etinyela nkọwa ikpe nzuzo, ozi kọntaktị ma ọ bụ akwụkwọ nzuzo na nsogbu ọha mmadụ ga-ahụ."
+      }
+    ]
+  },
+  "methodology": {
+    "heading": "Otú anyị si enyocha ịchọta nkebi",
+    "sections": [
+      {
+        "heading": "Ihe anyị tụrụ",
+        "text": "Ule plain-language-retrieval-v1 ị nwere ike ibudata nwere ajụjụ 57 a na-ajụ kwa ụbọchị n'asụsụ Bekee na ụdị Pidgin, ya na nkebi a na-atụ anya ya. Ule e dekọrọ na 12 October 2026 jiri ajụjụ 55 mbụ; nsonaazụ ya gosiri 0.98 maka ọnọdụ mbụ na 1.0 maka ọnọdụ ise mbụ mgbe agbakwunyere ntụziaka isiokwu. Nke a bụ nsonaazụ ịchọta e debere, ọ bụghị ule ọhụrụ nke ihe na-arụ ọrụ ugbu a."
+      },
+      {
+        "heading": "Ihe nsonaazụ ahụ egosighị",
+        "text": "Ịchọta nke ọma pụtara na nkebi a na-atụ anya ya pụtara n'ọnọdụ nchọ a tụrụ. Ọ naghị atụ ma nkọwa e mepụtara ziri ezi, ịdị mma ndụmọdụ iwu, ma nchịkọta iwu zuru ezu, ma ọ kpuchiri iwu nke ugbu a, ma ọ bụ otú ọ na-arụ ọrụ n'ajụjụ na-adịghị n'ule ahụ. Ajụjụ ndị ahụ bụ obere nchịkọta a họọrọ, ọ bụghị ihe nlele na-anọchite anya ndị ọrụ niile."
+      },
+      {
+        "heading": "Oke enwere ike imegharị",
+        "text": "Faịlụ ule nwere ụdị na-edekọ ajụjụ ọ bụla na nkebi a na-atụ anya ya. Ule a megharịrị kwesịrị idekọ ụdị e bugara, mwepụta nchịkọta iwu, nhazi ịchọta, ụbọchị na nsonaazụ ajụjụ ọ bụla. Tụlee otu data ahụ tupu ị kọọ mgbanwe. Okwu isi mmalite na mmezigharị ndị bịara mgbe e mesịrị chọrọ nyocha dị iche."
+      }
+    ]
+  },
+  "links": {
+    "label": "Isi mmalite na ndozi",
+    "source": "Gụọ mbipụta isi mmalite",
+    "about": "Gbasara anyị na ndozi",
+    "methodology": "Otú anyị si anwale ịchọta",
+    "corrections": "Ndozi na GitHub (ị chọrọ ohere ịbanye na nchekwa)",
+    "benchmark": "Ule ịchọta nwere ụdị"
+  }
+}

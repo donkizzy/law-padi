@@ -1,0 +1,119 @@
+{
+  "kicker": "Ntọala",
+  "title": "Mee ka constitution.ng bụrụ nke gị.",
+  "intro": "Jikwaa akaụntụ gị, otú ị na-agụ ihe, na nchọcha i chekwara.",
+  "tabs": {
+    "label": "Akụkụ ntọala",
+    "profile": "Nkọwa gbasara gị",
+    "preferences": "Ihe ị masịrị",
+    "security": "Nchekwa"
+  },
+  "guest": {
+    "loading": "Akaụntụ gị na-emepe…",
+    "body": "Ị na-eji ya dị ka ọbịa. Ị nwere ike ịjụ ajụjụ ma chekwaa nkebi n'enweghị akaụntụ.",
+    "signInBenefit": "Banye ka mkparịta ụka gị na nkebi i chekwara dịrị na ngwaọrụ ọ bụla. Ihe ọ bụla i chekwara ebe a ga-eso gị."
+  },
+  "available": {
+    "title": "Ihe dị ebe a",
+    "account": "Akaụntụ",
+    "signedIn": "Ị banyela",
+    "guest": "Ọbịa",
+    "edition": "Mbipụta isi mmalite",
+    "editionUnavailable": "Mbipụta adịghị",
+    "explanations": "Nkọwa",
+    "unknown": "Amaghị ma ọ dị",
+    "on": "Ọ dị",
+    "paused": "Akwụsịla ya"
+  },
+  "reading": {
+    "title": "Ịgụ na ịjụ ajụjụ",
+    "enterToSend": "Enter iji ziga",
+    "enterToSendHint": "Jiri Shift+Enter maka ahịrị ọhụrụ. Ctrl/Cmd+Enter na-eziga mgbe niile.",
+    "followLatest": "Soro azịza ikpeazụ",
+    "followLatestHint": "Gaa na ozi ọhụrụ mgbe ị nọ nso na njedebe mkparịta ụka.",
+    "openSources": "Mepee isi mmalite n'akụkụ azịza",
+    "openSourcesHint": "Na kọmputa, mepee isi mmalite mbụ e jikọrọ mgbe nkọwa gwụchara.",
+    "syncedToAccount": "Ntọala ndị a na-eso akaụntụ gị gaa na ngwaọrụ ọ bụla.",
+    "savedOnBrowser": "E chekwara ntọala ndị a na ihe nchọgharị a.",
+    "save": "Chekwaa mgbanwe",
+    "saved": "E chekwara ntọala"
+  },
+  "language": {
+    "title": "Asụsụ",
+    "official": "Okwu gọọmentị nke Iwu Obodo na iwu ndị ọzọ na-adị mgbe niile n'asụsụ Bekee.",
+    "savedOnBrowser": "E chekwara asụsụ gị na ihe nchọgharị a."
+  },
+  "privacy": {
+    "title": "Nzuzo na nchọcha",
+    "keptInAccount": "A na-edobe nkebi na ntọala i chekwara n'akaụntụ gị.",
+    "keptOnBrowser": "Nkebi na ntọala i chekwara na-anọ na ihe nchọgharị a.",
+    "retention": "Ihe ndeprụta na-anọ na taabụ a ruo mgbe i mechiri ya. A na-edobe mkparịta ụka n'akaụntụ gị, ma ọ bụ na ihe nchọgharị a ruo ụbọchị 30 ma ọ bụrụ na ị bụ ọbịa.",
+    "provider": "Mgbe nkọwa dị, a na-eziga ajụjụ gị na ederede Iwu Obodo metụtara ya na DeepSeek ka o dee ma nyochaa azịza ahụ. Etinyela nkọwa onwe gị nke ị na-achọghị ikesa.",
+    "exportFirst": "Bupụta akara gị, ntọala na mkparịta ụka dị tupu i hichapụ nchọcha dị na ngwaọrụ a. Mbipụta isi mmalite na ntụaka ga-adị n'ihe i bupụtara.",
+    "readMore": "Gụọ otú anyị si elekọta data gị",
+    "export": "Bupụta nchọcha m",
+    "exported": "E bupụtala nchọcha",
+    "clear": "Hichapụ akara na ihe ndeprụta"
+  },
+  "security": {
+    "title": "Nchekwa mbanye"
+  },
+  "data": {
+    "title": "Data akaụntụ gị",
+    "downloading": "A na-ebudata data akaụntụ gị",
+    "deleted": "E hichapụla akaụntụ gị",
+    "downloadTitle": "Budata data gị",
+    "downloadBody": "Mbipụta ihe niile dị n'akaụntụ gị: nkọwa gbasara gị, nkebi i chekwara, ntọala, na mkparịta ụka ọ bụla na ozi ya.",
+    "download": "Budata data m",
+    "deleteTitle": "Hichapụ akaụntụ gị",
+    "adminCannotDelete": "Akaụntụ onye nchịkwa enweghị ike ihichapụ onwe ya. Gwa onye nchịkwa ọzọ ka o wepụ akaụntụ a.",
+    "deleteBody": "Nke a ga-ehichapụ akaụntụ gị, mkparịta ụka gị, nkebi na ntọala i chekwara kpamkpam. Budata data gị mbụ ma ọ bụrụ na ịchọrọ mbipụta ya.",
+    "delete": "Hichapụ akaụntụ m",
+    "confirmTitle": "Hichapụ akaụntụ gị?",
+    "confirmBody": "A ga-ehichapụ akaụntụ gị, mkparịta ụka, nkebi i chekwara na ntọala ruo mgbe ebighị ebi. Enweghị ike iweghachi ha.",
+    "keep": "Debe akaụntụ m"
+  },
+  "qualitySignals": "Akara ịdị mma azịza",
+  "support": {
+    "title": "Nkọwa maka enyemaka",
+    "appBuild": "Mbipụta ngwa",
+    "serviceBuild": "Mbipụta ọrụ",
+    "sourceRelease": "Mwepụta isi mmalite",
+    "unavailable": "Adịghị"
+  },
+  "clear": {
+    "title": "Hichapụ akara na ihe ndeprụta dị na ngwaọrụ a?",
+    "body": "Nke a ga-ewepụ akara gị na ihe nchọgharị a na ihe ndeprụta na taabụ a. Akaụntụ gị na mkparịta ụka i chekwara ga-anọ. Bupụta nchọcha gị mbụ ma ọ bụrụ na ịchọrọ mbipụta ya.",
+    "keep": "Debe nchọcha m",
+    "done": "E hichapụla akara na ihe ndeprụta dị na ngwaọrụ a",
+    "confirm": "Hichapụ nchọcha dị na ngwaọrụ a"
+  },
+  "errors": {
+    "saveFailed": "Ihe nchọgharị gị enweghị ike ichekwa ntọala ndị a. Biko nwaa ọzọ.",
+    "exportFailed": "Enweghị ike ibupụta nchọcha gị niile. Lelee njikọ gị ma nwaa ọzọ.",
+    "clearFailed": "Enweghị ike ihichapụ ụfọdụ nchọcha dị na ngwaọrụ a. Biko lelee nchekwa ihe nchọgharị gị."
+  },
+  "password": {
+    "title": "Gbanwee paswọọdụ",
+    "current": "Paswọọdụ ugbu a",
+    "new": "Paswọọdụ ọhụrụ",
+    "confirm": "Kwado paswọọdụ",
+    "submit": "Melite paswọọdụ",
+    "updated": "Agbanweela paswọọdụ"
+  },
+  "profile": {
+    "title": "Nkọwa gbasara gị",
+    "fullName": "Aha zuru ezu",
+    "email": "Email",
+    "notSet": "Ọ dịghị",
+    "updated": "E meliteela nkọwa gị"
+  },
+  "verify": {
+    "title": "Kwado adreesị email gị",
+    "body": "Anyị zigara njikọ na {{email}}. Nkebi na mkparịta ụka i chekwara ga-amalite ijikọ ozugbo i kwadoro ya.",
+    "sentTo": "Anyị zigara njikọ ọhụrụ na {{email}}.",
+    "sent": "Anyị zigara njikọ ọhụrụ na email gị.",
+    "sending": "Ọ na-eziga…",
+    "resend": "Ziga njikọ ọhụrụ"
+  }
+}

@@ -1,0 +1,48 @@
+{
+  "about": {
+    "heading": "Nípa constitution.ng",
+    "sections": [
+      {
+        "heading": "Ìtọ́kasí òfin tó dá dúró",
+        "text": "constitution.ng ń tẹ àwọn ẹ̀dà orísun Òfin-Ìpìlẹ̀ Nàìjíríà àti àwọn òfin tí a tẹ̀jáde jáde lọ́nà tí a lè wá nǹkan nínú wọn, pẹ̀lú irinṣẹ́ láti wá àwọn ìpèsè àti láti ṣàlàyé wọn. constitution.ng ni olùtẹ̀jáde. Iṣẹ́ àkànṣe tó dá dúró ni èyí, kì í ṣe ìtẹ̀jáde ìjọba tàbí iṣẹ́ tó so mọ́ National Assembly. Àlàyé jẹ́ ìwífún, kì í ṣe ìmọ̀ràn òfin."
+      },
+      {
+        "heading": "Ẹ̀dà orísun àti ààlà rẹ̀",
+        "text": "{{caveat}} Àwọn òfin tó wà nínú ìtẹ̀jáde tí o yàn nìkan ló máa ń hàn nínú àṣàyàn òfin. A ń fi àwọn Act hàn bí wọ́n ṣe ṣe wọ́n, wọ́n sì lè ti ní àtúnṣe. Àwọn ojú-ìwé kíkà ń fi ìtẹ̀jáde gangan hàn, wọ́n sì ń tọ́ka sí ìwé orísun àti ojú-ìwé tí a tẹ̀. Orísun Òfin-Ìpìlẹ̀ ní àwọn àlàfo tí a mọ̀, bí Section 168 tí kò sí àti Section 189 méjì tí a fi ibi tí wọ́n wà nínú orísun yà sọ́tọ̀. Má rò pé èyí jẹ́ ẹ̀dà tó pé tàbí tí a ti kó gbogbo àtúnṣe lọ́wọ́lọ́wọ́ jọ sí."
+      },
+      {
+        "heading": "Bí a ṣe ń bójú tó ọ̀rọ̀ òfin àti àlàyé",
+        "text": "Àwọn ojú-ìwé kíkà ń fi ọ̀rọ̀ orísun tí a tẹ̀jáde hàn lọ́tọ̀ sí àwọn àlàyé tí a ṣẹ̀dá. Àwọn ìtọ́ka ń wá láti inú ìdánimọ̀ ìpèsè tí a ṣètò. Àlàyé ń lo ẹ̀rí tí a rí àti àyẹ̀wò aládàáṣe, ṣùgbọ́n wọ́n ṣì lè fo àyíká ọ̀rọ̀ tàbí kúlẹ̀kúlẹ̀ kan. Ojú-òpó yìí kò jẹ́rìí pé agbẹjọ́rò ti yẹ gbogbo àlàyé wò. Ṣàyẹ̀wò ọ̀rọ̀ tí a tọ́ka sí àti orísun rẹ̀, kí o sì bá agbẹjọ́rò tó kúnjú ìwọ̀n sọ̀rọ̀ fún ìpinnu òfin."
+      },
+      {
+        "heading": "Àtúnṣe àti ìfitónilétí",
+        "text": "Ìtẹ̀jáde kan ń fi ẹ̀dà tí ò ń kà hàn; ẹ̀dà ojú-òpó tuntun kò túmọ̀ sí pé òfin ti yí padà. A ń tọpinpin àwọn àtúnṣe nínú ibi ìpamọ́ GitHub. Lọ́wọ́lọ́wọ́, o nílò ìwọlé sí ibi ìpamọ́ náà; ìjápọ̀ náà lè má ṣí fún àwọn tí kò wọlé. Nígbà tí o bá ń jábọ̀ ìṣòro kan, fi ìjápọ̀ ìpèsè náà, ìtẹ̀jáde àti ojú-ìwé tí a tẹ̀ kún un tí o bá ní wọn. Má fi kúlẹ̀kúlẹ̀ ẹjọ́ àdáni, ìwífún ìkànsí tàbí ìwé àṣírí sínú ìṣòro tí gbogbo ènìyàn lè rí."
+      }
+    ]
+  },
+  "methodology": {
+    "heading": "Bí a ṣe ń ṣàyẹ̀wò wíwá abala",
+    "sections": [
+      {
+        "heading": "Ohun tí a wọ̀n",
+        "text": "Àyẹ̀wò plain-language-retrieval-v1 tí o lè gbà sílẹ̀ ní ìbéèrè ojoojúmọ́ mẹ́tàdínlọ́gọ́ta (57) ní èdè Gẹ̀ẹ́sì àti Pidgin, pẹ̀lú àwọn abala tí a ń retí. Àyẹ̀wò tí a ṣe ní 12 October 2026 lo àwọn ọ̀ràn àkọ́kọ́ márùndínlọ́gọ́ta (55); àbájáde rẹ̀ fi ìpín 0.98 hàn fún ipò kìíní àti 1.0 fún ipò márùn-ún àkọ́kọ́ lẹ́yìn tí a fi ìtọ́sọ́nà kókó ọ̀rọ̀ kún un. Àbájáde wíwá tí a tọ́jú ni èyí, kì í ṣe àyẹ̀wò tuntun ti ẹ̀dà tó ń ṣiṣẹ́ báyìí."
+      },
+      {
+        "heading": "Ohun tí àbájáde náà kò fìdí rẹ̀ múlẹ̀",
+        "text": "Àṣeyọrí wíwá túmọ̀ sí pé abala kan tí a ń retí hàn ní ipò ìwádìí tí a wọ̀n. Kò wọn bóyá àwọn àlàyé tí a ṣẹ̀dá tọ̀nà, dídára ìmọ̀ràn òfin, bóyá àkójọ òfin pé, bóyá ó bo òfin lọ́wọ́lọ́wọ́, tàbí bí ó ṣe ń ṣe lórí ìbéèrè tí kò sí nínú àyẹ̀wò náà. Àwọn ìbéèrè náà jẹ́ àkójọ kékeré tí a yàn, kì í ṣe àpẹẹrẹ tó dúró fún gbogbo olùlò."
+      },
+      {
+        "heading": "Ààlà tí a lè tún ṣe",
+        "text": "Fáìlì àyẹ̀wò tó ní ẹ̀dà ń kọ ìbéèrè kọ̀ọ̀kan àti àwọn abala tí a ń retí sílẹ̀. Àyẹ̀wò tí a tún ṣe gbọ́dọ̀ kọ ẹ̀dà tí a gbé jáde, ìtẹ̀jáde àkójọ òfin, ètò wíwá, ọjọ́ àti àbájáde ìbéèrè kọ̀ọ̀kan sílẹ̀. Fi àkójọ dátà kan náà wé ara wọn kí o tó jábọ̀ àyípadà. Ọ̀rọ̀ orísun àti àwọn àtúnṣe tó wá lẹ́yìn nílò àyẹ̀wò lọ́tọ̀."
+      }
+    ]
+  },
+  "links": {
+    "label": "Àwọn orísun àti àtúnṣe",
+    "source": "Ka ẹ̀dà orísun",
+    "about": "Nípa wa àti àtúnṣe",
+    "methodology": "Bí a ṣe ń ṣàyẹ̀wò wíwá",
+    "corrections": "Àtúnṣe lórí GitHub (o nílò ìwọlé sí ibi ìpamọ́)",
+    "benchmark": "Àyẹ̀wò wíwá tó ní ẹ̀dà"
+  }
+}

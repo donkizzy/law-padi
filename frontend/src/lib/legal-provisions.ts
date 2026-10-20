@@ -1,5 +1,22 @@
 import type { LegalSearchResult } from "@/client"
+import english from "../locales/en/edition.json"
 import { referencePath } from "./seo"
+
+export type EditionKey = keyof typeof english
+type Translate = (key: EditionKey, values?: Record<string, string>) => string
+
+// English unless the browser installs its catalogue; the Worker stays English.
+let say: Translate = (key, values = {}) =>
+  english[key].replace(/\{\{(\w+)\}\}/g, (_, name) => values[name] ?? "")
+
+export function setEditionTranslator(translate: Translate) {
+  say = translate
+}
+
+/** "page 12" or "page 12–13" in the reader's language. */
+export function pageLabel(pages: string | number) {
+  return say("page", { pages: String(pages) })
+}
 
 export type InstrumentContext = {
   instrument_slug?: string
@@ -18,7 +35,7 @@ export function instrumentSlug(context?: InstrumentContext | string) {
 
 export function lawName(context?: InstrumentContext | string) {
   const slug = instrumentSlug(context)
-  if (slug === "constitution-1999") return "Constitution"
+  if (slug === "constitution-1999") return say("constitution")
   if (
     typeof context !== "string" &&
     (context?.instrument_short_title || context?.instrument_title)
@@ -74,17 +91,17 @@ export function editionName(
   context?: InstrumentContext | string,
 ) {
   if (instrumentSlug(context) !== "constitution-1999")
-    return `${lawName(context)} (as enacted)`
-  if (/as enacted/i.test(label || "")) return "As enacted"
+    return say("lawAsEnacted", { law: lawName(context) })
+  if (/as enacted/i.test(label || "")) return say("asEnacted")
   const year = editionYear(label)
-  return year ? `1999 Constitution (${year} edition)` : "1999 Constitution"
+  return year ? say("constitutionEdition", { year }) : say("constitutionName")
 }
 
 /** A release can combine several source editions. */
 export function releaseEditionName(label: string | null | undefined) {
   return /constitution|LFN/i.test(label || "")
     ? editionName(label)
-    : label || "Published source editions"
+    : label || say("publishedEditions")
 }
 
 /** One plain sentence about what the edition does and doesn't include. */
@@ -93,13 +110,12 @@ export function editionNote(
   context?: InstrumentContext | string,
 ) {
   if (instrumentSlug(context) !== "constitution-1999")
-    return `${lawName(context)}: As enacted, may have been amended.`
-  if (/as enacted/i.test(label || ""))
-    return "As enacted, may have been amended."
+    return say("lawNote", { law: lawName(context) })
+  if (/as enacted/i.test(label || "")) return say("asEnactedNote")
   const year = editionYear(label)
   return year
-    ? `This is the 1999 Constitution as published in ${year}. Later amendments aren't included yet, so a section may have changed since.`
-    : "Later amendments to the Constitution aren't included yet, so a section may have changed since."
+    ? say("constitutionNote", { year })
+    : say("constitutionNoteUndated")
 }
 
 /** Short badge text for a provision's legal status. */
@@ -113,12 +129,12 @@ export function statusLabel(
       instrumentSlug(context) !== "constitution-1999" ||
       /as enacted/i.test(label || "")
     )
-      return "As enacted"
+      return say("asEnacted")
     const year = editionYear(label)
-    return year ? `${year} edition` : "Earlier edition"
+    return year ? say("yearEdition", { year }) : say("earlierEdition")
   }
-  if (status === "proposed") return "Proposed change"
-  return status === "current" ? "Current" : status.replace(/_/g, " ")
+  if (status === "proposed") return say("proposed")
+  return status === "current" ? say("current") : status.replace(/_/g, " ")
 }
 
 /**
@@ -147,7 +163,9 @@ export function provisionTitle(provision: {
 
 export function copyText(provision: LegalSearchResult) {
   const pages = provision.source_page_start
-    ? `page ${provision.source_page_start}${provision.source_page_end && provision.source_page_end !== provision.source_page_start ? `–${provision.source_page_end}` : ""}`
-    : "page not recorded"
+    ? pageLabel(
+        `${provision.source_page_start}${provision.source_page_end && provision.source_page_end !== provision.source_page_start ? `–${provision.source_page_end}` : ""}`,
+      )
+    : say("pageNotRecorded")
   return `${provision.citation}${provision.title ? ` — ${provision.title}` : ""}\n${provision.authoritative_text}\n\n${editionName(provision.edition_label, provision)}, ${provision.source_authority}, ${pages}\n${provision.legal_status === "historical" ? `${editionNote(provision.edition_label, provision)}\n` : ""}${provisionUrl(provision)}`
 }

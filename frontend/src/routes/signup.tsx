@@ -5,6 +5,7 @@ import {
   redirect,
 } from "@tanstack/react-router"
 import { useForm } from "react-hook-form"
+import { Trans, useTranslation } from "react-i18next"
 import { z } from "zod"
 import { AuthLayout } from "@/components/Common/AuthLayout"
 import {
@@ -23,18 +24,18 @@ import { redirectSearchSchema, safeRedirect } from "@/lib/redirect"
 
 const formSchema = z
   .object({
-    email: z.email({ message: "Invalid email address" }),
-    full_name: z.string().min(1, { message: "Full Name is required" }),
+    email: z.email({ message: "validation.emailInvalid" }),
+    full_name: z.string().min(1, { message: "validation.fullNameRequired" }),
     password: z
       .string()
-      .min(1, { message: "Password is required" })
-      .min(8, { message: "Password must be at least 8 characters" }),
+      .min(1, { message: "validation.passwordRequired" })
+      .min(8, { message: "validation.passwordMin" }),
     confirm_password: z
       .string()
-      .min(1, { message: "Password confirmation is required" }),
+      .min(1, { message: "validation.confirmRequired" }),
   })
   .refine((data) => data.password === data.confirm_password, {
-    message: "The passwords don't match",
+    message: "validation.passwordsMismatch",
     path: ["confirm_password"],
   })
 
@@ -59,6 +60,7 @@ export const Route = createFileRoute("/signup")({
 })
 
 function SignUp() {
+  const { t } = useTranslation("auth")
   const { redirect: redirectTo } = Route.useSearch()
   const { signUpMutation } = useAuth({ redirect: redirectTo })
   const form = useForm<FormData>({
@@ -89,7 +91,7 @@ function SignUp() {
           className="flex flex-col gap-6"
         >
           <div className="flex flex-col items-center gap-2 text-center">
-            <h1 className="text-2xl font-bold">Create an account</h1>
+            <h1 className="text-2xl font-bold">{t("signup.title")}</h1>
           </div>
 
           <div className="grid gap-4">
@@ -98,11 +100,11 @@ function SignUp() {
               name="full_name"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Full Name</FormLabel>
+                  <FormLabel>{t("fields.fullName")}</FormLabel>
                   <FormControl>
                     <Input
                       data-testid="full-name-input"
-                      placeholder="User"
+                      placeholder={t("fields.fullNamePlaceholder")}
                       type="text"
                       {...field}
                     />
@@ -117,7 +119,7 @@ function SignUp() {
               name="email"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Email</FormLabel>
+                  <FormLabel>{t("fields.email")}</FormLabel>
                   <FormControl>
                     <Input
                       data-testid="email-input"
@@ -136,11 +138,11 @@ function SignUp() {
               name="password"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Password</FormLabel>
+                  <FormLabel>{t("fields.password")}</FormLabel>
                   <FormControl>
                     <PasswordInput
                       data-testid="password-input"
-                      placeholder="Password"
+                      placeholder={t("fields.password")}
                       {...field}
                     />
                   </FormControl>
@@ -154,11 +156,11 @@ function SignUp() {
               name="confirm_password"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Confirm Password</FormLabel>
+                  <FormLabel>{t("fields.confirmPassword")}</FormLabel>
                   <FormControl>
                     <PasswordInput
                       data-testid="confirm-password-input"
-                      placeholder="Confirm Password"
+                      placeholder={t("fields.confirmPassword")}
                       {...field}
                     />
                   </FormControl>
@@ -172,28 +174,32 @@ function SignUp() {
               className="w-full"
               loading={signUpMutation.isPending}
             >
-              Sign Up
+              {t("signup.submit")}
             </LoadingButton>
             <p className="text-center text-xs text-muted-foreground">
-              Read{" "}
-              <RouterLink
-                to="/privacy"
-                className="underline underline-offset-4"
-              >
-                how we handle your data
-              </RouterLink>{" "}
-              before you sign up.
+              <Trans
+                components={{
+                  privacy: (
+                    <RouterLink
+                      to="/privacy"
+                      className="underline underline-offset-4"
+                    />
+                  ),
+                }}
+                i18nKey="signup.privacy"
+                ns="auth"
+              />
             </p>
           </div>
 
           <div className="text-center text-sm">
-            Already have an account?{" "}
+            {t("signup.haveAccount")}{" "}
             <RouterLink
               to="/login"
               search={{ redirect: redirectTo }}
               className="underline underline-offset-4"
             >
-              Log in
+              {t("logIn")}
             </RouterLink>
           </div>
         </form>

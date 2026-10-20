@@ -1,0 +1,186 @@
+{
+  "skip": "Skip to content",
+  "nav": {
+    "label": "Main",
+    "backToTop": "constitution.ng, back to top",
+    "howItWorks": "How it works",
+    "examples": "What people ask",
+    "faq": "Questions",
+    "ask": "Ask a question",
+    "openMenu": "Open menu",
+    "closeMenu": "Close menu"
+  },
+  "form": {
+    "empty": "Type a question or a section number first.",
+    "tooLong": "Keep your question under 2,000 characters.",
+    "label": "Your question about the Constitution",
+    "placeholder": "Can police search my phone?",
+    "submit": "Get my answer"
+  },
+  "hero": {
+    "kicker": "Nigeria's Constitution and published laws",
+    "line1": "Ask about your rights.",
+    "line2": "Get the exact section.",
+    "body": "Type your question the way you would say it. We find relevant sections in the published sources, explain them in plain language and show you the original wording beside them.",
+    "available": "Available in this release: {{laws}}. Check each source edition before relying on it.",
+    "pointsLabel": "Free to use",
+    "points": [
+      "Free to use",
+      "No account needed",
+      "Every answer cites its section"
+    ]
+  },
+  "preview": {
+    "label": "Example answer to the question: can police search my phone?",
+    "question": "Can police search my phone?",
+    "answer": "Your phone calls and messages are private under Section 37. Police can only override that under a law made for reasons like public safety or preventing crime, as Section 45 allows.",
+    "sectionTitle": "Section 37 · Right to private and family life",
+    "edition": "This is the 1999 Constitution as published in 2004. Later amendments aren't included yet."
+  },
+  "problem": {
+    "kicker": "Why it is hard",
+    "title": "The Constitution is written for lawyers. Your question is not.",
+    "body": "It runs to 320 sections and 7 schedules of formal legal English. The words you would search for are rarely the words it uses.",
+    "pdfKicker": "Searching the PDF",
+    "pdfTitle": "You search for “phone”. Nothing comes up.",
+    "pdfBody": "The section you need talks about “telephone conversations and telegraphic communications”, and the limits on it sit eight sections later.",
+    "appKicker": "With constitution.ng",
+    "appTitle": "You ask “can police search my phone?”",
+    "appBody": "Section 37 comes first, Section 45 comes with it for the limits, and the answer explains both in two sentences."
+  },
+  "tagline": [
+    "The Constitution belongs to every Nigerian.",
+    "Now every Nigerian can read it."
+  ],
+  "benefits": {
+    "kicker": "What you get",
+    "title": "Answers you can understand and check",
+    "items": [
+      {
+        "title": "Ask in your own words",
+        "body": "Everyday words, Pidgin or a half remembered section number. “Section thirty something about privacy” still finds Section 37."
+      },
+      {
+        "title": "The answer comes first",
+        "body": "You get a direct reply to what you asked, then what it means for you and where the limits are. No legal jargon to decode."
+      },
+      {
+        "title": "The official wording, every time",
+        "body": "Every answer shows the exact text of the sections it relies on, with citations taken from the published source."
+      },
+      {
+        "title": "Keep what you find",
+        "body": "Copy an answer with its citations, save sections for later, or open the page in the printed source to check it yourself."
+      }
+    ]
+  },
+  "steps": {
+    "kicker": "How it works",
+    "title": "Three steps, with sources beside you",
+    "items": [
+      {
+        "title": "Ask your question",
+        "body": "Type it as you would ask a friend who knows the law. A section number works too."
+      },
+      {
+        "title": "We find the sections",
+        "body": "Your question is matched against the published source edition, including provisions that limit a right."
+      },
+      {
+        "title": "Read the answer and the source",
+        "body": "A short answer in plain language, with the official English wording of each section right beside it."
+      }
+    ]
+  },
+  "proof": {
+    "kicker": "Built to be checked",
+    "title": "Tested on the questions people really ask",
+    "body": "We test section retrieval with everyday phrasing. Here is the scope of the retained source-edition test.",
+    "stats": [
+      {
+        "value": "54 of 55",
+        "label": "everyday questions, in English and Pidgin, put an expected section first in the retained 12 October 2026 retrieval test"
+      },
+      {
+        "value": "1,811",
+        "label": "source passages in the retained 2004 edition, linked to printed pages"
+      },
+      {
+        "value": "2004",
+        "label": "source edition; later amendments are not included"
+      }
+    ],
+    "limits": "Retrieval hits do not measure explanation accuracy or current-law coverage. <methodology>Read the dated test and its limits</methodology>.",
+    "try": "Try one of these",
+    "examples": [
+      "Can police search my phone?",
+      "How long can police hold me before court?",
+      "Who can run for president?",
+      "Can I own land in another state?",
+      "wetin constitution talk about freedom of religion?",
+      "What does Section 33 say?"
+    ]
+  },
+  "faq": {
+    "kicker": "Questions",
+    "title": "Before you ask",
+    "body": "The short version: it is free, it is independent, and it always shows you the source.",
+    "items": [
+      {
+        "q": "Is this legal advice?",
+        "a": "No. constitution.ng explains published Nigerian legal sources and shows you the exact section. If you are facing a court case, an arrest or a dispute, speak to a lawyer or the Legal Aid Council. Bring the sections you found here with you."
+      },
+      {
+        "q": "Is it free?",
+        "a": "Yes. Asking questions, finding sections and reading the published source edition are free. There is no paid plan."
+      },
+      {
+        "q": "Do I need an account?",
+        "a": "No. You can ask and read as a guest. Create an account only if you want your conversations to follow you to another device."
+      },
+      {
+        "q": "Is this the current Constitution?",
+        "a": "It is the 1999 Constitution as published in 2004. Amendments passed after that are not included yet, so a section may have changed since. Every answer tells you this so you can check before you rely on it."
+      },
+      {
+        "q": "Which laws can I read?",
+        "a": "The law picker lists the laws in the selected published release. A law under review is not available there. Each provision identifies its source edition. Acts labelled as enacted may have been amended; check the original source and later changes before relying on them."
+      },
+      {
+        "q": "Can I ask in Pidgin?",
+        "a": "Yes. Ask the way you would say it, in English or Pidgin, and we will find the section. You can also switch the site to Pidgin, Yorùbá, Hausa or Igbo. The official wording is always the English text."
+      },
+      {
+        "q": "How do you choose the section?",
+        "a": "Your question is matched against published sections, using both the words you typed and what you mean. Citations come from the text itself, never guessed, and every answer lists the sections it used so you can read them yourself."
+      },
+      {
+        "q": "Can I quote an answer?",
+        "a": "Yes. Copy any answer with its citations, or save the sections you need. Quote the official wording, not the explanation, when accuracy matters."
+      },
+      {
+        "q": "Is this a government website?",
+        "a": "No. constitution.ng is independent. It is not published by, or connected to, the National Assembly or any government body."
+      }
+    ]
+  },
+  "final": {
+    "kicker": "Free, no account, nothing to install",
+    "title": "Ask your first question",
+    "body": "Find the published sections about the thing on your mind, and read their source wording.",
+    "browse": "Or browse the published sections"
+  },
+  "footer": {
+    "about": "Nigeria's Constitution and published laws. Independent, and not a government publication. Explanations are not legal advice.",
+    "label": "Footer",
+    "links": {
+      "ask": "Ask a question",
+      "about": "About and corrections",
+      "methodology": "Retrieval methodology",
+      "laws": "Browse published laws",
+      "saved": "Saved sections",
+      "login": "Sign in",
+      "privacy": "Privacy"
+    }
+  }
+}

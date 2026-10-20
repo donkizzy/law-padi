@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from "react"
+import { useTranslation } from "react-i18next"
 import type { LegalSearchResult } from "@/client"
 import {
   CloseButton,
@@ -30,6 +31,7 @@ export function SourcePanel({
   onOpenChange: (open: boolean) => void
   provision: LegalSearchResult
 }) {
+  const { t } = useTranslation("legal")
   const [desktop, setDesktop] = useState(
     () => window.matchMedia("(min-width: 1280px)").matches,
   )
@@ -51,7 +53,7 @@ export function SourcePanel({
   if (desktop)
     return open ? (
       <aside
-        aria-label="Section details"
+        aria-label={t("source.details")}
         className="sticky top-16 max-h-[calc(100svh-4rem)] self-start overflow-y-auto border-l border-border bg-sidebar/70 px-6 py-6"
       >
         <div className="mb-5 flex justify-end">
@@ -76,10 +78,9 @@ export function SourcePanel({
           opener.current?.focus()
         }}
       >
-        <SheetTitle className="sr-only">Section details</SheetTitle>
+        <SheetTitle className="sr-only">{t("source.details")}</SheetTitle>
         <SheetDescription className="sr-only">
-          The text of this section, where it comes from, and a link to the
-          original document.
+          {t("source.description")}
         </SheetDescription>
         <SourcePanelContent provision={provision} />
       </SheetContent>
@@ -92,6 +93,7 @@ export function SourcePanelContent({
 }: {
   provision: LegalSearchResult
 }) {
+  const { t } = useTranslation("legal")
   return (
     <div className="grid gap-5">
       <div>
@@ -116,31 +118,36 @@ export function SourcePanelContent({
       <SourceActions source={provision} />
       <section>
         <h3 className="mb-3 text-xs font-bold uppercase text-muted-foreground">
-          What {lawName(provision)} says
+          {t("source.whatLawSays", { law: lawName(provision) })}
         </h3>
-        <p className="whitespace-pre-wrap font-legal text-sm leading-7">
+        <p
+          lang="en"
+          className="whitespace-pre-wrap font-legal text-sm leading-7"
+        >
           {readableText(provision.authoritative_text)}
         </p>
       </section>
       <dl className="grid gap-3 text-sm">
         <div>
-          <dt className="text-muted-foreground">Citation</dt>
+          <dt className="text-muted-foreground">{t("source.citation")}</dt>
           <dd className="font-semibold">{provision.citation}</dd>
         </div>
         <div>
-          <dt className="text-muted-foreground">Document</dt>
+          <dt className="text-muted-foreground">{t("source.document")}</dt>
           <dd>{provision.source_title}</dd>
         </div>
         <div>
-          <dt className="text-muted-foreground">Authority</dt>
+          <dt className="text-muted-foreground">{t("source.authority")}</dt>
           <dd>{provision.source_authority}</dd>
         </div>
         <div>
-          <dt className="text-muted-foreground">Location</dt>
+          <dt className="text-muted-foreground">{t("source.location")}</dt>
           <dd>
             {provision.source_page_start
-              ? `Page ${provision.source_page_start}${provision.source_page_end && provision.source_page_end !== provision.source_page_start ? `–${provision.source_page_end}` : ""}`
-              : "Page not recorded"}
+              ? t("source.pages", {
+                  pages: `${provision.source_page_start}${provision.source_page_end && provision.source_page_end !== provision.source_page_start ? `–${provision.source_page_end}` : ""}`,
+                })
+              : t("source.pageNotRecorded")}
           </dd>
         </div>
       </dl>
@@ -150,7 +157,7 @@ export function SourcePanelContent({
           target="_blank"
           rel="noopener noreferrer"
         >
-          See it in the original PDF
+          {t("source.originalPdf")}
         </a>
       </InlineAction>
     </div>

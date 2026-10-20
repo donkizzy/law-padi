@@ -1,0 +1,18 @@
+{
+  "constitution": "Constitution",
+  "lawAsEnacted": "{{law}} (as enacted)",
+  "asEnacted": "As enacted",
+  "constitutionEdition": "1999 Constitution ({{year}} edition)",
+  "constitutionName": "1999 Constitution",
+  "publishedEditions": "Published source editions",
+  "lawNote": "{{law}}: As enacted, may have been amended.",
+  "asEnactedNote": "As enacted, may have been amended.",
+  "constitutionNote": "This is the 1999 Constitution as published in {{year}}. Later amendments aren't included yet, so a section may have changed since.",
+  "constitutionNoteUndated": "Later amendments to the Constitution aren't included yet, so a section may have changed since.",
+  "yearEdition": "{{year}} edition",
+  "earlierEdition": "Earlier edition",
+  "proposed": "Proposed change",
+  "current": "Current",
+  "page": "page {{pages}}",
+  "pageNotRecorded": "page not recorded"
+}

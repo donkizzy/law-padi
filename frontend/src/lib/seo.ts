@@ -1,3 +1,6 @@
+import edition from "../locales/en/edition.json"
+import pages from "../locales/en/pages.json"
+
 /** Public identity shared by the browser and the Worker; no invented credentials. */
 export const DEFAULT_SITE_URL =
   "https://constitition-ng.amosgodwin500.workers.dev"
@@ -5,53 +8,32 @@ export const REPOSITORY_URL = "https://github.com/donkizzy/law-padi"
 export const CORRECTIONS_URL = `${REPOSITORY_URL}/issues`
 export const SITE_DESCRIPTION =
   "Explore Nigeria's Constitution and published laws with precise citations, source-edition notices and original documents. Free and independent."
-export const EDITION_CAVEAT =
-  "This is the 1999 Constitution as published in 2004. Later amendments aren't included yet, so a section may have changed since."
+export const EDITION_CAVEAT = edition.constitutionNote.replace(
+  "{{year}}",
+  "2004",
+)
+
+// Page wording lives in the English `pages` catalogue; the Worker reads it here.
+const withCaveat = (sections: readonly { heading: string; text: string }[]) =>
+  sections.map((section) => ({
+    ...section,
+    text: section.text.replace("{{caveat}}", EDITION_CAVEAT),
+  }))
 
 export const publicPages = {
   "/about": {
     title: "About, sources and corrections | constitution.ng",
     description:
       "Who publishes constitution.ng, which source editions it uses, how sources and explanations are checked, and how to report a correction.",
-    heading: "About constitution.ng",
-    sections: [
-      {
-        heading: "An independent legal reference",
-        text: "constitution.ng publishes a searchable source editions of Nigeria's Constitution and published laws, and a tool for finding and explaining provisions. The publisher is constitution.ng. This is an independent project, not a government publication or a service affiliated with the National Assembly. Explanations are information, not legal advice.",
-      },
-      {
-        heading: "Source edition and scope",
-        text: `${EDITION_CAVEAT} Only laws in the selected published release appear in the law picker. Acts are shown as enacted and may have been amended. The reading pages identify the exact release and link to the source document and printed page. The Constitution source contains known gaps, including a missing Section 168 and two Section 189 identities distinguished by their source locations. Do not assume this is a complete or current consolidated edition.`,
-      },
-      {
-        heading: "How wording and explanations are handled",
-        text: "The reading pages show published source wording separately from generated explanations. Citations come from structured provision identities. Explanations use retrieved evidence and automated checks, but can still miss context or details. This site does not certify every explanation as reviewed by a lawyer. Check the cited wording and source, and consult a qualified lawyer for a legal decision.",
-      },
-      {
-        heading: "Updates and corrections",
-        text: "A release identifies the edition being read; a new website build does not mean the law has changed. Corrections are tracked in the GitHub repository. Repository access is currently required; the link may be unavailable to signed-out visitors. When reporting an issue, include the provision link, release and printed page if available. Do not include private case details, contact information or confidential documents in a public issue.",
-      },
-    ],
+    heading: pages.about.heading,
+    sections: withCaveat(pages.about.sections),
   },
   "/methodology": {
     title: "Retrieval test and methodology | constitution.ng",
     description:
       "Read the scope and limits of constitution.ng's dated plain-language retrieval benchmark, including the test set and source edition.",
-    heading: "How we check section retrieval",
-    sections: [
-      {
-        heading: "What was measured",
-        text: "The downloadable plain-language-retrieval-v1 benchmark contains 57 everyday English and Pidgin-style questions and expected sections. The recorded 12 October 2026 run used the original 55 cases; its result reports a 0.98 top-one hit rate and 1.0 top-five hit rate after adding the topic guide. This is a retained retrieval result, not a new test of the current deployment.",
-      },
-      {
-        heading: "What the result does not establish",
-        text: "A retrieval hit means an expected section appeared in the measured search position. It does not measure the correctness of generated explanations, legal advice quality, completeness of the corpus, current-law coverage or performance on questions outside the test set. The questions are a small curated set, not a representative sample of all users.",
-      },
-      {
-        heading: "Reproducible scope",
-        text: "The versioned test file records each question and its expected sections. A repeat test should record the deployed revision, published corpus release, retrieval configuration, date and per-question results. Compare the same dataset before reporting a change. Source wording and later amendments require separate verification.",
-      },
-    ],
+    heading: pages.methodology.heading,
+    sections: withCaveat(pages.methodology.sections),
   },
 } as const
 

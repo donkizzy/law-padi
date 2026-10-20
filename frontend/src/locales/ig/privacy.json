@@ -1,0 +1,47 @@
+{
+  "kicker": "Nzuzo",
+  "title": "Otú anyị si elekọta data gị.",
+  "intro": "Ihe constitution.ng na-edobe, ihe kpatara ya, ogologo oge ọ na-adị, na ihe ị nwere ike ime gbasara ya. E melitere ya ikpeazụ na 16 October 2026.",
+  "noAccount": {
+    "title": "Ị chọghị akaụntụ",
+    "body": "Ị nwere ike ịjụ ajụjụ, lelee Iwu Obodo ma chekwaa nkebi n'edebanyeghị aha. Akaụntụ na-agbakwunye naanị otu ihe: mkparịta ụka gị na nkebi i chekwara ga-eso gị gaa na ngwaọrụ ọ bụla."
+  },
+  "keep": {
+    "title": "Ihe anyị na-edobe",
+    "questions": "<strong>Ajụjụ na azịza gị.</strong> A na-echekwa mkparịta ụka ka i nwee ike ịlaghachi na ha. Ọ bụrụ na ị bụ ọbịa, ha jikọtara na kuki dị na ihe nchọgharị a.",
+    "account": "<strong>Akaụntụ gị, ọ bụrụ na i mepere otu.</strong> Adreesị email gị, aha gị ma ọ bụrụ na i nyere ya, na paswọọdụ gị, nke e chekwara naanị dị ka hash otu ụzọ anyị na-enweghị ike ịgụ.",
+    "saved": "<strong>Nkebi na ntọala i chekwara.</strong> Ha dị na ihe nchọgharị gị. Ozugbo i kwadoro email gị, a na-edobekwa ha n'akaụntụ gị.",
+    "feedback": "<strong>Echiche i họọrọ inye</strong> gbasara azịza.",
+    "security": "<strong>Ndekọ nchekwa.</strong> Kuki mbanye, na ọnụ ọgụgụ mgbalị ịbanye maka obere oge jikọtara n'ụdị adreesị IP ma ọ bụ email gị agbagwojuru anya, ka anyị nwee ike ịkwụsị ndị na-akọ paswọọdụ.",
+    "advice": "Biko etinyela nkọwa onwe gị ị na-achọghị n'ajụjụ gị. Jụọ gbasara okwu ahụ, ọ bụghị aha ndị mmadụ."
+  },
+  "why": {
+    "title": "Ihe kpatara anyị ji edobe ya",
+    "body": "Naanị iji rụọ ọrụ ị rịọrọ: ịza ajụjụ gị, idobe nchọcha gị, ịbanye gị n'enweghị nsogbu, na idozi nsogbu. Anyị anaghị ere data gị ma ọ bụ jiri ya mee mgbasa ozi."
+  },
+  "processors": {
+    "title": "Ndị ọzọ na-elekọta ya",
+    "cloudflare": "<strong>Cloudflare</strong> na-ebuga weebụsaịtị ahụ ma na-ebugara sava anyị arịrịọ gị.",
+    "render": "<strong>Render</strong> na-arụ sava anyị na United States.",
+    "neon": "<strong>Neon</strong> na-echekwa ọdụ data anyị.",
+    "deepseek": "<strong>DeepSeek</strong> na-enweta ajụjụ gị na akụkụ Iwu Obodo metụtara ya mgbe nkọwa n'asụsụ dị mfe dị, ka o wee dee nkọwa ahụ. Ọ naghị enweta aha gị, email gị ma ọ bụ nkọwa akaụntụ gị.",
+    "email": "<strong>Onye na-enye anyị ọrụ email</strong> na-eziga email ndebanye aha na paswọọdụ na adreesị gị.",
+    "abroad": "Ụfọdụ n'ime ọrụ ndị a dị na mpụga Naịjirịa, ya mere enwere ike ịhazi data gị na mba ọzọ. Naanị ihe ọrụ ọ bụla chọrọ iji rụọ ọrụ ya ka anyị na-ekesa."
+  },
+  "retention": {
+    "title": "Ogologo oge anyị na-edobe ya",
+    "guest": "A na-ehichapụ mkparịta ụka ndị ọbịa mgbe ụbọchị 30 gachara n'ejighị ha.",
+    "account": "A na-edobe mkparịta ụka akaụntụ, nkebi na ntọala i chekwara ruo mgbe i hichapụrụ ha ma ọ bụ akaụntụ gị.",
+    "sessions": "Oge mbanye na-akwụsị mgbe ụbọchị 30 gachara n'ejighị ya, ma ọ bụ mgbe ị pụrụ. A na-ehichapụ ọnụ ọgụgụ mgbalị ịbanye n'ime otu ụbọchị."
+  },
+  "rights": {
+    "title": "Ikike gị",
+    "body": "N'okpuru Nigeria Data Protection Act 2023, ị nwere ike ịrịọ ịhụ data gị, idozi ya, ibufe ya ma ọ bụ ihichapụ ya, ịjụ otú anyị si eji ya, na iwepụ nkwenye gị. Ị nwere ike ime ọtụtụ n'ime ihe ndị a n'onwe gị:",
+    "download": "Budata ihe niile dị n'akaụntụ gị, ma ọ bụ hichapụ akaụntụ gị, na <settings>Ntọala</settings>.",
+    "change": "Gbanwee aha gị ma ọ bụ email gị na Ntọala.",
+    "delete": "Hichapụ mkparịta ụka ọ bụla na ndepụta mkparịta ụka.",
+    "clear": "Hichapụ ihe e chekwara na ihe nchọgharị a na Ntọala, n'okpuru Nchekwa.",
+    "contact": "Maka ihe ọ bụla ọzọ, zigara email na <email>{{email}}</email>.",
+    "complain": "Ọ bụrụ na obi adịghị gị mma n'otú anyị si lekọta data gị, ị nwere ike ime mkpesa na <ndpc>Nigeria Data Protection Commission</ndpc>."
+  }
+}

@@ -1,0 +1,47 @@
+{
+  "kicker": "Àṣírí",
+  "title": "Bí a ṣe ń tọ́jú dátà rẹ.",
+  "intro": "Ohun tí constitution.ng ń tọ́jú, ìdí rẹ̀, fún ìgbà tó, àti ohun tí o lè ṣe nípa rẹ̀. A ṣe àtúnṣe kẹ́yìn ní 16 October 2026.",
+  "noAccount": {
+    "title": "O kò nílò àkọọ́lẹ̀",
+    "body": "O lè béèrè ìbéèrè, ṣàwárí Òfin-Ìpìlẹ̀ kí o sì fi àwọn abala pamọ́ láìforúkọ sílẹ̀. Ohun kan ṣoṣo ni àkọọ́lẹ̀ ń fi kún un: àwọn ìjíròrò rẹ àti àwọn abala tí o fipamọ́ yóò tẹ̀lé ọ lọ sí ẹ̀rọ èyíkéyìí."
+  },
+  "keep": {
+    "title": "Ohun tí a ń tọ́jú",
+    "questions": "<strong>Àwọn ìbéèrè àti ìdáhùn rẹ.</strong> A ń tọ́jú àwọn ìjíròrò kí o lè padà sí wọn. Tí o bá jẹ́ àlejò, wọ́n so mọ́ kúkì kan lórí aṣàwákiri yìí.",
+    "account": "<strong>Àkọọ́lẹ̀ rẹ, tí o bá ṣẹ̀dá ọ̀kan.</strong> Àdírẹ́sì ímeèlì rẹ, orúkọ rẹ tí o bá fún wa, àti ọ̀rọ̀ aṣínà rẹ, èyí tí a tọ́jú gẹ́gẹ́ bí hash ọ̀nà kan tí a kò lè kà.",
+    "saved": "<strong>Àwọn abala àti ètò tí o fipamọ́.</strong> Wọ́n wà lórí aṣàwákiri rẹ. Ní kété tí o bá fìdí ímeèlì rẹ múlẹ̀, a tún ń tọ́jú wọn sínú àkọọ́lẹ̀ rẹ.",
+    "feedback": "<strong>Èsì tí o yàn láti fún wa</strong> lórí ìdáhùn kan.",
+    "security": "<strong>Àkọsílẹ̀ ààbò.</strong> Kúkì ìwọlé, àti iye ìgbìyànjú ìwọlé fún ìgbà kúkúrú tí a so mọ́ àdírẹ́sì IP tàbí ímeèlì rẹ tí a ti dàrú, kí a lè dá àwọn tó ń méfò ọ̀rọ̀ aṣínà dúró.",
+    "advice": "Jọ̀wọ́ má fi ìwífún ara ẹni tí o kò nílò sínú ìbéèrè rẹ. Béèrè nípa ọ̀rọ̀ náà, kì í ṣe orúkọ àwọn ènìyàn."
+  },
+  "why": {
+    "title": "Ìdí tí a fi ń tọ́jú rẹ̀",
+    "body": "Láti ṣiṣẹ́ tí o béèrè fún nìkan: láti dáhùn àwọn ìbéèrè rẹ, láti tọ́jú ìwádìí rẹ, láti mú ọ wọlé láìléwu, àti láti ṣàtúnṣe àwọn ìṣòro. A kì í ta dátà rẹ, a kì í sì lò ó fún ìpolówó."
+  },
+  "processors": {
+    "title": "Àwọn míì tó ń bójú tó o",
+    "cloudflare": "<strong>Cloudflare</strong> ń gbé ojú-òpó wẹ́ẹ̀bù náà dé ọ̀dọ̀ rẹ, ó sì ń gbé àwọn ìbéèrè rẹ lọ sí àwọn sáfà wa.",
+    "render": "<strong>Render</strong> ń ṣiṣẹ́ àwọn sáfà wa ní United States.",
+    "neon": "<strong>Neon</strong> ń tọ́jú ibi ìpamọ́ dátà wa.",
+    "deepseek": "<strong>DeepSeek</strong> ń gba ìbéèrè rẹ àti àwọn apá Òfin-Ìpìlẹ̀ tó jẹmọ́ ọ nígbà tí àlàyé ní èdè tó rọrùn bá wà, kí ó lè kọ àlàyé náà. Kò gba orúkọ rẹ, ímeèlì rẹ tàbí ìwífún àkọọ́lẹ̀ rẹ.",
+    "email": "<strong>Olùpèsè ímeèlì wa</strong> ń fi àwọn ímeèlì ìforúkọsílẹ̀ àti ọ̀rọ̀ aṣínà ránṣẹ́ sí àdírẹ́sì rẹ.",
+    "abroad": "Díẹ̀ lára àwọn iṣẹ́ wọ̀nyí wà lẹ́yìn odi Nàìjíríà, nítorí náà wọ́n lè ṣiṣẹ́ lórí dátà rẹ ní òkè òkun. Ohun tí iṣẹ́ kọ̀ọ̀kan nílò láti ṣe iṣẹ́ rẹ̀ nìkan la ń fún wọn."
+  },
+  "retention": {
+    "title": "Bí a ṣe ń tọ́jú rẹ̀ pẹ́ tó",
+    "guest": "A ń pa àwọn ìjíròrò àlejò rẹ́ lẹ́yìn ọgbọ̀n ọjọ́ tí ẹnìkan kò lò wọ́n.",
+    "account": "A ń tọ́jú àwọn ìjíròrò àkọọ́lẹ̀, àwọn abala àti ètò tí o fipamọ́ títí o fi pa wọ́n rẹ́ tàbí pa àkọọ́lẹ̀ rẹ rẹ́.",
+    "sessions": "Ìwọlé máa ń parí lẹ́yìn ọgbọ̀n ọjọ́ tí o kò lò ó, tàbí nígbà tí o bá jáde. A ń pa iye ìgbìyànjú ìwọlé rẹ́ láàárín ọjọ́ kan."
+  },
+  "rights": {
+    "title": "Àwọn ẹ̀tọ́ rẹ",
+    "body": "Lábẹ́ Nigeria Data Protection Act 2023, o lè béèrè láti rí dátà rẹ, ṣàtúnṣe rẹ̀, gbé e lọ tàbí pa á rẹ́, tako bí a ṣe ń lò ó, kí o sì fa ìfọwọ́sí rẹ sẹ́yìn. O lè ṣe èyí tó pọ̀ jù lára rẹ̀ fúnra rẹ:",
+    "download": "Gba gbogbo ohun tó wà nínú àkọọ́lẹ̀ rẹ sílẹ̀, tàbí pa àkọọ́lẹ̀ rẹ rẹ́, nínú <settings>Ètò</settings>.",
+    "change": "Yí orúkọ tàbí ímeèlì rẹ padà nínú Ètò.",
+    "delete": "Pa ìjíròrò èyíkéyìí rẹ́ láti inú àkójọ ìjíròrò.",
+    "clear": "Pa ohun tí o fipamọ́ sórí aṣàwákiri yìí rẹ́ nínú Ètò, lábẹ́ Ààbò.",
+    "contact": "Fún ohunkóhun míì, kọ ímeèlì sí <email>{{email}}</email>.",
+    "complain": "Tí inú rẹ kò bá dùn sí bí a ṣe tọ́jú dátà rẹ, o lè fi ẹjọ́ sùn <ndpc>Nigeria Data Protection Commission</ndpc>."
+  }
+}

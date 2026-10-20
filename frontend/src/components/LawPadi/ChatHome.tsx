@@ -2,6 +2,7 @@ import { useQuery, useQueryClient } from "@tanstack/react-query"
 import { useNavigate, useSearch } from "@tanstack/react-router"
 import { AxiosError } from "axios"
 import { useCallback, useEffect, useRef, useState } from "react"
+import { useTranslation } from "react-i18next"
 import { FiArrowDown } from "react-icons/fi"
 import { toast } from "sonner"
 import type {
@@ -27,6 +28,7 @@ import { conversationHeaders } from "@/hooks/useConversations"
 import { useLegalRelease } from "@/hooks/useLegalCorpus"
 import { useSavedProvisions } from "@/hooks/useSavedProvisions"
 import { useWorkspacePreferences } from "@/hooks/useWorkspacePreferences"
+import i18n from "@/lib/i18n"
 import {
   editionNote,
   readableText,
@@ -42,13 +44,6 @@ import { bestContainingSource } from "@/lib/source-ranking"
 import { cn } from "@/lib/utils"
 import { AnswerFeedback } from "./AnswerFeedback"
 import { EditionNotice } from "./EditionNotice"
-
-const suggestions = [
-  "Can police search my phone?",
-  "How long can police hold me before court?",
-  "Who can run for president?",
-  "What does Section 37 say?",
-]
 
 type ExplanationAnswer = {
   outcome: string
@@ -66,19 +61,26 @@ type ExplanationAnswer = {
 }
 
 // Fallbacks for older answers that have no server-provided notice.
-const outcomeMessages: Record<string, string> = {
-  clarification_required:
-    "That question covers a lot at once. Try asking about one law, section or issue.",
-  validation_failed:
-    "We couldn't confirm that the explanation matches the published provisions, so here are the sections themselves.",
-  provider_failure:
-    "Explanations aren't available right now. Here are the relevant published sections.",
-  budget_exhausted:
-    "We've reached today's limit for explanations. Here are the relevant published sections.",
-  capacity_exhausted:
-    "A lot of people are asking questions right now. Here is the relevant text; try again in a minute.",
-  cancelled: "You stopped this answer.",
-}
+const outcomes = [
+  "clarification_required",
+  "validation_failed",
+  "provider_failure",
+  "budget_exhausted",
+  "capacity_exhausted",
+  "cancelled",
+] as const
+type Outcome = (typeof outcomes)[number]
+const isOutcome = (value: string): value is Outcome =>
+  (outcomes as readonly string[]).includes(value)
+
+type Progress =
+  | "finding"
+  | "writing"
+  | "checking"
+  | "reconnecting"
+  | "connectionLost"
+  | "interrupted"
+  | "stopping"
 
 function asAnswer(
   value: Record<string, unknown> | null,
@@ -91,19 +93,19 @@ function asAnswer(
 function requestError(error: unknown): string {
   if (error instanceof AxiosError) {
     const detail = error.response?.data?.detail
-    if (error.response?.status === 503)
-      return "Explanations are temporarily unavailable. Your question is still here; try again or find the relevant sections."
+    if (error.response?.status === 503) return i18n.t("chat:errors.unavailable")
     if (error.response?.status === 429)
       return typeof detail === "string" &&
         detail.toLowerCase().includes("daily")
-        ? "You've reached today's explanation allowance. It resets at midnight in Lagos. You can still find and read sections."
-        : "Explanations are busy right now. Try again in a minute, or find the relevant sections."
+        ? i18n.t("chat:errors.dailyLimit")
+        : i18n.t("chat:errors.busy")
     if (typeof detail === "string") return detail
   }
-  return "Something went wrong sending your question. Check your connection and try again."
+  return i18n.t("chat:errors.sendFailed")
 }
 
 function AnswerActions({ answer }: { answer: ExplanationAnswer }) {
+  const { t } = useTranslation(["chat", "common"])
   const { isSaved, toggle } = useSavedProvisions()
   const copy = async () => {
     try {
@@ -121,17 +123,17 @@ function AnswerActions({ answer }: { answer: ExplanationAnswer }) {
         )
         .join("\n\n")
       const facts = answer.missing_facts.length
-        ? `\n\nThe answer may depend on:\n${answer.missing_facts.join("\n")}`
+        ? `\n\n${t("answer.dependsOn")}:\n${answer.missing_facts.join("\n")}`
         : ""
       const laws = answer.related_laws?.length
-        ? `\n\nOther laws also apply:\n${answer.related_laws.join("\n")}`
+        ? `\n\n${t("answer.otherLaws")}:\n${answer.related_laws.join("\n")}`
         : ""
       await navigator.clipboard.writeText(
-        `${explanation || statusMessage(answer)}${facts}${laws}\n\nSources:\n${answer.evidence.map(evidenceCopy).join("\n\n")}\n\nThis explanation is not legal advice.`,
+        `${explanation || statusMessage(answer)}${facts}${laws}\n\n${t("answer.sources")}:\n${answer.evidence.map(evidenceCopy).join("\n\n")}\n\n${t("answer.notAdvice")}`,
       )
-      toast.success("Answer and citations copied")
+      toast.success(t("actions.copied"))
     } catch {
-      toast.error("Couldn't copy. Please try again.")
+      toast.error(t("actions.copyFailed"))
     }
   }
   const save = () => {
@@ -141,19 +143,19 @@ function AnswerActions({ answer }: { answer: ExplanationAnswer }) {
       for (const item of sources)
         if (!isSaved(item.canonical_path, item.release_version))
           toggle(item.canonical_path, item.release_version)
-      toast.success("Sources saved")
+      toast.success(t("actions.sourcesSaved"))
     } catch {
-      toast.error("Couldn't save sources on this browser.")
+      toast.error(t("actions.saveFailed"))
     }
   }
   return (
-    <fieldset className="flex flex-wrap gap-2" aria-label="Answer actions">
+    <fieldset className="flex flex-wrap gap-2" aria-label={t("actions.label")}>
       <InlineAction type="button" onClick={() => void copy()}>
-        Copy answer with citations
+        {t("actions.copy")}
       </InlineAction>
       {answer.evidence.length > 0 && (
         <InlineAction type="button" onClick={save}>
-          Save sources
+          {t("actions.saveSources")}
         </InlineAction>
       )}
       <InlineAction
@@ -168,7 +170,7 @@ function AnswerActions({ answer }: { answer: ExplanationAnswer }) {
           })
         }
       >
-        Export answer
+        {t("actions.export")}
       </InlineAction>
     </fieldset>
   )
@@ -180,13 +182,12 @@ function statusMessage(answer: ExplanationAnswer) {
   if (answer.outcome === "insufficient_evidence") {
     if (gap?.message) return gap.message
     return answer.evidence.length
-      ? "The published provisions don't seem to answer this directly. Here are the closest sections we found."
-      : "We couldn't find a published section that answers this. Try rephrasing, or name a law and section."
+      ? i18n.t("chat:outcome.closest")
+      : i18n.t("chat:outcome.noSection")
   }
-  return (
-    outcomeMessages[answer.outcome] ??
-    "We couldn't finish this answer. Here are the relevant published sections."
-  )
+  return isOutcome(answer.outcome)
+    ? i18n.t(`chat:outcome.${answer.outcome}`)
+    : i18n.t("chat:outcome.unfinished")
 }
 
 function answerEditionNotice(answer: ExplanationAnswer) {
@@ -197,12 +198,8 @@ function answerEditionNotice(answer: ExplanationAnswer) {
     const slug = item.instrument_slug || item.canonical_path.split(".")[0]
     if (!instruments.has(slug)) instruments.set(slug, item)
   }
-  return [...instruments.entries()]
-    .map(([slug, item]) =>
-      slug === "constitution-1999"
-        ? editionNote(item.edition_label)
-        : `${item.instrument_short_title || item.instrument_title || slug}: As enacted, may have been amended.`,
-    )
+  return [...instruments.values()]
+    .map((item) => editionNote(item.edition_label, item))
     .join("\n\n")
 }
 
@@ -309,9 +306,17 @@ function SourceCard({
   item: EvidenceItem
   onSelect: (item: EvidenceItem) => void
 }) {
+  const { t } = useTranslation(["chat", "common"])
   return (
     <button
-      aria-label={`Open ${item.citation}${item.title ? `: ${item.title}` : " source"}`}
+      aria-label={
+        item.title
+          ? t("sources.openTitled", {
+              citation: item.citation,
+              title: item.title,
+            })
+          : t("sources.open", { citation: item.citation })
+      }
       className="sq-md grid gap-1 border border-border bg-card p-4 text-left hover:border-primary focus-visible:ring-2 focus-visible:ring-ring"
       onClick={() => onSelect(item)}
       type="button"
@@ -320,7 +325,10 @@ function SourceCard({
       {item.title && (
         <span className="text-body font-semibold">{item.title}</span>
       )}
-      <span className="hidden font-legal text-statute-sm text-muted-foreground sm:line-clamp-2">
+      <span
+        lang="en"
+        className="hidden font-legal text-statute-sm text-muted-foreground sm:line-clamp-2"
+      >
         {item.authoritative_text.replace(/\s+/g, " ")}
       </span>
     </button>
@@ -350,14 +358,15 @@ function SourceList({
 }
 
 function LookupGaps({ outcomes }: { outcomes: CitationOutcome[] }) {
+  const { t } = useTranslation(["chat", "common"])
   const gaps = outcomes.filter((item) => item.status !== "resolved")
   if (!gaps.length) return null
   return (
     <section
-      aria-label="Sections we couldn't find"
+      aria-label={t("gaps.label")}
       className="sq-md border border-amber-500/40 bg-amber-500/5 p-4"
     >
-      <h3 className="text-body font-semibold">We couldn't find everything</h3>
+      <h3 className="text-body font-semibold">{t("gaps.title")}</h3>
       <ul className="mt-2 list-inside list-disc text-body">
         {gaps.map((item, index) => (
           <li key={`${item.reference}:${index}`}>
@@ -377,13 +386,13 @@ function RelatedLaws({
   laws?: string[]
   className?: string
 }) {
+  const { t } = useTranslation(["chat", "common"])
   if (!laws?.length) return null
   return (
-    <section aria-label="Other laws also apply" className={className}>
-      <h3 className="text-body font-semibold">Other laws also apply</h3>
+    <section aria-label={t("answer.otherLaws")} className={className}>
+      <h3 className="text-body font-semibold">{t("answer.otherLaws")}</h3>
       <p className="mt-1 text-body text-muted-foreground">
-        These Nigerian laws also cover this. They aren't included here yet, so
-        check them or ask a lawyer before relying on this answer.
+        {t("answer.otherLawsBody")}
       </p>
       <ul className="mt-2 ml-5 grid list-disc gap-1 text-body">
         {laws.map((law) => (
@@ -401,11 +410,12 @@ function FollowUps({
   questions: string[]
   onAsk: (question: string) => void
 }) {
+  const { t } = useTranslation(["chat", "common"])
   if (!questions.length) return null
   return (
-    <section aria-label="Suggested questions" className="grid gap-3">
+    <section aria-label={t("followUps.label")} className="grid gap-3">
       <h3 className="text-overline uppercase text-muted-foreground">
-        You might also ask
+        {t("followUps.title")}
       </h3>
       <div className="flex flex-wrap gap-2">
         {questions.map((question) => (
@@ -427,6 +437,7 @@ function AnswerView({
   onSelect: (item: EvidenceItem) => void
   onAsk?: (question: string) => void
 }) {
+  const { t } = useTranslation(["chat", "common"])
   const byId = new Map(answer.evidence.map((item) => [item.evidence_id, item]))
   const historical = answer.evidence.find(
     (item) => item.legal_status === "historical",
@@ -443,7 +454,7 @@ function AnswerView({
       ),
     )
     return (
-      <section aria-label="Answer" className="grid gap-5">
+      <section aria-label={t("answer.label")} className="grid gap-5">
         <p className="sq-md bg-secondary p-4 text-body" role="status">
           {statusMessage(answer)}
         </p>
@@ -463,7 +474,10 @@ function AnswerView({
                 {bestSource.title}
               </h3>
             )}
-            <p className="mt-3 whitespace-pre-wrap font-legal text-statute-sm">
+            <p
+              lang="en"
+              className="mt-3 whitespace-pre-wrap font-legal text-statute-sm"
+            >
               {readableText(bestSource.authoritative_text)}
             </p>
             <InlineAction
@@ -471,14 +485,14 @@ function AnswerView({
               onClick={() => onSelect(bestSource)}
               type="button"
             >
-              More about this section
+              {t("answer.moreAboutSection")}
             </InlineAction>
           </div>
         )}
         <SourceList
           items={others.slice(0, 4)}
           onSelect={onSelect}
-          title="Other sections that may help"
+          title={t("sources.mayHelp")}
         />
         {onAsk && (
           <FollowUps
@@ -491,7 +505,7 @@ function AnswerView({
   }
   const { cited, others } = splitSources(answer)
   return (
-    <section aria-label="Answer" className="grid gap-5">
+    <section aria-label={t("answer.label")} className="grid gap-5">
       <div className="sq-lg border border-border bg-card p-5 sm:p-6">
         <div className="grid gap-5">
           {answer.blocks.map((block, index) => (
@@ -511,9 +525,7 @@ function AnswerView({
         </div>
         {answer.missing_facts.length > 0 && (
           <div className="mt-6 border-t border-border pt-4">
-            <h3 className="text-body font-semibold">
-              The answer may depend on
-            </h3>
+            <h3 className="text-body font-semibold">{t("answer.dependsOn")}</h3>
             <ul className="mt-2 ml-5 grid list-disc gap-1 text-body">
               {answer.missing_facts.map((fact) => (
                 <li key={fact}>{fact}</li>
@@ -534,19 +546,17 @@ function AnswerView({
       </div>
       <LookupGaps outcomes={answer.citation_outcomes} />
       <AnswerActions answer={answer} />
-      <SourceList items={cited} onSelect={onSelect} title="Sections used" />
+      <SourceList items={cited} onSelect={onSelect} title={t("sources.used")} />
       {others.length > 0 && (
         <details className="group">
           <summary className="cursor-pointer text-body text-muted-foreground hover:text-foreground">
-            {others.length === 1
-              ? "1 other section came up"
-              : `${others.length} other sections came up`}
+            {t("sources.othersCameUp", { count: others.length })}
           </summary>
           <div className="mt-3">
             <SourceList
               items={others}
               onSelect={onSelect}
-              title="Also related"
+              title={t("sources.alsoRelated")}
             />
           </div>
         </details>
@@ -563,26 +573,30 @@ function PendingAnswer({
   sources,
   outcomes,
 }: {
-  progress: string | null
+  progress: Progress | null
   sources: EvidenceItem[]
   outcomes: CitationOutcome[]
 }) {
+  const { t } = useTranslation(["chat", "common"])
   const reading = withoutContained(sources).slice(0, 4)
   return (
-    <section aria-label="Answer in progress" className="grid gap-4">
+    <section aria-label={t("pending.label")} className="grid gap-4">
       <LookupGaps outcomes={outcomes} />
       <div className="sq-lg grid gap-3 border border-border bg-card p-5">
         <p className="text-body text-muted-foreground" role="status">
-          {progress ?? "Finding the relevant sections…"}
+          {t(`progress.${progress ?? "finding"}`)}
         </p>
         {reading.length > 0 && (
           <p className="text-label font-normal text-muted-foreground">
-            Reading{" "}
-            {reading
-              .map((item) =>
-                item.title ? `${item.citation} (${item.title})` : item.citation,
-              )
-              .join(", ")}
+            {t("pending.reading", {
+              sources: reading
+                .map((item) =>
+                  item.title
+                    ? `${item.citation} (${item.title})`
+                    : item.citation,
+                )
+                .join(", "),
+            })}
           </p>
         )}
         <div aria-hidden className="grid gap-2">
@@ -606,6 +620,7 @@ function MessageView({
   onSelect: (item: EvidenceItem) => void
   onAsk?: (question: string) => void
 }) {
+  const { t } = useTranslation(["chat", "common"])
   if (message.role === "user")
     return (
       <div className="ml-auto max-w-[90%] sq-lg bg-secondary px-4 py-3 text-body">
@@ -621,13 +636,12 @@ function MessageView({
       )}
     </div>
   ) : (
-    <p className="text-body text-muted-foreground">
-      This answer couldn't be loaded.
-    </p>
+    <p className="text-body text-muted-foreground">{t("answer.loadFailed")}</p>
   )
 }
 
 export function ChatHome() {
+  const { t } = useTranslation(["chat", "common"])
   const search = useSearch({ from: "/_layout/" })
   const navigate = useNavigate({ from: "/" })
   const queryClient = useQueryClient()
@@ -646,7 +660,7 @@ export function ChatHome() {
   const [error, setError] = useState<string | null>(null)
   const [pendingQuestion, setPendingQuestion] = useState("")
   const [runId, setRunId] = useState<string | null>(null)
-  const [progress, setProgress] = useState<string | null>(null)
+  const [progress, setProgress] = useState<Progress | null>(null)
   const [streamError, setStreamError] = useState(false)
   const [streamAttempt, setStreamAttempt] = useState(0)
   const [sources, setSources] = useState<EvidenceItem[]>([])
@@ -837,7 +851,7 @@ export function ChatHome() {
         if (!scope.current()) return
         setDraft("")
         setRunId(accepted.data.run_id)
-        setProgress("Finding the relevant sections…")
+        setProgress("finding")
         setSubmitting(false)
         submittingRef.current = false
         queryClient.setQueryData<ConversationDetail>(
@@ -916,7 +930,7 @@ export function ChatHome() {
     if (!search.c || !activeRunId) return
     const scope = beginRequest()
     let terminal = false
-    if (streamAttempt > 0) setProgress("Reconnecting to your saved question…")
+    if (streamAttempt > 0) setProgress("reconnecting")
     void (async () => {
       try {
         const { stream } = await ConversationsService.conversationEvents({
@@ -936,19 +950,16 @@ export function ChatHome() {
             )
               return
             const data = event.data as Record<string, unknown>
-            if (event.event === "retrieval.started")
-              setProgress("Finding the relevant sections…")
+            if (event.event === "retrieval.started") setProgress("finding")
             if (event.event === "retrieval.complete") {
               if (Array.isArray(data.evidence))
                 setSources(data.evidence as EvidenceItem[])
               if (Array.isArray(data.citation_outcomes))
                 setOutcomes(data.citation_outcomes as CitationOutcome[])
-              setProgress("Writing a plain-English answer…")
+              setProgress("writing")
             }
-            if (event.event === "generation.started")
-              setProgress("Writing a plain-English answer…")
-            if (event.event === "verification.started")
-              setProgress("Double-checking the answer against its sources…")
+            if (event.event === "generation.started") setProgress("writing")
+            if (event.event === "verification.started") setProgress("checking")
             if (event.event === "answer.complete") {
               terminal = true
               if (data.answer && typeof data.answer === "object") {
@@ -980,7 +991,7 @@ export function ChatHome() {
           },
           onSseError: () => {
             if (scope.current()) {
-              setProgress("Connection lost. Reconnecting…")
+              setProgress("connectionLost")
               setStreamError(true)
             }
           },
@@ -993,9 +1004,7 @@ export function ChatHome() {
       } finally {
         if (scope.current() && !terminal) {
           setStreamError(true)
-          setProgress(
-            "The connection was interrupted. We're checking whether your answer finished.",
-          )
+          setProgress("interrupted")
           void queryClient.invalidateQueries({
             queryKey: ["conversation", search.c],
           })
@@ -1023,7 +1032,7 @@ export function ChatHome() {
         signal: scope.signal,
       })
       if (scope.current()) {
-        setProgress("Stopping…")
+        setProgress("stopping")
         void conversation.refetch()
       }
     } catch (cause) {
@@ -1060,11 +1069,7 @@ export function ChatHome() {
   }
 
   const remove = async () => {
-    if (
-      !search.c ||
-      !window.confirm("Delete this conversation? This can't be undone.")
-    )
-      return
+    if (!search.c || !window.confirm(t("conversation.confirmDelete"))) return
     const scope = beginRequest()
     try {
       await ConversationsService.deleteConversation({
@@ -1137,26 +1142,26 @@ export function ChatHome() {
             {editingTitle ? (
               <div className="flex min-w-0 max-w-full flex-wrap gap-2">
                 <input
-                  aria-label="Conversation title"
+                  aria-label={t("conversation.titleLabel")}
                   className="sq-sm min-w-0 flex-1 border border-input bg-card px-3 py-2 text-sm"
                   maxLength={255}
                   onChange={(event) => setTitle(event.target.value)}
                   value={title}
                 />
                 <InlineAction onClick={() => void rename()} type="button">
-                  Save
+                  {t("common:actions.save")}
                 </InlineAction>
                 <InlineAction
                   onClick={() => setEditingTitle(false)}
                   type="button"
                 >
-                  Cancel
+                  {t("common:actions.cancel")}
                 </InlineAction>
               </div>
             ) : (
               <div>
                 <h1 className="font-display text-title-3">
-                  {conversation.data?.title || "Conversation"}
+                  {conversation.data?.title || t("common:history.untitled")}
                 </h1>
                 <p className="mt-1 text-label font-normal text-muted-foreground">
                   {releaseEditionName(
@@ -1191,16 +1196,16 @@ export function ChatHome() {
                       })
                   } catch {
                     if (scope.current())
-                      toast.error(
-                        "Conversation could not be fully exported. Try again.",
-                      )
+                      toast.error(t("conversation.exportFailed"))
                   } finally {
                     if (scope.current()) setExporting(false)
                     scope.close()
                   }
                 }}
               >
-                {exporting ? "Exporting…" : "Export chat"}
+                {exporting
+                  ? t("conversation.exporting")
+                  : t("conversation.export")}
               </SquircleButton>
               <SquircleButton
                 onClick={() => {
@@ -1211,7 +1216,7 @@ export function ChatHome() {
                 type="button"
                 variant="ghost"
               >
-                Rename
+                {t("conversation.rename")}
               </SquircleButton>
               <SquircleButton
                 onClick={() => void remove()}
@@ -1219,34 +1224,33 @@ export function ChatHome() {
                 type="button"
                 variant="ghost"
               >
-                Delete
+                {t("conversation.delete")}
               </SquircleButton>
             </div>
           </div>
         ) : (
           <div className="mb-8">
             <p className="mb-4 text-overline uppercase text-primary">
-              The law, made easy
+              {t("home.kicker")}
             </p>
             <h1 className="font-display text-title-1 sm:text-display">
-              Ask about Nigeria&apos;s laws.
+              {t("home.title")}
             </h1>
             <p className="mt-4 max-w-xl text-body-lg text-muted-foreground">
-              Ask in your own words. You&apos;ll get a plain-English answer and
-              the exact sections it comes from.
+              {t("home.intro")}
             </p>
           </div>
         )}
 
         {conversation.isPending && search.c && <SkeletonBlock />}
         {conversation.isError && (
-          <ErrorState title="Conversation unavailable">
+          <ErrorState title={t("conversation.unavailable")}>
             {requestError(conversation.error)}
             <InlineAction
               type="button"
               onClick={() => void conversation.refetch()}
             >
-              Try again
+              {t("common:actions.tryAgain")}
             </InlineAction>
           </ErrorState>
         )}
@@ -1257,7 +1261,9 @@ export function ChatHome() {
               onClick={() => void loadOlder()}
               type="button"
             >
-              {loadingOlder ? "Loading…" : "Load older messages"}
+              {loadingOlder
+                ? t("common:status.loading")
+                : t("conversation.loadOlder")}
             </InlineAction>
           )}
           {visibleMessages.map((message) => (
@@ -1296,7 +1302,7 @@ export function ChatHome() {
           )}
           {progress && !awaitingAnswer && (
             <p role="status" className="text-body text-muted-foreground">
-              {progress}
+              {t(`progress.${progress}`)}
             </p>
           )}
           {activeRunId && (
@@ -1307,7 +1313,7 @@ export function ChatHome() {
               type="button"
               variant="outline"
             >
-              Stop answering
+              {t("conversation.stop")}
             </SquircleButton>
           )}
           {streamError && (
@@ -1315,7 +1321,7 @@ export function ChatHome() {
               className="sq-md border border-border bg-secondary p-4 text-body"
               role="status"
             >
-              Your question is saved. Reconnect or check its status to continue.
+              {t("stream.saved")}
               <div className="mt-2 flex flex-wrap gap-2">
                 <InlineAction
                   type="button"
@@ -1324,13 +1330,13 @@ export function ChatHome() {
                     setStreamAttempt((value) => value + 1)
                   }}
                 >
-                  Reconnect
+                  {t("stream.reconnect")}
                 </InlineAction>
                 <InlineAction
                   type="button"
                   onClick={() => void conversation.refetch()}
                 >
-                  Check answer status
+                  {t("stream.checkStatus")}
                 </InlineAction>
               </div>
             </div>
@@ -1351,7 +1357,7 @@ export function ChatHome() {
                       )
                     }
                   >
-                    Retry question
+                    {t("errors.retry")}
                   </InlineAction>
                 )}
                 <InlineAction
@@ -1361,7 +1367,7 @@ export function ChatHome() {
                     inputRef.current?.focus()
                   }}
                 >
-                  Edit question
+                  {t("errors.edit")}
                 </InlineAction>
                 <InlineAction
                   type="button"
@@ -1376,7 +1382,7 @@ export function ChatHome() {
                     })
                   }
                 >
-                  Find relevant sections
+                  {t("errors.findSections")}
                 </InlineAction>
               </div>
             </div>
@@ -1407,13 +1413,12 @@ export function ChatHome() {
               }}
             >
               <FiArrowDown aria-hidden />
-              Jump to latest
+              {t("conversation.jumpToLatest")}
             </SquircleButton>
           )}
           {!capabilities.data?.explanations_enabled && (
             <p role="status" className="mb-3 text-body text-muted-foreground">
-              Explanations are paused. Find a section to keep reading the
-              published laws.
+              {t("home.paused")}
             </p>
           )}
           <ChatComposer
@@ -1434,24 +1439,24 @@ export function ChatHome() {
           />
           {!search.c && (
             <div className="mt-4 flex flex-wrap gap-2">
-              {suggestions.map((prompt) => (
-                <PromptSuggestion
-                  key={prompt}
-                  onClick={() => {
-                    setDraft(prompt)
-                    inputRef.current?.focus()
-                  }}
-                  type="button"
-                >
-                  {prompt}
-                </PromptSuggestion>
-              ))}
+              {(t("home.suggestions", { returnObjects: true }) as string[]).map(
+                (prompt) => (
+                  <PromptSuggestion
+                    key={prompt}
+                    onClick={() => {
+                      setDraft(prompt)
+                      inputRef.current?.focus()
+                    }}
+                    type="button"
+                  >
+                    {prompt}
+                  </PromptSuggestion>
+                ),
+              )}
             </div>
           )}
           <p className="mt-3 text-label font-normal text-muted-foreground">
-            Answers explain published laws in plain language and can miss
-            details. Check the sections they link to, and talk to a lawyer about
-            your own situation.
+            {t("home.disclaimer")}
           </p>
         </div>
       </section>

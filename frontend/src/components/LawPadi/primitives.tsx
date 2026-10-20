@@ -1,5 +1,6 @@
 import { Slot, Slottable } from "@radix-ui/react-slot"
 import type { ComponentProps, ReactNode } from "react"
+import { useTranslation } from "react-i18next"
 import {
   FiAlertCircle,
   FiArrowRight,
@@ -111,6 +112,7 @@ export function StatusBadge({
   label?: string
   className?: string
 }) {
+  const { t } = useTranslation()
   const meta = statusMeta[status]
   const Icon = meta.icon
 
@@ -123,7 +125,7 @@ export function StatusBadge({
       )}
     >
       <Icon className="size-3.5" aria-hidden />
-      {label ?? meta.label}
+      {label ?? t(`legalStatus.${status}`)}
     </span>
   )
 }
@@ -204,7 +206,7 @@ export function SectionHeading({
 }
 
 export function OfficialTextBlock({
-  title = "Official wording",
+  title,
   children,
   className,
 }: {
@@ -212,6 +214,7 @@ export function OfficialTextBlock({
   children: ReactNode
   className?: string
 }) {
+  const { t } = useTranslation()
   return (
     <section
       className={cn(
@@ -220,9 +223,12 @@ export function OfficialTextBlock({
       )}
     >
       <h2 className="mb-3 text-overline uppercase text-muted-foreground">
-        {title}
+        {title ?? t("officialWording")}
       </h2>
-      <div className="font-legal text-statute border-l-2 border-primary/35 pl-4 text-foreground/90">
+      <div
+        lang="en"
+        className="font-legal text-statute border-l-2 border-primary/35 pl-4 text-foreground/90"
+      >
         {children}
       </div>
     </section>
@@ -364,7 +370,10 @@ export function VersionDiff({
           <h3 className="mb-3 text-overline uppercase text-muted-foreground">
             Previous wording
           </h3>
-          <p className="sq-sm bg-[color:var(--legal-red-soft)] p-3 font-legal text-statute-sm text-[color:var(--legal-red)] line-through">
+          <p
+            lang="en"
+            className="sq-sm bg-[color:var(--legal-red-soft)] p-3 font-legal text-statute-sm text-[color:var(--legal-red)] line-through"
+          >
             {previous}
           </p>
         </section>
@@ -372,7 +381,10 @@ export function VersionDiff({
           <h3 className="mb-3 text-overline uppercase text-muted-foreground">
             Current wording
           </h3>
-          <p className="sq-sm bg-[color:var(--legal-emerald-soft)] p-3 font-legal text-statute-sm text-[color:var(--legal-emerald-ink)]">
+          <p
+            lang="en"
+            className="sq-sm bg-[color:var(--legal-emerald-soft)] p-3 font-legal text-statute-sm text-[color:var(--legal-emerald-ink)]"
+          >
             {current}
           </p>
         </section>
@@ -430,11 +442,12 @@ export function ErrorState({
 }
 
 export function SkeletonBlock() {
+  const { t } = useTranslation()
   return (
     <div aria-live="polite" className="sq-lg border border-border bg-card p-5">
       <div className="mb-4 flex items-center gap-2 text-xs font-semibold text-muted-foreground">
         <FiLoader className="size-4 animate-spin" aria-hidden />
-        Checking trusted sources
+        {t("status.checkingSources")}
       </div>
       <div className="grid gap-3">
         <span className="sq-xs h-3 w-4/5 animate-pulse bg-secondary" />
@@ -449,8 +462,12 @@ export function CopyButton({
   copied,
   ...props
 }: ComponentProps<"button"> & { copied?: boolean }) {
+  const { t } = useTranslation()
   return (
-    <IconButton label={copied ? "Copied" : "Copy"} {...props}>
+    <IconButton
+      label={copied ? t("actions.copied") : t("actions.copy")}
+      {...props}
+    >
       {copied ? (
         <FiCheck className="size-4" aria-hidden />
       ) : (
@@ -484,8 +501,9 @@ export function InlineAction({
 }
 
 export function CloseButton(props: ComponentProps<"button">) {
+  const { t } = useTranslation()
   return (
-    <IconButton label="Close" {...props}>
+    <IconButton label={t("actions.close")} {...props}>
       <FiX className="size-4" aria-hidden />
     </IconButton>
   )

@@ -1,5 +1,6 @@
 import { Link, useNavigate } from "@tanstack/react-router"
 import { useState } from "react"
+import { useTranslation } from "react-i18next"
 import { ProvisionView } from "@/components/LawPadi/ProvisionView"
 import {
   ErrorState,
@@ -19,6 +20,7 @@ export function ProvisionDetail({
   release?: string
   instrument?: string
 }) {
+  const { t } = useTranslation(["legal", "common"])
   const validPath = !instrument || sectionId.startsWith(`${instrument}.`)
   const detail = useProvision(validPath ? sectionId : "", release)
   const [sourceOpen, setSourceOpen] = useState(false)
@@ -39,20 +41,20 @@ export function ProvisionDetail({
           }}
           search={{ release: detail.data?.release_version || release }}
         >
-          Back to browse
+          {t("provision.backToBrowse")}
         </Link>
         {!validPath ? (
-          <ErrorState title="Provision unavailable">
-            The section link names a different law.
+          <ErrorState title={t("provision.unavailable")}>
+            {t("provision.wrongLaw")}
           </ErrorState>
         ) : detail.isPending ? (
           <SkeletonBlock />
         ) : detail.isError || !detail.data ? (
           <ErrorState
-            title="Provision unavailable"
+            title={t("provision.unavailable")}
             action={
               <InlineAction onClick={() => detail.refetch()} type="button">
-                Try again
+                {t("common:actions.tryAgain")}
               </InlineAction>
             }
           >

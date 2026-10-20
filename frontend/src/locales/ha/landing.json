@@ -1,0 +1,186 @@
+{
+  "skip": "Tsallaka zuwa abun ciki",
+  "nav": {
+    "label": "Babban menu",
+    "backToTop": "constitution.ng, koma sama",
+    "howItWorks": "Yadda yake aiki",
+    "examples": "Abin da mutane ke tambaya",
+    "faq": "Tambayoyi",
+    "ask": "Yi tambaya",
+    "openMenu": "Buɗe menu",
+    "closeMenu": "Rufe menu"
+  },
+  "form": {
+    "empty": "Fara rubuta tambaya ko lambar sashe.",
+    "tooLong": "Kada tambayarka ta wuce haruffa 2,000.",
+    "label": "Tambayarka game da Kundin Tsarin Mulki",
+    "placeholder": "'Yan sanda za su iya bincika wayata?",
+    "submit": "Ba ni amsa"
+  },
+  "hero": {
+    "kicker": "Kundin Tsarin Mulkin Najeriya da dokokin da aka wallafa",
+    "line1": "Yi tambaya game da haƙƙoƙinka.",
+    "line2": "Sami ainihin sashe.",
+    "body": "Rubuta tambayarka yadda za ka faɗe ta. Za mu nemo sassan da suka shafi lamarin a cikin tushen da aka wallafa, mu bayyana su cikin harshe mai sauƙi, mu kuma nuna maka ainihin kalmomin doka a gefensu.",
+    "available": "Abin da ke cikin wannan fitarwa: {{laws}}. Duba kowane bugun tushe kafin ka dogara da shi.",
+    "pointsLabel": "Kyauta ne",
+    "points": [
+      "Kyauta ne",
+      "Ba a buƙatar asusu",
+      "Kowace amsa tana ambaton sashenta"
+    ]
+  },
+  "preview": {
+    "label": "Misalin amsa ga tambayar: 'yan sanda za su iya bincika wayata?",
+    "question": "'Yan sanda za su iya bincika wayata?",
+    "answer": "Kiran wayarka da saƙonninka sirri ne a ƙarƙashin Section 37. 'Yan sanda za su iya tsallake hakan ne kawai a ƙarƙashin dokar da aka yi saboda dalilai kamar tsaron jama'a ko hana aikata laifi, kamar yadda Section 45 ta yarda.",
+    "sectionTitle": "Section 37 · 'Yancin rayuwa ta sirri da ta iyali",
+    "edition": "Wannan shi ne Kundin Tsarin Mulki na 1999 kamar yadda aka buga shi a 2004. Gyare-gyaren da suka biyo baya ba sa ciki tukuna."
+  },
+  "problem": {
+    "kicker": "Dalilin da ya sa yake da wuya",
+    "title": "An rubuta Kundin Tsarin Mulki ne don lauyoyi. Tambayarka ba haka take ba.",
+    "body": "Yana da sassa 320 da jadawali 7 cikin Turancin doka mai tsauri. Kalmomin da za ka nema ba safai suke zama kalmomin da ya yi amfani da su ba.",
+    "pdfKicker": "Bincike a cikin PDF",
+    "pdfTitle": "Ka nemi “phone”. Babu abin da ya fito.",
+    "pdfBody": "Sashen da kake buƙata yana magana ne game da “telephone conversations and telegraphic communications”, kuma iyakokinsa suna sassa takwas daga baya.",
+    "appKicker": "Tare da constitution.ng",
+    "appTitle": "Ka tambaya “'yan sanda za su iya bincika wayata?”",
+    "appBody": "Section 37 ce ke fara fitowa, Section 45 tana biye da ita don iyakoki, kuma amsar tana bayyana su duka cikin jimla biyu."
+  },
+  "tagline": [
+    "Kundin Tsarin Mulki na kowane ɗan Najeriya ne.",
+    "Yanzu kowane ɗan Najeriya zai iya karanta shi."
+  ],
+  "benefits": {
+    "kicker": "Abin da za ka samu",
+    "title": "Amsoshin da za ka iya fahimta ka kuma duba",
+    "items": [
+      {
+        "title": "Yi tambaya da kalmominka",
+        "body": "Kalmomin yau da kullum, Pidgin ko lambar sashen da ka tuna rabi. “Section thirty something about privacy” za ta samo Section 37."
+      },
+      {
+        "title": "Amsa ce ke zuwa da farko",
+        "body": "Za ka sami amsa kai tsaye ga abin da ka tambaya, sannan abin da yake nufi a gare ka da inda iyakoki suke. Babu kalmomin doka masu wuyar fahimta."
+      },
+      {
+        "title": "Kalmomin hukuma, koyaushe",
+        "body": "Kowace amsa tana nuna ainihin rubutun sassan da ta dogara da su, tare da madogaru daga tushen da aka wallafa."
+      },
+      {
+        "title": "Ajiye abin da ka samu",
+        "body": "Kwafa amsa tare da madogarunta, ajiye sassa don nan gaba, ko buɗe shafin a cikin tushen da aka buga don ka duba da kanka."
+      }
+    ]
+  },
+  "steps": {
+    "kicker": "Yadda yake aiki",
+    "title": "Matakai uku, tare da tushe a gefenka",
+    "items": [
+      {
+        "title": "Yi tambayarka",
+        "body": "Rubuta ta kamar yadda za ka tambayi abokin da ya san doka. Lambar sashe ma tana aiki."
+      },
+      {
+        "title": "Muna nemo sassan",
+        "body": "Ana daidaita tambayarka da bugun tushen da aka wallafa, ciki har da tanade-tanaden da ke iyakance wani haƙƙi."
+      },
+      {
+        "title": "Karanta amsa da tushe",
+        "body": "Gajeriyar amsa cikin harshe mai sauƙi, tare da kalmomin hukuma na kowane sashe cikin Turanci a gefenta."
+      }
+    ]
+  },
+  "proof": {
+    "kicker": "An gina shi don a duba shi",
+    "title": "An gwada shi da tambayoyin da mutane ke yi da gaske",
+    "body": "Muna gwada nemo sashe da salon magana na yau da kullum. Ga iyakar gwajin bugun tushe da aka adana.",
+    "stats": [
+      {
+        "value": "54 cikin 55",
+        "label": "tambayoyin yau da kullum, cikin Turanci da Pidgin, sun kawo sashen da ake sa ran samu a farko a gwajin nemo na 12 October 2026 da aka adana"
+      },
+      {
+        "value": "1,811",
+        "label": "guntayen rubutun tushe a cikin bugun 2004 da aka adana, haɗe da shafukan da aka buga"
+      },
+      {
+        "value": "2004",
+        "label": "bugun tushe; gyare-gyaren da suka biyo baya ba sa ciki"
+      }
+    ],
+    "limits": "Nasarar nemo ba ta auna ingancin bayani ko ko ya ƙunshi dokar yanzu ba. <methodology>Karanta gwajin da ke da kwanan wata da iyakokinsa</methodology>.",
+    "try": "Gwada ɗaya daga cikin waɗannan",
+    "examples": [
+      "'Yan sanda za su iya bincika wayata?",
+      "Har yaushe 'yan sanda za su iya tsare ni kafin a kai ni kotu?",
+      "Wa zai iya tsayawa takarar shugaban ƙasa?",
+      "Zan iya mallakar fili a wata jiha?",
+      "wetin constitution talk about freedom of religion?",
+      "Me Section 33 ta ce?"
+    ]
+  },
+  "faq": {
+    "kicker": "Tambayoyi",
+    "title": "Kafin ka tambaya",
+    "body": "A taƙaice: kyauta ne, mai zaman kansa ne, kuma koyaushe yana nuna maka tushe.",
+    "items": [
+      {
+        "q": "Shin wannan shawarar doka ce?",
+        "a": "A'a. constitution.ng tana bayyana tushen dokokin Najeriya da aka wallafa kuma tana nuna maka ainihin sashe. Idan kana fuskantar shari'a a kotu, kamawa ko jayayya, yi magana da lauya ko Legal Aid Council. Ka tafi da sassan da ka samu a nan."
+      },
+      {
+        "q": "Kyauta ne?",
+        "a": "E. Yin tambayoyi, nemo sassa da karanta bugun tushen da aka wallafa kyauta ne. Babu tsarin biyan kuɗi."
+      },
+      {
+        "q": "Ina buƙatar asusu?",
+        "a": "A'a. Za ka iya tambaya ka karanta a matsayin baƙo. Buɗe asusu ne kawai idan kana son tattaunawarka ta bi ka zuwa wata na'ura."
+      },
+      {
+        "q": "Shin wannan shi ne Kundin Tsarin Mulki na yanzu?",
+        "a": "Kundin Tsarin Mulki na 1999 ne kamar yadda aka buga shi a 2004. Gyare-gyaren da aka zartar bayan haka ba sa ciki tukuna, don haka wani sashe zai iya canjawa tun daga lokacin. Kowace amsa tana gaya maka wannan don ka duba kafin ka dogara da ita."
+      },
+      {
+        "q": "Waɗanne dokoki zan iya karantawa?",
+        "a": "Mai zaɓar doka yana lissafa dokokin da ke cikin fitarwar da aka zaɓa. Dokar da ake nazari a kanta ba ta nan. Kowane tanadi yana nuna bugun tushensa. Act-Act da aka yi wa lakabi da yadda aka kafa su wataƙila an yi musu gyara; duba ainihin tushe da canje-canjen da suka biyo baya kafin ka dogara da su."
+      },
+      {
+        "q": "Zan iya tambaya da Pidgin?",
+        "a": "E. Yi tambaya yadda za ka faɗe ta, cikin Turanci ko Pidgin, kuma za mu nemo sashen. Za ka iya kuma sauya shafin zuwa Pidgin, Yorùbá, Hausa ko Igbo. Kalmomin hukuma koyaushe rubutun Turanci ne."
+      },
+      {
+        "q": "Ta yaya kuke zaɓar sashe?",
+        "a": "Ana daidaita tambayarka da sassan da aka wallafa, ana amfani da kalmomin da ka rubuta da abin da kake nufi. Madogaru suna fitowa daga rubutun kansa, ba a hasashensu, kuma kowace amsa tana lissafa sassan da ta yi amfani da su don ka karanta su da kanka."
+      },
+      {
+        "q": "Zan iya ambaton amsa?",
+        "a": "E. Kwafa kowace amsa tare da madogarunta, ko ka ajiye sassan da kake buƙata. Ka ambaci kalmomin hukuma, ba bayanin ba, idan daidaito yana da muhimmanci."
+      },
+      {
+        "q": "Shin wannan shafin gwamnati ne?",
+        "a": "A'a. constitution.ng mai zaman kanta ce. Ba National Assembly ko wata hukumar gwamnati ce ta wallafa ta ba, kuma ba ta da alaƙa da su."
+      }
+    ]
+  },
+  "final": {
+    "kicker": "Kyauta, babu asusu, babu abin da za a saka a na'ura",
+    "title": "Yi tambayarka ta farko",
+    "body": "Nemi sassan da aka wallafa game da abin da ke zuciyarka, ka karanta kalmominsu daga tushe.",
+    "browse": "Ko ka duba sassan da aka wallafa"
+  },
+  "footer": {
+    "about": "Kundin Tsarin Mulkin Najeriya da dokokin da aka wallafa. Mai zaman kansa ne, ba wallafar gwamnati ba ne. Bayani ba shawarar doka ba ne.",
+    "label": "Ƙasan shafi",
+    "links": {
+      "ask": "Yi tambaya",
+      "about": "Game da mu da gyare-gyare",
+      "methodology": "Yadda muke gwada nemo",
+      "laws": "Duba dokokin da aka wallafa",
+      "saved": "Sassan da ka ajiye",
+      "login": "Shiga",
+      "privacy": "Sirri"
+    }
+  }
+}

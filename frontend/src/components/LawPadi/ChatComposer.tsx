@@ -1,8 +1,10 @@
 import { type RefObject, useEffect, useId, useRef } from "react"
+import { useTranslation } from "react-i18next"
 import { FiSend } from "react-icons/fi"
 
 import { SquircleButton } from "@/components/LawPadi/primitives"
 import { useWorkspacePreferences } from "@/hooks/useWorkspacePreferences"
+import { intlLocales } from "@/lib/i18n"
 import { cn } from "@/lib/utils"
 
 type ChatComposerProps = {
@@ -24,7 +26,7 @@ export function ChatComposer({
   value,
   onChange,
   onSubmit,
-  placeholder = "Ask about Nigeria's Constitution and published laws…",
+  placeholder,
   compact = false,
   contextLabel,
   loading = false,
@@ -34,6 +36,8 @@ export function ChatComposer({
   inputRef,
   autoFocus = false,
 }: ChatComposerProps) {
+  const { t, i18n } = useTranslation("chat")
+  const count = new Intl.NumberFormat(intlLocales(i18n.resolvedLanguage))
   const textareaRef = useRef<HTMLTextAreaElement | null>(null)
   const hintId = useId()
   const { preferences } = useWorkspacePreferences()
@@ -70,7 +74,7 @@ export function ChatComposer({
     >
       <textarea
         data-chat-composer
-        aria-label="Your question"
+        aria-label={t("composer.label")}
         aria-describedby={hintId}
         className={cn(
           "block w-full resize-none bg-transparent px-1 text-[0.98rem] leading-7 text-foreground outline-none",
@@ -95,7 +99,7 @@ export function ChatComposer({
             submit()
           }
         }}
-        placeholder={placeholder}
+        placeholder={placeholder ?? t("composer.placeholder")}
         ref={(element) => {
           textareaRef.current = element
           if (inputRef) inputRef.current = element
@@ -107,8 +111,8 @@ export function ChatComposer({
         <div className="flex min-w-0 flex-wrap items-center gap-2">
           <span className="sq-sm bg-secondary px-3 py-2 text-label text-muted-foreground">
             {purpose === "explanation"
-              ? "Answers in plain English"
-              : "Search published laws"}
+              ? t("composer.explanation")
+              : t("composer.search")}
           </span>
           {contextLabel ? (
             <span className="text-label font-normal text-muted-foreground">
@@ -118,7 +122,7 @@ export function ChatComposer({
         </div>
 
         <SquircleButton
-          aria-label={loading ? "Sending" : "Send question"}
+          aria-label={loading ? t("composer.sending") : t("composer.send")}
           className="min-w-11 px-0"
           disabled={!value.trim() || disabled || value.length > 2000}
           loading={loading}
@@ -126,7 +130,7 @@ export function ChatComposer({
           type="button"
         >
           {loading ? (
-            <span className="sr-only">Sending</span>
+            <span className="sr-only">{t("composer.sending")}</span>
           ) : (
             <FiSend className="size-4" aria-hidden />
           )}
@@ -138,11 +142,11 @@ export function ChatComposer({
       >
         <span>
           {preferences.enterToSend
-            ? "Enter to send · Shift+Enter for a new line"
-            : "Ctrl/Cmd+Enter to send"}
+            ? t("composer.enterHint")
+            : t("composer.modEnterHint")}
         </span>
         <span aria-live={value.length >= 1900 ? "polite" : "off"}>
-          {value.length}/2,000
+          {count.format(value.length)}/{count.format(2000)}
         </span>
       </div>
     </div>

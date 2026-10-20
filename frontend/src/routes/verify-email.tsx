@@ -1,5 +1,6 @@
 import { useQuery, useQueryClient } from "@tanstack/react-query"
 import { createFileRoute, Link as RouterLink } from "@tanstack/react-router"
+import { useTranslation } from "react-i18next"
 import { z } from "zod"
 
 import { UsersService } from "@/client"
@@ -18,6 +19,7 @@ export const Route = createFileRoute("/verify-email")({
 })
 
 function VerifyEmail() {
+  const { t } = useTranslation("auth")
   const { token } = Route.useSearch()
   const queryClient = useQueryClient()
   const signedIn = useSessionStatus() === "signed-in"
@@ -45,36 +47,36 @@ function VerifyEmail() {
       <div className="flex flex-col gap-4 text-center" aria-live="polite">
         {verify.isSuccess ? (
           <>
-            <h1 className="text-2xl font-bold">Email confirmed</h1>
+            <h1 className="text-2xl font-bold">{t("verify.confirmed")}</h1>
             <p className="text-body text-muted-foreground">
-              Thanks. Your account is ready to keep your research in sync.
+              {t("verify.confirmedBody")}
             </p>
             <SquircleButton asChild>
-              <RouterLink to="/">Continue</RouterLink>
+              <RouterLink to="/">{t("verify.continue")}</RouterLink>
             </SquircleButton>
           </>
         ) : failed ? (
           <>
-            <h1 className="text-2xl font-bold">This link didn't work</h1>
+            <h1 className="text-2xl font-bold">{t("verify.failed")}</h1>
             <p className="text-body text-muted-foreground">
-              It may have expired or already been replaced by a newer one.
-              {signedIn
-                ? " You can send yourself a new link from your settings."
-                : " Log in to send yourself a new link."}
+              {t("verify.failedBody")}{" "}
+              {signedIn ? t("verify.resendSettings") : t("verify.resendLogin")}
             </p>
             <SquircleButton asChild>
               {signedIn ? (
-                <RouterLink to="/settings">Go to settings</RouterLink>
+                <RouterLink to="/settings">
+                  {t("verify.goToSettings")}
+                </RouterLink>
               ) : (
                 <RouterLink to="/login" search={{ redirect: "/settings" }}>
-                  Log in
+                  {t("logIn")}
                 </RouterLink>
               )}
             </SquircleButton>
           </>
         ) : (
           <p className="text-body" role="status">
-            Confirming your email…
+            {t("verify.confirming")}
           </p>
         )}
       </div>

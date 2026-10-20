@@ -1,0 +1,119 @@
+{
+  "kicker": "Settings",
+  "title": "Make constitution.ng be your own.",
+  "intro": "Manage your account, how you dey read, and di research wey you save.",
+  "tabs": {
+    "label": "Settings sections",
+    "profile": "Profile",
+    "preferences": "Wetin you like",
+    "security": "Security"
+  },
+  "guest": {
+    "loading": "Your account dey load…",
+    "body": "You dey use am as guest. You fit ask questions and save sections without account.",
+    "signInBenefit": "Sign in make your conversations and di sections wey you save dey every device. Anything wey you don save here go follow you."
+  },
+  "available": {
+    "title": "Wetin dey here",
+    "account": "Account",
+    "signedIn": "You don sign in",
+    "guest": "Guest",
+    "edition": "Source edition",
+    "editionUnavailable": "Edition no dey available",
+    "explanations": "Explanations",
+    "unknown": "We no sure whether e dey available",
+    "on": "E dey available",
+    "paused": "E don pause"
+  },
+  "reading": {
+    "title": "Reading and asking",
+    "enterToSend": "Press Enter to send",
+    "enterToSendHint": "Use Shift+Enter for new line. Ctrl/Cmd+Enter go always send.",
+    "followLatest": "Follow di latest answer",
+    "followLatestHint": "Scroll go new messages when you dey near di end of di chat.",
+    "openSources": "Open source beside di answers",
+    "openSourcesHint": "For computer, open di first source wey dem link after explanation finish.",
+    "syncedToAccount": "Dis settings go follow your account go any device.",
+    "savedOnBrowser": "Dis settings dey saved for dis browser.",
+    "save": "Save changes",
+    "saved": "Settings don save"
+  },
+  "language": {
+    "title": "Language",
+    "official": "Di official wording of di Constitution and other laws go always stay for English.",
+    "savedOnBrowser": "Your language dey saved for dis browser."
+  },
+  "privacy": {
+    "title": "Privacy and research",
+    "keptInAccount": "Di sections and settings wey you save dey your account.",
+    "keptOnBrowser": "Di sections and settings wey you save dey stay for dis browser.",
+    "retention": "Drafts go stay for dis tab until you close am. Conversations dey stay with your account, or with dis browser for 30 days if you be guest.",
+    "provider": "When explanations dey on, we dey send your question and di Constitution text wey concern am to DeepSeek make e write and check di answer. No put personal details wey you no need share.",
+    "exportFirst": "Export your bookmarks, settings and di conversations wey dey before you clear di research for dis device. Source editions and citations go dey inside di export.",
+    "readMore": "Read how we dey handle your data",
+    "export": "Export my research",
+    "exported": "Research don export",
+    "clear": "Clear bookmarks and drafts"
+  },
+  "security": {
+    "title": "Sign-in security"
+  },
+  "data": {
+    "title": "Your account data",
+    "downloading": "Your account data dey download",
+    "deleted": "We don delete your account",
+    "downloadTitle": "Download your data",
+    "downloadBody": "Copy of everything wey dey your account: your profile, sections wey you save, settings, and every conversation with di messages.",
+    "download": "Download my data",
+    "deleteTitle": "Delete your account",
+    "adminCannotDelete": "Administrator account no fit delete itself. Ask another administrator make e remove dis account.",
+    "deleteBody": "Dis one go delete your account, your conversations, di sections and settings wey you save, finish. Download your data first if you want copy.",
+    "delete": "Delete my account",
+    "confirmTitle": "Delete your account?",
+    "confirmBody": "Your account, conversations, sections wey you save and settings go delete for good. You no fit bring dem back.",
+    "keep": "Keep my account"
+  },
+  "qualitySignals": "How good di answers be",
+  "support": {
+    "title": "Details for support",
+    "appBuild": "App build",
+    "serviceBuild": "Service build",
+    "sourceRelease": "Source release",
+    "unavailable": "E no dey available"
+  },
+  "clear": {
+    "title": "Clear di bookmarks and drafts for dis device?",
+    "body": "Dis one go comot your bookmarks from dis browser and drafts from dis tab. Your account and di conversations wey you save go still dey. Export your research first if you want copy.",
+    "keep": "Keep my research",
+    "done": "Bookmarks and drafts for dis device don clear",
+    "confirm": "Clear di research for dis device"
+  },
+  "errors": {
+    "saveFailed": "Your browser no fit save dis settings. Abeg try again.",
+    "exportFailed": "We no fit export all your research. Check your network and try again.",
+    "clearFailed": "We no fit clear some research for dis device. Abeg check your browser storage."
+  },
+  "password": {
+    "title": "Change password",
+    "current": "Current password",
+    "new": "New password",
+    "confirm": "Confirm password",
+    "submit": "Update password",
+    "updated": "Password don change"
+  },
+  "profile": {
+    "title": "Your information",
+    "fullName": "Full name",
+    "email": "Email",
+    "notSet": "Nothing dey",
+    "updated": "Your information don update"
+  },
+  "verify": {
+    "title": "Confirm your email address",
+    "body": "We don send link to {{email}}. Di sections and conversations wey you save go start to sync once you confirm am.",
+    "sentTo": "We don send new link to {{email}}.",
+    "sent": "We don send new link to your email.",
+    "sending": "E dey send…",
+    "resend": "Send new link"
+  }
+}

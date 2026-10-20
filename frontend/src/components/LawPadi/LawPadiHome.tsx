@@ -1,5 +1,6 @@
 import { useNavigate, useSearch } from "@tanstack/react-router"
 import { useEffect, useRef, useState } from "react"
+import { useTranslation } from "react-i18next"
 import { ChatComposer } from "@/components/LawPadi/ChatComposer"
 import { ChatHome } from "@/components/LawPadi/ChatHome"
 import { LawPicker } from "@/components/LawPadi/LawPicker"
@@ -21,19 +22,12 @@ import {
   useLegalSearch,
   useProvision,
 } from "@/hooks/useLegalCorpus"
-import { editionName, sectionQuery } from "@/lib/legal-provisions"
+import { editionName, pageLabel, sectionQuery } from "@/lib/legal-provisions"
 import { bestContainingSource } from "@/lib/source-ranking"
 import { EditionNotice } from "./EditionNotice"
 
-const suggestions = [
-  "Can police search my phone?",
-  "Section 35",
-  "Freedom of expression",
-  "Who can run for president?",
-  "Owning land in another state",
-]
-
 export function LawPadiHome() {
+  const { t } = useTranslation(["chat", "common"])
   const search = useSearch({ from: "/_layout/" })
   const navigate = useNavigate({ from: "/" })
   const capabilities = useChatCapabilities()
@@ -57,12 +51,12 @@ export function LawPadiHome() {
         className="block"
       >
         <div className="mx-auto w-full max-w-4xl px-4 pt-5 sm:px-8 lg:px-12">
-          <TabsList aria-label="Choose a task" className="sq-md h-11">
+          <TabsList aria-label={t("tasks.label")} className="sq-md h-11">
             <TabsTrigger value="ask" className="sq-sm min-h-9 px-4">
-              Ask a question
+              {t("common:nav.ask")}
             </TabsTrigger>
             <TabsTrigger value="find" className="sq-sm min-h-9 px-4">
-              Find a section
+              {t("common:nav.findSection")}
             </TabsTrigger>
           </TabsList>
         </div>
@@ -70,7 +64,7 @@ export function LawPadiHome() {
           {capabilities.isPending ? (
             <div className="mx-auto max-w-4xl px-4 py-8" role="status">
               <p className="mb-4 text-body text-muted-foreground">
-                Checking available features…
+                {t("tasks.checking")}
               </p>
               <SkeletonBlock />
             </div>
@@ -106,6 +100,7 @@ function SearchHome({
   explanationsEnabled: boolean
   retryAvailability: () => void
 }) {
+  const { t } = useTranslation(["chat", "common"])
   const search = useSearch({ from: "/_layout/" })
   const navigate = useNavigate({ from: "/" })
   const [question, setQuestion] = useChatDraft("find")
@@ -139,13 +134,13 @@ function SearchHome({
         {!search.q && (
           <>
             <p className="mb-4 text-overline uppercase text-primary">
-              The law, made easy
+              {t("home.kicker")}
             </p>
             <h1 className="font-display text-title-1 sm:text-display">
-              Explore Nigeria&apos;s published laws.
+              {t("find.title")}
             </h1>
             <p className="mt-4 max-w-xl text-body-lg text-muted-foreground">
-              Find a section by number or describe the issue in your own words.
+              {t("find.intro")}
             </p>
           </>
         )}
@@ -154,15 +149,13 @@ function SearchHome({
             className="mt-4 sq-md border border-border bg-secondary p-3 text-body"
             role="status"
           >
-            {availabilityError
-              ? "We couldn't check whether plain-English answers are available. You can still find and read sections."
-              : "Plain-English answers are paused. You can still find and read sections."}
+            {availabilityError ? t("find.availabilityError") : t("find.paused")}
             <InlineAction
               className="ml-2"
               type="button"
               onClick={retryAvailability}
             >
-              Check again
+              {t("common:actions.checkAgain")}
             </InlineAction>
           </div>
         )}
@@ -195,35 +188,37 @@ function SearchHome({
             selectedLaw
               ? editionName(selectedLaw.edition_label, selectedLaw.slug)
               : instruments.data && instruments.data.count > 1
-                ? "All published source editions"
+                ? t("find.allEditions")
                 : editionName(release.data?.edition_label)
           }
-          placeholder="Find a topic or a reference, e.g. Section 37 or ACJA s.9…"
+          placeholder={t("find.placeholder")}
         />
         {!search.q && (
           <fieldset className="mt-4 flex flex-wrap gap-2">
-            <legend className="sr-only">Suggested searches</legend>
-            {suggestions.map((prompt) => (
-              <PromptSuggestion
-                key={prompt}
-                onClick={() => {
-                  setQuestion(prompt)
-                  inputRef.current?.focus()
-                }}
-                type="button"
-              >
-                {prompt}
-              </PromptSuggestion>
-            ))}
+            <legend className="sr-only">{t("find.suggestionsLabel")}</legend>
+            {(t("find.suggestions", { returnObjects: true }) as string[]).map(
+              (prompt) => (
+                <PromptSuggestion
+                  key={prompt}
+                  onClick={() => {
+                    setQuestion(prompt)
+                    inputRef.current?.focus()
+                  }}
+                  type="button"
+                >
+                  {prompt}
+                </PromptSuggestion>
+              ),
+            )}
           </fieldset>
         )}
         {!search.q && release.isError && (
           <div className="mt-6">
             <ErrorState
-              title="Couldn't load the published laws"
+              title={t("find.loadFailed")}
               action={
                 <InlineAction type="button" onClick={() => release.refetch()}>
-                  Try again
+                  {t("common:actions.tryAgain")}
                 </InlineAction>
               }
             >
@@ -274,6 +269,7 @@ function SearchResults({
   release?: string
   instrument?: string
 }) {
+  const { t } = useTranslation(["chat", "common"])
   const resultsRef = useRef<HTMLElement | null>(null)
   const search = useLegalSearch(query, mode, attempt, release, instrument)
   useEffect(() => {
@@ -320,25 +316,25 @@ function SearchResults({
       <section
         ref={resultsRef}
         tabIndex={-1}
-        aria-label="Search results"
+        aria-label={t("results.label")}
         className="mx-auto grid w-full max-w-4xl scroll-mt-20 gap-6 px-4 pb-12 outline-none sm:px-8 lg:px-12"
       >
         <p className="border-t border-border pt-7 text-body font-semibold">
-          Results for &ldquo;{query}&rdquo;
+          {t("results.title", { query })}
         </p>
         {search.isPending ? (
           <div role="status">
             <p className="mb-4 text-sm text-muted-foreground">
-              Searching the published laws…
+              {t("results.searching")}
             </p>
             <SkeletonBlock />
           </div>
         ) : search.isError ? (
           <ErrorState
-            title="Search unavailable"
+            title={t("results.unavailable")}
             action={
               <InlineAction onClick={() => search.refetch()} type="button">
-                Try again
+                {t("common:actions.tryAgain")}
               </InlineAction>
             }
           >
@@ -355,12 +351,11 @@ function SearchResults({
               <ErrorState
                 title={
                   search.data.outcome === "unsupported_reference"
-                    ? "Reference not supported"
-                    : "No matching section found"
+                    ? t("results.unsupported")
+                    : t("results.none")
                 }
               >
-                Try different words, a broader topic, or a section number like
-                Section 35.
+                {t("results.noneHint")}
               </ErrorState>
             ) : (
               <>
@@ -368,15 +363,17 @@ function SearchResults({
                   <div className="sq-md border border-primary/30 bg-primary/5 p-4">
                     <h2 className="font-display text-xl">
                       {selected.canonical_path === bestMatch?.canonical_path
-                        ? "Best match"
-                        : "Selected section"}
+                        ? t("results.bestMatch")
+                        : t("results.selected")}
                     </h2>
                     <p className="mt-1 text-body text-muted-foreground">
                       {selected.citation}
                       {selected.title ? ` · ${selected.title}` : ""}
                       {selected.canonical_path === bestMatch?.canonical_path &&
                       bestMatch?.canonical_path !== rankedFirst?.canonical_path
-                        ? `. Shown in full so you can read ${rankedFirst?.citation} in context.`
+                        ? t("results.inContext", {
+                            citation: rankedFirst?.citation,
+                          })
                         : ""}
                     </p>
                   </div>
@@ -385,8 +382,8 @@ function SearchResults({
                   <>
                     {detail.isError && (
                       <p role="alert" className="text-sm">
-                        {legalError(detail.error)} The surrounding section
-                        couldn&apos;t be loaded.
+                        {legalError(detail.error)}{" "}
+                        {t("results.surroundingFailed")}
                       </p>
                     )}
                     <ProvisionView
@@ -398,11 +395,11 @@ function SearchResults({
                   </>
                 )}
                 {search.data.outcome !== "exact" && (
-                  <section aria-label="Search matches">
+                  <section aria-label={t("results.matchesLabel")}>
                     <h2 className="mb-4 font-display text-xl">
                       {search.data.outcome === "ambiguous"
-                        ? "Which one do you mean?"
-                        : "Other matching sections"}
+                        ? t("results.ambiguous")
+                        : t("results.otherMatches")}
                     </h2>
                     <div className="grid gap-3 sm:grid-cols-2">
                       {search.data.data
@@ -434,7 +431,7 @@ function SearchResults({
                               {[
                                 ...match.ancestors.map((a) => a.citation),
                                 match.source_page_start
-                                  ? `page ${match.source_page_start}`
+                                  ? pageLabel(match.source_page_start)
                                   : null,
                               ]
                                 .filter(Boolean)

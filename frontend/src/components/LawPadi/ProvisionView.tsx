@@ -1,5 +1,6 @@
 import { Link } from "@tanstack/react-router"
 import { useState } from "react"
+import { useTranslation } from "react-i18next"
 import { FiBookmark, FiCheck, FiCopy, FiShare2 } from "react-icons/fi"
 import { toast } from "sonner"
 import type { LegalSearchResult, ProvisionReference } from "@/client"
@@ -69,6 +70,7 @@ export function ProvisionView({
   primary?: boolean
   onRelated?: (query: string) => void
 }) {
+  const { t } = useTranslation("legal")
   const Heading = primary ? "h1" : "h2"
   const [copied, setCopied] = useState<"text" | "share" | null>(null)
   const [historyOpen, setHistoryOpen] = useState(false)
@@ -86,20 +88,22 @@ export function ProvisionView({
         kind === "text" ? copyText(provision) : provisionUrl(provision),
       )
       setCopied(kind)
-      toast.success(kind === "text" ? "Text copied" : "Link copied")
+      toast.success(
+        kind === "text" ? t("provision.textCopied") : t("provision.linkCopied"),
+      )
     } catch {
-      toast.error("Couldn't copy. Please try again.")
+      toast.error(t("provision.copyFailed"))
     }
   }
   const save = () => {
     try {
       toast.success(
         toggle(provision.canonical_path, provision.release_version)
-          ? "Saved"
-          : "Removed from saved",
+          ? t("provision.saved")
+          : t("provision.removed"),
       )
     } catch {
-      toast.error("Couldn't save on this device.")
+      toast.error(t("provision.saveFailed"))
     }
   }
   const enclosing = [...provision.ancestors, provision].find(
@@ -109,8 +113,8 @@ export function ProvisionView({
     <article
       aria-label={
         instrumentSlug(provision) === "constitution-1999"
-          ? "Constitutional provision"
-          : "Legal provision"
+          ? t("provision.constitutional")
+          : t("provision.legal")
       }
       className="grid gap-5"
     >
@@ -131,7 +135,11 @@ export function ProvisionView({
         />
         <div className="flex gap-1">
           <IconButton
-            label={copied === "text" ? "Text copied" : "Copy text"}
+            label={
+              copied === "text"
+                ? t("provision.textCopied")
+                : t("provision.copyText")
+            }
             onClick={() => copy("text")}
             type="button"
           >
@@ -142,14 +150,14 @@ export function ProvisionView({
             )}
           </IconButton>
           <IconButton
-            label="Copy link"
+            label={t("provision.copyLink")}
             onClick={() => copy("share")}
             type="button"
           >
             <FiShare2 aria-hidden />
           </IconButton>
           <IconButton
-            label={saved ? "Remove from saved" : "Save"}
+            label={saved ? t("provision.unsave") : t("provision.save")}
             aria-pressed={saved}
             onClick={save}
             type="button"
@@ -159,7 +167,7 @@ export function ProvisionView({
         </div>
       </div>
       <nav
-        aria-label="Provision hierarchy"
+        aria-label={t("provision.hierarchy")}
         className="flex flex-wrap items-center gap-2"
       >
         {provision.ancestors.map((ancestor) => (
@@ -184,7 +192,9 @@ export function ProvisionView({
           {editionName(provision.edition_label, provision)}
         </p>
       </div>
-      <OfficialTextBlock title={`What ${provision.citation} says`}>
+      <OfficialTextBlock
+        title={t("source.whatLawSays", { law: provision.citation })}
+      >
         <p className="whitespace-pre-wrap">
           {readableText(provision.authoritative_text)}
         </p>
@@ -195,13 +205,18 @@ export function ProvisionView({
         historical={provision.legal_status === "historical"}
       />
       <p className="text-sm text-muted-foreground">
-        Source: {provision.source_authority}, {provision.source_title}
         {provision.source_page_start
-          ? `, printed page ${provision.source_page_start}`
-          : ""}
-        .{" "}
+          ? t("provision.sourcePage", {
+              authority: provision.source_authority,
+              title: provision.source_title,
+              page: provision.source_page_start,
+            })
+          : t("provision.source", {
+              authority: provision.source_authority,
+              title: provision.source_title,
+            })}{" "}
         <Link className="text-primary underline" to="/about">
-          Source scope and corrections
+          {t("provision.scopeLink")}
         </Link>
       </p>
       {provision.ancestors
@@ -212,19 +227,22 @@ export function ProvisionView({
             key={ancestor.id}
           >
             <summary className="cursor-pointer text-sm font-semibold">
-              Read all of {ancestor.citation}
+              {t("provision.readAll", { citation: ancestor.citation })}
             </summary>
-            <p className="mt-4 whitespace-pre-wrap font-legal text-sm leading-7">
+            <p
+              lang="en"
+              className="mt-4 whitespace-pre-wrap font-legal text-sm leading-7"
+            >
               {readableText(ancestor.authoritative_text ?? "")}
             </p>
           </details>
         ))}
       {provision.children.length > 0 && (
         <section
-          aria-label="Parts of this section"
+          aria-label={t("provision.parts")}
           className="sq-md border border-border p-4"
         >
-          <h3 className="mb-3 text-sm font-semibold">Parts of this section</h3>
+          <h3 className="mb-3 text-sm font-semibold">{t("provision.parts")}</h3>
           <div className="flex flex-wrap gap-4">
             {provision.children.map((child) => (
               <ProvisionLink
@@ -251,37 +269,37 @@ export function ProvisionView({
                 fresh: crypto.randomUUID(),
               }}
             >
-              Explain in plain English
+              {t("provision.explain")}
             </Link>
           </InlineAction>
         )}
         <InlineAction onClick={onOpenSource} type="button">
-          Original document
+          {t("provision.original")}
         </InlineAction>
         <InlineAction
           onClick={() => setHistoryOpen(!historyOpen)}
           type="button"
           aria-expanded={historyOpen}
         >
-          Version history
+          {t("provision.history")}
         </InlineAction>
         {onRelated && (enclosing?.title || enclosing?.heading) && (
           <InlineAction
             onClick={() => onRelated((enclosing.title || enclosing.heading)!)}
             type="button"
           >
-            Find related sections
+            {t("provision.related")}
           </InlineAction>
         )}
       </div>
       {historyOpen && (
         <section
-          aria-label="Version history"
+          aria-label={t("provision.history")}
           className="sq-md border border-border p-5"
         >
-          <h3 className="mb-3 font-semibold">Versions</h3>
+          <h3 className="mb-3 font-semibold">{t("provision.versions")}</h3>
           {history.isPending ? (
-            <p>Loading versions…</p>
+            <p>{t("provision.loadingVersions")}</p>
           ) : history.isError ? (
             <p role="alert">{legalError(history.error)}</p>
           ) : (

@@ -1,5 +1,6 @@
 import { useQueryClient } from "@tanstack/react-query"
 import { useEffect, useState } from "react"
+import { useTranslation } from "react-i18next"
 import { ConversationsService, type MessagePublic } from "@/client"
 import { useChatRequestScope } from "@/hooks/useChatRequestScope"
 import { conversationHeaders } from "@/hooks/useConversations"
@@ -12,6 +13,7 @@ export function AnswerFeedback({
   message: MessagePublic
   conversationId: string
 }) {
+  const { t } = useTranslation("chat")
   const [rating, setRating] = useState(message.helpful ?? null)
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState(false)
@@ -45,17 +47,17 @@ export function AnswerFeedback({
   }
   return (
     <fieldset
-      aria-label="Answer feedback"
+      aria-label={t("feedback.label")}
       className="mt-3 flex flex-wrap items-center gap-2 text-sm text-muted-foreground"
     >
-      <span>Was this useful?</span>
+      <span>{t("feedback.question")}</span>
       <InlineAction
         type="button"
         aria-pressed={rating === true}
         disabled={saving}
         onClick={() => void rate(true)}
       >
-        Helpful
+        {t("feedback.helpful")}
       </InlineAction>
       <InlineAction
         type="button"
@@ -63,12 +65,10 @@ export function AnswerFeedback({
         disabled={saving}
         onClick={() => void rate(false)}
       >
-        Not helpful
+        {t("feedback.notHelpful")}
       </InlineAction>
-      {rating !== null && <span role="status">Thanks for your feedback.</span>}
-      {error && (
-        <span role="alert">Feedback couldn't be saved. Try again.</span>
-      )}
+      {rating !== null && <span role="status">{t("feedback.thanks")}</span>}
+      {error && <span role="alert">{t("feedback.failed")}</span>}
     </fieldset>
   )
 }

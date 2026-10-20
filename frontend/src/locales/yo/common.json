@@ -1,0 +1,135 @@
+{
+  "nav": {
+    "ask": "Béèrè ìbéèrè",
+    "findSection": "Wá abala kan",
+    "browseLaws": "Ṣàwárí àwọn òfin",
+    "saved": "Àwọn abala tí o fipamọ́",
+    "settings": "Ètò",
+    "legalAdmin": "Alábòójútó òfin",
+    "newConversation": "Ìjíròrò tuntun",
+    "new": "Tuntun",
+    "userSettings": "Ètò rẹ"
+  },
+  "header": {
+    "explore": "Ṣàwárí àwọn òfin tí a tẹ̀jáde",
+    "sources": "Gbogbo ìdáhùn ló ń fi orísun rẹ̀ hàn",
+    "openSettings": "Ṣí ètò"
+  },
+  "language": {
+    "title": "Èdè",
+    "auto": "Tẹ̀lé èdè ẹ̀rọ mi",
+    "menuLabel": "Èdè: {{language}}"
+  },
+  "preferences": {
+    "unreadable": "A kò lè ka ètò rẹ. Àwọn dátà inú aṣàwákiri rẹ ṣì wà níbẹ̀.",
+    "storageUnavailable": "Ibi ìpamọ́ aṣàwákiri kò ṣiṣẹ́. A kò lè fi ètò rẹ pamọ́."
+  },
+  "saved": {
+    "unreadable": "A kò lè ka àwọn àmì-ìwé tí o fipamọ́. Àwọn dátà inú aṣàwákiri rẹ ṣì wà níbẹ̀.",
+    "storageUnavailable": "Ibi ìpamọ́ aṣàwákiri kò ṣiṣẹ́. A kò lè ṣí àwọn abala tí o fipamọ́."
+  },
+  "legalError": {
+    "notFound": "A kò rí abala yẹn.",
+    "unavailable": "A kò lè ṣí àwọn òfin tí a tẹ̀jáde báyìí. Jọ̀wọ́ gbìyànjú lẹ́ẹ̀kan sí i láìpẹ́.",
+    "generic": "Nǹkan kan ṣẹlẹ̀ bí a ṣe ń ṣí èyí. Ṣàyẹ̀wò ìsopọ̀ rẹ kí o sì gbìyànjú lẹ́ẹ̀kan sí i."
+  },
+  "errors": {
+    "generic": "Nǹkan kan ṣẹlẹ̀."
+  },
+  "toast": {
+    "success": "Ó ti ṣeé ṣe!",
+    "error": "Nǹkan kan ṣẹlẹ̀!"
+  },
+  "sync": {
+    "updateFailed": "A kò lè ṣe àtúnṣe sí àkọọ́lẹ̀ rẹ. Àyípadà rẹ ṣì wà níbí.",
+    "chatsClaimed_one": "Ìjíròrò rẹ ti wọ inú àkọọ́lẹ̀ rẹ báyìí.",
+    "chatsClaimed_other": "Àwọn ìjíròrò rẹ {{count}} ti wọ inú àkọọ́lẹ̀ rẹ báyìí.",
+    "savedFailed": "A kò lè mú àwọn abala tí o fipamọ́ ṣọ̀kan. A ó tún gbìyànjú nígbà míì."
+  },
+  "actions": {
+    "close": "Pa á dé",
+    "tryAgain": "Gbìyànjú lẹ́ẹ̀kan sí i",
+    "showPassword": "Fi ọ̀rọ̀ aṣínà hàn",
+    "hidePassword": "Fi ọ̀rọ̀ aṣínà pamọ́",
+    "save": "Fipamọ́",
+    "cancel": "Fagilé",
+    "edit": "Ṣàtúnṣe",
+    "continue": "Tẹ̀síwájú",
+    "checkAgain": "Tún ṣàyẹ̀wò",
+    "copy": "Ṣe ẹ̀dà",
+    "copied": "A ti ṣe ẹ̀dà",
+    "remove": "Yọ ọ́ kúrò",
+    "search": "Wá"
+  },
+  "status": {
+    "loading": "Ó ń ṣí…",
+    "checkingSources": "À ń ṣàyẹ̀wò àwọn orísun tí a gbẹ́kẹ̀lé"
+  },
+  "sidebar": {
+    "title": "Àkójọ ẹ̀gbẹ́",
+    "description": "Ó ń fi àkójọ ẹ̀gbẹ́ hàn lórí fóònù.",
+    "open": "Ṣí àkójọ ẹ̀gbẹ́",
+    "collapse": "Ká àkójọ ẹ̀gbẹ́",
+    "toggle": "Ṣí tàbí ká àkójọ ẹ̀gbẹ́"
+  },
+  "history": {
+    "title": "Àwọn ìjíròrò",
+    "searchLabel": "Wá nínú àwọn ìjíròrò",
+    "searchPlaceholder": "Wá nínú àwọn ìjíròrò rẹ",
+    "loadFailed": "Ìtàn kò ṣí.",
+    "loading": "Àwọn ìjíròrò ń ṣí…",
+    "today": "Lónìí",
+    "yesterday": "Àná",
+    "earlier": "Ṣáájú",
+    "untitled": "Ìjíròrò",
+    "noMatches": "Kò sí ìjíròrò tó bá ìwádìí yẹn mu.",
+    "empty": "Àwọn ìjíròrò rẹ yóò hàn níbí.",
+    "loadOlder": "Ṣí àwọn ìjíròrò àtijọ́"
+  },
+  "guest": {
+    "note": "Àlejò · àwọn àmì-ìwé rẹ yóò wà lórí aṣàwákiri yìí."
+  },
+  "auth": {
+    "signIn": "Wọlé",
+    "createAccount": "Ṣẹ̀dá àkọọ́lẹ̀",
+    "logOut": "Jáde"
+  },
+  "theme": {
+    "appearance": "Ìrísí",
+    "toggle": "Yí ìmọ́lẹ̀ tàbí òkùnkùn padà",
+    "light": "Ìmọ́lẹ̀",
+    "dark": "Òkùnkùn",
+    "system": "Tẹ̀lé ẹ̀rọ mi"
+  },
+  "logo": {
+    "home": "Ojú-ìwé àkọ́kọ́ constitution.ng"
+  },
+  "legalStatus": {
+    "current": "Òfin tó ń ṣiṣẹ́ báyìí",
+    "proposed": "Àbá àyípadà - kò tíì bẹ̀rẹ̀ sí í ṣiṣẹ́",
+    "historical": "Ẹ̀yà àtijọ́ - wọ́n ti fi òmíràn rọ́pò rẹ̀",
+    "warning": "A kò lè fìdí orísun lọ́wọ́lọ́wọ́ múlẹ̀"
+  },
+  "officialWording": "Ọ̀rọ̀ òfin gangan",
+  "errorPage": {
+    "title": "Àṣìṣe",
+    "oops": "Háà!",
+    "body": "Nǹkan kan ṣẹlẹ̀. Jọ̀wọ́ gbìyànjú lẹ́ẹ̀kan sí i.",
+    "home": "Padà sí ojú-ìwé àkọ́kọ́"
+  },
+  "notFound": {
+    "body": "A kò rí ojú-ìwé tí ò ń wá.",
+    "back": "Padà sẹ́yìn"
+  },
+  "footer": {
+    "tagline": "Òfin-Ìpìlẹ̀ Nàìjíríà àti àwọn òfin tí a tẹ̀jáde"
+  },
+  "validation": {
+    "emailInvalid": "Àdírẹ́sì ímeèlì yìí kò tọ̀nà",
+    "passwordRequired": "O gbọ́dọ̀ tẹ ọ̀rọ̀ aṣínà",
+    "passwordMin": "Ọ̀rọ̀ aṣínà gbọ́dọ̀ ní ó kéré tán ohun-kíkọ mẹ́jọ (8)",
+    "confirmRequired": "Tún ọ̀rọ̀ aṣínà tẹ̀ láti fìdí rẹ̀ múlẹ̀",
+    "passwordsMismatch": "Àwọn ọ̀rọ̀ aṣínà méjèèjì kò bára mu",
+    "fullNameRequired": "O gbọ́dọ̀ tẹ orúkọ rẹ ní kíkún"
+  }
+}

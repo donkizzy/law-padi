@@ -1,0 +1,48 @@
+{
+  "about": {
+    "heading": "About constitution.ng",
+    "sections": [
+      {
+        "heading": "Independent legal reference",
+        "text": "constitution.ng dey publish source editions of Naija Constitution and di laws wey dem publish wey you fit search, plus tool to find and explain provisions. Na constitution.ng be di publisher. Dis na independent project, e no be government publication or service wey join body with National Assembly. Explanations na information, no be legal advice."
+      },
+      {
+        "heading": "Source edition and wetin e cover",
+        "text": "{{caveat}} Na only di laws wey dey di published release wey you select go show for di law picker. Acts dey show as dem pass am, and dem fit don amend dem. Di reading pages dey show di exact release and dey link to di source document and printed page. Di Constitution source get gaps wey we know, like Section 168 wey no dey and two Section 189 wey we separate by where dem dey for di source. No assume say dis na complete or current consolidated edition."
+      },
+      {
+        "heading": "How we dey handle wording and explanations",
+        "text": "Di reading pages dey show di published source wording separate from di explanations wey we generate. Citations dey come from structured provision identities. Explanations dey use evidence wey we find and automatic checks, but dem fit still miss context or details. Dis site no dey certify say lawyer don check every explanation. Check di wording and source wey we cite, and see qualified lawyer for legal decision."
+      },
+      {
+        "heading": "Updates and corrections",
+        "text": "Release dey show di edition wey you dey read; new website build no mean say di law don change. We dey track corrections for di GitHub repository. For now you need repository access; di link fit no open for people wey never sign in. When you dey report issue, put di provision link, release and printed page if you get am. No put private case details, contact information or confidential documents for public issue."
+      }
+    ]
+  },
+  "methodology": {
+    "heading": "How we dey check section retrieval",
+    "sections": [
+      {
+        "heading": "Wetin we measure",
+        "text": "Di plain-language-retrieval-v1 benchmark wey you fit download get 57 everyday questions for English and Pidgin style, plus di sections wey we expect. Di run wey we record for 12 October 2026 use di original 55 cases; di result show 0.98 top-one hit rate and 1.0 top-five hit rate after we add di topic guide. Dis na retrieval result wey we keep, no be new test of di current deployment."
+      },
+      {
+        "heading": "Wetin di result no prove",
+        "text": "Retrieval hit mean say one section wey we expect show for di search position wey we measure. E no dey measure whether di explanations correct, how good legal advice be, whether di corpus complete, whether e cover current law, or how e go perform for questions wey no dey di test set. Di questions na small set wey we choose, no be sample wey represent all users."
+      },
+      {
+        "heading": "Wetin person fit repeat",
+        "text": "Di versioned test file dey record each question and di sections wey we expect. Repeat test suppose record di deployed revision, published corpus release, retrieval configuration, date and di result for each question. Compare di same dataset before you report change. Source wording and later amendments need separate check."
+      }
+    ]
+  },
+  "links": {
+    "label": "Sources and corrections",
+    "source": "Read di source edition",
+    "about": "About and corrections",
+    "methodology": "How we test retrieval",
+    "corrections": "Corrections for GitHub (you need repository access)",
+    "benchmark": "Versioned retrieval test"
+  }
+}

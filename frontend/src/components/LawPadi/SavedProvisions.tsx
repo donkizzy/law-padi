@@ -1,6 +1,7 @@
 import { useQueries } from "@tanstack/react-query"
 import { Link } from "@tanstack/react-router"
 import { useState } from "react"
+import { Trans, useTranslation } from "react-i18next"
 import { toast } from "sonner"
 import { LegalService } from "@/client"
 import {
@@ -23,36 +24,44 @@ import { EditionNotice } from "./EditionNotice"
 
 /** Where saved sections live, with a gentle nudge when an account would help. */
 function SavedWhere() {
+  const { t } = useTranslation(["legal", "common"])
   const { user } = useAuth()
   const status = useSessionStatus()
-  if (user?.email_verified_at)
-    return <>Sections you save follow your account to any device.</>
+  if (user?.email_verified_at) return <>{t("saved.followsAccount")}</>
   if (status === "signed-in")
     return (
-      <>
-        Sections you save stay on this device until you{" "}
-        <Link className="font-semibold text-primary underline" to="/settings">
-          confirm your email
-        </Link>
-        .
-      </>
+      <Trans
+        components={{
+          confirm: (
+            <Link
+              className="font-semibold text-primary underline"
+              to="/settings"
+            />
+          ),
+        }}
+        i18nKey="saved.untilConfirmed"
+        ns="legal"
+      />
     )
   return (
-    <>
-      Sections you save stay on this device.{" "}
-      <Link
-        className="font-semibold text-primary underline"
-        search={{ redirect: "/saved" }}
-        to="/login"
-      >
-        Sign in
-      </Link>{" "}
-      to keep them on all your devices.
-    </>
+    <Trans
+      components={{
+        signIn: (
+          <Link
+            className="font-semibold text-primary underline"
+            search={{ redirect: "/saved" }}
+            to="/login"
+          />
+        ),
+      }}
+      i18nKey="saved.onDevice"
+      ns="legal"
+    />
   )
 }
 
 export function SavedProvisions() {
+  const { t } = useTranslation(["legal", "common"])
   const { bookmarks, storageError } = useSavedProvisions()
   const [query, setQuery] = useState("")
   const details = useQueries({
@@ -84,12 +93,12 @@ export function SavedProvisions() {
     })
   return (
     <section className="mx-auto max-w-5xl px-4 py-8 sm:px-8 lg:px-12 lg:py-12">
-      <SectionHeading kicker="Saved" title="Saved sections.">
+      <SectionHeading kicker={t("saved.kicker")} title={t("saved.title")}>
         <SavedWhere />
       </SectionHeading>
       <div className="mb-5 flex flex-wrap gap-2">
         <InlineAction asChild>
-          <Link to="/laws">Browse sections</Link>
+          <Link to="/laws">{t("saved.browse")}</Link>
         </InlineAction>
         {bookmarks.length > 0 && (
           <InlineAction
@@ -104,36 +113,36 @@ export function SavedProvisions() {
               })
             }
           >
-            Export saved sections
+            {t("saved.export")}
           </InlineAction>
         )}
       </div>
       <input
-        aria-label="Search saved sections"
+        aria-label={t("saved.search")}
         className="sq-md mb-6 min-h-12 w-full max-w-lg border border-border bg-card px-4 text-sm"
-        placeholder="Search saved sections"
+        placeholder={t("saved.search")}
         value={query}
         onChange={(event) => setQuery(event.target.value)}
       />
       {storageError && (
         <p className="mb-4 text-sm" role="alert">
-          {storageError}
+          {t(`common:${storageError}` as never)}
         </p>
       )}
       {bookmarks.length === 0 ? (
-        <EmptyState title="Nothing saved yet">
-          Tap Save on any section to keep it here for later.
+        <EmptyState title={t("saved.emptyTitle")}>
+          {t("saved.emptyBody")}
           <div className="mt-4">
             <InlineAction asChild>
               <Link to="/" search={{ intent: "find" }}>
-                Find your first section
+                {t("saved.findFirst")}
               </Link>
             </InlineAction>
           </div>
         </EmptyState>
       ) : visible.length === 0 ? (
-        <EmptyState title="Nothing matches that search">
-          Try a different word or a section number.
+        <EmptyState title={t("saved.noMatchTitle")}>
+          {t("saved.noMatchBody")}
         </EmptyState>
       ) : (
         <div className="grid gap-3 md:grid-cols-2">
@@ -157,22 +166,23 @@ function SavedCard({
   bookmark: Bookmark
   detail: ReturnType<typeof useProvision>
 }) {
+  const { t } = useTranslation(["legal", "common"])
   const { toggle } = useSavedProvisions()
   const remove = () => {
     try {
       toggle(bookmark.canonical_path, bookmark.release_version)
     } catch {
-      toast.error("Your browser could not remove this bookmark.")
+      toast.error(t("saved.removeFailed"))
     }
   }
   const provision = detail.data
   return (
     <article className="sq-lg grid gap-3 border border-border bg-card p-5">
       {detail.isPending ? (
-        <p role="status">Loading…</p>
+        <p role="status">{t("common:status.loading")}</p>
       ) : detail.isError || !provision ? (
         <p role="alert">
-          {legalError(detail.error)} Your bookmark is still saved.
+          {legalError(detail.error)} {t("saved.stillSaved")}
         </p>
       ) : (
         <>
@@ -202,12 +212,12 @@ function SavedCard({
             }}
             search={{ release: bookmark.release_version }}
           >
-            Open section
+            {t("saved.open")}
           </Link>
         </>
       )}
       <InlineAction onClick={remove} type="button">
-        Remove
+        {t("common:actions.remove")}
       </InlineAction>
     </article>
   )

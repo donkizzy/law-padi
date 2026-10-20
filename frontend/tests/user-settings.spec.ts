@@ -74,8 +74,11 @@ test("Guest settings shows honest identity, supported language, and a sign-in pa
       .getByRole("link", { name: "Sign in" }),
   ).toBeVisible()
   await page.getByRole("tab", { name: "Preferences" }).click()
+  await expect(page.getByRole("radio", { name: "English" })).toBeChecked()
   await expect(
-    page.getByText("Answers are currently available in English."),
+    page.getByText(
+      "Official wording of the Constitution and other laws always stays in English.",
+    ),
   ).toBeVisible()
   await expect(
     page.getByRole("combobox", { name: "Default answer language" }),

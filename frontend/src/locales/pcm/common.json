@@ -1,0 +1,135 @@
+{
+  "nav": {
+    "ask": "Ask question",
+    "findSection": "Find section",
+    "browseLaws": "Look through di laws",
+    "saved": "Section wey you save",
+    "settings": "Settings",
+    "legalAdmin": "Legal admin",
+    "newConversation": "New conversation",
+    "new": "New",
+    "userSettings": "Your settings"
+  },
+  "header": {
+    "explore": "Check di laws wey dem publish",
+    "sources": "Every answer dey show where e come from",
+    "openSettings": "Open settings"
+  },
+  "language": {
+    "title": "Language",
+    "auto": "Follow my phone or computer",
+    "menuLabel": "Language: {{language}}"
+  },
+  "preferences": {
+    "unreadable": "We no fit read your settings. We still keep wetin dey your browser.",
+    "storageUnavailable": "Browser storage no dey work. We no fit save your settings."
+  },
+  "saved": {
+    "unreadable": "We no fit read di sections wey you save. We still keep wetin dey your browser.",
+    "storageUnavailable": "Browser storage no dey work. We no fit load di sections wey you save."
+  },
+  "legalError": {
+    "notFound": "We no fit find dat section.",
+    "unavailable": "Di laws no fit load now. Abeg try again small time.",
+    "generic": "Something spoil as e dey load. Check your network and try again."
+  },
+  "errors": {
+    "generic": "Something spoil."
+  },
+  "toast": {
+    "success": "E don work!",
+    "error": "Something spoil!"
+  },
+  "sync": {
+    "updateFailed": "We no fit update your account. Your change still dey here.",
+    "chatsClaimed_one": "Your chat don enter your account.",
+    "chatsClaimed_other": "Your {{count}} chats don enter your account.",
+    "savedFailed": "We no fit sync di sections wey you save. We go try again next time."
+  },
+  "actions": {
+    "close": "Close",
+    "tryAgain": "Try again",
+    "showPassword": "Show password",
+    "hidePassword": "Hide password",
+    "save": "Save",
+    "cancel": "Cancel",
+    "edit": "Change am",
+    "continue": "Continue",
+    "checkAgain": "Check again",
+    "copy": "Copy",
+    "copied": "E don copy",
+    "remove": "Comot am",
+    "search": "Search"
+  },
+  "status": {
+    "loading": "E dey load…",
+    "checkingSources": "We dey check di sources wey we trust"
+  },
+  "sidebar": {
+    "title": "Side menu",
+    "description": "E dey show di side menu for phone.",
+    "open": "Open side menu",
+    "collapse": "Close side menu",
+    "toggle": "Open or close side menu"
+  },
+  "history": {
+    "title": "Conversations",
+    "searchLabel": "Search conversations",
+    "searchPlaceholder": "Search your chats",
+    "loadFailed": "Your history no load.",
+    "loading": "Chats dey load…",
+    "today": "Today",
+    "yesterday": "Yesterday",
+    "earlier": "Before",
+    "untitled": "Conversation",
+    "noMatches": "No chat match dat search.",
+    "empty": "Your chats go show here.",
+    "loadOlder": "Load old conversations"
+  },
+  "guest": {
+    "note": "Guest · wetin you save go stay for dis browser."
+  },
+  "auth": {
+    "signIn": "Sign in",
+    "createAccount": "Create account",
+    "logOut": "Log out"
+  },
+  "theme": {
+    "appearance": "How e go look",
+    "toggle": "Change light or dark",
+    "light": "Light",
+    "dark": "Dark",
+    "system": "Follow my device"
+  },
+  "logo": {
+    "home": "constitution.ng home"
+  },
+  "legalStatus": {
+    "current": "Law wey dey work now",
+    "proposed": "Change wey dem propose - e never start to work",
+    "historical": "Old version - dem don replace am",
+    "warning": "We no fit confirm di current source"
+  },
+  "officialWording": "Official wording",
+  "errorPage": {
+    "title": "Error",
+    "oops": "Ehen!",
+    "body": "Something spoil. Abeg try again.",
+    "home": "Go Home"
+  },
+  "notFound": {
+    "body": "We no see di page wey you dey find.",
+    "back": "Go back"
+  },
+  "footer": {
+    "tagline": "Naija Constitution and di laws wey dem publish"
+  },
+  "validation": {
+    "emailInvalid": "Dis email address no correct",
+    "passwordRequired": "You need put password",
+    "passwordMin": "Password must reach 8 characters",
+    "confirmRequired": "Type di password again to confirm am",
+    "passwordsMismatch": "Di two passwords no match",
+    "fullNameRequired": "You need put your full name"
+  }
+}

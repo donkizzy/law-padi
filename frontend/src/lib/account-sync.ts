@@ -20,6 +20,7 @@ import {
   replacePreferences,
   type WorkspacePreferences,
 } from "@/hooks/useWorkspacePreferences"
+import i18n from "@/lib/i18n"
 
 /**
  * Keeps a confirmed account's research on every device it signs in on.
@@ -53,14 +54,15 @@ const toServer = (value: WorkspacePreferences): PreferencesBase => ({
   open_sources: value.openSources,
 })
 
+// The account has no language field yet, so the language stays per browser.
 const fromServer = (value: PreferencesBase): WorkspacePreferences => ({
   enterToSend: value.enter_to_send ?? true,
   followLatest: value.follow_latest ?? true,
   openSources: value.open_sources ?? false,
+  language: readPreferences().language,
 })
 
-const syncFailed = () =>
-  toast.error("Couldn't update your account. Your change is saved here.")
+const syncFailed = () => toast.error(i18n.t("sync.updateFailed"))
 
 onBookmarkChange(({ bookmark, saved }) => {
   if (!activeUserId) return

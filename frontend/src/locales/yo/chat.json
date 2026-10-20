@@ -1,0 +1,158 @@
+{
+  "home": {
+    "kicker": "Òfin, ní ọ̀nà tó rọrùn",
+    "title": "Béèrè nípa àwọn òfin Nàìjíríà.",
+    "intro": "Béèrè bí o ṣe máa ń sọ̀rọ̀. Wàá rí ìdáhùn tó yéni yékéyéké àti àwọn abala gangan tí ó ti wá.",
+    "paused": "Àlàyé ti dúró fún ìgbà díẹ̀. Wá abala kan láti máa ka àwọn òfin tí a tẹ̀jáde lọ.",
+    "suggestions": [
+      "Ṣé ọlọ́pàá lè yẹ fóònù mi wò?",
+      "Báwo ni ọlọ́pàá ṣe lè pẹ́ tó tí wọ́n á fi mú mi dání kí wọ́n tó gbé mi lọ sí ilé-ẹjọ́?",
+      "Ta ló lè du ipò Ààrẹ?",
+      "Kí ni Section 37 sọ?"
+    ],
+    "disclaimer": "Àwọn ìdáhùn ń ṣàlàyé àwọn òfin tí a tẹ̀jáde ní èdè tó rọrùn, wọ́n sì lè fo àwọn kúlẹ̀kúlẹ̀ kan. Ṣàyẹ̀wò àwọn abala tí wọ́n tọ́ka sí, kí o sì bá agbẹjọ́rò sọ̀rọ̀ nípa ọ̀rọ̀ tìrẹ."
+  },
+  "outcome": {
+    "clarification_required": "Ìbéèrè yẹn bo ọ̀pọ̀ nǹkan lẹ́ẹ̀kan náà. Gbìyànjú láti béèrè nípa òfin kan, abala kan tàbí ọ̀rọ̀ kan.",
+    "validation_failed": "A kò lè fìdí rẹ̀ múlẹ̀ pé àlàyé náà bá àwọn ìpèsè tí a tẹ̀jáde mu, nítorí náà àwọn abala fúnra wọn nìyí.",
+    "provider_failure": "Àlàyé kò sí báyìí. Àwọn abala tí a tẹ̀jáde tó jẹmọ́ ọ̀rọ̀ náà nìyí.",
+    "budget_exhausted": "A ti dé òpin àlàyé fún òní. Àwọn abala tí a tẹ̀jáde tó jẹmọ́ ọ̀rọ̀ náà nìyí.",
+    "capacity_exhausted": "Ọ̀pọ̀ ènìyàn ló ń béèrè ìbéèrè báyìí. Ọ̀rọ̀ òfin tó jẹmọ́ ọ̀rọ̀ náà nìyí; gbìyànjú lẹ́ẹ̀kan sí i lẹ́yìn ìṣẹ́jú kan.",
+    "cancelled": "O dá ìdáhùn yìí dúró.",
+    "closest": "Àwọn ìpèsè tí a tẹ̀jáde kò dàbí ẹni pé wọ́n dáhùn èyí tààrà. Àwọn abala tó súnmọ́ ọ jùlọ tí a rí nìyí.",
+    "noSection": "A kò rí abala tí a tẹ̀jáde tó dáhùn èyí. Gbìyànjú láti béèrè lọ́nà míì, tàbí dárúkọ òfin àti abala kan.",
+    "unfinished": "A kò lè parí ìdáhùn yìí. Àwọn abala tí a tẹ̀jáde tó jẹmọ́ ọ̀rọ̀ náà nìyí."
+  },
+  "errors": {
+    "unavailable": "Àlàyé kò sí fún ìgbà díẹ̀. Ìbéèrè rẹ ṣì wà níbí; gbìyànjú lẹ́ẹ̀kan sí i tàbí wá àwọn abala tó jẹmọ́ ọ.",
+    "dailyLimit": "O ti lo gbogbo àlàyé tí o lè gbà lónìí. Yóò tún bẹ̀rẹ̀ ní ọ̀gànjọ́ òru ní àkókò Èkó. O ṣì lè wá àwọn abala kí o sì kà wọ́n.",
+    "busy": "Àlàyé ń ṣiṣẹ́ lọ́wọ́ báyìí. Gbìyànjú lẹ́ẹ̀kan sí i lẹ́yìn ìṣẹ́jú kan, tàbí wá àwọn abala tó jẹmọ́ ọ.",
+    "sendFailed": "Nǹkan kan ṣẹlẹ̀ bí a ṣe ń fi ìbéèrè rẹ ránṣẹ́. Ṣàyẹ̀wò ìsopọ̀ rẹ kí o sì gbìyànjú lẹ́ẹ̀kan sí i.",
+    "retry": "Tún ìbéèrè náà fi ránṣẹ́",
+    "edit": "Ṣàtúnṣe ìbéèrè",
+    "findSections": "Wá àwọn abala tó jẹmọ́ ọ"
+  },
+  "actions": {
+    "label": "Ohun tí o lè ṣe pẹ̀lú ìdáhùn",
+    "copy": "Ṣe ẹ̀dà ìdáhùn pẹ̀lú àwọn ìtọ́ka",
+    "copied": "A ti ṣe ẹ̀dà ìdáhùn àti àwọn ìtọ́ka",
+    "copyFailed": "A kò lè ṣe ẹ̀dà. Jọ̀wọ́ gbìyànjú lẹ́ẹ̀kan sí i.",
+    "saveSources": "Fi àwọn orísun pamọ́",
+    "sourcesSaved": "A ti fi àwọn orísun pamọ́",
+    "saveFailed": "A kò lè fi àwọn orísun pamọ́ sórí aṣàwákiri yìí.",
+    "export": "Gbé ìdáhùn jáde"
+  },
+  "answer": {
+    "label": "Ìdáhùn",
+    "dependsOn": "Ìdáhùn náà lè dá lórí",
+    "otherLaws": "Àwọn òfin míì náà kàn án",
+    "otherLawsBody": "Àwọn òfin Nàìjíríà wọ̀nyí náà sọ̀rọ̀ nípa èyí. Wọn kò tíì sí níbí, nítorí náà ṣàyẹ̀wò wọn tàbí bi agbẹjọ́rò kí o tó gbára lé ìdáhùn yìí.",
+    "sources": "Àwọn orísun",
+    "notAdvice": "Àlàyé yìí kì í ṣe ìmọ̀ràn òfin.",
+    "moreAboutSection": "Síwájú sí i nípa abala yìí",
+    "loadFailed": "A kò lè ṣí ìdáhùn yìí."
+  },
+  "sources": {
+    "open": "Ṣí orísun {{citation}}",
+    "openTitled": "Ṣí {{citation}}: {{title}}",
+    "mayHelp": "Àwọn abala míì tó lè ṣèrànwọ́",
+    "used": "Àwọn abala tí a lò",
+    "othersCameUp_one": "Abala míì 1 tún jáde",
+    "othersCameUp_other": "Àwọn abala míì {{count}} tún jáde",
+    "alsoRelated": "Àwọn tó tún jẹmọ́ ọ"
+  },
+  "gaps": {
+    "label": "Àwọn abala tí a kò rí",
+    "title": "A kò rí gbogbo rẹ̀"
+  },
+  "followUps": {
+    "label": "Àwọn ìbéèrè tí a dábàá",
+    "title": "O tún lè béèrè"
+  },
+  "pending": {
+    "label": "Ìdáhùn ń bọ̀",
+    "reading": "À ń ka {{sources}}"
+  },
+  "progress": {
+    "finding": "À ń wá àwọn abala tó jẹmọ́ ọ…",
+    "writing": "À ń kọ ìdáhùn tó yéni…",
+    "checking": "À ń tún ìdáhùn náà yẹ̀wò pẹ̀lú àwọn orísun rẹ̀…",
+    "reconnecting": "À ń tún sopọ̀ mọ́ ìbéèrè tí o fipamọ́…",
+    "connectionLost": "Ìsopọ̀ já. À ń tún sopọ̀…",
+    "interrupted": "Ìsopọ̀ já láàárín. À ń ṣàyẹ̀wò bóyá ìdáhùn rẹ ti parí.",
+    "stopping": "Ó ń dúró…"
+  },
+  "conversation": {
+    "confirmDelete": "Ṣé kí a pa ìjíròrò yìí rẹ́? A kò ní lè dá a padà.",
+    "titleLabel": "Àkọlé ìjíròrò",
+    "exportFailed": "A kò lè gbé gbogbo ìjíròrò náà jáde. Gbìyànjú lẹ́ẹ̀kan sí i.",
+    "exporting": "Ó ń jáde…",
+    "export": "Gbé ìjíròrò jáde",
+    "rename": "Yí orúkọ padà",
+    "delete": "Pa á rẹ́",
+    "unavailable": "Ìjíròrò kò sí",
+    "loadOlder": "Ṣí àwọn ìfiránṣẹ́ àtijọ́",
+    "stop": "Dá ìdáhùn dúró",
+    "jumpToLatest": "Lọ sí èyí tó kẹ́yìn"
+  },
+  "stream": {
+    "saved": "A ti fi ìbéèrè rẹ pamọ́. Tún sopọ̀ tàbí ṣàyẹ̀wò ipò rẹ̀ láti tẹ̀síwájú.",
+    "reconnect": "Tún sopọ̀",
+    "checkStatus": "Ṣàyẹ̀wò ipò ìdáhùn"
+  },
+  "composer": {
+    "label": "Ìbéèrè rẹ",
+    "placeholder": "Béèrè nípa Òfin-Ìpìlẹ̀ Nàìjíríà àti àwọn òfin tí a tẹ̀jáde…",
+    "explanation": "Ìdáhùn ní èdè tó rọrùn",
+    "search": "Wá nínú àwọn òfin tí a tẹ̀jáde",
+    "sending": "Ó ń lọ",
+    "send": "Fi ìbéèrè ránṣẹ́",
+    "enterHint": "Enter láti fi ránṣẹ́ · Shift+Enter fún ìlà tuntun",
+    "modEnterHint": "Ctrl/Cmd+Enter láti fi ránṣẹ́"
+  },
+  "feedback": {
+    "label": "Èrò rẹ nípa ìdáhùn",
+    "question": "Ṣé èyí wúlò?",
+    "helpful": "Ó wúlò",
+    "notHelpful": "Kò wúlò",
+    "thanks": "A dúpẹ́ fún èsì rẹ.",
+    "failed": "A kò lè fi èsì rẹ pamọ́. Gbìyànjú lẹ́ẹ̀kan sí i."
+  },
+  "tasks": {
+    "label": "Yan ohun tí o fẹ́ ṣe",
+    "checking": "À ń ṣàyẹ̀wò àwọn ohun tó wà…"
+  },
+  "find": {
+    "title": "Ṣàwárí àwọn òfin Nàìjíríà tí a tẹ̀jáde.",
+    "intro": "Wá abala kan nípa nọ́ńbà rẹ̀, tàbí ṣàpèjúwe ọ̀rọ̀ náà ní èdè tìrẹ.",
+    "availabilityError": "A kò lè ṣàyẹ̀wò bóyá ìdáhùn tó yéni wà. O ṣì lè wá àwọn abala kí o sì kà wọ́n.",
+    "paused": "Ìdáhùn tó yéni ti dúró fún ìgbà díẹ̀. O ṣì lè wá àwọn abala kí o sì kà wọ́n.",
+    "allEditions": "Gbogbo ẹ̀dà orísun tí a tẹ̀jáde",
+    "placeholder": "Wá kókó ọ̀rọ̀ tàbí ìtọ́ka, bí Section 37 tàbí ACJA s.9…",
+    "suggestionsLabel": "Àwọn ìwádìí tí a dábàá",
+    "suggestions": [
+      "Ṣé ọlọ́pàá lè yẹ fóònù mi wò?",
+      "Section 35",
+      "Òmìnira láti sọ̀rọ̀",
+      "Ta ló lè du ipò Ààrẹ?",
+      "Níní ilẹ̀ ní ìpínlẹ̀ míì"
+    ],
+    "loadFailed": "A kò lè ṣí àwọn òfin tí a tẹ̀jáde"
+  },
+  "results": {
+    "label": "Àbájáde ìwádìí",
+    "title": "Àbájáde fún “{{query}}”",
+    "searching": "À ń wá nínú àwọn òfin tí a tẹ̀jáde…",
+    "unavailable": "Ìwádìí kò ṣiṣẹ́ báyìí",
+    "unsupported": "A kò lè lo ìtọ́ka yẹn",
+    "none": "A kò rí abala tó bá a mu",
+    "noneHint": "Gbìyànjú àwọn ọ̀rọ̀ míì, kókó ọ̀rọ̀ tó gbòòrò, tàbí nọ́ńbà abala bí Section 35.",
+    "bestMatch": "Èyí tó bá a mu jùlọ",
+    "selected": "Abala tí o yàn",
+    "inContext": ". A fi gbogbo rẹ̀ hàn kí o lè ka {{citation}} pẹ̀lú ohun tó yí i ká.",
+    "surroundingFailed": "A kò lè ṣí abala tó yí i ká.",
+    "matchesLabel": "Àwọn tó bá ìwádìí mu",
+    "ambiguous": "Èwo ni o ní lọ́kàn?",
+    "otherMatches": "Àwọn abala míì tó bá a mu"
+  }
+}

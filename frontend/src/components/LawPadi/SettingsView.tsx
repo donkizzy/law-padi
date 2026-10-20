@@ -1,7 +1,9 @@
 import { Link } from "@tanstack/react-router"
 import { type ReactNode, useEffect, useState } from "react"
-import { FiGlobe, FiLock, FiSettings, FiUser } from "react-icons/fi"
+import { useTranslation } from "react-i18next"
+import { FiLock, FiSettings, FiUser } from "react-icons/fi"
 import { toast } from "sonner"
+import { LanguageChoice } from "@/components/Common/LanguagePicker"
 import { AccountData } from "@/components/UserSettings/AccountData"
 import ChangePassword from "@/components/UserSettings/ChangePassword"
 import { EmailVerificationNotice } from "@/components/UserSettings/EmailVerificationNotice"
@@ -85,6 +87,7 @@ function SettingToggle({
 }
 
 export function SettingsView() {
+  const { t } = useTranslation(["settings", "common"])
   const { user } = useAuth()
   const capabilities = useChatCapabilities()
   const release = useLegalRelease()
@@ -105,96 +108,95 @@ export function SettingsView() {
   }
   const save = () => {
     try {
-      savePreferences(edited)
+      // The language applies as soon as it is picked, so keep the saved one.
+      savePreferences({ ...edited, language: preferences.language })
       setDirty(false)
       setSaved(true)
       setError(null)
     } catch {
-      setError(
-        "Your browser couldn't save these preferences. Please try again.",
-      )
+      setError(t("errors.saveFailed"))
       setSaved(false)
     }
   }
   return (
     <section className="mx-auto max-w-5xl px-4 py-8 sm:px-8 lg:px-12">
-      <SectionHeading kicker="Settings" title="Make constitution.ng yours.">
-        Manage your account, reading preferences and saved research.
+      <SectionHeading kicker={t("kicker")} title={t("title")}>
+        {t("intro")}
       </SectionHeading>
       <Tabs defaultValue="profile">
         <TabsList
-          className="sq-md mb-5 h-12 max-w-full"
-          aria-label="Settings sections"
+          className="sq-md mb-5 h-12 max-w-full justify-start overflow-x-auto"
+          aria-label={t("tabs.label")}
         >
           <TabsTrigger className="sq-sm px-4" value="profile">
             <FiUser aria-hidden />
-            Profile
+            {t("tabs.profile")}
           </TabsTrigger>
           <TabsTrigger className="sq-sm px-4" value="preferences">
             <FiSettings aria-hidden />
-            Preferences
+            {t("tabs.preferences")}
           </TabsTrigger>
           <TabsTrigger className="sq-sm px-4" value="security">
             <FiLock aria-hidden />
-            Security
+            {t("tabs.security")}
           </TabsTrigger>
         </TabsList>
         <TabsContent
           value="profile"
           className="grid gap-5 lg:grid-cols-[minmax(0,1fr)_20rem]"
         >
-          <SettingsCard title="Profile">
+          <SettingsCard title={t("tabs.profile")}>
             {user ? (
               <>
                 <EmailVerificationNotice />
                 <UserInformation />
               </>
             ) : isLoggedIn() ? (
-              <p role="status">Loading your account…</p>
+              <p role="status">{t("guest.loading")}</p>
             ) : (
               <div className="grid gap-4">
-                <p className="text-body">
-                  You're browsing as a guest. You can ask questions and save
-                  sections without an account.
-                </p>
+                <p className="text-body">{t("guest.body")}</p>
                 <p className="text-sm text-muted-foreground">
-                  Sign in to keep your conversations and saved sections on every
-                  device. Anything you've saved here comes with you.
+                  {t("guest.signInBenefit")}
                 </p>
                 <div className="flex flex-wrap gap-2">
                   <SquircleButton asChild>
                     <Link to="/login" search={{ redirect: "/settings" }}>
-                      Sign in
+                      {t("common:auth.signIn")}
                     </Link>
                   </SquircleButton>
                   <SquircleButton asChild variant="outline">
                     <Link to="/signup" search={{ redirect: "/settings" }}>
-                      Create account
+                      {t("common:auth.createAccount")}
                     </Link>
                   </SquircleButton>
                 </div>
               </div>
             )}
           </SettingsCard>
-          <SettingsCard title="Available here">
+          <SettingsCard title={t("available.title")}>
             <dl className="grid gap-3 text-body">
-              <dt className="text-muted-foreground">Account</dt>
-              <dd>{user ? "Signed in" : "Guest"}</dd>
-              <dt className="text-muted-foreground">Source edition</dt>
+              <dt className="text-muted-foreground">
+                {t("available.account")}
+              </dt>
+              <dd>{user ? t("available.signedIn") : t("available.guest")}</dd>
+              <dt className="text-muted-foreground">
+                {t("available.edition")}
+              </dt>
               <dd>
                 {release.data
                   ? editionName(release.data.edition_label)
-                  : "Edition unavailable"}
+                  : t("available.editionUnavailable")}
               </dd>
-              <dt className="text-muted-foreground">Answer language</dt>
-              <dd>English</dd>
-              <dt className="text-muted-foreground">Explanations</dt>
+              <dt className="text-muted-foreground">
+                {t("available.explanations")}
+              </dt>
               <dd>
                 {capabilities.isError
-                  ? "Availability unknown"
+                  ? t("available.unknown")
                   : capabilities.data?.explanations_enabled
-                    ? "Available"
-                    : "Paused"}
+                    ? t("available.on")
+                    : t("available.paused")}
               </dd>
             </dl>
             <EditionNotice
@@ -211,7 +213,7 @@ export function SettingsView() {
                   void capabilities.refetch()
                 }}
               >
-                Check again
+                {t("common:actions.checkAgain")}
               </InlineAction>
             )}
           </SettingsCard>
@@ -220,80 +222,68 @@ export function SettingsView() {
           value="preferences"
           className="grid gap-5 lg:grid-cols-[minmax(0,1fr)_20rem]"
         >
-          <SettingsCard title="Reading and asking">
+          <SettingsCard title={t("reading.title")}>
             <SettingToggle
-              label="Enter to send"
-              description="Use Shift+Enter for a new line. Ctrl/Cmd+Enter always sends."
+              label={t("reading.enterToSend")}
+              description={t("reading.enterToSendHint")}
               value={edited.enterToSend}
               onChange={() => update("enterToSend")}
             />
             <SettingToggle
-              label="Follow latest answer"
-              description="Scroll to new messages while you're near the end of the chat."
+              label={t("reading.followLatest")}
+              description={t("reading.followLatestHint")}
               value={edited.followLatest}
               onChange={() => update("followLatest")}
             />
             <SettingToggle
-              label="Open source beside answers"
-              description="On desktop, open the first linked source after an explanation finishes."
+              label={t("reading.openSources")}
+              description={t("reading.openSourcesHint")}
               value={edited.openSources}
               onChange={() => update("openSources")}
             />
             <p className="mt-3 text-sm text-muted-foreground">
               {user?.email_verified_at
-                ? "These preferences follow your account to any device."
-                : "These preferences are saved on this browser."}
+                ? t("reading.syncedToAccount")
+                : t("reading.savedOnBrowser")}
             </p>
             <div className="mt-4 flex flex-wrap items-center gap-3">
               <SquircleButton type="button" disabled={!dirty} onClick={save}>
-                Save changes
+                {t("reading.save")}
               </SquircleButton>
               {saved && (
                 <span role="status" className="text-sm text-primary">
-                  Settings saved
+                  {t("reading.saved")}
                 </span>
               )}
             </div>
           </SettingsCard>
-          <SettingsCard title="Answer language">
-            <FiGlobe className="mb-3 size-5 text-primary" aria-hidden />
-            <p className="text-body">
-              Answers are currently available in English.
+          <SettingsCard title={t("language.title")}>
+            <LanguageChoice />
+            <p className="mt-4 text-sm text-muted-foreground">
+              {t("language.official")}
             </p>
-            <p className="mt-3 text-sm text-muted-foreground">
-              Official constitutional wording stays in English. Other answer
-              languages and amendment notifications aren't available yet.
+            <p className="mt-2 text-sm text-muted-foreground">
+              {t("language.savedOnBrowser")}
             </p>
           </SettingsCard>
         </TabsContent>
         <TabsContent value="security" className="grid gap-5">
-          <SettingsCard title="Privacy and research">
+          <SettingsCard title={t("privacy.title")}>
             <div className="grid gap-3 text-body text-muted-foreground">
               <p>
                 {user?.email_verified_at
-                  ? "Saved sections and preferences are kept in your account."
-                  : "Saved sections and preferences stay on this browser."}{" "}
-                Drafts stay in this tab until it closes. Conversations are kept
-                with your account, or with this browser for 30 days if you're a
-                guest.
+                  ? t("privacy.keptInAccount")
+                  : t("privacy.keptOnBrowser")}{" "}
+                {t("privacy.retention")}
               </p>
-              <p>
-                When explanations are enabled, your question and relevant
-                constitutional text are sent to DeepSeek to write and check the
-                answer. Avoid including personal details you don't need to
-                share.
-              </p>
-              <p>
-                Export your bookmarks, preferences and available conversations
-                before clearing local research. Source editions and citations
-                are kept in the export.
-              </p>
+              <p>{t("privacy.provider")}</p>
+              <p>{t("privacy.exportFirst")}</p>
               <p>
                 <Link
                   className="font-semibold text-primary underline"
                   to="/privacy"
                 >
-                  Read how we handle your data
+                  {t("privacy.readMore")}
                 </Link>
               </p>
             </div>
@@ -307,62 +297,60 @@ export function SettingsView() {
                   setError(null)
                   try {
                     if (capabilities.isError)
-                      throw new Error("Availability unknown")
+                      throw new Error("Chat availability unknown")
                     await exportResearch(
                       capabilities.data?.conversations_enabled === true,
                     )
-                    toast.success("Research exported")
+                    toast.success(t("privacy.exported"))
                   } catch {
-                    setError(
-                      "Your research could not be fully exported. Check your connection and try again.",
-                    )
+                    setError(t("errors.exportFailed"))
                   } finally {
                     setExporting(false)
                   }
                 }}
               >
-                Export my research
+                {t("privacy.export")}
               </SquircleButton>
               <SquircleButton
                 type="button"
                 variant="danger"
                 onClick={() => setClearOpen(true)}
               >
-                Clear bookmarks and drafts
+                {t("privacy.clear")}
               </SquircleButton>
             </div>
           </SettingsCard>
           {user && (
-            <SettingsCard title="Sign-in security">
+            <SettingsCard title={t("security.title")}>
               <ChangePassword />
             </SettingsCard>
           )}
           {user && (
-            <SettingsCard title="Your account data">
+            <SettingsCard title={t("data.title")}>
               <AccountData />
             </SettingsCard>
           )}
           {user?.is_superuser && (
-            <SettingsCard title="Answer quality signals">
+            <SettingsCard title={t("qualitySignals")}>
               <ChatMetricsView />
             </SettingsCard>
           )}
           <details className="sq-md border border-border p-4">
             <summary className="cursor-pointer text-body font-semibold">
-              Support details
+              {t("support.title")}
             </summary>
             <dl className="mt-3 grid gap-2 text-sm">
-              <dt>App build</dt>
+              <dt>{t("support.appBuild")}</dt>
               <dd className="break-all">
                 {import.meta.env.VITE_BUILD_REVISION ?? "development"}
               </dd>
-              <dt>Service build</dt>
+              <dt>{t("support.serviceBuild")}</dt>
               <dd className="break-all">
-                {capabilities.data?.build_revision ?? "Unavailable"}
+                {capabilities.data?.build_revision ?? t("support.unavailable")}
               </dd>
-              <dt>Source release</dt>
+              <dt>{t("support.sourceRelease")}</dt>
               <dd className="break-all">
-                {release.data?.release_version ?? "Unavailable"}
+                {release.data?.release_version ?? t("support.unavailable")}
               </dd>
             </dl>
           </details>
@@ -370,21 +358,17 @@ export function SettingsView() {
       </Tabs>
       {(error || storageError) && (
         <p className="mt-5 sq-md bg-destructive/10 p-4 text-body" role="alert">
-          {error || storageError}
+          {error || (storageError && t(`common:${storageError}` as never))}
         </p>
       )}
       <Dialog open={clearOpen} onOpenChange={setClearOpen}>
         <DialogContent className="sq-lg">
-          <DialogTitle>Clear local bookmarks and drafts?</DialogTitle>
-          <DialogDescription>
-            This removes your bookmarks from this browser and drafts from this
-            tab. Your account and saved conversations stay available. Export
-            your research first if you want a copy.
-          </DialogDescription>
+          <DialogTitle>{t("clear.title")}</DialogTitle>
+          <DialogDescription>{t("clear.body")}</DialogDescription>
           <DialogFooter>
             <DialogClose asChild>
               <SquircleButton variant="outline" type="button">
-                Keep my research
+                {t("clear.keep")}
               </SquircleButton>
             </DialogClose>
             <SquircleButton
@@ -395,15 +379,13 @@ export function SettingsView() {
                   clearSavedProvisions()
                   clearDrafts()
                   setClearOpen(false)
-                  toast.success("Local bookmarks and drafts cleared")
+                  toast.success(t("clear.done"))
                 } catch {
-                  setError(
-                    "Some local research could not be cleared. Please check your browser storage.",
-                  )
+                  setError(t("errors.clearFailed"))
                 }
               }}
             >
-              Clear local research
+              {t("clear.confirm")}
             </SquircleButton>
           </DialogFooter>
         </DialogContent>

@@ -1,0 +1,186 @@
+{
+  "skip": "Jump go di main content",
+  "nav": {
+    "label": "Main",
+    "backToTop": "constitution.ng, go back up",
+    "howItWorks": "How e dey work",
+    "examples": "Wetin people dey ask",
+    "faq": "Questions",
+    "ask": "Ask question",
+    "openMenu": "Open menu",
+    "closeMenu": "Close menu"
+  },
+  "form": {
+    "empty": "Type question or section number first.",
+    "tooLong": "Make your question no pass 2,000 characters.",
+    "label": "Your question about di Constitution",
+    "placeholder": "Police fit search my phone?",
+    "submit": "Give me answer"
+  },
+  "hero": {
+    "kicker": "Naija Constitution and di laws wey dem publish",
+    "line1": "Ask about your rights.",
+    "line2": "Get di exact section.",
+    "body": "Type your question as you take talk am. We go find di sections wey concern am for di published sources, explain dem for simple language, and show you di original wording for di side.",
+    "available": "Wetin dey dis release: {{laws}}. Check each source edition before you rely on am.",
+    "pointsLabel": "E free",
+    "points": [
+      "E free",
+      "You no need account",
+      "Every answer dey show im section"
+    ]
+  },
+  "preview": {
+    "label": "Example answer for di question: police fit search my phone?",
+    "question": "Police fit search my phone?",
+    "answer": "Your phone calls and messages dey private under Section 37. Police fit only cross dat one under law wey dem make for reasons like public safety or to stop crime, as Section 45 allow.",
+    "sectionTitle": "Section 37 · Right to private and family life",
+    "edition": "Dis na di 1999 Constitution as dem publish am for 2004. Amendments wey come after never dey inside."
+  },
+  "problem": {
+    "kicker": "Why e hard",
+    "title": "Na for lawyers dem write di Constitution. Your question no be lawyer talk.",
+    "body": "E get 320 sections and 7 schedules for big legal English. Di words wey you go search for no dey usually be di words wey e use.",
+    "pdfKicker": "If you search di PDF",
+    "pdfTitle": "You search “phone”. Nothing show.",
+    "pdfBody": "Di section wey you need dey talk about “telephone conversations and telegraphic communications”, and di limits on top am dey eight sections after.",
+    "appKicker": "With constitution.ng",
+    "appTitle": "You ask “police fit search my phone?”",
+    "appBody": "Section 37 go show first, Section 45 go follow am for di limits, and di answer go explain both for two sentences."
+  },
+  "tagline": [
+    "Di Constitution na for every Naija person.",
+    "Now every Naija person fit read am."
+  ],
+  "benefits": {
+    "kicker": "Wetin you go get",
+    "title": "Answers wey you fit understand and check",
+    "items": [
+      {
+        "title": "Ask am your own way",
+        "body": "Everyday words, Pidgin, or section number wey you half remember. “Section thirty something about privacy” go still find Section 37."
+      },
+      {
+        "title": "Answer dey come first",
+        "body": "You go get straight answer to wetin you ask, then wetin e mean for you and where di limits dey. No big legal grammar wey you go struggle with."
+      },
+      {
+        "title": "Di official wording, every time",
+        "body": "Every answer dey show di exact text of di sections wey e stand on, with citations from di published source."
+      },
+      {
+        "title": "Keep wetin you find",
+        "body": "Copy answer with im citations, save sections for later, or open di page for di printed source make you check am yourself."
+      }
+    ]
+  },
+  "steps": {
+    "kicker": "How e dey work",
+    "title": "Three steps, with di sources near you",
+    "items": [
+      {
+        "title": "Ask your question",
+        "body": "Type am as you go ask friend wey sabi law. Section number dey work too."
+      },
+      {
+        "title": "We go find di sections",
+        "body": "We go match your question with di published source edition, plus di provisions wey put limit for di right."
+      },
+      {
+        "title": "Read di answer and di source",
+        "body": "Short answer for simple language, with di official English wording of each section right for im side."
+      }
+    ]
+  },
+  "proof": {
+    "kicker": "We build am make you fit check am",
+    "title": "We test am with di questions wey people dey really ask",
+    "body": "We dey test section retrieval with everyday way of talking. Na di scope of di source-edition test wey we keep be dis.",
+    "stats": [
+      {
+        "value": "54 out of 55",
+        "label": "everyday questions, for English and Pidgin, bring one expected section first for di retrieval test of 12 October 2026 wey we keep"
+      },
+      {
+        "value": "1,811",
+        "label": "source passages for di 2004 edition wey we keep, linked to printed pages"
+      },
+      {
+        "value": "2004",
+        "label": "source edition; amendments wey come after no dey inside"
+      }
+    ],
+    "limits": "Retrieval hits no dey measure whether di explanation correct or whether e cover current law. <methodology>Read di test wey get date and im limits</methodology>.",
+    "try": "Try one of dis ones",
+    "examples": [
+      "Police fit search my phone?",
+      "How long police fit hold me before dem carry me go court?",
+      "Who fit run for president?",
+      "I fit get land for another state?",
+      "wetin constitution talk about freedom of religion?",
+      "Wetin Section 33 talk?"
+    ]
+  },
+  "faq": {
+    "kicker": "Questions",
+    "title": "Before you ask",
+    "body": "Short version: e free, e independent, and e dey always show you di source.",
+    "items": [
+      {
+        "q": "Dis one na legal advice?",
+        "a": "No. constitution.ng dey explain Naija legal sources wey dem publish and dey show you di exact section. If you get court case, arrest or dispute, talk to lawyer or di Legal Aid Council. Carry di sections wey you find here go with you."
+      },
+      {
+        "q": "E free?",
+        "a": "Yes. To ask questions, find sections and read di published source edition na free. No paid plan dey."
+      },
+      {
+        "q": "I need account?",
+        "a": "No. You fit ask and read as guest. Create account only if you want make your conversations follow you go another device."
+      },
+      {
+        "q": "Na di current Constitution be dis?",
+        "a": "Na di 1999 Constitution as dem publish am for 2004. Amendments wey dem pass after dat one never dey inside, so one section fit don change since. Every answer dey tell you dis so you fit check before you rely on am."
+      },
+      {
+        "q": "Which laws I fit read?",
+        "a": "Di law picker dey list di laws wey dey di published release wey you select. Law wey dem still dey review no dey there. Each provision dey show im source edition. Acts wey dem label say na as dem pass am fit don get amendment; check di original source and di changes wey come after before you rely on dem."
+      },
+      {
+        "q": "I fit ask for Pidgin?",
+        "a": "Yes. Ask am as you take talk am, for English or Pidgin, and we go find di section. You fit also change di site to Pidgin, Yorùbá, Hausa or Igbo. Di official wording na always di English text."
+      },
+      {
+        "q": "How una dey choose di section?",
+        "a": "We dey match your question with di published sections, using both di words wey you type and wetin you mean. Citations dey come from di text itself, we no dey guess am, and every answer dey list di sections wey e use so you fit read dem yourself."
+      },
+      {
+        "q": "I fit quote answer?",
+        "a": "Yes. Copy any answer with im citations, or save di sections wey you need. Quote di official wording, no be di explanation, when accuracy matter."
+      },
+      {
+        "q": "Na government website be dis?",
+        "a": "No. constitution.ng dey independent. Na no National Assembly or any government body publish am, and e no join body with dem."
+      }
+    ]
+  },
+  "final": {
+    "kicker": "E free, no account, nothing to install",
+    "title": "Ask your first question",
+    "body": "Find di published sections about wetin dey your mind, and read di wording from di source.",
+    "browse": "Or look through di published sections"
+  },
+  "footer": {
+    "about": "Naija Constitution and di laws wey dem publish. E dey independent, e no be government publication. Explanations no be legal advice.",
+    "label": "Footer",
+    "links": {
+      "ask": "Ask question",
+      "about": "About and corrections",
+      "methodology": "How we test retrieval",
+      "laws": "Look through di published laws",
+      "saved": "Sections wey you save",
+      "login": "Sign in",
+      "privacy": "Privacy"
+    }
+  }
+}

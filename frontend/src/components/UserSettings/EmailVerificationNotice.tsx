@@ -1,4 +1,5 @@
 import { useMutation } from "@tanstack/react-query"
+import { useTranslation } from "react-i18next"
 
 import { UsersService } from "@/client"
 import { SquircleButton } from "@/components/LawPadi/primitives"
@@ -8,12 +9,17 @@ import { handleError } from "@/utils"
 
 /** Asks a signed-in person to confirm their email until they have. */
 export function EmailVerificationNotice() {
+  const { t } = useTranslation("settings")
   const { user } = useAuth()
   const { showSuccessToast, showErrorToast } = useCustomToast()
   const resend = useMutation({
     mutationFn: () => UsersService.resendVerificationEmail(),
     onSuccess: () =>
-      showSuccessToast(`We sent a new link to ${user?.email ?? "your email"}.`),
+      showSuccessToast(
+        user?.email
+          ? t("verify.sentTo", { email: user.email })
+          : t("verify.sent"),
+      ),
     onError: handleError.bind(showErrorToast),
   })
 
@@ -25,10 +31,9 @@ export function EmailVerificationNotice() {
       role="status"
     >
       <div className="grid gap-1">
-        <p className="text-body font-semibold">Confirm your email address</p>
+        <p className="text-body font-semibold">{t("verify.title")}</p>
         <p className="text-sm text-muted-foreground">
-          We sent a link to {user.email}. Your saved sections and conversations
-          start syncing once it's confirmed.
+          {t("verify.body", { email: user.email })}
         </p>
       </div>
       <div>
@@ -38,7 +43,7 @@ export function EmailVerificationNotice() {
           size="sm"
           variant="outline"
         >
-          {resend.isPending ? "Sending…" : "Send a new link"}
+          {resend.isPending ? t("verify.sending") : t("verify.resend")}
         </SquircleButton>
       </div>
     </div>

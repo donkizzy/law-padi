@@ -1,0 +1,135 @@
+{
+  "nav": {
+    "ask": "Yi tambaya",
+    "findSection": "Nemi sashe",
+    "browseLaws": "Duba dokoki",
+    "saved": "Sassan da ka ajiye",
+    "settings": "Saituna",
+    "legalAdmin": "Mai kula da dokoki",
+    "newConversation": "Sabuwar tattaunawa",
+    "new": "Sabo",
+    "userSettings": "Saitunanka"
+  },
+  "header": {
+    "explore": "Duba dokokin da aka wallafa",
+    "sources": "Kowace amsa tana nuna tushenta",
+    "openSettings": "Buɗe saituna"
+  },
+  "language": {
+    "title": "Harshe",
+    "auto": "Bi harshen na'urata",
+    "menuLabel": "Harshe: {{language}}"
+  },
+  "preferences": {
+    "unreadable": "Ba mu iya karanta saitunanka ba. Bayanan burauzarka suna nan yadda suke.",
+    "storageUnavailable": "Ma'ajiyar burauza ba ta aiki. Ba za mu iya ajiye saitunanka ba."
+  },
+  "saved": {
+    "unreadable": "Ba mu iya karanta alamomin da ka ajiye ba. Bayanan burauzarka suna nan yadda suke.",
+    "storageUnavailable": "Ma'ajiyar burauza ba ta aiki. Ba za mu iya buɗe sassan da ka ajiye ba."
+  },
+  "legalError": {
+    "notFound": "Ba mu sami wannan sashe ba.",
+    "unavailable": "Ba za a iya buɗe dokokin da aka wallafa yanzu ba. Da fatan za a sake gwadawa nan ba da jimawa ba.",
+    "generic": "Wani abu ya faru yayin buɗe wannan. Duba haɗin intanet ɗinka ka sake gwadawa."
+  },
+  "errors": {
+    "generic": "Wani abu ya faru."
+  },
+  "toast": {
+    "success": "An yi nasara!",
+    "error": "Wani abu ya faru!"
+  },
+  "sync": {
+    "updateFailed": "Ba mu iya sabunta asusunka ba. Canjinka yana nan an ajiye.",
+    "chatsClaimed_one": "Tattaunawarka ta shiga asusunka yanzu.",
+    "chatsClaimed_other": "Tattaunawowinka {{count}} sun shiga asusunka yanzu.",
+    "savedFailed": "Ba mu iya daidaita sassan da ka ajiye ba. Za mu sake gwadawa nan gaba."
+  },
+  "actions": {
+    "close": "Rufe",
+    "tryAgain": "Sake gwadawa",
+    "showPassword": "Nuna kalmar sirri",
+    "hidePassword": "Ɓoye kalmar sirri",
+    "save": "Ajiye",
+    "cancel": "Soke",
+    "edit": "Gyara",
+    "continue": "Ci gaba",
+    "checkAgain": "Sake dubawa",
+    "copy": "Kwafa",
+    "copied": "An kwafa",
+    "remove": "Cire",
+    "search": "Nema"
+  },
+  "status": {
+    "loading": "Ana buɗewa…",
+    "checkingSources": "Ana duba amintattun tushe"
+  },
+  "sidebar": {
+    "title": "Menu na gefe",
+    "description": "Yana nuna menu na gefe a waya.",
+    "open": "Buɗe menu na gefe",
+    "collapse": "Rufe menu na gefe",
+    "toggle": "Buɗe ko rufe menu na gefe"
+  },
+  "history": {
+    "title": "Tattaunawa",
+    "searchLabel": "Nemi tattaunawa",
+    "searchPlaceholder": "Nemi cikin tattaunawarka",
+    "loadFailed": "Tarihi bai buɗe ba.",
+    "loading": "Ana buɗe tattaunawa…",
+    "today": "Yau",
+    "yesterday": "Jiya",
+    "earlier": "A baya",
+    "untitled": "Tattaunawa",
+    "noMatches": "Babu tattaunawar da ta dace da wannan bincike.",
+    "empty": "Tattaunawarka za ta bayyana a nan.",
+    "loadOlder": "Buɗe tsofaffin tattaunawa"
+  },
+  "guest": {
+    "note": "Baƙo · alamominka suna zama a kan wannan burauza."
+  },
+  "auth": {
+    "signIn": "Shiga",
+    "createAccount": "Buɗe asusu",
+    "logOut": "Fita"
+  },
+  "theme": {
+    "appearance": "Kamanni",
+    "toggle": "Sauya haske ko duhu",
+    "light": "Haske",
+    "dark": "Duhu",
+    "system": "Bi na'urata"
+  },
+  "logo": {
+    "home": "Shafin farko na constitution.ng"
+  },
+  "legalStatus": {
+    "current": "Dokar da ke aiki yanzu",
+    "proposed": "Shawarar canji - ba ta fara aiki ba tukuna",
+    "historical": "Tsohon tsari - an maye gurbinsa",
+    "warning": "Ba mu iya tabbatar da tushen yanzu ba"
+  },
+  "officialWording": "Kalmomin doka na hukuma",
+  "errorPage": {
+    "title": "Kuskure",
+    "oops": "Kai!",
+    "body": "Wani abu ya faru. Da fatan za a sake gwadawa.",
+    "home": "Koma shafin farko"
+  },
+  "notFound": {
+    "body": "Ba mu sami shafin da kake nema ba.",
+    "back": "Koma baya"
+  },
+  "footer": {
+    "tagline": "Kundin Tsarin Mulkin Najeriya da dokokin da aka wallafa"
+  },
+  "validation": {
+    "emailInvalid": "Adireshin imel ɗin bai yi daidai ba",
+    "passwordRequired": "Dole ne ka shigar da kalmar sirri",
+    "passwordMin": "Kalmar sirri dole ta kai haruffa 8 aƙalla",
+    "confirmRequired": "Sake rubuta kalmar sirri don tabbatarwa",
+    "passwordsMismatch": "Kalmomin sirrin biyu ba su yi daidai ba",
+    "fullNameRequired": "Dole ne ka shigar da cikakken sunanka"
+  }
+}

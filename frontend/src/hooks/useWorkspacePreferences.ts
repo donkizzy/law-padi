@@ -8,10 +8,14 @@ const schema = z.object({
   enterToSend: z.boolean().default(true),
   followLatest: z.boolean().default(true),
   openSources: z.boolean().default(false),
+  language: z
+    .enum(["auto", "english", "pidgin", "yoruba", "igbo", "hausa"])
+    .catch("english"),
 })
 export type WorkspacePreferences = z.infer<typeof schema>
 export const defaultPreferences = schema.parse({})
 let rawCache: string | null | undefined
+// Errors are `common` catalogue keys so the message follows the language.
 let snapshot = { preferences: defaultPreferences, error: null as string | null }
 
 function read() {
@@ -24,14 +28,13 @@ function read() {
       ? { preferences: result.data, error: null }
       : {
           preferences: defaultPreferences,
-          error:
-            "Preferences could not be read. Your browser data has been retained.",
+          error: "preferences.unreadable",
         }
   } catch {
     if (!snapshot.error)
       snapshot = {
         preferences: defaultPreferences,
-        error: "Browser storage is unavailable. Preferences cannot be saved.",
+        error: "preferences.storageUnavailable",
       }
   }
   return snapshot
@@ -71,8 +74,16 @@ export function savePreferences(value: WorkspacePreferences) {
 /** Replace this browser's preferences with the account's, without echoing back. */
 export const replacePreferences = writePreferences
 
+/** Reset to defaults, keeping the language: the account doesn't store it. */
 export function clearPreferences() {
-  localStorage.removeItem(preferencesKey)
+  const { language } = readPreferences()
+  if (language === defaultPreferences.language)
+    localStorage.removeItem(preferencesKey)
+  else
+    localStorage.setItem(
+      preferencesKey,
+      JSON.stringify({ ...defaultPreferences, language }),
+    )
   rawCache = undefined
   window.dispatchEvent(new Event(workspaceStorageEvent))
 }

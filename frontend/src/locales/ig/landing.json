@@ -1,0 +1,186 @@
+{
+  "skip": "Mafee gaa n'isi ihe",
+  "nav": {
+    "label": "Isi menu",
+    "backToTop": "constitution.ng, laghachi n'elu",
+    "howItWorks": "Otú o si arụ ọrụ",
+    "examples": "Ihe ndị mmadụ na-ajụ",
+    "faq": "Ajụjụ",
+    "ask": "Jụọ ajụjụ",
+    "openMenu": "Mepee menu",
+    "closeMenu": "Mechie menu"
+  },
+  "form": {
+    "empty": "Buru ụzọ pịnye ajụjụ ma ọ bụ nọmba nkebi.",
+    "tooLong": "Mee ka ajụjụ gị ghara ịgafe mkpụrụedemede 2,000.",
+    "label": "Ajụjụ gị gbasara Iwu Obodo",
+    "placeholder": "Ndị uwe ojii nwere ike inyocha ekwentị m?",
+    "submit": "Nye m azịza"
+  },
+  "hero": {
+    "kicker": "Iwu Obodo Naịjirịa na iwu ndị e bipụtara",
+    "line1": "Jụọ maka ikike gị.",
+    "line2": "Nweta kpọmkwem nkebi.",
+    "body": "Pịnye ajụjụ gị otú ị ga-esi kwuo ya. Anyị ga-achọta nkebi metụtara ya n'isi mmalite e bipụtara, kọwaa ha n'asụsụ dị mfe, ma gosi gị okwu iwu mbụ n'akụkụ ha.",
+    "available": "Ihe dị na mwepụta a: {{laws}}. Lelee mbipụta isi mmalite ọ bụla tupu ị dabere na ya.",
+    "pointsLabel": "Ọ bụ n'efu",
+    "points": [
+      "Ọ bụ n'efu",
+      "Ị chọghị akaụntụ",
+      "Azịza ọ bụla na-ezo aka na nkebi ya"
+    ]
+  },
+  "preview": {
+    "label": "Ọmụmaatụ azịza maka ajụjụ: ndị uwe ojii nwere ike inyocha ekwentị m?",
+    "question": "Ndị uwe ojii nwere ike inyocha ekwentị m?",
+    "answer": "Oku ekwentị gị na ozi gị bụ nzuzo n'okpuru Section 37. Ndị uwe ojii nwere ike ịgafe nke ahụ naanị n'okpuru iwu e mere maka ihe dị ka nchekwa ọha ma ọ bụ igbochi mpụ, dị ka Section 45 kwere.",
+    "sectionTitle": "Section 37 · Ikike inwe ndụ nzuzo na nke ezinụlọ",
+    "edition": "Nke a bụ Iwu Obodo 1999 dị ka e bipụtara ya n'afọ 2004. Mmezigharị ndị bịara mgbe e mesịrị adịbeghị n'ime ya."
+  },
+  "problem": {
+    "kicker": "Ihe mere o ji sie ike",
+    "title": "Ọ bụ maka ndị ọkàiwu ka e dere Iwu Obodo. Ajụjụ gị abụghị otú ahụ.",
+    "body": "O nwere nkebi 320 na usoro 7 n'asụsụ Bekee iwu siri ike. Okwu ị ga-achọ anaghị abụkarị okwu o ji.",
+    "pdfKicker": "Ịchọ na PDF",
+    "pdfTitle": "Ị chọrọ “phone”. Ọ dịghị ihe pụtara.",
+    "pdfBody": "Nkebi ị chọrọ na-ekwu maka “telephone conversations and telegraphic communications”, oke ya dịkwa nkebi asatọ mgbe e mesịrị.",
+    "appKicker": "Na constitution.ng",
+    "appTitle": "Ị jụrụ “ndị uwe ojii nwere ike inyocha ekwentị m?”",
+    "appBody": "Section 37 na-ebu ụzọ pụta, Section 45 na-esoro ya maka oke, azịza ahụ na-akọwakwa ha abụọ n'ahịrịokwu abụọ."
+  },
+  "tagline": [
+    "Iwu Obodo bụ nke onye Naịjirịa ọ bụla.",
+    "Ugbu a onye Naịjirịa ọ bụla nwere ike ịgụ ya."
+  ],
+  "benefits": {
+    "kicker": "Ihe ị ga-enweta",
+    "title": "Azịza ị ga-aghọta ma nyochaa",
+    "items": [
+      {
+        "title": "Jụọ n'okwu nke gị",
+        "body": "Okwu kwa ụbọchị, Pidgin ma ọ bụ nọmba nkebi i chetara ọkara. “Section thirty something about privacy” ka ga-achọta Section 37."
+      },
+      {
+        "title": "Azịza na-ebu ụzọ",
+        "body": "Ị ga-enweta azịza kpọmkwem nye ihe ị jụrụ, mgbe ahụ ihe ọ pụtara nye gị na ebe oke dị. Ọ dịghị okwu iwu siri ike ịghọta."
+      },
+      {
+        "title": "Okwu gọọmentị, mgbe niile",
+        "body": "Azịza ọ bụla na-egosi kpọmkwem ederede nkebi ndị ọ dabere na ha, ya na ntụaka e si n'isi mmalite e bipụtara wepụta."
+      },
+      {
+        "title": "Debe ihe ị chọtara",
+        "body": "Detuo azịza na ntụaka ya, chekwaa nkebi maka oge ọzọ, ma ọ bụ mepee ibe ahụ n'isi mmalite e bipụtara ka i nyochaa ya n'onwe gị."
+      }
+    ]
+  },
+  "steps": {
+    "kicker": "Otú o si arụ ọrụ",
+    "title": "Usoro atọ, ya na isi mmalite n'akụkụ gị",
+    "items": [
+      {
+        "title": "Jụọ ajụjụ gị",
+        "body": "Pịnye ya otú ị ga-esi jụọ enyi maara iwu. Nọmba nkebi na-arụkwa ọrụ."
+      },
+      {
+        "title": "Anyị na-achọta nkebi",
+        "body": "A na-atụnyere ajụjụ gị na mbipụta isi mmalite e bipụtara, gụnyere ndokwa ndị na-etinye oke n'ikike."
+      },
+      {
+        "title": "Gụọ azịza na isi mmalite",
+        "body": "Azịza dị mkpụmkpụ n'asụsụ dị mfe, ya na okwu gọọmentị nke nkebi ọ bụla n'asụsụ Bekee n'akụkụ ya."
+      }
+    ]
+  },
+  "proof": {
+    "kicker": "E wuru ya ka e nyochaa ya",
+    "title": "E jiri ajụjụ ndị mmadụ na-ajụ n'ezie nwalee ya",
+    "body": "Anyị na-anwale ịchọta nkebi site n'otú e si ekwu okwu kwa ụbọchị. Nke a bụ oke ule mbipụta isi mmalite e debere.",
+    "stats": [
+      {
+        "value": "54 n'ime 55",
+        "label": "ajụjụ kwa ụbọchị, n'asụsụ Bekee na Pidgin, butere nkebi a na-atụ anya ya n'ọnọdụ mbụ n'ule ịchọta nke 12 October 2026 e debere"
+      },
+      {
+        "value": "1,811",
+        "label": "akụkụ ederede isi mmalite na mbipụta 2004 e debere, jikọtara na ibe e bipụtara"
+      },
+      {
+        "value": "2004",
+        "label": "mbipụta isi mmalite; mmezigharị ndị bịara mgbe e mesịrị adịghị n'ime ya"
+      }
+    ],
+    "limits": "Ịchọta nke ọma anaghị atụ izi ezi nkọwa ma ọ bụ ma ọ kpuchiri iwu nke ugbu a. <methodology>Gụọ ule nwere ụbọchị na oke ya</methodology>.",
+    "try": "Nwaa otu n'ime ndị a",
+    "examples": [
+      "Ndị uwe ojii nwere ike inyocha ekwentị m?",
+      "Ogologo oge ole ka ndị uwe ojii nwere ike ijide m tupu ha akpọga m n'ụlọikpe?",
+      "Onye nwere ike ịgba ọsọ maka onye isi ala?",
+      "Enwere m ike inwe ala na steeti ọzọ?",
+      "wetin constitution talk about freedom of religion?",
+      "Gịnị ka Section 33 kwuru?"
+    ]
+  },
+  "faq": {
+    "kicker": "Ajụjụ",
+    "title": "Tupu ị jụọ",
+    "body": "Na nkenke: ọ bụ n'efu, ọ nọ onwe ya, ọ na-egosikwa gị isi mmalite mgbe niile.",
+    "items": [
+      {
+        "q": "Nke a ọ bụ ndụmọdụ iwu?",
+        "a": "Mba. constitution.ng na-akọwa isi mmalite iwu Naịjirịa e bipụtara ma na-egosi gị kpọmkwem nkebi. Ọ bụrụ na i nwere ikpe n'ụlọikpe, e jidere gị, ma ọ bụ i nwere esemokwu, gwa ọkàiwu ma ọ bụ Legal Aid Council okwu. Buru nkebi ndị ị chọtara ebe a gaa."
+      },
+      {
+        "q": "Ọ bụ n'efu?",
+        "a": "Ee. Ịjụ ajụjụ, ịchọta nkebi na ịgụ mbipụta isi mmalite e bipụtara bụ n'efu. Ọ dịghị atụmatụ ị ga-akwụ ụgwọ."
+      },
+      {
+        "q": "Achọrọ m akaụntụ?",
+        "a": "Mba. Ị nwere ike ịjụ ma gụọ dị ka ọbịa. Mepee akaụntụ naanị ma ọ bụrụ na ịchọrọ ka mkparịta ụka gị soro gị gaa na ngwaọrụ ọzọ."
+      },
+      {
+        "q": "Nke a ọ bụ Iwu Obodo nke ugbu a?",
+        "a": "Ọ bụ Iwu Obodo 1999 dị ka e bipụtara ya n'afọ 2004. Mmezigharị ndị a gafere mgbe ahụ adịbeghị n'ime ya, ya mere nkebi nwere ike ịgbanwela kemgbe ahụ. Azịza ọ bụla na-agwa gị nke a ka i nwee ike inyocha tupu ị dabere na ya."
+      },
+      {
+        "q": "Kedu iwu m nwere ike ịgụ?",
+        "a": "Onye nhọrọ iwu na-edepụta iwu dị na mwepụta i họọrọ. Iwu a ka na-enyocha adịghị ebe ahụ. Ndokwa ọ bụla na-egosi mbipụta isi mmalite ya. Act ndị e dere dị ka e si mee ha nwere ike ịbụ na e mezigharịrị ha; lelee isi mmalite mbụ na mgbanwe ndị bịara mgbe e mesịrị tupu ị dabere na ha."
+      },
+      {
+        "q": "Enwere m ike ịjụ na Pidgin?",
+        "a": "Ee. Jụọ ya otú ị ga-esi kwuo ya, n'asụsụ Bekee ma ọ bụ Pidgin, anyị ga-achọta nkebi ahụ. Ị nwekwara ike ịgbanwe saịtị ahụ gaa na Pidgin, Yorùbá, Hausa ma ọ bụ Igbo. Okwu gọọmentị na-abụ ederede Bekee mgbe niile."
+      },
+      {
+        "q": "Kedu otú unu si ahọrọ nkebi?",
+        "a": "A na-atụnyere ajụjụ gị na nkebi e bipụtara, na-eji ma okwu ị pịnyere ma ihe ị pụtara. Ntụaka na-esi n'ederede ahụ n'onwe ya, a naghị akọ ha, azịza ọ bụla na-edepụtakwa nkebi o ji ka i nwee ike ịgụ ha n'onwe gị."
+      },
+      {
+        "q": "Enwere m ike ịkọpịa okwu site n'azịza?",
+        "a": "Ee. Detuo azịza ọ bụla na ntụaka ya, ma ọ bụ chekwaa nkebi ị chọrọ. Zoo aka n'okwu gọọmentị, ọ bụghị nkọwa, mgbe izi ezi dị mkpa."
+      },
+      {
+        "q": "Nke a ọ bụ weebụsaịtị gọọmentị?",
+        "a": "Mba. constitution.ng nọ onwe ya. Ọ bụghị National Assembly ma ọ bụ ụlọ ọrụ gọọmentị ọ bụla bipụtara ya, ọ jikọkwaghị na ha."
+      }
+    ]
+  },
+  "final": {
+    "kicker": "N'efu, enweghị akaụntụ, enweghị ihe ị ga-etinye",
+    "title": "Jụọ ajụjụ mbụ gị",
+    "body": "Chọta nkebi e bipụtara gbasara ihe dị gị n'obi, ma gụọ okwu ha site n'isi mmalite.",
+    "browse": "Ma ọ bụ lelee nkebi e bipụtara"
+  },
+  "footer": {
+    "about": "Iwu Obodo Naịjirịa na iwu ndị e bipụtara. Ọ nọ onwe ya, ọ bụghị mbipụta gọọmentị. Nkọwa abụghị ndụmọdụ iwu.",
+    "label": "Ala ibe",
+    "links": {
+      "ask": "Jụọ ajụjụ",
+      "about": "Gbasara anyị na ndozi",
+      "methodology": "Otú anyị si anwale ịchọta",
+      "laws": "Lelee iwu e bipụtara",
+      "saved": "Nkebi i chekwara",
+      "login": "Banye",
+      "privacy": "Nzuzo"
+    }
+  }
+}

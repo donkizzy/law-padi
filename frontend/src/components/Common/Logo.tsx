@@ -1,4 +1,5 @@
 import { Link } from "@tanstack/react-router"
+import { useTranslation } from "react-i18next"
 
 import { cn } from "@/lib/utils"
 
@@ -48,6 +49,7 @@ export function Logo({
   className,
   asLink = true,
 }: LogoProps) {
+  const { t } = useTranslation()
   const content =
     variant === "icon" ? (
       <LogoMark className={className} />
@@ -77,7 +79,7 @@ export function Logo({
     <Link
       to="/"
       className="sq-md inline-flex min-w-0 items-center focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-ring/25"
-      aria-label="constitution.ng home"
+      aria-label={t("logo.home")}
     >
       {content}
     </Link>

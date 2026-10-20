@@ -1,0 +1,158 @@
+{
+  "home": {
+    "kicker": "Doka, cikin sauƙi",
+    "title": "Yi tambaya game da dokokin Najeriya.",
+    "intro": "Yi tambaya yadda kake magana. Za ka sami amsa mai sauƙin fahimta da ainihin sassan da ta fito daga ciki.",
+    "paused": "An dakatar da bayani na ɗan lokaci. Nemi sashe don ci gaba da karanta dokokin da aka wallafa.",
+    "suggestions": [
+      "'Yan sanda za su iya bincika wayata?",
+      "Har yaushe 'yan sanda za su iya tsare ni kafin a kai ni kotu?",
+      "Wa zai iya tsayawa takarar shugaban ƙasa?",
+      "Me Section 37 ta ce?"
+    ],
+    "disclaimer": "Amsoshi suna bayyana dokokin da aka wallafa cikin harshe mai sauƙi, kuma za su iya rasa wasu bayanai. Duba sassan da suka nuna, kuma ka yi magana da lauya game da al'amarinka."
+  },
+  "outcome": {
+    "clarification_required": "Wannan tambayar ta ƙunshi abubuwa da yawa a lokaci ɗaya. Gwada tambaya game da doka ɗaya, sashe ɗaya ko al'amari ɗaya.",
+    "validation_failed": "Ba mu iya tabbatar da cewa bayanin ya dace da tanade-tanaden da aka wallafa ba, don haka ga sassan da kansu.",
+    "provider_failure": "Babu bayani a yanzu. Ga sassan da aka wallafa da suka shafi lamarin.",
+    "budget_exhausted": "Mun kai iyakar bayani na yau. Ga sassan da aka wallafa da suka shafi lamarin.",
+    "capacity_exhausted": "Mutane da yawa suna yin tambayoyi yanzu. Ga rubutun da ya shafi lamarin; sake gwadawa bayan minti ɗaya.",
+    "cancelled": "Ka dakatar da wannan amsa.",
+    "closest": "Tanade-tanaden da aka wallafa ba su amsa wannan kai tsaye ba. Ga sassan da suka fi kusa da muka samu.",
+    "noSection": "Ba mu sami sashen da aka wallafa wanda ya amsa wannan ba. Gwada tambaya ta wata hanya, ko ka ambaci doka da sashe.",
+    "unfinished": "Ba mu iya kammala wannan amsa ba. Ga sassan da aka wallafa da suka shafi lamarin."
+  },
+  "errors": {
+    "unavailable": "Babu bayani na ɗan lokaci. Tambayarka tana nan; sake gwadawa ko ka nemi sassan da suka shafi lamarin.",
+    "dailyLimit": "Ka kai iyakar bayani na yau. Zai sake farawa da tsakar dare agogon Legas. Har yanzu za ka iya nema da karanta sassa.",
+    "busy": "Bayani yana da cunkoso yanzu. Sake gwadawa bayan minti ɗaya, ko ka nemi sassan da suka shafi lamarin.",
+    "sendFailed": "Wani abu ya faru yayin aika tambayarka. Duba haɗin intanet ɗinka ka sake gwadawa.",
+    "retry": "Sake aika tambayar",
+    "edit": "Gyara tambayar",
+    "findSections": "Nemi sassan da suka shafi lamarin"
+  },
+  "actions": {
+    "label": "Abin da za ka iya yi da amsar",
+    "copy": "Kwafa amsa tare da madogaru",
+    "copied": "An kwafa amsa da madogaru",
+    "copyFailed": "Ba a iya kwafa ba. Da fatan za a sake gwadawa.",
+    "saveSources": "Ajiye tushe",
+    "sourcesSaved": "An ajiye tushe",
+    "saveFailed": "Ba a iya ajiye tushe a kan wannan burauza ba.",
+    "export": "Fitar da amsa"
+  },
+  "answer": {
+    "label": "Amsa",
+    "dependsOn": "Amsar za ta iya dogara da",
+    "otherLaws": "Wasu dokoki ma sun shafi lamarin",
+    "otherLawsBody": "Waɗannan dokokin Najeriya ma sun shafi wannan. Ba sa nan tukuna, don haka ka duba su ko ka tambayi lauya kafin ka dogara da wannan amsa.",
+    "sources": "Tushe",
+    "notAdvice": "Wannan bayani ba shawarar doka ba ce.",
+    "moreAboutSection": "Ƙarin bayani game da wannan sashe",
+    "loadFailed": "Ba a iya buɗe wannan amsa ba."
+  },
+  "sources": {
+    "open": "Buɗe tushen {{citation}}",
+    "openTitled": "Buɗe {{citation}}: {{title}}",
+    "mayHelp": "Wasu sassan da za su iya taimakawa",
+    "used": "Sassan da aka yi amfani da su",
+    "othersCameUp_one": "Wani sashe 1 ya bayyana",
+    "othersCameUp_other": "Wasu sassa {{count}} sun bayyana",
+    "alsoRelated": "Su ma suna da alaƙa"
+  },
+  "gaps": {
+    "label": "Sassan da ba mu samu ba",
+    "title": "Ba mu sami komai ba"
+  },
+  "followUps": {
+    "label": "Tambayoyin da muke ba da shawara",
+    "title": "Za ka iya kuma tambaya"
+  },
+  "pending": {
+    "label": "Amsa tana zuwa",
+    "reading": "Ana karanta {{sources}}"
+  },
+  "progress": {
+    "finding": "Ana neman sassan da suka shafi lamarin…",
+    "writing": "Ana rubuta amsa mai sauƙin fahimta…",
+    "checking": "Ana sake duba amsar da tushenta…",
+    "reconnecting": "Ana sake haɗawa da tambayar da ka ajiye…",
+    "connectionLost": "Haɗi ya yanke. Ana sake haɗawa…",
+    "interrupted": "Haɗi ya katse. Muna duba ko amsarka ta kammala.",
+    "stopping": "Ana tsayarwa…"
+  },
+  "conversation": {
+    "confirmDelete": "A goge wannan tattaunawa? Ba za a iya dawo da ita ba.",
+    "titleLabel": "Taken tattaunawa",
+    "exportFailed": "Ba a iya fitar da tattaunawar gaba ɗaya ba. Sake gwadawa.",
+    "exporting": "Ana fitarwa…",
+    "export": "Fitar da tattaunawa",
+    "rename": "Sauya suna",
+    "delete": "Goge",
+    "unavailable": "Babu tattaunawar",
+    "loadOlder": "Buɗe tsofaffin saƙonni",
+    "stop": "Dakatar da amsa",
+    "jumpToLatest": "Je zuwa na ƙarshe"
+  },
+  "stream": {
+    "saved": "An ajiye tambayarka. Sake haɗawa ko duba matsayinta don ci gaba.",
+    "reconnect": "Sake haɗawa",
+    "checkStatus": "Duba matsayin amsa"
+  },
+  "composer": {
+    "label": "Tambayarka",
+    "placeholder": "Yi tambaya game da Kundin Tsarin Mulkin Najeriya da dokokin da aka wallafa…",
+    "explanation": "Amsoshi cikin harshe mai sauƙi",
+    "search": "Nemi cikin dokokin da aka wallafa",
+    "sending": "Ana aikawa",
+    "send": "Aika tambaya",
+    "enterHint": "Enter don aikawa · Shift+Enter don sabon layi",
+    "modEnterHint": "Ctrl/Cmd+Enter don aikawa"
+  },
+  "feedback": {
+    "label": "Ra'ayinka game da amsar",
+    "question": "Wannan ya taimaka?",
+    "helpful": "Ya taimaka",
+    "notHelpful": "Bai taimaka ba",
+    "thanks": "Mun gode da ra'ayinka.",
+    "failed": "Ba a iya ajiye ra'ayinka ba. Sake gwadawa."
+  },
+  "tasks": {
+    "label": "Zaɓi abin da kake son yi",
+    "checking": "Ana duba abubuwan da ke akwai…"
+  },
+  "find": {
+    "title": "Duba dokokin Najeriya da aka wallafa.",
+    "intro": "Nemi sashe ta lambarsa, ko ka bayyana al'amarin da kalmominka.",
+    "availabilityError": "Ba mu iya dubawa ko amsoshi masu sauƙin fahimta suna akwai ba. Har yanzu za ka iya nema da karanta sassa.",
+    "paused": "An dakatar da amsoshi masu sauƙin fahimta na ɗan lokaci. Har yanzu za ka iya nema da karanta sassa.",
+    "allEditions": "Duk bugu-bugun tushe da aka wallafa",
+    "placeholder": "Nemi wani batu ko madogara, misali Section 37 ko ACJA s.9…",
+    "suggestionsLabel": "Binciken da muke ba da shawara",
+    "suggestions": [
+      "'Yan sanda za su iya bincika wayata?",
+      "Section 35",
+      "'Yancin faɗar albarkacin baki",
+      "Wa zai iya tsayawa takarar shugaban ƙasa?",
+      "Mallakar fili a wata jiha"
+    ],
+    "loadFailed": "Ba a iya buɗe dokokin da aka wallafa ba"
+  },
+  "results": {
+    "label": "Sakamakon bincike",
+    "title": "Sakamako na “{{query}}”",
+    "searching": "Ana bincike cikin dokokin da aka wallafa…",
+    "unavailable": "Bincike ba ya aiki",
+    "unsupported": "Ba mu iya amfani da wannan madogara ba",
+    "none": "Ba a sami sashen da ya dace ba",
+    "noneHint": "Gwada wasu kalmomi, batu mai faɗi, ko lambar sashe kamar Section 35.",
+    "bestMatch": "Wanda ya fi dacewa",
+    "selected": "Sashen da ka zaɓa",
+    "inContext": ". An nuna shi gaba ɗaya don ka karanta {{citation}} tare da abin da ke kewaye da shi.",
+    "surroundingFailed": "Ba a iya buɗe sashen da ke kewaye da shi ba.",
+    "matchesLabel": "Abubuwan da suka dace da binciken",
+    "ambiguous": "Wanne kake nufi?",
+    "otherMatches": "Wasu sassan da suka dace"
+  }
+}

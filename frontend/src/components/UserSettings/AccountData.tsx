@@ -1,5 +1,6 @@
 import { useMutation } from "@tanstack/react-query"
 import { useState } from "react"
+import { useTranslation } from "react-i18next"
 import { toast } from "sonner"
 
 import { AccountService, UsersService } from "@/client"
@@ -19,6 +20,7 @@ import { handleError } from "@/utils"
 
 /** Download everything the account holds, or delete the account. */
 export function AccountData() {
+  const { t } = useTranslation("settings")
   const { user, logout } = useAuth()
   const { showErrorToast } = useCustomToast()
   const [confirmOpen, setConfirmOpen] = useState(false)
@@ -27,7 +29,7 @@ export function AccountData() {
     mutationFn: async () => (await AccountService.exportAccountData()).data,
     onSuccess: (data) => {
       downloadResearch("constitution-ng-account.json", data)
-      toast.success("Your account data is downloading")
+      toast.success(t("data.downloading"))
     },
     onError: handleError.bind(showErrorToast),
   })
@@ -36,7 +38,7 @@ export function AccountData() {
     mutationFn: () => UsersService.deleteUserMe(),
     onSuccess: () => {
       setConfirmOpen(false)
-      toast.success("Your account has been deleted")
+      toast.success(t("data.deleted"))
       void logout()
     },
     onError: handleError.bind(showErrorToast),
@@ -47,10 +49,9 @@ export function AccountData() {
   return (
     <div className="grid gap-5">
       <div className="grid gap-2">
-        <p className="text-body font-semibold">Download your data</p>
+        <p className="text-body font-semibold">{t("data.downloadTitle")}</p>
         <p className="text-sm text-muted-foreground">
-          A copy of everything your account holds: your profile, saved sections,
-          preferences, and every conversation with its messages.
+          {t("data.downloadBody")}
         </p>
         <div>
           <SquircleButton
@@ -59,26 +60,23 @@ export function AccountData() {
             loading={download.isPending}
             onClick={() => download.mutate()}
           >
-            Download my data
+            {t("data.download")}
           </SquircleButton>
         </div>
       </div>
 
       <div className="sq-md grid gap-2 border border-destructive/40 p-4">
         <p className="text-body font-semibold text-destructive">
-          Delete your account
+          {t("data.deleteTitle")}
         </p>
         {user.is_superuser ? (
           <p className="text-sm text-muted-foreground">
-            Administrator accounts can't delete themselves. Ask another
-            administrator to remove this account.
+            {t("data.adminCannotDelete")}
           </p>
         ) : (
           <>
             <p className="text-sm text-muted-foreground">
-              This permanently deletes your account, your conversations, saved
-              sections and preferences. Download your data first if you want a
-              copy.
+              {t("data.deleteBody")}
             </p>
             <div>
               <SquircleButton
@@ -86,7 +84,7 @@ export function AccountData() {
                 variant="danger"
                 onClick={() => setConfirmOpen(true)}
               >
-                Delete my account
+                {t("data.delete")}
               </SquircleButton>
             </div>
           </>
@@ -95,11 +93,8 @@ export function AccountData() {
 
       <Dialog open={confirmOpen} onOpenChange={setConfirmOpen}>
         <DialogContent>
-          <DialogTitle>Delete your account?</DialogTitle>
-          <DialogDescription>
-            Your account, conversations, saved sections and preferences will be
-            deleted for good. This can't be undone.
-          </DialogDescription>
+          <DialogTitle>{t("data.confirmTitle")}</DialogTitle>
+          <DialogDescription>{t("data.confirmBody")}</DialogDescription>
           <DialogFooter>
             <DialogClose asChild>
               <SquircleButton
@@ -107,7 +102,7 @@ export function AccountData() {
                 variant="outline"
                 disabled={remove.isPending}
               >
-                Keep my account
+                {t("data.keep")}
               </SquircleButton>
             </DialogClose>
             <SquircleButton
@@ -116,7 +111,7 @@ export function AccountData() {
               loading={remove.isPending}
               onClick={() => remove.mutate()}
             >
-              Delete my account
+              {t("data.delete")}
             </SquircleButton>
           </DialogFooter>
         </DialogContent>

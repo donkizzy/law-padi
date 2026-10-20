@@ -8,6 +8,7 @@ import {
   useRef,
   useState,
 } from "react"
+import { Trans, useTranslation } from "react-i18next"
 import {
   FiArrowRight,
   FiBookmark,
@@ -20,45 +21,38 @@ import {
 } from "react-icons/fi"
 
 import { Appearance } from "@/components/Common/Appearance"
+import { LanguageMenu } from "@/components/Common/LanguagePicker"
 import { Logo } from "@/components/Common/Logo"
 import { SquircleButton } from "@/components/LawPadi/primitives"
 import { useInView } from "@/hooks/useInView"
 import { useLegalInstruments } from "@/hooks/useLegalCorpus"
-import { faqs } from "@/lib/public-content"
 import { cn } from "@/lib/utils"
 
 // Heavy, springy motion used by every landing transition.
 const fluid = "transition-all duration-700 ease-[cubic-bezier(0.32,0.72,0,1)]"
 
 const navLinks = [
-  { id: "how-it-works", label: "How it works" },
-  { id: "examples", label: "What people ask" },
-  { id: "faq", label: "Questions" },
-]
-
-export const exampleQuestions = [
-  "Can police search my phone?",
-  "How long can police hold me before court?",
-  "Who can run for president?",
-  "Can I own land in another state?",
-  "wetin constitution talk about freedom of religion?",
-  "What does Section 33 say?",
-]
+  { id: "how-it-works", label: "nav.howItWorks" },
+  { id: "examples", label: "nav.examples" },
+  { id: "faq", label: "nav.faq" },
+] as const
 
 export function LandingPage() {
+  const { t, i18n } = useTranslation("landing")
   return (
     <div className="min-h-svh bg-background text-foreground" id="top">
       <a
         className="sq-sm fixed left-4 top-4 z-[60] -translate-y-24 bg-primary px-3 py-2 text-sm font-semibold text-primary-foreground focus-visible:translate-y-0 focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-ring/25"
         href="#main"
       >
-        Skip to content
+        {t("skip")}
       </a>
       <IslandNav />
       <main id="main">
         <Hero />
         <ProblemSection />
-        <TaglineReveal />
+        {/* Remount so the word observer sees the new language's words. */}
+        <TaglineReveal key={i18n.resolvedLanguage} />
         <Benefits />
         <HowItWorks />
         <Proof />
@@ -95,6 +89,7 @@ function useActiveSection(ids: string[]) {
 const sectionIds = navLinks.map((link) => link.id)
 
 function IslandNav() {
+  const { t } = useTranslation("landing")
   const [open, setOpen] = useState(false)
   const active = useActiveSection(sectionIds)
 
@@ -121,14 +116,14 @@ function IslandNav() {
     <>
       <header className="pointer-events-none fixed inset-x-0 top-0 z-50 px-4">
         <nav
-          aria-label="Main"
+          aria-label={t("nav.label")}
           className={cn(
             "sq-lg pointer-events-auto mx-auto mt-6 flex w-full max-w-max items-center gap-2 border border-border bg-card/75 py-2 pl-4 pr-2 shadow-[var(--shadow-subtle)] backdrop-blur-xl",
             fluid,
           )}
         >
           <a
-            aria-label="constitution.ng, back to top"
+            aria-label={t("nav.backToTop")}
             className="sq-sm mr-2 inline-flex focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-ring/25"
             href="#top"
           >
@@ -147,21 +142,22 @@ function IslandNav() {
                   )}
                   href={`#${link.id}`}
                 >
-                  {link.label}
+                  {t(link.label)}
                 </a>
               </li>
             ))}
           </ul>
+          <LanguageMenu />
           <div className="hidden md:block">
             <Appearance />
           </div>
           <SquircleButton asChild className="hidden sm:inline-flex" size="sm">
-            <RouterLink to="/">Ask a question</RouterLink>
+            <RouterLink to="/">{t("nav.ask")}</RouterLink>
           </SquircleButton>
           <button
             aria-controls="landing-menu"
             aria-expanded={open}
-            aria-label={open ? "Close menu" : "Open menu"}
+            aria-label={open ? t("nav.closeMenu") : t("nav.openMenu")}
             className="sq-sm relative grid size-10 place-items-center text-foreground hover:bg-secondary focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-ring/25 md:hidden"
             onClick={() => setOpen((value) => !value)}
             type="button"
@@ -197,7 +193,7 @@ function IslandNav() {
         inert={!open}
       >
         <ul className="flex h-full flex-col justify-center gap-2 px-8">
-          {[...navLinks, { id: "start", label: "Ask a question" }].map(
+          {[...navLinks, { id: "start", label: "nav.ask" } as const].map(
             (link, index) => (
               <li
                 className={cn(
@@ -216,7 +212,7 @@ function IslandNav() {
                   href={`#${link.id}`}
                   onClick={() => setOpen(false)}
                 >
-                  {link.label}
+                  {t(link.label)}
                 </a>
               </li>
             ),
@@ -300,6 +296,7 @@ function SectionIntro({
 }
 
 function QuestionForm({ className, ...props }: ComponentProps<"form">) {
+  const { t } = useTranslation("landing")
   const navigate = useNavigate()
   const [question, setQuestion] = useState("")
   const [error, setError] = useState<string | null>(null)
@@ -310,11 +307,11 @@ function QuestionForm({ className, ...props }: ComponentProps<"form">) {
     event.preventDefault()
     const value = question.trim()
     if (!value) {
-      setError("Type a question or a section number first.")
+      setError(t("form.empty"))
       return
     }
     if (value.length > 2000) {
-      setError("Keep your question under 2,000 characters.")
+      setError(t("form.tooLong"))
       return
     }
     void navigate({ to: "/", search: { q: value } })
@@ -328,7 +325,7 @@ function QuestionForm({ className, ...props }: ComponentProps<"form">) {
       {...props}
     >
       <label className="sr-only" htmlFor={inputId}>
-        Your question about the Constitution
+        {t("form.label")}
       </label>
       <div
         className={cn(
@@ -355,7 +352,7 @@ function QuestionForm({ className, ...props }: ComponentProps<"form">) {
               setQuestion(event.target.value)
               if (error) setError(null)
             }}
-            placeholder="Can police search my phone?"
+            placeholder={t("form.placeholder")}
             value={question}
           />
         </div>
@@ -364,7 +361,7 @@ function QuestionForm({ className, ...props }: ComponentProps<"form">) {
           size="lg"
           type="submit"
         >
-          Get my answer
+          {t("form.submit")}
           <FiArrowRight aria-hidden className="size-4" />
         </SquircleButton>
       </div>
@@ -408,6 +405,7 @@ function QuestionLink({
 /* Hero */
 
 function Hero() {
+  const { t } = useTranslation("landing")
   const instruments = useLegalInstruments()
   return (
     <section
@@ -417,46 +415,45 @@ function Hero() {
       <div className="min-w-0">
         <Reveal>
           <p className="mb-4 text-overline uppercase text-primary">
-            Nigeria&apos;s Constitution and published laws
+            {t("hero.kicker")}
           </p>
           <h1
             className="max-w-[680px] font-display text-title-1 text-balance text-foreground sm:text-display"
             id="hero-title"
           >
-            <span className="block text-balance">Ask about your rights.</span>
-            <span className="block text-balance">Get the exact section.</span>
+            <span className="block text-balance">{t("hero.line1")}</span>
+            <span className="block text-balance">{t("hero.line2")}</span>
           </h1>
           <p className="mt-6 max-w-[680px] text-body-lg text-pretty text-muted-foreground">
-            Type your question the way you would say it. We find relevant
-            sections in the published sources, explain them in plain English and
-            show you the original wording beside them.
+            {t("hero.body")}
           </p>
         </Reveal>
         <Reveal className="mt-8" delay={120}>
           <QuestionForm id="start" />
           {instruments.data && (
             <p className="mt-4 text-label font-normal text-muted-foreground">
-              Available in this release:{" "}
-              {instruments.data.data
-                .map((law) => law.short_title || law.title)
-                .join(", ")}
-              . Check each source edition before relying on it.
+              {t("hero.available", {
+                laws: instruments.data.data
+                  .map((law) => law.short_title || law.title)
+                  .join(", "),
+              })}
             </p>
           )}
           <ul
-            aria-label="Free to use"
+            aria-label={t("hero.pointsLabel")}
             className="mt-5 flex flex-wrap gap-x-5 gap-y-2 text-label font-normal text-muted-foreground"
           >
-            {[
-              "Free to use",
-              "No account needed",
-              "Every answer cites its section",
-            ].map((item) => (
-              <li className="flex items-center gap-1.5" key={item}>
-                <FiCheckCircle aria-hidden className="size-3.5 text-primary" />
-                {item}
-              </li>
-            ))}
+            {(t("hero.points", { returnObjects: true }) as string[]).map(
+              (item) => (
+                <li className="flex items-center gap-1.5" key={item}>
+                  <FiCheckCircle
+                    aria-hidden
+                    className="size-3.5 text-primary"
+                  />
+                  {item}
+                </li>
+              ),
+            )}
           </ul>
         </Reveal>
       </div>
@@ -468,22 +465,19 @@ function Hero() {
 }
 
 function AnswerPreview() {
+  const { t } = useTranslation("landing")
   return (
     <figure
-      aria-label="Example answer to the question: can police search my phone?"
+      aria-label={t("preview.label")}
       className="sq-xxl border border-border bg-secondary/70 p-3 shadow-[var(--shadow-soft)] sm:p-4"
     >
       <div className="flex justify-end">
         <p className="sq-lg max-w-[85%] bg-primary px-4 py-3 text-body text-primary-foreground">
-          Can police search my phone?
+          {t("preview.question")}
         </p>
       </div>
       <div className="sq-xl mt-3 border border-border bg-card p-5">
-        <p className="text-body-lg text-foreground">
-          Your phone calls and messages are private under Section 37. Police can
-          only override that under a law made for reasons like public safety or
-          preventing crime, as Section 45 allows.
-        </p>
+        <p className="text-body-lg text-foreground">{t("preview.answer")}</p>
         <div className="mt-4 flex flex-wrap gap-2">
           {["Section 37", "Section 45"].map((label) => (
             <span
@@ -495,10 +489,11 @@ function AnswerPreview() {
           ))}
         </div>
         <div className="sq-lg mt-5 border border-border bg-background/60 p-4">
-          <p className="text-label text-primary">
-            Section 37 · Right to private and family life
-          </p>
-          <blockquote className="mt-2 border-l-2 border-primary/35 pl-3 font-legal text-statute-sm text-foreground/90">
+          <p className="text-label text-primary">{t("preview.sectionTitle")}</p>
+          <blockquote
+            lang="en"
+            className="mt-2 border-l-2 border-primary/35 pl-3 font-legal text-statute-sm text-foreground/90"
+          >
             The privacy of citizens, their homes, correspondence, telephone
             conversations and telegraphic communications is hereby guaranteed
             and protected.
@@ -506,10 +501,7 @@ function AnswerPreview() {
         </div>
         <p className="mt-4 flex gap-2 text-label font-normal text-muted-foreground">
           <FiInfo aria-hidden className="mt-0.5 size-4 shrink-0" />
-          <span>
-            This is the 1999 Constitution as published in 2004. Later amendments
-            aren&apos;t included yet.
-          </span>
+          <span>{t("preview.edition")}</span>
         </p>
       </div>
     </figure>
@@ -519,6 +511,7 @@ function AnswerPreview() {
 /* Problem to solution */
 
 function ProblemSection() {
+  const { t } = useTranslation("landing")
   return (
     <section
       aria-labelledby="problem-title"
@@ -526,24 +519,21 @@ function ProblemSection() {
     >
       <SectionIntro
         id="problem-title"
-        kicker="Why it is hard"
-        title="The Constitution is written for lawyers. Your question is not."
+        kicker={t("problem.kicker")}
+        title={t("problem.title")}
       >
-        It runs to 320 sections and 7 schedules of formal legal English. The
-        words you would search for are rarely the words it uses.
+        {t("problem.body")}
       </SectionIntro>
       <div className="mt-12 grid gap-4 md:grid-cols-2">
         <Reveal className="sq-xl border border-border bg-card p-6 sm:p-8">
           <p className="text-overline uppercase text-muted-foreground">
-            Searching the PDF
+            {t("problem.pdfKicker")}
           </p>
           <p className="mt-4 font-display text-title-3 text-foreground">
-            You search for “phone”. Nothing comes up.
+            {t("problem.pdfTitle")}
           </p>
           <p className="mt-3 text-body text-muted-foreground">
-            The section you need talks about “telephone conversations and
-            telegraphic communications”, and the limits on it sit eight sections
-            later.
+            {t("problem.pdfBody")}
           </p>
         </Reveal>
         <Reveal
@@ -551,14 +541,13 @@ function ProblemSection() {
           delay={120}
         >
           <p className="text-overline uppercase text-accent-foreground">
-            With constitution.ng
+            {t("problem.appKicker")}
           </p>
           <p className="mt-4 font-display text-title-3 text-foreground">
-            You ask “can police search my phone?”
+            {t("problem.appTitle")}
           </p>
           <p className="mt-3 text-body text-accent-foreground">
-            Section 37 comes first, Section 45 comes with it for the limits, and
-            the answer explains both in two sentences.
+            {t("problem.appBody")}
           </p>
         </Reveal>
       </div>
@@ -568,12 +557,9 @@ function ProblemSection() {
 
 /* Tagline reveal */
 
-const taglineLines = [
-  "The Constitution belongs to every Nigerian.",
-  "Now every Nigerian can read it.",
-]
-
 function TaglineReveal() {
+  const { t } = useTranslation("landing")
+  const taglineLines = t("tagline", { returnObjects: true }) as string[]
   const containerRef = useRef<HTMLHeadingElement | null>(null)
   const [lit, setLit] = useState<Set<number>>(() => new Set())
 
@@ -643,30 +629,15 @@ function TaglineReveal() {
 
 /* Benefits */
 
-const benefits = [
-  {
-    icon: FiMessageCircle,
-    title: "Ask in your own words",
-    body: "Plain English, Pidgin or a half remembered section number. “Section thirty something about privacy” still finds Section 37.",
-  },
-  {
-    icon: FiCheckCircle,
-    title: "The answer comes first",
-    body: "You get a direct reply to what you asked, then what it means for you and where the limits are. No legal jargon to decode.",
-  },
-  {
-    icon: FiBookOpen,
-    title: "The official wording, every time",
-    body: "Every answer shows the exact text of the sections it relies on, with citations taken from the published source.",
-  },
-  {
-    icon: FiBookmark,
-    title: "Keep what you find",
-    body: "Copy an answer with its citations, save sections for later, or open the page in the printed source to check it yourself.",
-  },
-]
+const benefitIcons = [FiMessageCircle, FiCheckCircle, FiBookOpen, FiBookmark]
+
+type Copy = { title: string; body: string }
 
 function Benefits() {
+  const { t } = useTranslation("landing")
+  const benefits = (t("benefits.items", { returnObjects: true }) as Copy[]).map(
+    (item, position) => ({ ...item, icon: benefitIcons[position] }),
+  )
   return (
     <section
       aria-labelledby="benefits-title"
@@ -674,8 +645,8 @@ function Benefits() {
     >
       <SectionIntro
         id="benefits-title"
-        kicker="What you get"
-        title="Answers you can understand and check"
+        kicker={t("benefits.kicker")}
+        title={t("benefits.title")}
       />
       <ul className="mt-12 grid gap-4 sm:grid-cols-2">
         {benefits.map((benefit, position) => (
@@ -703,22 +674,9 @@ function Benefits() {
 
 /* How it works */
 
-const steps = [
-  {
-    title: "Ask your question",
-    body: "Type it as you would ask a friend who knows the law. A section number works too.",
-  },
-  {
-    title: "We find the sections",
-    body: "Your question is matched against the published source edition, including provisions that limit a right.",
-  },
-  {
-    title: "Read the answer and the source",
-    body: "A short answer in plain English, with the official wording of each section right beside it.",
-  },
-]
-
 function HowItWorks() {
+  const { t } = useTranslation("landing")
+  const steps = t("steps.items", { returnObjects: true }) as Copy[]
   return (
     <section
       aria-labelledby="how-it-works-title"
@@ -728,8 +686,8 @@ function HowItWorks() {
       <div className="mx-auto w-full max-w-7xl px-4 py-24 sm:px-6">
         <SectionIntro
           id="how-it-works-title"
-          kicker="How it works"
-          title="Three steps, with sources beside you"
+          kicker={t("steps.kicker")}
+          title={t("steps.title")}
         />
         <ol className="mt-12 grid gap-4 md:grid-cols-3">
           {steps.map((step, position) => (
@@ -758,24 +716,12 @@ function HowItWorks() {
 
 /* Proof */
 
-const stats = [
-  {
-    value: "54 of 55",
-    label:
-      "everyday questions, in English and Pidgin, put an expected section first in the retained 12 October 2026 retrieval test",
-  },
-  {
-    value: "1,811",
-    label:
-      "source passages in the retained 2004 edition, linked to printed pages",
-  },
-  {
-    value: "2004",
-    label: "source edition; later amendments are not included",
-  },
-]
-
 function Proof() {
+  const { t } = useTranslation("landing")
+  const stats = t("proof.stats", { returnObjects: true }) as {
+    value: string
+    label: string
+  }[]
   return (
     <section
       aria-labelledby="examples-title"
@@ -784,11 +730,10 @@ function Proof() {
     >
       <SectionIntro
         id="examples-title"
-        kicker="Built to be checked"
-        title="Tested on the questions people really ask"
+        kicker={t("proof.kicker")}
+        title={t("proof.title")}
       >
-        We test section retrieval with everyday phrasing. Here is the scope of
-        the retained source-edition test.
+        {t("proof.body")}
       </SectionIntro>
       <dl className="mt-12 grid gap-4 md:grid-cols-3">
         {stats.map((stat, position) => (
@@ -810,23 +755,31 @@ function Proof() {
         ))}
       </dl>
       <p className="mt-6 text-body text-muted-foreground">
-        Retrieval hits do not measure explanation accuracy or current-law
-        coverage.{" "}
-        <RouterLink className="text-primary underline" to="/methodology">
-          Read the dated test and its limits
-        </RouterLink>
-        .
+        <Trans
+          components={{
+            methodology: (
+              <RouterLink
+                className="text-primary underline"
+                to="/methodology"
+              />
+            ),
+          }}
+          i18nKey="proof.limits"
+          ns="landing"
+        />
       </p>
       <Reveal className="mt-16">
         <h3 className="text-overline uppercase text-muted-foreground">
-          Try one of these
+          {t("proof.try")}
         </h3>
         <ul className="mt-4 flex flex-wrap gap-2">
-          {exampleQuestions.map((question) => (
-            <li key={question}>
-              <QuestionLink question={question} />
-            </li>
-          ))}
+          {(t("proof.examples", { returnObjects: true }) as string[]).map(
+            (question) => (
+              <li key={question}>
+                <QuestionLink question={question} />
+              </li>
+            ),
+          )}
         </ul>
       </Reveal>
     </section>
@@ -836,6 +789,11 @@ function Proof() {
 /* FAQ */
 
 function Faq() {
+  const { t } = useTranslation("landing")
+  const faqs = t("faq.items", { returnObjects: true }) as {
+    q: string
+    a: string
+  }[]
   return (
     <section
       aria-labelledby="faq-title"
@@ -846,11 +804,10 @@ function Faq() {
         <SectionIntro
           className="lg:sticky lg:top-32 lg:self-start"
           id="faq-title"
-          kicker="Questions"
-          title="Before you ask"
+          kicker={t("faq.kicker")}
+          title={t("faq.title")}
         >
-          The short version: it is free, it is independent, and it always shows
-          you the source.
+          {t("faq.body")}
         </SectionIntro>
         <div className="grid gap-3">
           {faqs.map((item, position) => (
@@ -887,6 +844,7 @@ function Faq() {
 /* Final call to action */
 
 function FinalCta() {
+  const { t } = useTranslation("landing")
   return (
     <section
       aria-labelledby="final-title"
@@ -894,24 +852,23 @@ function FinalCta() {
     >
       <Reveal className="mx-auto flex max-w-[680px] flex-col items-center text-center">
         <p className="mb-3 text-overline uppercase text-primary">
-          Free, no account, nothing to install
+          {t("final.kicker")}
         </p>
         <h2
           className="font-display text-title-2 text-balance text-foreground sm:text-title-1"
           id="final-title"
         >
-          Ask your first question
+          {t("final.title")}
         </h2>
         <p className="mt-4 text-body-lg text-pretty text-muted-foreground">
-          Find the published sections about the thing on your mind, and read
-          their source wording.
+          {t("final.body")}
         </p>
         <QuestionForm className="mt-8 text-left" />
         <RouterLink
           className="sq-sm mt-6 inline-flex items-center gap-1.5 px-2 py-1 text-sm font-semibold text-[color:var(--legal-blue)] hover:underline focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-ring/25"
           to="/laws"
         >
-          Or browse the published sections
+          {t("final.browse")}
           <FiArrowRight aria-hidden className="size-3.5" />
         </RouterLink>
       </Reveal>
@@ -922,27 +879,27 @@ function FinalCta() {
 /* Footer */
 
 const footerLinks = [
-  { label: "Ask a question", to: "/" },
-  { label: "About and corrections", to: "/about" },
-  { label: "Retrieval methodology", to: "/methodology" },
-  { label: "Browse published laws", to: "/laws" },
-  { label: "Saved sections", to: "/saved" },
-  { label: "Sign in", to: "/login" },
-  { label: "Privacy", to: "/privacy" },
+  { label: "ask", to: "/" },
+  { label: "about", to: "/about" },
+  { label: "methodology", to: "/methodology" },
+  { label: "laws", to: "/laws" },
+  { label: "saved", to: "/saved" },
+  { label: "login", to: "/login" },
+  { label: "privacy", to: "/privacy" },
 ] as const
 
 function SiteFooter() {
+  const { t } = useTranslation("landing")
   return (
     <footer className="border-t border-border bg-sidebar">
       <div className="mx-auto grid w-full max-w-7xl gap-8 px-4 py-12 sm:px-6 md:grid-cols-[1.4fr_1fr]">
         <div>
           <Logo asLink={false} className="h-5" />
           <p className="mt-4 max-w-md text-body text-pretty text-muted-foreground">
-            Nigeria&apos;s Constitution and published laws. Independent, and not
-            a government publication. Explanations are not legal advice.
+            {t("footer.about")}
           </p>
         </div>
-        <nav aria-label="Footer">
+        <nav aria-label={t("footer.label")}>
           <ul className="grid gap-2 sm:grid-cols-2">
             {footerLinks.map((link) => (
               <li key={link.to}>
@@ -950,7 +907,7 @@ function SiteFooter() {
                   className="sq-xs text-body text-muted-foreground hover:text-foreground focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-ring/25"
                   to={link.to}
                 >
-                  {link.label}
+                  {t(`footer.links.${link.label}`)}
                 </RouterLink>
               </li>
             ))}

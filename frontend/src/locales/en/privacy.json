@@ -1,0 +1,47 @@
+{
+  "kicker": "Privacy",
+  "title": "How we handle your data.",
+  "intro": "What constitution.ng keeps, why, for how long, and what you can do about it. Last updated 16 October 2026.",
+  "noAccount": {
+    "title": "You don't need an account",
+    "body": "You can ask questions, browse the Constitution and save sections without signing up. An account only adds one thing: your conversations and saved sections follow you to any device."
+  },
+  "keep": {
+    "title": "What we keep",
+    "questions": "<strong>Your questions and answers.</strong> Conversations are stored so you can come back to them. If you're a guest, they're tied to a cookie on this browser.",
+    "account": "<strong>Your account, if you make one.</strong> Your email address, your name if you give it, and your password, stored only as a one-way hash we can't read.",
+    "saved": "<strong>Saved sections and preferences.</strong> Kept on your browser. Once you confirm your email, they're also kept in your account.",
+    "feedback": "<strong>Feedback you choose to give</strong> on an answer.",
+    "security": "<strong>Security records.</strong> A sign-in cookie, and short-lived counts of sign-in attempts keyed to a scrambled form of your IP address or email, so we can stop people guessing passwords.",
+    "advice": "Please don't put personal details in your questions that you don't need to. Ask about the situation, not the names."
+  },
+  "why": {
+    "title": "Why we keep it",
+    "body": "Only to run the service you asked for: answering your questions, keeping your research, signing you in safely, and fixing problems. We don't sell your data or use it for advertising."
+  },
+  "processors": {
+    "title": "Who else handles it",
+    "cloudflare": "<strong>Cloudflare</strong> delivers the website and passes your requests to our servers.",
+    "render": "<strong>Render</strong> runs our servers in the United States.",
+    "neon": "<strong>Neon</strong> stores our database.",
+    "deepseek": "<strong>DeepSeek</strong> receives your question and the relevant parts of the Constitution when plain-language explanations are switched on, so it can write the explanation. It doesn't receive your name, email or account details.",
+    "email": "<strong>Our email provider</strong> sends sign-up and password emails to your address.",
+    "abroad": "Some of these services are outside Nigeria, so your data may be processed abroad. We only share what each service needs to do its job."
+  },
+  "retention": {
+    "title": "How long we keep it",
+    "guest": "Guest conversations are deleted after 30 days without use.",
+    "account": "Account conversations, saved sections and preferences are kept until you delete them or your account.",
+    "sessions": "Sign-in sessions end after 30 days without use, or when you sign out. Sign-in attempt counts are cleared within a day."
+  },
+  "rights": {
+    "title": "Your rights",
+    "body": "Under the Nigeria Data Protection Act 2023 you can ask to see, correct, move or delete your data, object to how we use it, and withdraw your consent. Most of this you can do yourself:",
+    "download": "Download everything your account holds, or delete your account, in <settings>Settings</settings>.",
+    "change": "Change your name or email in Settings.",
+    "delete": "Delete any conversation from the conversation list.",
+    "clear": "Clear what's saved on this browser in Settings, under Security.",
+    "contact": "For anything else, email <email>{{email}}</email>.",
+    "complain": "If you're unhappy with how we've handled your data, you can complain to the <ndpc>Nigeria Data Protection Commission</ndpc>."
+  }
+}

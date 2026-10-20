@@ -16,10 +16,9 @@ let cachedRaw: string | null | undefined
 let cached = initialSnapshot
 const listeners = new Set<() => void>()
 
-const unreadable =
-  "Saved bookmarks could not be read. Their browser data has been retained."
-const unavailable =
-  "Browser storage is unavailable. Saved provisions cannot be loaded."
+// Errors are `common` catalogue keys so the message follows the language.
+const unreadable = "saved.unreadable"
+const unavailable = "saved.storageUnavailable"
 
 function read() {
   let raw: string | null

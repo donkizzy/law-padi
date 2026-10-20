@@ -8,6 +8,7 @@ import { ThemeProvider } from "./components/theme-provider"
 import { Toaster } from "./components/ui/sonner"
 import "./index.css"
 import { stopAccountSync } from "./lib/account-sync"
+import { initI18n } from "./lib/i18n"
 import { queryClient } from "./lib/query-client"
 import {
   getAccessToken,
@@ -91,7 +92,8 @@ subscribeSession(() => {
   void router.invalidate()
 })
 
-void initSession().finally(() => {
+// A failed catalogue load falls back to English rather than blocking the app.
+void Promise.allSettled([initSession(), initI18n()]).finally(() => {
   document.querySelectorAll("[data-public-head]").forEach((node) => {
     node.remove()
   })

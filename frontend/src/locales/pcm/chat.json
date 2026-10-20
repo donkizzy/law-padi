@@ -1,0 +1,158 @@
+{
+  "home": {
+    "kicker": "Law wey easy to understand",
+    "title": "Ask about Naija laws.",
+    "intro": "Ask am as you take talk am. You go get answer wey clear, plus di exact sections wey e come from.",
+    "paused": "Explanations don pause small. Find section make you continue to read di laws wey dem publish.",
+    "suggestions": [
+      "Police fit search my phone?",
+      "How long police fit hold me before dem carry me go court?",
+      "Who fit run for president?",
+      "Wetin Section 37 talk?"
+    ],
+    "disclaimer": "Di answers dey explain di published laws for simple language, and dem fit miss some details. Check di sections wey dem link, and talk to lawyer about your own matter."
+  },
+  "outcome": {
+    "clarification_required": "Dat question cover too many things at once. Ask about one law, one section or one matter.",
+    "validation_failed": "We no fit confirm say di explanation match di published provisions, so na di sections themselves be dis.",
+    "provider_failure": "Explanations no dey available now. Na di sections wey concern am be dis.",
+    "budget_exhausted": "We don reach today limit for explanations. Na di sections wey concern am be dis.",
+    "capacity_exhausted": "Plenty people dey ask question now. Na di text wey concern am be dis; try again after one minute.",
+    "cancelled": "You stop dis answer.",
+    "closest": "Di published provisions no too answer dis one direct. Na di sections wey near am pass be dis.",
+    "noSection": "We no find any published section wey answer dis. Ask am another way, or name di law and di section.",
+    "unfinished": "We no fit finish dis answer. Na di sections wey concern am be dis."
+  },
+  "errors": {
+    "unavailable": "Explanations no dey available for now. Your question still dey here; try again or find di sections wey concern am.",
+    "dailyLimit": "You don use finish your explanations for today. E go start again for midnight Lagos time. You still fit find and read sections.",
+    "busy": "Explanations dey busy now. Try again after one minute, or find di sections wey concern am.",
+    "sendFailed": "Something spoil as we dey send your question. Check your network and try again.",
+    "retry": "Send di question again",
+    "edit": "Change di question",
+    "findSections": "Find di sections wey concern am"
+  },
+  "actions": {
+    "label": "Wetin you fit do with di answer",
+    "copy": "Copy answer with di citations",
+    "copied": "Answer and citations don copy",
+    "copyFailed": "E no copy. Abeg try again.",
+    "saveSources": "Save di sources",
+    "sourcesSaved": "Sources don save",
+    "saveFailed": "We no fit save di sources for dis browser.",
+    "export": "Export di answer"
+  },
+  "answer": {
+    "label": "Answer",
+    "dependsOn": "Di answer fit depend on",
+    "otherLaws": "Other laws still dey apply",
+    "otherLawsBody": "Dis Naija laws still cover dis matter. Dem never dey here, so check dem or ask lawyer before you rely on dis answer.",
+    "sources": "Sources",
+    "notAdvice": "Dis explanation no be legal advice.",
+    "moreAboutSection": "More about dis section",
+    "loadFailed": "Dis answer no fit load."
+  },
+  "sources": {
+    "open": "Open {{citation}} source",
+    "openTitled": "Open {{citation}}: {{title}}",
+    "mayHelp": "Other sections wey fit help",
+    "used": "Sections wey we use",
+    "othersCameUp_one": "1 other section show",
+    "othersCameUp_other": "{{count}} other sections show",
+    "alsoRelated": "Dem still relate"
+  },
+  "gaps": {
+    "label": "Sections wey we no find",
+    "title": "We no find everything"
+  },
+  "followUps": {
+    "label": "Questions wey you fit ask",
+    "title": "You fit still ask"
+  },
+  "pending": {
+    "label": "Answer dey come",
+    "reading": "We dey read {{sources}}"
+  },
+  "progress": {
+    "finding": "We dey find di sections wey concern am…",
+    "writing": "We dey write answer wey clear…",
+    "checking": "We dey check di answer again against di sources…",
+    "reconnecting": "We dey connect back to di question wey you save…",
+    "connectionLost": "Network cut. We dey connect back…",
+    "interrupted": "Di connection cut. We dey check whether your answer don finish.",
+    "stopping": "E dey stop…"
+  },
+  "conversation": {
+    "confirmDelete": "Delete dis conversation? You no fit bring am back.",
+    "titleLabel": "Conversation title",
+    "exportFailed": "We no fit export di whole conversation. Try again.",
+    "exporting": "E dey export…",
+    "export": "Export chat",
+    "rename": "Change name",
+    "delete": "Delete",
+    "unavailable": "Conversation no dey available",
+    "loadOlder": "Load old messages",
+    "stop": "Stop di answer",
+    "jumpToLatest": "Go di latest one"
+  },
+  "stream": {
+    "saved": "Your question don save. Connect back or check where e reach to continue.",
+    "reconnect": "Connect back",
+    "checkStatus": "Check where di answer reach"
+  },
+  "composer": {
+    "label": "Your question",
+    "placeholder": "Ask about Naija Constitution and di laws wey dem publish…",
+    "explanation": "Answers for simple language",
+    "search": "Search di published laws",
+    "sending": "E dey send",
+    "send": "Send question",
+    "enterHint": "Enter to send · Shift+Enter for new line",
+    "modEnterHint": "Ctrl/Cmd+Enter to send"
+  },
+  "feedback": {
+    "label": "Wetin you think about di answer",
+    "question": "E help you?",
+    "helpful": "E help",
+    "notHelpful": "E no help",
+    "thanks": "Thank you for telling us.",
+    "failed": "We no fit save wetin you talk. Try again."
+  },
+  "tasks": {
+    "label": "Choose wetin you wan do",
+    "checking": "We dey check wetin dey available…"
+  },
+  "find": {
+    "title": "Check Naija laws wey dem publish.",
+    "intro": "Find section by number, or describe di matter as you take talk am.",
+    "availabilityError": "We no fit check whether answers wey clear dey available. You still fit find and read sections.",
+    "paused": "Answers wey clear don pause small. You still fit find and read sections.",
+    "allEditions": "All di source editions wey dem publish",
+    "placeholder": "Find topic or reference, like Section 37 or ACJA s.9…",
+    "suggestionsLabel": "Searches wey you fit try",
+    "suggestions": [
+      "Police fit search my phone?",
+      "Section 35",
+      "Freedom to talk wetin you think",
+      "Who fit run for president?",
+      "To get land for another state"
+    ],
+    "loadFailed": "Di published laws no load"
+  },
+  "results": {
+    "label": "Search results",
+    "title": "Results for “{{query}}”",
+    "searching": "We dey search di published laws…",
+    "unavailable": "Search no dey work now",
+    "unsupported": "We no fit handle dat reference",
+    "none": "No section match",
+    "noneHint": "Try another words, bigger topic, or section number like Section 35.",
+    "bestMatch": "Di one wey match pass",
+    "selected": "Section wey you pick",
+    "inContext": ". We show di whole thing so you fit read {{citation}} with wetin surround am.",
+    "surroundingFailed": "Di section wey surround am no load.",
+    "matchesLabel": "Wetin match di search",
+    "ambiguous": "Which one you mean?",
+    "otherMatches": "Other sections wey match"
+  }
+}

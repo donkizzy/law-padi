@@ -1,4 +1,5 @@
 import { Link as RouterLink } from "@tanstack/react-router"
+import { useTranslation } from "react-i18next"
 import { FiChevronDown, FiLogOut, FiSettings } from "react-icons/fi"
 
 import { Avatar, AvatarFallback } from "@/components/ui/avatar"
@@ -41,6 +42,7 @@ function UserInfo({ fullName, email }: UserInfoProps) {
 }
 
 export function User({ user }: { user: any }) {
+  const { t } = useTranslation()
   const { logout } = useAuth()
   const { isMobile, setOpenMobile } = useSidebar()
 
@@ -82,12 +84,12 @@ export function User({ user }: { user: any }) {
             <RouterLink to="/settings" onClick={handleMenuClick}>
               <DropdownMenuItem>
                 <FiSettings />
-                User Settings
+                {t("nav.userSettings")}
               </DropdownMenuItem>
             </RouterLink>
             <DropdownMenuItem onClick={handleLogout}>
               <FiLogOut />
-              Log Out
+              {t("auth.logOut")}
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>

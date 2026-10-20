@@ -1,0 +1,18 @@
+{
+  "constitution": "Constitution",
+  "lawAsEnacted": "{{law}} (as dem pass am)",
+  "asEnacted": "As dem pass am",
+  "constitutionEdition": "1999 Constitution ({{year}} edition)",
+  "constitutionName": "1999 Constitution",
+  "publishedEditions": "Source editions wey dem publish",
+  "lawNote": "{{law}}: Na as dem pass am, dem fit don amend am.",
+  "asEnactedNote": "Na as dem pass am, dem fit don amend am.",
+  "constitutionNote": "Dis na di 1999 Constitution as dem publish am for {{year}}. Amendments wey come after never dey inside, so one section fit don change since.",
+  "constitutionNoteUndated": "Amendments wey come after for di Constitution never dey inside, so one section fit don change since.",
+  "yearEdition": "{{year}} edition",
+  "earlierEdition": "Old edition",
+  "proposed": "Change wey dem propose",
+  "current": "Dey work now",
+  "page": "page {{pages}}",
+  "pageNotRecorded": "page no dey recorded"
+}

@@ -1,0 +1,135 @@
+{
+  "nav": {
+    "ask": "Ask a question",
+    "findSection": "Find a section",
+    "browseLaws": "Browse laws",
+    "saved": "Saved provisions",
+    "settings": "Settings",
+    "legalAdmin": "Legal admin",
+    "newConversation": "New conversation",
+    "new": "New",
+    "userSettings": "User Settings"
+  },
+  "header": {
+    "explore": "Explore published laws",
+    "sources": "Every answer shows its source",
+    "openSettings": "Open settings"
+  },
+  "language": {
+    "title": "Language",
+    "auto": "Match my device",
+    "menuLabel": "Language: {{language}}"
+  },
+  "preferences": {
+    "unreadable": "Preferences could not be read. Your browser data has been retained.",
+    "storageUnavailable": "Browser storage is unavailable. Preferences cannot be saved."
+  },
+  "saved": {
+    "unreadable": "Saved bookmarks could not be read. Their browser data has been retained.",
+    "storageUnavailable": "Browser storage is unavailable. Saved provisions cannot be loaded."
+  },
+  "legalError": {
+    "notFound": "We couldn't find that section.",
+    "unavailable": "The published laws can't be loaded right now. Please try again in a moment.",
+    "generic": "Something went wrong loading this. Check your connection and try again."
+  },
+  "errors": {
+    "generic": "Something went wrong."
+  },
+  "toast": {
+    "success": "Success!",
+    "error": "Something went wrong!"
+  },
+  "sync": {
+    "updateFailed": "Couldn't update your account. Your change is saved here.",
+    "chatsClaimed_one": "Your chat is now in your account.",
+    "chatsClaimed_other": "Your {{count}} chats are now in your account.",
+    "savedFailed": "Couldn't sync your saved sections. We'll try again next time."
+  },
+  "actions": {
+    "close": "Close",
+    "tryAgain": "Try again",
+    "showPassword": "Show password",
+    "hidePassword": "Hide password",
+    "save": "Save",
+    "cancel": "Cancel",
+    "edit": "Edit",
+    "continue": "Continue",
+    "checkAgain": "Check again",
+    "copy": "Copy",
+    "copied": "Copied",
+    "remove": "Remove",
+    "search": "Search"
+  },
+  "status": {
+    "loading": "Loading…",
+    "checkingSources": "Checking trusted sources"
+  },
+  "sidebar": {
+    "title": "Sidebar",
+    "description": "Displays the mobile sidebar.",
+    "open": "Open Sidebar",
+    "collapse": "Collapse Sidebar",
+    "toggle": "Toggle Sidebar"
+  },
+  "history": {
+    "title": "Conversations",
+    "searchLabel": "Search conversations",
+    "searchPlaceholder": "Search your chats",
+    "loadFailed": "History couldn't load.",
+    "loading": "Loading chats…",
+    "today": "Today",
+    "yesterday": "Yesterday",
+    "earlier": "Earlier",
+    "untitled": "Conversation",
+    "noMatches": "No chats match that search.",
+    "empty": "Your chats will appear here.",
+    "loadOlder": "Load older conversations"
+  },
+  "guest": {
+    "note": "Guest · bookmarks stay on this browser."
+  },
+  "auth": {
+    "signIn": "Sign in",
+    "createAccount": "Create account",
+    "logOut": "Log Out"
+  },
+  "theme": {
+    "appearance": "Appearance",
+    "toggle": "Toggle theme",
+    "light": "Light",
+    "dark": "Dark",
+    "system": "System"
+  },
+  "logo": {
+    "home": "constitution.ng home"
+  },
+  "legalStatus": {
+    "current": "Current law",
+    "proposed": "Proposed change - not currently in force",
+    "historical": "Previous version - superseded",
+    "warning": "Unable to verify current source"
+  },
+  "officialWording": "Official wording",
+  "errorPage": {
+    "title": "Error",
+    "oops": "Oops!",
+    "body": "Something went wrong. Please try again.",
+    "home": "Go Home"
+  },
+  "notFound": {
+    "body": "The page you are looking for was not found.",
+    "back": "Go Back"
+  },
+  "footer": {
+    "tagline": "Nigeria's Constitution and published laws"
+  },
+  "validation": {
+    "emailInvalid": "Invalid email address",
+    "passwordRequired": "Password is required",
+    "passwordMin": "Password must be at least 8 characters",
+    "confirmRequired": "Password confirmation is required",
+    "passwordsMismatch": "The passwords don't match",
+    "fullNameRequired": "Full Name is required"
+  }
+}

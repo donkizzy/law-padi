@@ -4,7 +4,14 @@ import {
   useSearch,
 } from "@tanstack/react-router"
 import { Fragment, useState } from "react"
-import { FiMessageSquare, FiSearch, FiShield } from "react-icons/fi"
+import { useTranslation } from "react-i18next"
+import {
+  FiBookmark,
+  FiBookOpen,
+  FiMessageSquare,
+  FiSearch,
+  FiShield,
+} from "react-icons/fi"
 
 import { SidebarAppearance } from "@/components/Common/Appearance"
 import { Logo } from "@/components/Common/Logo"
@@ -25,16 +32,11 @@ import {
 import useAuth from "@/hooks/useAuth"
 import { useChatCapabilities } from "@/hooks/useChatCapabilities"
 import { useConversations } from "@/hooks/useConversations"
-import { sidebarSections } from "@/lib/law-padi-data"
+import { intlLocales } from "@/lib/i18n"
 import { type Item, Main } from "./Main"
 import { User } from "./User"
 
-const baseItems: Item[] = sidebarSections[0].items
-  .filter((item) => item.path !== "/amendments" && item.path !== "/")
-  .map((item) =>
-    item.path === "/" ? { ...item, title: "Search Constitution" } : item,
-  )
-
+// Not shown: en-CA formats as YYYY-MM-DD, which compares days in Lagos time.
 const historyDay = new Intl.DateTimeFormat("en-CA", {
   year: "numeric",
   month: "2-digit",
@@ -44,13 +46,14 @@ const historyDay = new Intl.DateTimeFormat("en-CA", {
 
 function historyGroup(updatedAt: string) {
   const day = historyDay.format(new Date(updatedAt))
-  if (day === historyDay.format(new Date())) return "Today"
+  if (day === historyDay.format(new Date())) return "today"
   if (day === historyDay.format(new Date(Date.now() - 86_400_000)))
-    return "Yesterday"
-  return "Earlier"
+    return "yesterday"
+  return "earlier"
 }
 
 export function AppSidebar() {
+  const { t, i18n } = useTranslation()
   const { user: currentUser } = useAuth()
   const [historyQuery, setHistoryQuery] = useState("")
   const conversations = useConversations(historyQuery)
@@ -64,16 +67,28 @@ export function AppSidebar() {
   const navigation: Item[] = [
     {
       icon: FiMessageSquare,
-      title: "Ask a question",
+      title: t("nav.ask"),
       path: "/",
       intent: "ask",
     },
-    { icon: FiSearch, title: "Find a section", path: "/", intent: "find" },
-    ...baseItems,
+    { icon: FiSearch, title: t("nav.findSection"), path: "/", intent: "find" },
+    { icon: FiBookOpen, title: t("nav.browseLaws"), path: "/laws" },
+    { icon: FiBookmark, title: t("nav.saved"), path: "/saved" },
   ]
   const items = currentUser?.is_superuser
-    ? [...navigation, { icon: FiShield, title: "Legal admin", path: "/admin" }]
+    ? [
+        ...navigation,
+        { icon: FiShield, title: t("nav.legalAdmin"), path: "/admin" },
+      ]
     : navigation
+  const shortDate = new Intl.DateTimeFormat(
+    intlLocales(i18n.resolvedLanguage),
+    {
+      day: "numeric",
+      month: "short",
+      timeZone: "Africa/Lagos",
+    },
+  )
 
   return (
     <Sidebar collapsible="icon">
@@ -86,25 +101,25 @@ export function AppSidebar() {
         <Main items={items} />
         {chatEnabled && (
           <SidebarGroup>
-            <SidebarGroupLabel>Conversations</SidebarGroupLabel>
+            <SidebarGroupLabel>{t("history.title")}</SidebarGroupLabel>
             <SidebarGroupContent>
               <input
-                aria-label="Search conversations"
+                aria-label={t("history.searchLabel")}
                 className="sq-sm mb-3 w-full min-w-0 border border-sidebar-border bg-background px-2 py-2 text-xs group-data-[collapsible=icon]:hidden"
-                placeholder="Search your chats"
+                placeholder={t("history.searchPlaceholder")}
                 maxLength={200}
                 value={historyQuery}
                 onChange={(event) => setHistoryQuery(event.target.value)}
               />
               {conversations.isError && (
                 <div className="px-2 py-2 text-xs" role="alert">
-                  History couldn't load.{" "}
+                  {t("history.loadFailed")}{" "}
                   <button
                     className="min-h-9 font-semibold text-primary"
                     type="button"
                     onClick={() => void conversations.refetch()}
                   >
-                    Try again
+                    {t("actions.tryAgain")}
                   </button>
                 </div>
               )}
@@ -113,7 +128,7 @@ export function AppSidebar() {
                   className="px-2 py-2 text-xs text-muted-foreground"
                   role="status"
                 >
-                  Loading chats…
+                  {t("history.loading")}
                 </p>
               )}
               <SidebarMenu>
@@ -123,13 +138,13 @@ export function AppSidebar() {
                       historyGroup(history[index - 1].updated_at) !==
                         historyGroup(conversation.updated_at)) && (
                       <li className="px-2 pt-2 text-[0.65rem] font-semibold text-muted-foreground group-data-[collapsible=icon]:hidden">
-                        {historyGroup(conversation.updated_at)}
+                        {t(`history.${historyGroup(conversation.updated_at)}`)}
                       </li>
                     )}
                     <SidebarMenuItem>
                       <SidebarMenuButton
                         asChild
-                        tooltip={conversation.title || "Conversation"}
+                        tooltip={conversation.title || t("history.untitled")}
                         isActive={search.c === conversation.id}
                       >
                         <RouterLink
@@ -151,13 +166,11 @@ export function AppSidebar() {
                         >
                           {/*<FiMessageSquare aria-hidden />*/}
                           <span className="min-w-0 truncate">
-                            {conversation.title || "Conversation"}
+                            {conversation.title || t("history.untitled")}
                             <span className="mt-0.5 block text-[0.65rem] font-normal text-muted-foreground">
-                              {new Intl.DateTimeFormat("en-NG", {
-                                day: "numeric",
-                                month: "short",
-                                timeZone: "Africa/Lagos",
-                              }).format(new Date(conversation.updated_at))}
+                              {shortDate.format(
+                                new Date(conversation.updated_at),
+                              )}
                             </span>
                           </span>
                         </RouterLink>
@@ -167,9 +180,7 @@ export function AppSidebar() {
                 ))}
                 {conversations.data?.pages[0]?.count === 0 && (
                   <li className="px-2 py-1 text-xs text-muted-foreground">
-                    {historyQuery
-                      ? "No chats match that search."
-                      : "Your chats will appear here."}
+                    {historyQuery ? t("history.noMatches") : t("history.empty")}
                   </li>
                 )}
                 {conversations.hasNextPage && (
@@ -181,8 +192,8 @@ export function AppSidebar() {
                       type="button"
                     >
                       {conversations.isFetchingNextPage
-                        ? "Loading…"
-                        : "Load older conversations"}
+                        ? t("status.loading")
+                        : t("history.loadOlder")}
                     </button>
                   </li>
                 )}
@@ -195,9 +206,7 @@ export function AppSidebar() {
       <SidebarFooter className="border-t border-sidebar-border/80 px-3 py-4">
         {!currentUser && (
           <div className="grid gap-2 px-1 text-xs group-data-[collapsible=icon]:hidden">
-            <p className="text-muted-foreground">
-              Guest · bookmarks stay on this browser.
-            </p>
+            <p className="text-muted-foreground">{t("guest.note")}</p>
             <div className="flex gap-2">
               <RouterLink
                 className="sq-sm min-h-9 px-2 py-2 font-semibold text-primary hover:underline"
@@ -205,7 +214,7 @@ export function AppSidebar() {
                 search={{ redirect: here }}
                 onClick={() => setOpenMobile(false)}
               >
-                Sign in
+                {t("auth.signIn")}
               </RouterLink>
               <RouterLink
                 className="sq-sm min-h-9 px-2 py-2 font-semibold text-primary hover:underline"
@@ -213,7 +222,7 @@ export function AppSidebar() {
                 search={{ redirect: here }}
                 onClick={() => setOpenMobile(false)}
               >
-                Create account
+                {t("auth.createAccount")}
               </RouterLink>
             </div>
           </div>

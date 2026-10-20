@@ -1,0 +1,47 @@
+{
+  "kicker": "Sirri",
+  "title": "Yadda muke kula da bayananka.",
+  "intro": "Abin da constitution.ng ke adanawa, dalili, tsawon lokaci, da abin da za ka iya yi game da shi. An sabunta na ƙarshe a 16 October 2026.",
+  "noAccount": {
+    "title": "Ba ka buƙatar asusu",
+    "body": "Za ka iya yin tambayoyi, duba Kundin Tsarin Mulki ka kuma ajiye sassa ba tare da yin rajista ba. Asusu yana ƙara abu ɗaya kawai: tattaunawarka da sassan da ka ajiye za su bi ka zuwa kowace na'ura."
+  },
+  "keep": {
+    "title": "Abin da muke adanawa",
+    "questions": "<strong>Tambayoyinka da amsoshi.</strong> Ana adana tattaunawa don ka iya komawa gare su. Idan kai baƙo ne, suna haɗe da kuki a kan wannan burauza.",
+    "account": "<strong>Asusunka, idan ka buɗe ɗaya.</strong> Adireshin imel ɗinka, sunanka idan ka bayar, da kalmar sirrinka, wadda ake adanawa a matsayin hash na hanya ɗaya kawai da ba za mu iya karantawa ba.",
+    "saved": "<strong>Sassa da zaɓuɓɓukan da ka ajiye.</strong> Suna kan burauzarka. Da zarar ka tabbatar da imel ɗinka, ana kuma adana su a cikin asusunka.",
+    "feedback": "<strong>Ra'ayin da ka zaɓi bayarwa</strong> a kan wata amsa.",
+    "security": "<strong>Bayanan tsaro.</strong> Kuki na shiga, da ƙididdigar ƙoƙarin shiga na ɗan lokaci da aka haɗa da sigar adireshin IP ko imel ɗinka da aka ɓoye, don mu iya hana mutane hasashen kalmomin sirri.",
+    "advice": "Da fatan kada ka saka bayanan kanka da ba ka buƙata a cikin tambayoyinka. Ka tambayi game da al'amarin, ba sunaye ba."
+  },
+  "why": {
+    "title": "Dalilin da muke adanawa",
+    "body": "Don gudanar da sabis ɗin da ka nema kawai: amsa tambayoyinka, adana bincikenka, shigar da kai cikin aminci, da gyara matsaloli. Ba ma sayar da bayananka ko amfani da su don talla."
+  },
+  "processors": {
+    "title": "Su wa kuma ke kula da su",
+    "cloudflare": "<strong>Cloudflare</strong> yana isar da shafin yanar gizo kuma yana tura buƙatunka zuwa sabobinmu.",
+    "render": "<strong>Render</strong> yana gudanar da sabobinmu a United States.",
+    "neon": "<strong>Neon</strong> yana adana rumbun bayananmu.",
+    "deepseek": "<strong>DeepSeek</strong> yana karɓar tambayarka da sassan Kundin Tsarin Mulki da suka shafi lamarin lokacin da bayani cikin harshe mai sauƙi yake kunne, don ya rubuta bayanin. Ba ya karɓar sunanka, imel ko bayanan asusunka.",
+    "email": "<strong>Mai ba mu sabis na imel</strong> yana aika imel na rajista da na kalmar sirri zuwa adireshinka.",
+    "abroad": "Wasu daga cikin waɗannan sabis ɗin suna wajen Najeriya, don haka ana iya sarrafa bayananka a ƙasar waje. Abin da kowane sabis ke buƙata don aikinsa kawai muke rabawa."
+  },
+  "retention": {
+    "title": "Tsawon lokacin da muke adanawa",
+    "guest": "Ana goge tattaunawar baƙi bayan kwanaki 30 ba tare da amfani ba.",
+    "account": "Ana adana tattaunawar asusu, sassa da zaɓuɓɓukan da ka ajiye har sai ka goge su ko ka goge asusunka.",
+    "sessions": "Zaman shiga yana ƙarewa bayan kwanaki 30 ba tare da amfani ba, ko lokacin da ka fita. Ana share ƙididdigar ƙoƙarin shiga cikin kwana ɗaya."
+  },
+  "rights": {
+    "title": "Haƙƙoƙinka",
+    "body": "A ƙarƙashin Nigeria Data Protection Act 2023 za ka iya neman ganin bayananka, gyara su, mayar da su wani wuri ko goge su, ƙin yadda muke amfani da su, da janye amincewarka. Mafi yawan wannan za ka iya yi da kanka:",
+    "download": "Sauke duk abin da ke cikin asusunka, ko goge asusunka, a cikin <settings>Saituna</settings>.",
+    "change": "Canja sunanka ko imel ɗinka a cikin Saituna.",
+    "delete": "Goge kowace tattaunawa daga jerin tattaunawa.",
+    "clear": "Share abin da aka ajiye a kan wannan burauza a cikin Saituna, ƙarƙashin Tsaro.",
+    "contact": "Don kowane abu kuma, aika imel zuwa <email>{{email}}</email>.",
+    "complain": "Idan ba ka ji daɗin yadda muka kula da bayananka ba, za ka iya kai ƙara ga <ndpc>Nigeria Data Protection Commission</ndpc>."
+  }
+}

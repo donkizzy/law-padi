@@ -1,4 +1,5 @@
 import { AxiosError } from "axios"
+import i18n from "@/lib/i18n"
 
 function extractErrorMessage(err: Error): string {
   if (err instanceof AxiosError) {
@@ -11,7 +12,7 @@ function extractErrorMessage(err: Error): string {
     }
     return err.message
   }
-  return "Something went wrong."
+  return i18n.t("errors.generic")
 }
 
 export const handleError = function (this: (msg: string) => void, err: Error) {

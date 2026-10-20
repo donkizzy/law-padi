@@ -1,6 +1,7 @@
 import { useQuery } from "@tanstack/react-query"
 import { AxiosError } from "axios"
 import { LegalService } from "@/client"
+import i18n from "@/lib/i18n"
 
 export function useLegalRelease() {
   return useQuery({
@@ -134,9 +135,8 @@ export function useProvisionHistory(
 
 export function legalError(error: unknown): string {
   if (error instanceof AxiosError) {
-    if (error.response?.status === 404) return "We couldn't find that section."
-    if (error.response?.status === 503)
-      return "The published laws can't be loaded right now. Please try again in a moment."
+    if (error.response?.status === 404) return i18n.t("legalError.notFound")
+    if (error.response?.status === 503) return i18n.t("legalError.unavailable")
   }
-  return "Something went wrong loading this. Check your connection and try again."
+  return i18n.t("legalError.generic")
 }

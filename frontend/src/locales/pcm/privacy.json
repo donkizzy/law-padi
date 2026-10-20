@@ -1,0 +1,47 @@
+{
+  "kicker": "Privacy",
+  "title": "How we dey handle your data.",
+  "intro": "Wetin constitution.ng dey keep, why, for how long, and wetin you fit do about am. Last update: 16 October 2026.",
+  "noAccount": {
+    "title": "You no need account",
+    "body": "You fit ask questions, look through di Constitution and save sections without sign up. Account only add one thing: your conversations and di sections wey you save go follow you go any device."
+  },
+  "keep": {
+    "title": "Wetin we dey keep",
+    "questions": "<strong>Your questions and answers.</strong> We dey store conversations so you fit come back to dem. If you be guest, dem dey tie to one cookie for dis browser.",
+    "account": "<strong>Your account, if you create one.</strong> Your email address, your name if you give us, and your password, wey we store only as one-way hash wey we no fit read.",
+    "saved": "<strong>Sections and settings wey you save.</strong> Dem dey your browser. Once you confirm your email, we still keep dem for your account.",
+    "feedback": "<strong>Feedback wey you choose to give</strong> on top answer.",
+    "security": "<strong>Security records.</strong> Sign-in cookie, plus short-time count of sign-in attempts wey we tie to scrambled form of your IP address or email, so we fit stop people wey dey guess passwords.",
+    "advice": "Abeg no put personal details wey you no need for your questions. Ask about di matter, no be di names."
+  },
+  "why": {
+    "title": "Why we dey keep am",
+    "body": "Na only to run di service wey you ask for: to answer your questions, keep your research, sign you in safe, and fix problems. We no dey sell your data or use am for advert."
+  },
+  "processors": {
+    "title": "Who else dey handle am",
+    "cloudflare": "<strong>Cloudflare</strong> dey deliver di website and pass your requests go our servers.",
+    "render": "<strong>Render</strong> dey run our servers for United States.",
+    "neon": "<strong>Neon</strong> dey store our database.",
+    "deepseek": "<strong>DeepSeek</strong> dey receive your question and di parts of di Constitution wey concern am when simple-language explanations dey on, so e fit write di explanation. E no dey receive your name, email or account details.",
+    "email": "<strong>Our email provider</strong> dey send sign-up and password emails go your address.",
+    "abroad": "Some of dis services dey outside Naija, so dem fit process your data abroad. Na only wetin each service need to do im work we dey share."
+  },
+  "retention": {
+    "title": "How long we dey keep am",
+    "guest": "We dey delete guest conversations after 30 days wey nobody use dem.",
+    "account": "We dey keep account conversations, sections and settings wey you save until you delete dem or your account.",
+    "sessions": "Sign-in sessions dey end after 30 days wey you no use am, or when you sign out. We dey clear sign-in attempt counts inside one day."
+  },
+  "rights": {
+    "title": "Your rights",
+    "body": "Under di Nigeria Data Protection Act 2023, you fit ask to see, correct, move or delete your data, object to how we dey use am, and withdraw your consent. Most of dis one, you fit do am by yourself:",
+    "download": "Download everything wey dey your account, or delete your account, for <settings>Settings</settings>.",
+    "change": "Change your name or email for Settings.",
+    "delete": "Delete any conversation from di conversation list.",
+    "clear": "Clear wetin you save for dis browser for Settings, under Security.",
+    "contact": "For any other thing, email <email>{{email}}</email>.",
+    "complain": "If you no happy with how we handle your data, you fit complain to di <ndpc>Nigeria Data Protection Commission</ndpc>."
+  }
+}

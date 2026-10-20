@@ -1,0 +1,135 @@
+{
+  "nav": {
+    "ask": "Jụọ ajụjụ",
+    "findSection": "Chọta nkebi",
+    "browseLaws": "Lelee iwu niile",
+    "saved": "Nkebi i chekwara",
+    "settings": "Ntọala",
+    "legalAdmin": "Onye nlekọta iwu",
+    "newConversation": "Mkparịta ụka ọhụrụ",
+    "new": "Ọhụrụ",
+    "userSettings": "Ntọala gị"
+  },
+  "header": {
+    "explore": "Nyochaa iwu e bipụtara",
+    "sources": "Azịza ọ bụla na-egosi ebe o si",
+    "openSettings": "Mepee ntọala"
+  },
+  "language": {
+    "title": "Asụsụ",
+    "auto": "Soro asụsụ ngwaọrụ m",
+    "menuLabel": "Asụsụ: {{language}}"
+  },
+  "preferences": {
+    "unreadable": "Anyị enweghị ike ịgụ ntọala gị. Data dị na ihe nchọgharị gị ka dị ka ọ dị.",
+    "storageUnavailable": "Nchekwa ihe nchọgharị anaghị arụ ọrụ. Anyị enweghị ike ịchekwa ntọala gị."
+  },
+  "saved": {
+    "unreadable": "Anyị enweghị ike ịgụ akara i chekwara. Data dị na ihe nchọgharị gị ka dị ka ọ dị.",
+    "storageUnavailable": "Nchekwa ihe nchọgharị anaghị arụ ọrụ. Anyị enweghị ike imepe nkebi i chekwara."
+  },
+  "legalError": {
+    "notFound": "Anyị ahụghị nkebi ahụ.",
+    "unavailable": "Enweghị ike imepe iwu e bipụtara ugbu a. Biko nwaa ọzọ n'oge na-adịghị anya.",
+    "generic": "Ihe mebiri mgbe a na-emepe nke a. Lelee njikọ gị ma nwaa ọzọ."
+  },
+  "errors": {
+    "generic": "Ihe mebiri."
+  },
+  "toast": {
+    "success": "Ọ gara nke ọma!",
+    "error": "Ihe mebiri!"
+  },
+  "sync": {
+    "updateFailed": "Anyị enweghị ike imelite akaụntụ gị. Mgbanwe gị ka echekwara ebe a.",
+    "chatsClaimed_one": "Mkparịta ụka gị abanyela n'akaụntụ gị ugbu a.",
+    "chatsClaimed_other": "Mkparịta ụka gị {{count}} abanyela n'akaụntụ gị ugbu a.",
+    "savedFailed": "Anyị enweghị ike ijikọ nkebi i chekwara. Anyị ga-anwa ọzọ oge ọzọ."
+  },
+  "actions": {
+    "close": "Mechie",
+    "tryAgain": "Nwaa ọzọ",
+    "showPassword": "Gosi paswọọdụ",
+    "hidePassword": "Zoo paswọọdụ",
+    "save": "Chekwaa",
+    "cancel": "Kagbuo",
+    "edit": "Dezie",
+    "continue": "Gaa n'ihu",
+    "checkAgain": "Lelee ọzọ",
+    "copy": "Detuo",
+    "copied": "E detuola ya",
+    "remove": "Wepụ",
+    "search": "Chọọ"
+  },
+  "status": {
+    "loading": "Ọ na-emepe…",
+    "checkingSources": "A na-enyocha isi mmalite a tụkwasịrị obi"
+  },
+  "sidebar": {
+    "title": "Menu n'akụkụ",
+    "description": "Ọ na-egosi menu n'akụkụ na ekwentị.",
+    "open": "Mepee menu n'akụkụ",
+    "collapse": "Mechie menu n'akụkụ",
+    "toggle": "Mepee ma ọ bụ mechie menu n'akụkụ"
+  },
+  "history": {
+    "title": "Mkparịta ụka",
+    "searchLabel": "Chọọ na mkparịta ụka",
+    "searchPlaceholder": "Chọọ na mkparịta ụka gị",
+    "loadFailed": "Akụkọ ihe mere emeghepeghị.",
+    "loading": "Mkparịta ụka na-emepe…",
+    "today": "Taa",
+    "yesterday": "Ụnyaahụ",
+    "earlier": "Tupu mgbe ahụ",
+    "untitled": "Mkparịta ụka",
+    "noMatches": "Ọ dịghị mkparịta ụka dabara na nchọ ahụ.",
+    "empty": "Mkparịta ụka gị ga-apụta ebe a.",
+    "loadOlder": "Mepee mkparịta ụka ochie"
+  },
+  "guest": {
+    "note": "Ọbịa · akara gị ga-anọ na ihe nchọgharị a."
+  },
+  "auth": {
+    "signIn": "Banye",
+    "createAccount": "Mepee akaụntụ",
+    "logOut": "Pụọ"
+  },
+  "theme": {
+    "appearance": "Ọdịdị",
+    "toggle": "Gbanwee ìhè ma ọ bụ ọchịchịrị",
+    "light": "Ìhè",
+    "dark": "Ọchịchịrị",
+    "system": "Soro ngwaọrụ m"
+  },
+  "logo": {
+    "home": "Ibe mbụ nke constitution.ng"
+  },
+  "legalStatus": {
+    "current": "Iwu na-arụ ọrụ ugbu a",
+    "proposed": "Mgbanwe a tụrụ aro - ọ malitebeghị ịrụ ọrụ",
+    "historical": "Ụdị ochie - e jirila nke ọzọ dochie ya",
+    "warning": "Anyị enweghị ike ikwenye isi mmalite nke ugbu a"
+  },
+  "officialWording": "Okwu iwu nke gọọmentị",
+  "errorPage": {
+    "title": "Njehie",
+    "oops": "Chei!",
+    "body": "Ihe mebiri. Biko nwaa ọzọ.",
+    "home": "Laa n'ibe mbụ"
+  },
+  "notFound": {
+    "body": "Anyị ahụghị ibe ị na-achọ.",
+    "back": "Laghachi azụ"
+  },
+  "footer": {
+    "tagline": "Iwu Obodo Naịjirịa na iwu ndị e bipụtara"
+  },
+  "validation": {
+    "emailInvalid": "Adreesị email a ezighị ezi",
+    "passwordRequired": "Ị ga-etinye paswọọdụ",
+    "passwordMin": "Paswọọdụ ga-enwe opekata mpe mkpụrụedemede 8",
+    "confirmRequired": "Pịnye paswọọdụ ọzọ iji kwado ya",
+    "passwordsMismatch": "Paswọọdụ abụọ ahụ adabaghị",
+    "fullNameRequired": "Ị ga-etinye aha gị zuru ezu"
+  }
+}

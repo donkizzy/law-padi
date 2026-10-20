@@ -1,0 +1,158 @@
+{
+  "home": {
+    "kicker": "Iwu, n'ụzọ dị mfe",
+    "title": "Jụọ maka iwu Naịjirịa.",
+    "intro": "Jụọ ya otú i si ekwu okwu. Ị ga-enweta azịza doro anya na nkebi ndị ahụ ọ si na ha.",
+    "paused": "Nkọwa akwụsịla nwa oge. Chọta nkebi ka ị gaa n'ihu na-agụ iwu e bipụtara.",
+    "suggestions": [
+      "Ndị uwe ojii nwere ike inyocha ekwentị m?",
+      "Ogologo oge ole ka ndị uwe ojii nwere ike ijide m tupu ha akpọga m n'ụlọikpe?",
+      "Onye nwere ike ịgba ọsọ maka onye isi ala?",
+      "Gịnị ka Section 37 kwuru?"
+    ],
+    "disclaimer": "Azịza na-akọwa iwu e bipụtara n'asụsụ dị mfe, ha nwekwara ike ịhapụ ụfọdụ nkọwa. Lelee nkebi ha jikọrọ, ma soro ọkàiwu kparịta maka okwu gị."
+  },
+  "outcome": {
+    "clarification_required": "Ajụjụ ahụ metụtara ọtụtụ ihe n'otu oge. Nwaa ịjụ maka otu iwu, otu nkebi ma ọ bụ otu okwu.",
+    "validation_failed": "Anyị enweghị ike ikwenye na nkọwa ahụ dabara na ndokwa e bipụtara, ya mere nkebi ndị ahụ n'onwe ha nọ ebe a.",
+    "provider_failure": "Nkọwa adịghị ugbu a. Nkebi e bipụtara metụtara ya nọ ebe a.",
+    "budget_exhausted": "Anyị eruola oke nkọwa maka taa. Nkebi e bipụtara metụtara ya nọ ebe a.",
+    "capacity_exhausted": "Ọtụtụ mmadụ na-ajụ ajụjụ ugbu a. Ederede metụtara ya nọ ebe a; nwaa ọzọ mgbe otu nkeji gachara.",
+    "cancelled": "Ị kwụsịrị azịza a.",
+    "closest": "Ọ dị ka ndokwa e bipụtara anaghị aza nke a ozugbo. Nkebi kacha nso anyị hụrụ nọ ebe a.",
+    "noSection": "Anyị ahụghị nkebi e bipụtara na-aza nke a. Nwaa ịjụ ya n'ụzọ ọzọ, ma ọ bụ kpọọ aha iwu na nkebi.",
+    "unfinished": "Anyị enweghị ike imecha azịza a. Nkebi e bipụtara metụtara ya nọ ebe a."
+  },
+  "errors": {
+    "unavailable": "Nkọwa adịghị nwa oge. Ajụjụ gị ka nọ ebe a; nwaa ọzọ ma ọ bụ chọta nkebi metụtara ya.",
+    "dailyLimit": "Ị ruola oke nkọwa gị maka taa. Ọ ga-amalite ọzọ n'etiti abalị n'oge Legọs. Ị ka nwere ike ịchọta ma gụọ nkebi.",
+    "busy": "Nkọwa nwere ọtụtụ ọrụ ugbu a. Nwaa ọzọ mgbe otu nkeji gachara, ma ọ bụ chọta nkebi metụtara ya.",
+    "sendFailed": "Ihe mebiri mgbe a na-eziga ajụjụ gị. Lelee njikọ gị ma nwaa ọzọ.",
+    "retry": "Ziga ajụjụ ọzọ",
+    "edit": "Dezie ajụjụ",
+    "findSections": "Chọta nkebi metụtara ya"
+  },
+  "actions": {
+    "label": "Ihe ị nwere ike iji azịza mee",
+    "copy": "Detuo azịza na ntụaka ya",
+    "copied": "E detuola azịza na ntụaka",
+    "copyFailed": "Enweghị ike idetu ya. Biko nwaa ọzọ.",
+    "saveSources": "Chekwaa isi mmalite",
+    "sourcesSaved": "E chekwara isi mmalite",
+    "saveFailed": "Enweghị ike ichekwa isi mmalite na ihe nchọgharị a.",
+    "export": "Bupụta azịza"
+  },
+  "answer": {
+    "label": "Azịza",
+    "dependsOn": "Azịza ahụ nwere ike ịdabere na",
+    "otherLaws": "Iwu ndị ọzọ metụtakwara ya",
+    "otherLawsBody": "Iwu Naịjirịa ndị a metụtakwara nke a. Ha adịbeghị ebe a, ya mere lelee ha ma ọ bụ jụọ ọkàiwu tupu ị dabere na azịza a.",
+    "sources": "Isi mmalite",
+    "notAdvice": "Nkọwa a abụghị ndụmọdụ iwu.",
+    "moreAboutSection": "Ihe ndị ọzọ gbasara nkebi a",
+    "loadFailed": "Enweghị ike imepe azịza a."
+  },
+  "sources": {
+    "open": "Mepee isi mmalite {{citation}}",
+    "openTitled": "Mepee {{citation}}: {{title}}",
+    "mayHelp": "Nkebi ndị ọzọ nwere ike inye aka",
+    "used": "Nkebi ejiri",
+    "othersCameUp_one": "Otu nkebi ọzọ (1) pụtara",
+    "othersCameUp_other": "Nkebi {{count}} ndị ọzọ pụtara",
+    "alsoRelated": "Ha metụtakwara ya"
+  },
+  "gaps": {
+    "label": "Nkebi anyị na-ahụghị",
+    "title": "Anyị ahụghị ihe niile"
+  },
+  "followUps": {
+    "label": "Ajụjụ anyị na-atụ aro",
+    "title": "Ị nwekwara ike ịjụ"
+  },
+  "pending": {
+    "label": "Azịza na-abịa",
+    "reading": "A na-agụ {{sources}}"
+  },
+  "progress": {
+    "finding": "A na-achọ nkebi metụtara ya…",
+    "writing": "A na-ede azịza doro anya…",
+    "checking": "A na-enyochagharị azịza ahụ na isi mmalite ya…",
+    "reconnecting": "A na-ejikọghachi na ajụjụ i chekwara…",
+    "connectionLost": "Njikọ bipụrụ. A na-ejikọghachi…",
+    "interrupted": "Njikọ kwụsịrị n'etiti. Anyị na-enyocha ma azịza gị ọ gwụla.",
+    "stopping": "Ọ na-akwụsị…"
+  },
+  "conversation": {
+    "confirmDelete": "Hichapụ mkparịta ụka a? Enweghị ike iweghachi ya.",
+    "titleLabel": "Aha mkparịta ụka",
+    "exportFailed": "Enweghị ike ibupụta mkparịta ụka ahụ niile. Nwaa ọzọ.",
+    "exporting": "Ọ na-ebupụta…",
+    "export": "Bupụta mkparịta ụka",
+    "rename": "Gbanwee aha",
+    "delete": "Hichapụ",
+    "unavailable": "Mkparịta ụka adịghị",
+    "loadOlder": "Mepee ozi ochie",
+    "stop": "Kwụsị ịza",
+    "jumpToLatest": "Gaa na nke ikpeazụ"
+  },
+  "stream": {
+    "saved": "E chekwara ajụjụ gị. Jikọghachi ma ọ bụ lelee ọnọdụ ya ka ị gaa n'ihu.",
+    "reconnect": "Jikọghachi",
+    "checkStatus": "Lelee ọnọdụ azịza"
+  },
+  "composer": {
+    "label": "Ajụjụ gị",
+    "placeholder": "Jụọ maka Iwu Obodo Naịjirịa na iwu e bipụtara…",
+    "explanation": "Azịza n'asụsụ dị mfe",
+    "search": "Chọọ n'iwu e bipụtara",
+    "sending": "Ọ na-eziga",
+    "send": "Ziga ajụjụ",
+    "enterHint": "Enter iji ziga · Shift+Enter maka ahịrị ọhụrụ",
+    "modEnterHint": "Ctrl/Cmd+Enter iji ziga"
+  },
+  "feedback": {
+    "label": "Echiche gị gbasara azịza",
+    "question": "Nke a ọ bara uru?",
+    "helpful": "Ọ bara uru",
+    "notHelpful": "Ọ baghị uru",
+    "thanks": "Daalụ maka echiche gị.",
+    "failed": "Enweghị ike ichekwa echiche gị. Nwaa ọzọ."
+  },
+  "tasks": {
+    "label": "Họrọ ihe ị chọrọ ime",
+    "checking": "A na-enyocha ihe dị…"
+  },
+  "find": {
+    "title": "Nyochaa iwu Naịjirịa e bipụtara.",
+    "intro": "Chọta nkebi site na nọmba ya, ma ọ bụ kọwaa okwu ahụ n'okwu nke gị.",
+    "availabilityError": "Anyị enweghị ike inyocha ma azịza doro anya dị. Ị ka nwere ike ịchọta ma gụọ nkebi.",
+    "paused": "Azịza doro anya akwụsịla nwa oge. Ị ka nwere ike ịchọta ma gụọ nkebi.",
+    "allEditions": "Mbipụta isi mmalite niile e bipụtara",
+    "placeholder": "Chọta isiokwu ma ọ bụ ntụaka, dị ka Section 37 ma ọ bụ ACJA s.9…",
+    "suggestionsLabel": "Nchọ anyị na-atụ aro",
+    "suggestions": [
+      "Ndị uwe ojii nwere ike inyocha ekwentị m?",
+      "Section 35",
+      "Nnwere onwe ikwu okwu",
+      "Onye nwere ike ịgba ọsọ maka onye isi ala?",
+      "Inwe ala na steeti ọzọ"
+    ],
+    "loadFailed": "Enweghị ike imepe iwu e bipụtara"
+  },
+  "results": {
+    "label": "Nsonaazụ nchọ",
+    "title": "Nsonaazụ maka “{{query}}”",
+    "searching": "A na-achọ n'iwu e bipụtara…",
+    "unavailable": "Nchọ adịghị",
+    "unsupported": "Anyị enweghị ike iji ntụaka ahụ",
+    "none": "Ahụghị nkebi dabara",
+    "noneHint": "Nwaa okwu ndị ọzọ, isiokwu sara mbara, ma ọ bụ nọmba nkebi dị ka Section 35.",
+    "bestMatch": "Nke kacha dabara",
+    "selected": "Nkebi i họrọ",
+    "inContext": ". E gosiri ya niile ka i wee gụọ {{citation}} na ihe gbara ya gburugburu.",
+    "surroundingFailed": "Enweghị ike imepe nkebi gbara ya gburugburu.",
+    "matchesLabel": "Ihe dabara na nchọ",
+    "ambiguous": "Kedu nke ị na-ekwu?",
+    "otherMatches": "Nkebi ndị ọzọ dabara"
+  }
+}

@@ -1,5 +1,6 @@
 import { Link, useNavigate } from "@tanstack/react-router"
 import { useState } from "react"
+import { useTranslation } from "react-i18next"
 import type { ProvisionReference } from "@/client"
 import { LawPicker } from "@/components/LawPadi/LawPicker"
 import {
@@ -31,6 +32,7 @@ export function BrowseConstitution({
   release?: string
   instrument?: string
 }) {
+  const { t } = useTranslation(["legal", "common"])
   const root = useProvisionTree(parent, release, instrument)
   const edition = root.data?.release_version ?? release
   const instruments = useLegalInstruments(edition)
@@ -42,15 +44,21 @@ export function BrowseConstitution({
   return (
     <section className="mx-auto max-w-5xl px-4 py-8 sm:px-8 lg:px-12 lg:py-12">
       <SectionHeading
-        kicker="Browse"
+        kicker={t("browse.kicker")}
         title={
           root.data?.parent
-            ? `${root.data.parent.citation}: ${root.data.parent.title || root.data.parent.heading || "Published provisions"}`
-            : `Browse ${selected?.short_title || selected?.title || lawName(instrument)}.`
+            ? `${root.data.parent.citation}: ${root.data.parent.title || root.data.parent.heading || t("browse.publishedProvisions")}`
+            : t("browse.title", {
+                law:
+                  selected?.short_title ||
+                  selected?.title ||
+                  lawName(instrument),
+              })
         }
       >
-        Explore the available parts and sections of{" "}
-        {editionName(root.data?.edition_label, instrument)}.
+        {t("browse.intro", {
+          edition: editionName(root.data?.edition_label, instrument),
+        })}
       </SectionHeading>
       <LawPicker
         value={instrument}
@@ -70,7 +78,8 @@ export function BrowseConstitution({
       />
       {selected && (
         <p className="mb-5 text-label font-normal text-muted-foreground">
-          {selected.section_count} published sections · {selected.edition_note}
+          {t("browse.sectionCount", { count: selected.section_count })} ·{" "}
+          {selected.edition_note}
         </p>
       )}
       {parent && (
@@ -80,7 +89,7 @@ export function BrowseConstitution({
           params={{ instrument }}
           search={{ release: edition }}
         >
-          All parts and sections
+          {t("browse.allParts")}
         </Link>
       )}
       <form
@@ -101,25 +110,25 @@ export function BrowseConstitution({
         }}
       >
         <input
-          aria-label="Search this law"
+          aria-label={t("browse.searchLabel")}
           className="sq-md min-w-0 flex-1 border border-border bg-card px-4 text-sm"
-          placeholder="Search a topic or a section number"
+          placeholder={t("browse.searchPlaceholder")}
           value={query}
           onChange={(event) => setQuery(event.target.value)}
           maxLength={2000}
         />
         <SquircleButton type="submit" disabled={!query.trim()}>
-          Search
+          {t("common:actions.search")}
         </SquircleButton>
       </form>
       {root.isPending ? (
         <SkeletonBlock />
       ) : root.isError ? (
         <ErrorState
-          title="Couldn't load this law"
+          title={t("browse.loadFailed")}
           action={
             <InlineAction onClick={() => root.refetch()} type="button">
-              Try again
+              {t("common:actions.tryAgain")}
             </InlineAction>
           }
         >
@@ -134,13 +143,13 @@ export function BrowseConstitution({
           ))}
         </ul>
       ) : (
-        <p>No sections are available at this level in this edition.</p>
+        <p>{t("browse.empty")}</p>
       )}
       <Link
         className="mt-8 inline-block text-sm text-primary underline"
         to="/about"
       >
-        Sources, edition limits and corrections
+        {t("browse.sourcesLink")}
       </Link>
     </section>
   )
@@ -153,12 +162,13 @@ function ReadingLink({
   node: ProvisionReference
   release: string
 }) {
+  const { t } = useTranslation(["legal", "common"])
   const instrument = instrumentSlug(node)
   const contents = (
     <>
       <span className="font-bold text-primary">{node.citation}</span>
       <span className="mt-1 block">
-        {node.title || node.heading || "Read published provisions"}
+        {node.title || node.heading || t("browse.readProvisions")}
       </span>
     </>
   )

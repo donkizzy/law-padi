@@ -1,6 +1,7 @@
 import * as React from "react"
 import * as LabelPrimitive from "@radix-ui/react-label"
 import { Slot } from "@radix-ui/react-slot"
+import { useTranslation } from "react-i18next"
 import {
   Controller,
   FormProvider,
@@ -135,7 +136,14 @@ function FormDescription({ className, ...props }: React.ComponentProps<"p">) {
 
 function FormMessage({ className, ...props }: React.ComponentProps<"p">) {
   const { error, formMessageId } = useFormField()
-  const body = error ? String(error?.message ?? "") : props.children
+  const { t, i18n } = useTranslation()
+  const message = String(error?.message ?? "")
+  // Schemas use `common` catalogue keys such as "validation.emailInvalid".
+  const body = error
+    ? i18n.exists(message)
+      ? t(message as never)
+      : message
+    : props.children
 
   if (!body) {
     return null

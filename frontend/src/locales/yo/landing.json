@@ -1,0 +1,186 @@
+{
+  "skip": "Fò lọ sí àkóónú",
+  "nav": {
+    "label": "Àkọ́kọ́",
+    "backToTop": "constitution.ng, padà sí òkè",
+    "howItWorks": "Bí ó ṣe ń ṣiṣẹ́",
+    "examples": "Ohun tí àwọn ènìyàn ń béèrè",
+    "faq": "Àwọn ìbéèrè",
+    "ask": "Béèrè ìbéèrè",
+    "openMenu": "Ṣí àkójọ",
+    "closeMenu": "Pa àkójọ dé"
+  },
+  "form": {
+    "empty": "Kọ́kọ́ tẹ ìbéèrè tàbí nọ́ńbà abala kan.",
+    "tooLong": "Jẹ́ kí ìbéèrè rẹ kéré sí ohun-kíkọ 2,000.",
+    "label": "Ìbéèrè rẹ nípa Òfin-Ìpìlẹ̀",
+    "placeholder": "Ṣé ọlọ́pàá lè yẹ fóònù mi wò?",
+    "submit": "Fún mi ní ìdáhùn"
+  },
+  "hero": {
+    "kicker": "Òfin-Ìpìlẹ̀ Nàìjíríà àti àwọn òfin tí a tẹ̀jáde",
+    "line1": "Béèrè nípa àwọn ẹ̀tọ́ rẹ.",
+    "line2": "Rí abala gangan.",
+    "body": "Tẹ ìbéèrè rẹ bí o ṣe máa ń sọ ọ́. A ó wá àwọn abala tó jẹmọ́ ọ nínú àwọn orísun tí a tẹ̀jáde, a ó ṣàlàyé wọn ní èdè tó rọrùn, a ó sì fi ọ̀rọ̀ òfin gangan hàn ọ́ lẹ́gbẹ̀ẹ́ wọn.",
+    "available": "Ohun tó wà nínú ìtẹ̀jáde yìí: {{laws}}. Ṣàyẹ̀wò ẹ̀dà orísun kọ̀ọ̀kan kí o tó gbára lé e.",
+    "pointsLabel": "Ọ̀fẹ́ ni",
+    "points": [
+      "Ọ̀fẹ́ ni",
+      "O kò nílò àkọọ́lẹ̀",
+      "Gbogbo ìdáhùn ló ń tọ́ka sí abala rẹ̀"
+    ]
+  },
+  "preview": {
+    "label": "Àpẹẹrẹ ìdáhùn sí ìbéèrè náà: ṣé ọlọ́pàá lè yẹ fóònù mi wò?",
+    "question": "Ṣé ọlọ́pàá lè yẹ fóònù mi wò?",
+    "answer": "Àwọn ìpè fóònù àti àwọn ìfiránṣẹ́ rẹ jẹ́ àṣírí lábẹ́ Section 37. Ọlọ́pàá lè ré èyí kọjá lábẹ́ òfin tí a ṣe fún ìdí bí ààbò gbogbo ènìyàn tàbí láti dènà ìwà ọ̀daràn nìkan, gẹ́gẹ́ bí Section 45 ṣe gbà á láàyè.",
+    "sectionTitle": "Section 37 · Ẹ̀tọ́ sí ìgbésí ayé àdáni àti ti ẹbí",
+    "edition": "Èyí ni Òfin-Ìpìlẹ̀ 1999 bí wọ́n ṣe tẹ̀ ẹ́ jáde ní 2004. Àwọn àtúnṣe tó wá lẹ́yìn náà kò tíì sí nínú rẹ̀."
+  },
+  "problem": {
+    "kicker": "Ìdí tí ó fi ṣòro",
+    "title": "Fún àwọn agbẹjọ́rò ni wọ́n kọ Òfin-Ìpìlẹ̀. Ìbéèrè rẹ kì í ṣe bẹ́ẹ̀.",
+    "body": "Ó ní abala 320 àti àfikún 7 ní èdè Gẹ̀ẹ́sì òfin tó le. Àwọn ọ̀rọ̀ tí o máa wá kì í sábà jẹ́ àwọn ọ̀rọ̀ tí ó lò.",
+    "pdfKicker": "Wíwá nínú PDF",
+    "pdfTitle": "O wá “phone”. Kò sí nǹkan tó jáde.",
+    "pdfBody": "Abala tí o nílò ń sọ̀rọ̀ nípa “telephone conversations and telegraphic communications”, àwọn ààlà rẹ̀ sì wà ní abala mẹ́jọ lẹ́yìn rẹ̀.",
+    "appKicker": "Pẹ̀lú constitution.ng",
+    "appTitle": "O béèrè “ṣé ọlọ́pàá lè yẹ fóònù mi wò?”",
+    "appBody": "Section 37 ló kọ́kọ́ jáde, Section 45 tẹ̀lé e fún àwọn ààlà, ìdáhùn náà sì ṣàlàyé méjèèjì nínú gbólóhùn méjì."
+  },
+  "tagline": [
+    "Òfin-Ìpìlẹ̀ jẹ́ ti gbogbo ọmọ Nàìjíríà.",
+    "Báyìí gbogbo ọmọ Nàìjíríà lè kà á."
+  ],
+  "benefits": {
+    "kicker": "Ohun tí wàá rí",
+    "title": "Ìdáhùn tí o lè lóye tí o sì lè ṣàyẹ̀wò",
+    "items": [
+      {
+        "title": "Béèrè ní ọ̀nà tìrẹ",
+        "body": "Ọ̀rọ̀ ojoojúmọ́, Pidgin tàbí nọ́ńbà abala tí o rántí díẹ̀. “Section thirty something about privacy” ṣì máa rí Section 37."
+      },
+      {
+        "title": "Ìdáhùn ló ń kọ́kọ́ dé",
+        "body": "Wàá rí ìdáhùn tààrà sí ohun tí o béèrè, lẹ́yìn náà ohun tí ó túmọ̀ sí fún ọ àti ibi tí ààlà wà. Kò sí èdè òfin tó le láti túmọ̀."
+      },
+      {
+        "title": "Ọ̀rọ̀ òfin gangan, nígbà gbogbo",
+        "body": "Gbogbo ìdáhùn ló ń fi ọ̀rọ̀ gangan àwọn abala tí ó gbára lé hàn, pẹ̀lú ìtọ́ka láti inú orísun tí a tẹ̀jáde."
+      },
+      {
+        "title": "Tọ́jú ohun tí o rí",
+        "body": "Ṣe ẹ̀dà ìdáhùn pẹ̀lú àwọn ìtọ́ka rẹ̀, fi àwọn abala pamọ́ fún ìgbà míì, tàbí ṣí ojú-ìwé náà nínú orísun tí a tẹ̀ láti yẹ̀ ẹ́ wò fúnra rẹ."
+      }
+    ]
+  },
+  "steps": {
+    "kicker": "Bí ó ṣe ń ṣiṣẹ́",
+    "title": "Ìgbésẹ̀ mẹ́ta, pẹ̀lú àwọn orísun lẹ́gbẹ̀ẹ́ rẹ",
+    "items": [
+      {
+        "title": "Béèrè ìbéèrè rẹ",
+        "body": "Tẹ ẹ́ bí o ṣe máa béèrè lọ́wọ́ ọ̀rẹ́ tó mọ òfin. Nọ́ńbà abala náà ń ṣiṣẹ́."
+      },
+      {
+        "title": "A ó wá àwọn abala",
+        "body": "A ó fi ìbéèrè rẹ wé ẹ̀dà orísun tí a tẹ̀jáde, títí kan àwọn ìpèsè tó fi ààlà sí ẹ̀tọ́ kan."
+      },
+      {
+        "title": "Ka ìdáhùn àti orísun",
+        "body": "Ìdáhùn kúkúrú ní èdè tó rọrùn, pẹ̀lú ọ̀rọ̀ òfin gangan ní èdè Gẹ̀ẹ́sì fún abala kọ̀ọ̀kan lẹ́gbẹ̀ẹ́ rẹ̀."
+      }
+    ]
+  },
+  "proof": {
+    "kicker": "A kọ́ ọ kí o lè yẹ̀ ẹ́ wò",
+    "title": "A dán an wò pẹ̀lú àwọn ìbéèrè tí àwọn ènìyàn ń béèrè gan-an",
+    "body": "A ń dán wíwá abala wò pẹ̀lú ọ̀nà ìsọ̀rọ̀ ojoojúmọ́. Ààlà àyẹ̀wò ẹ̀dà orísun tí a tọ́jú nìyí.",
+    "stats": [
+      {
+        "value": "54 nínú 55",
+        "label": "ìbéèrè ojoojúmọ́, ní èdè Gẹ̀ẹ́sì àti Pidgin, mú abala tí a ń retí wá ní ipò kìíní nínú àyẹ̀wò wíwá ti 12 October 2026 tí a tọ́jú"
+      },
+      {
+        "value": "1,811",
+        "label": "àyọkà orísun nínú ẹ̀dà 2004 tí a tọ́jú, tí a so mọ́ ojú-ìwé tí a tẹ̀"
+      },
+      {
+        "value": "2004",
+        "label": "ẹ̀dà orísun; àwọn àtúnṣe tó wá lẹ́yìn kò sí nínú rẹ̀"
+      }
+    ],
+    "limits": "Àṣeyọrí wíwá kò wọn bóyá àlàyé tọ̀nà tàbí bóyá ó bo òfin lọ́wọ́lọ́wọ́. <methodology>Ka àyẹ̀wò tó ní ọjọ́ àti àwọn ààlà rẹ̀</methodology>.",
+    "try": "Gbìyànjú ọ̀kan nínú ìwọ̀nyí",
+    "examples": [
+      "Ṣé ọlọ́pàá lè yẹ fóònù mi wò?",
+      "Báwo ni ọlọ́pàá ṣe lè pẹ́ tó tí wọ́n á fi mú mi dání kí wọ́n tó gbé mi lọ sí ilé-ẹjọ́?",
+      "Ta ló lè du ipò Ààrẹ?",
+      "Ṣé mo lè ní ilẹ̀ ní ìpínlẹ̀ míì?",
+      "wetin constitution talk about freedom of religion?",
+      "Kí ni Section 33 sọ?"
+    ]
+  },
+  "faq": {
+    "kicker": "Àwọn ìbéèrè",
+    "title": "Kí o tó béèrè",
+    "body": "Ní ṣókí: ọ̀fẹ́ ni, ó dá dúró, ó sì máa ń fi orísun hàn ọ́ nígbà gbogbo.",
+    "items": [
+      {
+        "q": "Ṣé ìmọ̀ràn òfin ni èyí?",
+        "a": "Rárá. constitution.ng ń ṣàlàyé àwọn orísun òfin Nàìjíríà tí a tẹ̀jáde, ó sì ń fi abala gangan hàn ọ́. Tí o bá ní ẹjọ́ ní ilé-ẹjọ́, tí wọ́n mú ọ, tàbí tí o ní aáwọ̀, bá agbẹjọ́rò tàbí Legal Aid Council sọ̀rọ̀. Mú àwọn abala tí o rí níbí dání lọ."
+      },
+      {
+        "q": "Ṣé ọ̀fẹ́ ni?",
+        "a": "Bẹ́ẹ̀ ni. Bíbéèrè ìbéèrè, wíwá abala àti kíka ẹ̀dà orísun tí a tẹ̀jáde jẹ́ ọ̀fẹ́. Kò sí ètò tí o máa san owó fún."
+      },
+      {
+        "q": "Ṣé mo nílò àkọọ́lẹ̀?",
+        "a": "Rárá. O lè béèrè kí o sì kàwé gẹ́gẹ́ bí àlejò. Ṣẹ̀dá àkọọ́lẹ̀ tí o bá fẹ́ kí àwọn ìjíròrò rẹ tẹ̀lé ọ lọ sí ẹ̀rọ míì nìkan."
+      },
+      {
+        "q": "Ṣé Òfin-Ìpìlẹ̀ lọ́wọ́lọ́wọ́ nìyí?",
+        "a": "Òfin-Ìpìlẹ̀ 1999 ni, bí wọ́n ṣe tẹ̀ ẹ́ jáde ní 2004. Àwọn àtúnṣe tí wọ́n ṣe lẹ́yìn ìgbà yẹn kò tíì sí nínú rẹ̀, nítorí náà abala kan lè ti yí padà. Gbogbo ìdáhùn ló ń sọ èyí fún ọ kí o lè yẹ̀ ẹ́ wò kí o tó gbára lé e."
+      },
+      {
+        "q": "Àwọn òfin wo ni mo lè kà?",
+        "a": "Àṣàyàn òfin ń ṣe àkójọ àwọn òfin tó wà nínú ìtẹ̀jáde tí o yàn. Òfin tí wọ́n ṣì ń ṣàyẹ̀wò kò sí níbẹ̀. Ìpèsè kọ̀ọ̀kan ń fi ẹ̀dà orísun rẹ̀ hàn. Àwọn Act tí a sàmì sí pé bí wọ́n ṣe ṣe wọ́n lè ti ní àtúnṣe; ṣàyẹ̀wò orísun àkọ́kọ́ àti àwọn àyípadà tó wá lẹ́yìn kí o tó gbára lé wọn."
+      },
+      {
+        "q": "Ṣé mo lè béèrè ní Pidgin?",
+        "a": "Bẹ́ẹ̀ ni. Béèrè bí o ṣe máa ń sọ ọ́, ní èdè Gẹ̀ẹ́sì tàbí Pidgin, a ó sì wá abala náà. O tún lè yí ojú-òpó náà padà sí Pidgin, Yorùbá, Hausa tàbí Igbo. Ọ̀rọ̀ òfin gangan máa ń jẹ́ ọ̀rọ̀ Gẹ̀ẹ́sì nígbà gbogbo."
+      },
+      {
+        "q": "Báwo ni ẹ ṣe ń yan abala?",
+        "a": "A ń fi ìbéèrè rẹ wé àwọn abala tí a tẹ̀jáde, ní lílo àwọn ọ̀rọ̀ tí o tẹ àti ohun tí o ní lọ́kàn. Àwọn ìtọ́ka ń wá láti inú ọ̀rọ̀ òfin fúnra rẹ̀, a kì í méfò wọn, gbogbo ìdáhùn ló sì ń ṣe àkójọ àwọn abala tí ó lò kí o lè kà wọ́n fúnra rẹ."
+      },
+      {
+        "q": "Ṣé mo lè fa ọ̀rọ̀ yọ láti inú ìdáhùn?",
+        "a": "Bẹ́ẹ̀ ni. Ṣe ẹ̀dà ìdáhùn èyíkéyìí pẹ̀lú àwọn ìtọ́ka rẹ̀, tàbí fi àwọn abala tí o nílò pamọ́. Fa ọ̀rọ̀ òfin gangan yọ, kì í ṣe àlàyé, nígbà tí ìpéye bá ṣe pàtàkì."
+      },
+      {
+        "q": "Ṣé ojú-òpó ìjọba ni èyí?",
+        "a": "Rárá. constitution.ng dá dúró. Kì í ṣe National Assembly tàbí ẹ̀ka ìjọba kankan ló tẹ̀ ẹ́ jáde, kò sì so mọ́ wọn."
+      }
+    ]
+  },
+  "final": {
+    "kicker": "Ọ̀fẹ́ ni, kò sí àkọọ́lẹ̀, kò sí nǹkan láti fi sórí ẹ̀rọ",
+    "title": "Béèrè ìbéèrè àkọ́kọ́ rẹ",
+    "body": "Wá àwọn abala tí a tẹ̀jáde nípa ohun tó wà lọ́kàn rẹ, kí o sì ka ọ̀rọ̀ wọn láti inú orísun.",
+    "browse": "Tàbí ṣàwárí àwọn abala tí a tẹ̀jáde"
+  },
+  "footer": {
+    "about": "Òfin-Ìpìlẹ̀ Nàìjíríà àti àwọn òfin tí a tẹ̀jáde. Ó dá dúró, kì í sì í ṣe ìtẹ̀jáde ìjọba. Àlàyé kì í ṣe ìmọ̀ràn òfin.",
+    "label": "Ìsàlẹ̀ ojú-ìwé",
+    "links": {
+      "ask": "Béèrè ìbéèrè",
+      "about": "Nípa wa àti àtúnṣe",
+      "methodology": "Bí a ṣe ń ṣàyẹ̀wò wíwá",
+      "laws": "Ṣàwárí àwọn òfin tí a tẹ̀jáde",
+      "saved": "Àwọn abala tí o fipamọ́",
+      "login": "Wọlé",
+      "privacy": "Àṣírí"
+    }
+  }
+}

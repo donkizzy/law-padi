@@ -5,7 +5,7 @@ import {
 } from "@/client"
 import { conversationHeaders } from "@/hooks/useConversations"
 import { preferencesKey } from "@/hooks/useWorkspacePreferences"
-import { editionName, editionNote } from "./legal-provisions"
+import { editionName, editionNote, pageLabel } from "./legal-provisions"
 import { referencePath } from "./seo"
 
 export function evidenceUrl(
@@ -34,7 +34,7 @@ export type CopySource = Partial<
     | "source_page_start"
   >
 export function evidenceCopy(item: CopySource) {
-  return `${item.citation}${item.title ? ` — ${item.title}` : ""}\n${item.authoritative_text}\n\n${editionName(item.edition_label, item)}\n${item.legal_status === "historical" ? `${editionNote(item.edition_label, item)}\n` : ""}${item.source_authority} · ${item.source_title}${item.source_page_start ? ` · page ${item.source_page_start}` : ""}\n${evidenceUrl(item)}`
+  return `${item.citation}${item.title ? ` — ${item.title}` : ""}\n${item.authoritative_text}\n\n${editionName(item.edition_label, item)}\n${item.legal_status === "historical" ? `${editionNote(item.edition_label, item)}\n` : ""}${item.source_authority} · ${item.source_title}${item.source_page_start ? ` · ${pageLabel(item.source_page_start)}` : ""}\n${evidenceUrl(item)}`
 }
 
 export function downloadResearch(name: string, data: unknown) {

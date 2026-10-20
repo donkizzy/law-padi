@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from "react"
+import { useTranslation } from "react-i18next"
 import type { EvidenceItem } from "@/client"
 import {
   CloseButton,
@@ -11,7 +12,12 @@ import {
   SheetDescription,
   SheetTitle,
 } from "@/components/ui/sheet"
-import { lawName, readableText, statusLabel } from "@/lib/legal-provisions"
+import {
+  lawName,
+  pageLabel,
+  readableText,
+  statusLabel,
+} from "@/lib/legal-provisions"
 import { referencePath } from "@/lib/seo"
 import { EditionNotice } from "./EditionNotice"
 import { SourceActions } from "./SourceActions"
@@ -32,6 +38,7 @@ function SourceContent({
   onExplain: (evidence: EvidenceItem) => void
   explainDisabled: boolean
 }) {
+  const { t } = useTranslation("legal")
   const base = import.meta.env.VITE_API_URL || window.location.origin
   const source = new URL(evidence.source_content_url, base)
   if (evidence.source_page_start)
@@ -68,16 +75,16 @@ function SourceContent({
       </div>
       <section>
         <h3 className="mb-3 text-overline uppercase text-muted-foreground">
-          What {lawName(evidence)} says
+          {t("source.whatLawSays", { law: lawName(evidence) })}
         </h3>
-        <p className="whitespace-pre-wrap font-legal text-statute-sm">
+        <p lang="en" className="whitespace-pre-wrap font-legal text-statute-sm">
           {readableText(evidence.authoritative_text)}
         </p>
       </section>
       <p className="text-label font-normal text-muted-foreground">
         {evidence.source_title} · {evidence.source_authority}
         {evidence.source_page_start
-          ? ` · page ${evidence.source_page_start}`
+          ? ` · ${pageLabel(evidence.source_page_start)}`
           : ""}
       </p>
       <div className="flex flex-wrap gap-3">
@@ -86,7 +93,7 @@ function SourceContent({
           onClick={() => onExplain(evidence)}
           type="button"
         >
-          Explain this section
+          {t("source.explain")}
         </InlineAction>
         <InlineAction asChild>
           <a
@@ -95,12 +102,12 @@ function SourceContent({
               evidence.release_version,
             )}
           >
-            Open full section
+            {t("source.openFull")}
           </a>
         </InlineAction>
         <InlineAction asChild>
           <a href={source.href} target="_blank" rel="noopener noreferrer">
-            See it in the original PDF
+            {t("source.originalPdf")}
           </a>
         </InlineAction>
       </div>
@@ -115,6 +122,7 @@ export function ChatEvidencePanel({
   onExplain,
   explainDisabled,
 }: Props) {
+  const { t } = useTranslation("legal")
   const [desktop, setDesktop] = useState(
     () => window.matchMedia("(min-width: 1280px)").matches,
   )
@@ -136,7 +144,7 @@ export function ChatEvidencePanel({
   if (desktop)
     return evidence ? (
       <aside
-        aria-label="Section details"
+        aria-label={t("source.details")}
         className="sticky top-16 max-h-[calc(100svh-4rem)] self-start overflow-y-auto border-l border-border bg-sidebar/70 px-6 py-6"
       >
         <div className="mb-5 flex justify-end">
@@ -165,9 +173,9 @@ export function ChatEvidencePanel({
           opener.current?.focus()
         }}
       >
-        <SheetTitle className="sr-only">Section details</SheetTitle>
+        <SheetTitle className="sr-only">{t("source.details")}</SheetTitle>
         <SheetDescription className="sr-only">
-          The text of this section and a link to the original document.
+          {t("source.evidenceDescription")}
         </SheetDescription>
         {evidence && (
           <SourceContent

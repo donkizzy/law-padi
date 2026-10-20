@@ -1,0 +1,119 @@
+{
+  "kicker": "Settings",
+  "title": "Make constitution.ng yours.",
+  "intro": "Manage your account, reading preferences and saved research.",
+  "tabs": {
+    "label": "Settings sections",
+    "profile": "Profile",
+    "preferences": "Preferences",
+    "security": "Security"
+  },
+  "guest": {
+    "loading": "Loading your account…",
+    "body": "You're browsing as a guest. You can ask questions and save sections without an account.",
+    "signInBenefit": "Sign in to keep your conversations and saved sections on every device. Anything you've saved here comes with you."
+  },
+  "available": {
+    "title": "Available here",
+    "account": "Account",
+    "signedIn": "Signed in",
+    "guest": "Guest",
+    "edition": "Source edition",
+    "editionUnavailable": "Edition unavailable",
+    "explanations": "Explanations",
+    "unknown": "Availability unknown",
+    "on": "Available",
+    "paused": "Paused"
+  },
+  "reading": {
+    "title": "Reading and asking",
+    "enterToSend": "Enter to send",
+    "enterToSendHint": "Use Shift+Enter for a new line. Ctrl/Cmd+Enter always sends.",
+    "followLatest": "Follow latest answer",
+    "followLatestHint": "Scroll to new messages while you're near the end of the chat.",
+    "openSources": "Open source beside answers",
+    "openSourcesHint": "On desktop, open the first linked source after an explanation finishes.",
+    "syncedToAccount": "These preferences follow your account to any device.",
+    "savedOnBrowser": "These preferences are saved on this browser.",
+    "save": "Save changes",
+    "saved": "Settings saved"
+  },
+  "language": {
+    "title": "Language",
+    "official": "Official wording of the Constitution and other laws always stays in English.",
+    "savedOnBrowser": "Your language is saved on this browser."
+  },
+  "privacy": {
+    "title": "Privacy and research",
+    "keptInAccount": "Saved sections and preferences are kept in your account.",
+    "keptOnBrowser": "Saved sections and preferences stay on this browser.",
+    "retention": "Drafts stay in this tab until it closes. Conversations are kept with your account, or with this browser for 30 days if you're a guest.",
+    "provider": "When explanations are enabled, your question and relevant constitutional text are sent to DeepSeek to write and check the answer. Avoid including personal details you don't need to share.",
+    "exportFirst": "Export your bookmarks, preferences and available conversations before clearing local research. Source editions and citations are kept in the export.",
+    "readMore": "Read how we handle your data",
+    "export": "Export my research",
+    "exported": "Research exported",
+    "clear": "Clear bookmarks and drafts"
+  },
+  "security": {
+    "title": "Sign-in security"
+  },
+  "data": {
+    "title": "Your account data",
+    "downloading": "Your account data is downloading",
+    "deleted": "Your account has been deleted",
+    "downloadTitle": "Download your data",
+    "downloadBody": "A copy of everything your account holds: your profile, saved sections, preferences, and every conversation with its messages.",
+    "download": "Download my data",
+    "deleteTitle": "Delete your account",
+    "adminCannotDelete": "Administrator accounts can't delete themselves. Ask another administrator to remove this account.",
+    "deleteBody": "This permanently deletes your account, your conversations, saved sections and preferences. Download your data first if you want a copy.",
+    "delete": "Delete my account",
+    "confirmTitle": "Delete your account?",
+    "confirmBody": "Your account, conversations, saved sections and preferences will be deleted for good. This can't be undone.",
+    "keep": "Keep my account"
+  },
+  "qualitySignals": "Answer quality signals",
+  "support": {
+    "title": "Support details",
+    "appBuild": "App build",
+    "serviceBuild": "Service build",
+    "sourceRelease": "Source release",
+    "unavailable": "Unavailable"
+  },
+  "clear": {
+    "title": "Clear local bookmarks and drafts?",
+    "body": "This removes your bookmarks from this browser and drafts from this tab. Your account and saved conversations stay available. Export your research first if you want a copy.",
+    "keep": "Keep my research",
+    "done": "Local bookmarks and drafts cleared",
+    "confirm": "Clear local research"
+  },
+  "errors": {
+    "saveFailed": "Your browser couldn't save these preferences. Please try again.",
+    "exportFailed": "Your research could not be fully exported. Check your connection and try again.",
+    "clearFailed": "Some local research could not be cleared. Please check your browser storage."
+  },
+  "password": {
+    "title": "Change Password",
+    "current": "Current Password",
+    "new": "New Password",
+    "confirm": "Confirm Password",
+    "submit": "Update Password",
+    "updated": "Password updated successfully"
+  },
+  "profile": {
+    "title": "User Information",
+    "fullName": "Full name",
+    "email": "Email",
+    "notSet": "N/A",
+    "updated": "User updated successfully"
+  },
+  "verify": {
+    "title": "Confirm your email address",
+    "body": "We sent a link to {{email}}. Your saved sections and conversations start syncing once it's confirmed.",
+    "sentTo": "We sent a new link to {{email}}.",
+    "sent": "We sent a new link to your email.",
+    "sending": "Sending…",
+    "resend": "Send a new link"
+  }
+}

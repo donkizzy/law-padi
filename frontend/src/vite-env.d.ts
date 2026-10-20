@@ -10,3 +10,8 @@ interface ImportMetaEnv {
 interface ImportMeta {
   readonly env: ImportMetaEnv
 }
+
+declare module "virtual:locale-manifest" {
+  /** Language codes whose catalogues are complete, English first. */
+  export const completeLanguages: string[]
+}

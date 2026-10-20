@@ -1,0 +1,119 @@
+{
+  "kicker": "Saituna",
+  "title": "Mayar da constitution.ng naka.",
+  "intro": "Sarrafa asusunka, yadda kake karatu, da binciken da ka ajiye.",
+  "tabs": {
+    "label": "Sassan saituna",
+    "profile": "Bayananka",
+    "preferences": "Zaɓuɓɓuka",
+    "security": "Tsaro"
+  },
+  "guest": {
+    "loading": "Ana buɗe asusunka…",
+    "body": "Kana amfani a matsayin baƙo. Za ka iya yin tambayoyi ka ajiye sassa ba tare da asusu ba.",
+    "signInBenefit": "Shiga don tattaunawarka da sassan da ka ajiye su kasance a kowace na'ura. Duk abin da ka ajiye a nan zai biyo ka."
+  },
+  "available": {
+    "title": "Abubuwan da ke nan",
+    "account": "Asusu",
+    "signedIn": "Ka shiga",
+    "guest": "Baƙo",
+    "edition": "Bugun tushe",
+    "editionUnavailable": "Babu bugu",
+    "explanations": "Bayani",
+    "unknown": "Ba a san ko yana akwai ba",
+    "on": "Yana akwai",
+    "paused": "An dakatar"
+  },
+  "reading": {
+    "title": "Karatu da tambaya",
+    "enterToSend": "Enter don aikawa",
+    "enterToSendHint": "Yi amfani da Shift+Enter don sabon layi. Ctrl/Cmd+Enter koyaushe yana aikawa.",
+    "followLatest": "Bi amsa ta ƙarshe",
+    "followLatestHint": "Gungura zuwa sababbin saƙonni lokacin da kake kusa da ƙarshen tattaunawa.",
+    "openSources": "Buɗe tushe kusa da amsoshi",
+    "openSourcesHint": "A kwamfuta, buɗe tushe na farko da aka nuna bayan bayani ya kammala.",
+    "syncedToAccount": "Waɗannan zaɓuɓɓuka suna bin asusunka zuwa kowace na'ura.",
+    "savedOnBrowser": "An ajiye waɗannan zaɓuɓɓuka a kan wannan burauza.",
+    "save": "Ajiye canje-canje",
+    "saved": "An ajiye saituna"
+  },
+  "language": {
+    "title": "Harshe",
+    "official": "Kalmomin hukuma na Kundin Tsarin Mulki da sauran dokoki koyaushe suna cikin Turanci.",
+    "savedOnBrowser": "An ajiye harshenka a kan wannan burauza."
+  },
+  "privacy": {
+    "title": "Sirri da bincike",
+    "keptInAccount": "Ana adana sassa da zaɓuɓɓukan da ka ajiye a cikin asusunka.",
+    "keptOnBrowser": "Sassa da zaɓuɓɓukan da ka ajiye suna zama a kan wannan burauza.",
+    "retention": "Daftari suna zama a wannan shafin har sai ka rufe shi. Ana adana tattaunawa tare da asusunka, ko a kan wannan burauza na kwanaki 30 idan kai baƙo ne.",
+    "provider": "Idan bayani yana kunne, ana aika tambayarka da rubutun Kundin Tsarin Mulki da ya shafi lamarin zuwa DeepSeek don ya rubuta ya kuma duba amsar. Kada ka saka bayanan kanka da ba ka buƙatar bayarwa.",
+    "exportFirst": "Fitar da alamominka, zaɓuɓɓuka da tattaunawar da ke akwai kafin ka share binciken wannan na'ura. Bugu-bugun tushe da madogaru za su kasance a cikin abin da ka fitar.",
+    "readMore": "Karanta yadda muke kula da bayananka",
+    "export": "Fitar da bincikena",
+    "exported": "An fitar da bincike",
+    "clear": "Share alamomi da daftari"
+  },
+  "security": {
+    "title": "Tsaron shiga"
+  },
+  "data": {
+    "title": "Bayanan asusunka",
+    "downloading": "Ana sauke bayanan asusunka",
+    "deleted": "An goge asusunka",
+    "downloadTitle": "Sauke bayananka",
+    "downloadBody": "Kwafin duk abin da ke cikin asusunka: bayananka, sassan da ka ajiye, zaɓuɓɓuka, da kowace tattaunawa tare da saƙonninta.",
+    "download": "Sauke bayanaina",
+    "deleteTitle": "Goge asusunka",
+    "adminCannotDelete": "Asusun mai gudanarwa ba zai iya goge kansa ba. Nemi wani mai gudanarwa ya cire wannan asusu.",
+    "deleteBody": "Wannan zai goge asusunka, tattaunawarka, sassa da zaɓuɓɓukan da ka ajiye har abada. Sauke bayananka tukuna idan kana son kwafi.",
+    "delete": "Goge asusuna",
+    "confirmTitle": "A goge asusunka?",
+    "confirmBody": "Za a goge asusunka, tattaunawa, sassan da ka ajiye da zaɓuɓɓuka har abada. Ba za a iya dawo da su ba.",
+    "keep": "Bar asusuna"
+  },
+  "qualitySignals": "Alamomin ingancin amsa",
+  "support": {
+    "title": "Bayanai don taimako",
+    "appBuild": "Bugun manhaja",
+    "serviceBuild": "Bugun sabis",
+    "sourceRelease": "Fitar tushe",
+    "unavailable": "Babu"
+  },
+  "clear": {
+    "title": "A share alamomi da daftarin wannan na'ura?",
+    "body": "Wannan zai cire alamominka daga wannan burauza da daftari daga wannan shafi. Asusunka da tattaunawar da ka ajiye za su kasance. Fitar da bincikenka tukuna idan kana son kwafi.",
+    "keep": "Bar bincikena",
+    "done": "An share alamomi da daftarin wannan na'ura",
+    "confirm": "Share binciken wannan na'ura"
+  },
+  "errors": {
+    "saveFailed": "Burauzarka ba ta iya ajiye waɗannan zaɓuɓɓuka ba. Da fatan za a sake gwadawa.",
+    "exportFailed": "Ba a iya fitar da bincikenka gaba ɗaya ba. Duba haɗin intanet ɗinka ka sake gwadawa.",
+    "clearFailed": "Ba a iya share wani ɓangare na binciken wannan na'ura ba. Da fatan za ka duba ma'ajiyar burauzarka."
+  },
+  "password": {
+    "title": "Canja kalmar sirri",
+    "current": "Kalmar sirri ta yanzu",
+    "new": "Sabuwar kalmar sirri",
+    "confirm": "Tabbatar da kalmar sirri",
+    "submit": "Sabunta kalmar sirri",
+    "updated": "An canja kalmar sirri"
+  },
+  "profile": {
+    "title": "Bayananka",
+    "fullName": "Cikakken suna",
+    "email": "Imel",
+    "notSet": "Babu",
+    "updated": "An sabunta bayananka"
+  },
+  "verify": {
+    "title": "Tabbatar da adireshin imel ɗinka",
+    "body": "Mun aika mahaɗi zuwa {{email}}. Sassa da tattaunawar da ka ajiye za su fara daidaitawa da zarar ka tabbatar.",
+    "sentTo": "Mun aika sabon mahaɗi zuwa {{email}}.",
+    "sent": "Mun aika sabon mahaɗi zuwa imel ɗinka.",
+    "sending": "Ana aikawa…",
+    "resend": "Aika sabon mahaɗi"
+  }
+}

@@ -1,0 +1,158 @@
+{
+  "home": {
+    "kicker": "The law, made easy",
+    "title": "Ask about Nigeria's laws.",
+    "intro": "Ask in your own words. You'll get a plain-language answer and the exact sections it comes from.",
+    "paused": "Explanations are paused. Find a section to keep reading the published laws.",
+    "suggestions": [
+      "Can police search my phone?",
+      "How long can police hold me before court?",
+      "Who can run for president?",
+      "What does Section 37 say?"
+    ],
+    "disclaimer": "Answers explain published laws in plain language and can miss details. Check the sections they link to, and talk to a lawyer about your own situation."
+  },
+  "outcome": {
+    "clarification_required": "That question covers a lot at once. Try asking about one law, section or issue.",
+    "validation_failed": "We couldn't confirm that the explanation matches the published provisions, so here are the sections themselves.",
+    "provider_failure": "Explanations aren't available right now. Here are the relevant published sections.",
+    "budget_exhausted": "We've reached today's limit for explanations. Here are the relevant published sections.",
+    "capacity_exhausted": "A lot of people are asking questions right now. Here is the relevant text; try again in a minute.",
+    "cancelled": "You stopped this answer.",
+    "closest": "The published provisions don't seem to answer this directly. Here are the closest sections we found.",
+    "noSection": "We couldn't find a published section that answers this. Try rephrasing, or name a law and section.",
+    "unfinished": "We couldn't finish this answer. Here are the relevant published sections."
+  },
+  "errors": {
+    "unavailable": "Explanations are temporarily unavailable. Your question is still here; try again or find the relevant sections.",
+    "dailyLimit": "You've reached today's explanation allowance. It resets at midnight in Lagos. You can still find and read sections.",
+    "busy": "Explanations are busy right now. Try again in a minute, or find the relevant sections.",
+    "sendFailed": "Something went wrong sending your question. Check your connection and try again.",
+    "retry": "Retry question",
+    "edit": "Edit question",
+    "findSections": "Find relevant sections"
+  },
+  "actions": {
+    "label": "Answer actions",
+    "copy": "Copy answer with citations",
+    "copied": "Answer and citations copied",
+    "copyFailed": "Couldn't copy. Please try again.",
+    "saveSources": "Save sources",
+    "sourcesSaved": "Sources saved",
+    "saveFailed": "Couldn't save sources on this browser.",
+    "export": "Export answer"
+  },
+  "answer": {
+    "label": "Answer",
+    "dependsOn": "The answer may depend on",
+    "otherLaws": "Other laws also apply",
+    "otherLawsBody": "These Nigerian laws also cover this. They aren't included here yet, so check them or ask a lawyer before relying on this answer.",
+    "sources": "Sources",
+    "notAdvice": "This explanation is not legal advice.",
+    "moreAboutSection": "More about this section",
+    "loadFailed": "This answer couldn't be loaded."
+  },
+  "sources": {
+    "open": "Open {{citation}} source",
+    "openTitled": "Open {{citation}}: {{title}}",
+    "mayHelp": "Other sections that may help",
+    "used": "Sections used",
+    "othersCameUp_one": "1 other section came up",
+    "othersCameUp_other": "{{count}} other sections came up",
+    "alsoRelated": "Also related"
+  },
+  "gaps": {
+    "label": "Sections we couldn't find",
+    "title": "We couldn't find everything"
+  },
+  "followUps": {
+    "label": "Suggested questions",
+    "title": "You might also ask"
+  },
+  "pending": {
+    "label": "Answer in progress",
+    "reading": "Reading {{sources}}"
+  },
+  "progress": {
+    "finding": "Finding the relevant sections…",
+    "writing": "Writing a plain-English answer…",
+    "checking": "Double-checking the answer against its sources…",
+    "reconnecting": "Reconnecting to your saved question…",
+    "connectionLost": "Connection lost. Reconnecting…",
+    "interrupted": "The connection was interrupted. We're checking whether your answer finished.",
+    "stopping": "Stopping…"
+  },
+  "conversation": {
+    "confirmDelete": "Delete this conversation? This can't be undone.",
+    "titleLabel": "Conversation title",
+    "exportFailed": "Conversation could not be fully exported. Try again.",
+    "exporting": "Exporting…",
+    "export": "Export chat",
+    "rename": "Rename",
+    "delete": "Delete",
+    "unavailable": "Conversation unavailable",
+    "loadOlder": "Load older messages",
+    "stop": "Stop answering",
+    "jumpToLatest": "Jump to latest"
+  },
+  "stream": {
+    "saved": "Your question is saved. Reconnect or check its status to continue.",
+    "reconnect": "Reconnect",
+    "checkStatus": "Check answer status"
+  },
+  "composer": {
+    "label": "Your question",
+    "placeholder": "Ask about Nigeria's Constitution and published laws…",
+    "explanation": "Answers in plain English",
+    "search": "Search published laws",
+    "sending": "Sending",
+    "send": "Send question",
+    "enterHint": "Enter to send · Shift+Enter for a new line",
+    "modEnterHint": "Ctrl/Cmd+Enter to send"
+  },
+  "feedback": {
+    "label": "Answer feedback",
+    "question": "Was this useful?",
+    "helpful": "Helpful",
+    "notHelpful": "Not helpful",
+    "thanks": "Thanks for your feedback.",
+    "failed": "Feedback couldn't be saved. Try again."
+  },
+  "tasks": {
+    "label": "Choose a task",
+    "checking": "Checking available features…"
+  },
+  "find": {
+    "title": "Explore Nigeria's published laws.",
+    "intro": "Find a section by number or describe the issue in your own words.",
+    "availabilityError": "We couldn't check whether plain-English answers are available. You can still find and read sections.",
+    "paused": "Plain-English answers are paused. You can still find and read sections.",
+    "allEditions": "All published source editions",
+    "placeholder": "Find a topic or a reference, e.g. Section 37 or ACJA s.9…",
+    "suggestionsLabel": "Suggested searches",
+    "suggestions": [
+      "Can police search my phone?",
+      "Section 35",
+      "Freedom of expression",
+      "Who can run for president?",
+      "Owning land in another state"
+    ],
+    "loadFailed": "Couldn't load the published laws"
+  },
+  "results": {
+    "label": "Search results",
+    "title": "Results for “{{query}}”",
+    "searching": "Searching the published laws…",
+    "unavailable": "Search unavailable",
+    "unsupported": "Reference not supported",
+    "none": "No matching section found",
+    "noneHint": "Try different words, a broader topic, or a section number like Section 35.",
+    "bestMatch": "Best match",
+    "selected": "Selected section",
+    "inContext": ". Shown in full so you can read {{citation}} in context.",
+    "surroundingFailed": "The surrounding section couldn't be loaded.",
+    "matchesLabel": "Search matches",
+    "ambiguous": "Which one do you mean?",
+    "otherMatches": "Other matching sections"
+  }
+}
