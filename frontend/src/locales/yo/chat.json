@@ -80,7 +80,8 @@
     "reconnecting": "À ń tún sopọ̀ mọ́ ìbéèrè tí o fipamọ́…",
     "connectionLost": "Ìsopọ̀ já. À ń tún sopọ̀…",
     "interrupted": "Ìsopọ̀ já láàárín. À ń ṣàyẹ̀wò bóyá ìdáhùn rẹ ti parí.",
-    "stopping": "Ó ń dúró…"
+    "stopping": "Ó ń dúró…",
+    "translating": "À ń túmọ̀ ìdáhùn náà sí èdè rẹ…"
   },
   "conversation": {
     "confirmDelete": "Ṣé kí a pa ìjíròrò yìí rẹ́? A kò ní lè dá a padà.",
@@ -154,5 +155,25 @@
     "matchesLabel": "Àwọn tó bá ìwádìí mu",
     "ambiguous": "Èwo ni o ní lọ́kàn?",
     "otherMatches": "Àwọn abala míì tó bá a mu"
+  },
+  "notices": {
+    "cancelled": "O ti dá ìdáhùn yìí dúró.",
+    "disabled": "Àlàyé kò ṣiṣẹ́ báyìí. O ṣì lè wá àti ka àwọn òfin tí a ti tẹ̀jáde.",
+    "too_large": "Ìbéèrè yẹn bo ọ̀pọ̀ nǹkan lẹ́ẹ̀kan náà. Gbìyànjú láti béèrè nípa òfin kan, abala kan tàbí ọ̀rọ̀ kan.",
+    "no_match": "A kò rí abala tí a tẹ̀jáde tí ó dáhùn èyí. Gbìyànjú láti béèrè lọ́nà mìíràn, tàbí dárúkọ òfin àti abala.",
+    "not_covered": "Ó dàbí ẹni pé àwọn abala tí a tẹ̀jáde kò dáhùn èyí tààrà. Àwọn abala tí ó súnmọ́ jùlọ nìyí.",
+    "budget": "A ti dé òpin ohun tí a ní fún àlàyé. O ṣì lè ka àwọn abala tí ó kàn án nísàlẹ̀.",
+    "unverified": "A kò lè fìdí rẹ̀ múlẹ̀ pé àlàyé náà bá àwọn abala tí a tẹ̀jáde mu, nítorí náà àwọn abala fúnra wọn nìyí.",
+    "unavailable": "Àlàyé kò sí báyìí. Àwọn abala tí a tẹ̀jáde tí ó kàn án nìyí.",
+    "stalled": "Ìdáhùn yìí pẹ́ jù. Jọ̀wọ́ gbìyànjú lẹ́ẹ̀kan sí i.",
+    "clarify_section": "Abala wo ni o ní lọ́kàn: {{choices}}?",
+    "coverage": "Ẹ̀dà yìí ní {{laws}} nínú."
+  },
+  "translation": {
+    "label": "A túmọ̀ rẹ̀ láti èdè Gẹ̀ẹ́sì",
+    "showEnglish": "Fi ti Gẹ̀ẹ́sì hàn",
+    "showTranslation": "Fi hàn ní {{language}}",
+    "beta": "Beta",
+    "unavailable": "A kò lè túmọ̀ ìdáhùn yìí, nítorí náà a fi hàn ní èdè Gẹ̀ẹ́sì."
   }
 }

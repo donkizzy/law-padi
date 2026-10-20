@@ -80,7 +80,8 @@
     "reconnecting": "Reconnecting to your saved question…",
     "connectionLost": "Connection lost. Reconnecting…",
     "interrupted": "The connection was interrupted. We're checking whether your answer finished.",
-    "stopping": "Stopping…"
+    "stopping": "Stopping…",
+    "translating": "Putting the answer in your language…"
   },
   "conversation": {
     "confirmDelete": "Delete this conversation? This can't be undone.",
@@ -154,5 +155,25 @@
     "matchesLabel": "Search matches",
     "ambiguous": "Which one do you mean?",
     "otherMatches": "Other matching sections"
+  },
+  "notices": {
+    "cancelled": "You stopped this answer.",
+    "disabled": "Explanations are switched off at the moment. You can still search and read the published laws.",
+    "too_large": "That question covers too much to explain at once. Try asking about one law, section or issue.",
+    "no_match": "We couldn't find a published section that answers this. Try rephrasing, or name a law and section.",
+    "not_covered": "The published provisions don't seem to answer this directly. These are the closest sections we found.",
+    "budget": "We've reached the available budget for explanations. You can still read the relevant sections below.",
+    "unverified": "We couldn't confirm that the explanation matches the published provisions, so here are the sections themselves.",
+    "unavailable": "Explanations aren't available right now. Here are the relevant published sections.",
+    "stalled": "This answer took too long. Please try again.",
+    "clarify_section": "Which section do you mean: {{choices}}?",
+    "coverage": "This edition includes {{laws}}."
+  },
+  "translation": {
+    "label": "Translated from English",
+    "showEnglish": "Show English",
+    "showTranslation": "Show in {{language}}",
+    "beta": "Beta",
+    "unavailable": "We couldn't translate this answer, so it's shown in English."
   }
 }

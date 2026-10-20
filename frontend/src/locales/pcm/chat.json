@@ -80,7 +80,8 @@
     "reconnecting": "We dey connect back to di question wey you save…",
     "connectionLost": "Network cut. We dey connect back…",
     "interrupted": "Di connection cut. We dey check whether your answer don finish.",
-    "stopping": "E dey stop…"
+    "stopping": "E dey stop…",
+    "translating": "We dey put the answer for your language…"
   },
   "conversation": {
     "confirmDelete": "Delete dis conversation? You no fit bring am back.",
@@ -154,5 +155,25 @@
     "matchesLabel": "Wetin match di search",
     "ambiguous": "Which one you mean?",
     "otherMatches": "Other sections wey match"
+  },
+  "notices": {
+    "cancelled": "You don stop dis answer.",
+    "disabled": "Explanation no dey work for now. You fit still search and read the laws wey dem don publish.",
+    "too_large": "Dis question cover too many things at once. Try ask about one law, one section or one matter.",
+    "no_match": "We no fit find any published section wey answer dis one. Try ask am another way, or name the law and the section.",
+    "not_covered": "The published sections no too answer dis one straight. Na the ones wey near am pass be dis.",
+    "budget": "We don reach the limit wey we get for explanations. You fit still read the sections wey concern am for down.",
+    "unverified": "We no fit confirm say the explanation match the published sections, so na the sections themselves be dis.",
+    "unavailable": "Explanation no dey available now. Na the published sections wey concern am be dis.",
+    "stalled": "Dis answer take too long. Abeg try again.",
+    "clarify_section": "Which section you mean: {{choices}}?",
+    "coverage": "Dis edition get {{laws}}."
+  },
+  "translation": {
+    "label": "We translate am from English",
+    "showEnglish": "Show the English",
+    "showTranslation": "Show am for {{language}}",
+    "beta": "Beta",
+    "unavailable": "We no fit translate dis answer, so na English we show."
   }
 }

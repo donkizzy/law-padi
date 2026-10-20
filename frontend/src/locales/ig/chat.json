@@ -80,7 +80,8 @@
     "reconnecting": "A na-ejikọghachi na ajụjụ i chekwara…",
     "connectionLost": "Njikọ bipụrụ. A na-ejikọghachi…",
     "interrupted": "Njikọ kwụsịrị n'etiti. Anyị na-enyocha ma azịza gị ọ gwụla.",
-    "stopping": "Ọ na-akwụsị…"
+    "stopping": "Ọ na-akwụsị…",
+    "translating": "A na-atụgharị azịza ahụ n'asụsụ gị…"
   },
   "conversation": {
     "confirmDelete": "Hichapụ mkparịta ụka a? Enweghị ike iweghachi ya.",
@@ -154,5 +155,25 @@
     "matchesLabel": "Ihe dabara na nchọ",
     "ambiguous": "Kedu nke ị na-ekwu?",
     "otherMatches": "Nkebi ndị ọzọ dabara"
+  },
+  "notices": {
+    "cancelled": "I kwụsịrị azịza a.",
+    "disabled": "Nkọwa anaghị arụ ọrụ ugbu a. Ị ka nwere ike ịchọ ma gụọ iwu ndị e bipụtara.",
+    "too_large": "Ajụjụ ahụ gụnyere ọtụtụ ihe n'otu oge. Gbalịa jụọ maka otu iwu, otu nkebi ma ọ bụ otu okwu.",
+    "no_match": "Anyị ahụghị nkebi e bipụtara nke zara nke a. Gbalịa jụọ ya n'ụzọ ọzọ, ma ọ bụ kpọọ aha iwu na nkebi.",
+    "not_covered": "Ọ dị ka nkebi ndị e bipụtara azaghị nke a ozugbo. Ndị a bụ nkebi kacha nso.",
+    "budget": "Anyị eruola njedebe nke ihe dị maka nkọwa. Ị ka nwere ike ịgụ nkebi ndị metụtara ya n'okpuru.",
+    "unverified": "Anyị enweghị ike ịkwado na nkọwa ahụ kwekọrọ na nkebi ndị e bipụtara, ya mere ndị a bụ nkebi ndị ahụ n'onwe ha.",
+    "unavailable": "Nkọwa adịghị ugbu a. Ndị a bụ nkebi e bipụtara metụtara ya.",
+    "stalled": "Azịza a were ogologo oge. Biko gbalịa ọzọ.",
+    "clarify_section": "Kedu nkebi ị na-ekwu maka ya: {{choices}}?",
+    "coverage": "Mbipụta a gụnyere {{laws}}."
+  },
+  "translation": {
+    "label": "Atụgharịrị ya site na Bekee",
+    "showEnglish": "Gosi nke Bekee",
+    "showTranslation": "Gosi ya na {{language}}",
+    "beta": "Beta",
+    "unavailable": "Anyị enweghị ike ịtụgharị azịza a, ya mere e gosiri ya na Bekee."
   }
 }

@@ -9,6 +9,7 @@ import type {
   CitationOutcome,
   ConversationDetail,
   EvidenceItem,
+  Language,
   MessagePublic,
 } from "@/client"
 import { ConversationsService } from "@/client"
@@ -58,6 +59,59 @@ type ExplanationAnswer = {
   evidence: EvidenceItem[]
   related_laws?: string[]
   notice?: string | null
+  notice_code?: string | null
+  notice_params?: { laws?: string[]; choices?: string[] }
+  question_language?: string | null
+  answer_language?: string
+  translation?: AnswerTranslation | null
+}
+
+type AnswerTranslation = {
+  language: string
+  blocks: ExplanationAnswer["blocks"]
+  missing_facts: string[]
+  follow_up_questions: string[]
+}
+
+// Languages without native-speaker review are labelled as beta.
+const betaLanguages = new Set(["yo", "ha", "ig"])
+const languageNames: Record<string, string> = {
+  en: "English",
+  pcm: "Pidgin",
+  yo: "Yorùbá",
+  ha: "Hausa",
+  ig: "Igbo",
+}
+
+/** The answer as the reader sees it: translated unless they asked for English. */
+function readerAnswer(
+  answer: ExplanationAnswer,
+  english: boolean,
+): ExplanationAnswer {
+  const translation = answer.translation
+  if (!translation || english) return answer
+  return {
+    ...answer,
+    blocks: translation.blocks,
+    missing_facts: translation.missing_facts,
+    follow_up_questions: translation.follow_up_questions,
+  }
+}
+
+/** Server notices are English; other languages render them from their code. */
+function noticeText(answer: ExplanationAnswer): string | null {
+  const code = answer.notice_code
+  if (!code || (i18n.resolvedLanguage ?? "en") === "en")
+    return answer.notice ?? null
+  if (code === "edition") return null
+  if (!i18n.exists(`chat:notices.${code}`)) return answer.notice ?? null
+  const params = answer.notice_params ?? {}
+  const text = i18n.t(`chat:notices.${code}` as "chat:notices.cancelled", {
+    choices: params.choices?.join(", "),
+  })
+  return params.laws?.length
+    ? `${text} ${i18n.t("chat:notices.coverage", { laws: params.laws.join(", ") })}`
+    : text
 }
 
 // Fallbacks for older answers that have no server-provided notice.
@@ -77,6 +131,7 @@ type Progress =
   | "finding"
   | "writing"
   | "checking"
+  | "translating"
   | "reconnecting"
   | "connectionLost"
   | "interrupted"
@@ -177,7 +232,8 @@ function AnswerActions({ answer }: { answer: ExplanationAnswer }) {
 }
 
 function statusMessage(answer: ExplanationAnswer) {
-  if (answer.notice) return answer.notice
+  const notice = noticeText(answer)
+  if (notice) return notice
   const gap = answer.citation_outcomes.find((row) => row.status !== "resolved")
   if (answer.outcome === "insufficient_evidence") {
     if (gap?.message) return gap.message
@@ -191,7 +247,8 @@ function statusMessage(answer: ExplanationAnswer) {
 }
 
 function answerEditionNotice(answer: ExplanationAnswer) {
-  if (answer.blocks.length && answer.notice) return answer.notice
+  const notice = noticeText(answer)
+  if (answer.blocks.length && notice) return notice
   const instruments = new Map<string, EvidenceItem>()
   for (const item of answer.evidence) {
     if (item.legal_status !== "historical") continue
@@ -428,8 +485,44 @@ function FollowUps({
   )
 }
 
-function AnswerView({
+function TranslationBar({
   answer,
+  english,
+  onToggle,
+}: {
+  answer: ExplanationAnswer
+  english: boolean
+  onToggle: () => void
+}) {
+  const { t } = useTranslation("chat")
+  if ((answer.answer_language ?? "en") === "en") return null
+  const translation = answer.translation
+  if (!translation)
+    return (
+      <p className="mb-4 text-label text-muted-foreground" role="note">
+        {t("translation.unavailable")}
+      </p>
+    )
+  const name = languageNames[translation.language] ?? translation.language
+  return (
+    <div className="mb-4 flex flex-wrap items-center gap-2 text-label text-muted-foreground">
+      <span>{t("translation.label")}</span>
+      {betaLanguages.has(translation.language) && (
+        <span className="sq-xs border border-border px-1.5 text-overline uppercase">
+          {t("translation.beta")}
+        </span>
+      )}
+      <InlineAction type="button" aria-pressed={english} onClick={onToggle}>
+        {english
+          ? t("translation.showTranslation", { language: name })
+          : t("translation.showEnglish")}
+      </InlineAction>
+    </div>
+  )
+}
+
+function AnswerView({
+  answer: original,
   onSelect,
   onAsk,
 }: {
@@ -438,6 +531,10 @@ function AnswerView({
   onAsk?: (question: string) => void
 }) {
   const { t } = useTranslation(["chat", "common"])
+  const [english, setEnglish] = useState(false)
+  const answer = readerAnswer(original, english)
+  const blocksLanguage =
+    original.translation && !english ? original.translation.language : "en"
   const byId = new Map(answer.evidence.map((item) => [item.evidence_id, item]))
   const historical = answer.evidence.find(
     (item) => item.legal_status === "historical",
@@ -507,7 +604,12 @@ function AnswerView({
   return (
     <section aria-label={t("answer.label")} className="grid gap-5">
       <div className="sq-lg border border-border bg-card p-5 sm:p-6">
-        <div className="grid gap-5">
+        <TranslationBar
+          answer={original}
+          english={english}
+          onToggle={() => setEnglish((value) => !value)}
+        />
+        <div className="grid gap-5" lang={blocksLanguage}>
           {answer.blocks.map((block, index) => (
             <div key={`${index}:${block.text.slice(0, 24)}`}>
               <BlockText lead={index === 0} text={block.text} />
@@ -649,6 +751,17 @@ export function ChatHome() {
   const capabilities = useChatCapabilities()
   const release = useLegalRelease()
   const { preferences } = useWorkspacePreferences()
+  const { i18n: translator } = useTranslation()
+  // A non-English interface asks for answers in that language; with English,
+  // the question's own language decides.
+  const interfaceLanguage = translator.resolvedLanguage ?? "en"
+  const answerLanguage =
+    interfaceLanguage !== "en" &&
+    capabilities.data?.answer_languages?.some(
+      (code) => code === interfaceLanguage,
+    )
+      ? (interfaceLanguage as Language)
+      : null
   const [draft, setDraft] = useChatDraft(search.c ?? "new")
   const inputRef = useRef<HTMLTextAreaElement | null>(null)
   const bottomRef = useRef<HTMLDivElement | null>(null)
@@ -843,6 +956,7 @@ export function ChatHome() {
             question,
             idempotency_key: key,
             selected_provision_version_id: selectedVersionId ?? null,
+            answer_language: answerLanguage,
           },
           headers: conversationHeaders(),
           withCredentials: true,
@@ -909,7 +1023,15 @@ export function ChatHome() {
         scope.close()
       }
     },
-    [activeRunId, beginRequest, navigate, queryClient, search.c, setDraft],
+    [
+      activeRunId,
+      answerLanguage,
+      beginRequest,
+      navigate,
+      queryClient,
+      search.c,
+      setDraft,
+    ],
   )
 
   useEffect(() => {
@@ -960,6 +1082,8 @@ export function ChatHome() {
             }
             if (event.event === "generation.started") setProgress("writing")
             if (event.event === "verification.started") setProgress("checking")
+            if (event.event === "translation.started")
+              setProgress("translating")
             if (event.event === "answer.complete") {
               terminal = true
               if (data.answer && typeof data.answer === "object") {

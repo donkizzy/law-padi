@@ -69,6 +69,7 @@ async function mockChat(
     failedSubmissions?: number
     historyFailures?: number
     interruptStream?: boolean
+    answerLanguages?: string[]
   } = {},
 ) {
   let created = false
@@ -81,6 +82,7 @@ async function mockChat(
     question: string
     idempotency_key: string
     selected_provision_version_id?: string | null
+    answer_language?: string | null
   }> = []
   await page.route("**/api/v1/legal/search", (route) =>
     route.fulfill({
@@ -106,6 +108,7 @@ async function mockChat(
           conversations_enabled: true,
           explanations_enabled: true,
           supported_languages: ["English"],
+          answer_languages: options.answerLanguages ?? ["en"],
           question_max_length: 2000,
           build_revision: "test",
           prompt_version: "constitution-english-v8",
@@ -781,4 +784,81 @@ test("Exported Act answers retain the law, source caveat and canonical URL", asy
   expect(exported.sources[0]).toContain(
     `/laws/acja-2015/acja-2015.section9?release=${releaseVersion}`,
   )
+})
+
+const yorubaBlock = "Òfin-Ìpìlẹ̀ dáàbò bo ìpamọ́ nínú ilé àti ìbánisọ̀rọ̀."
+const translatedAnswer = {
+  ...answer,
+  question_language: "yo",
+  answer_language: "yo",
+  translation: {
+    language: "yo",
+    blocks: [{ text: yorubaBlock, evidence_ids: ["E1"], quotation: null }],
+    missing_facts: [],
+    follow_up_questions: [],
+  },
+}
+
+test("A translated answer shows the reader's language with an English toggle", async ({
+  page,
+}) => {
+  await mockChat(page, translatedAnswer)
+  await page.goto("/?intent=ask")
+  await sendQuestion(page)
+  const region = page.getByRole("region", { name: "Answer", exact: true })
+  await expect(region.getByText(yorubaBlock)).toBeVisible()
+  await expect(region.locator('[lang="yo"]')).toContainText(yorubaBlock)
+  await expect(region.getByText("Translated from English")).toBeVisible()
+  await expect(region.getByText("Beta", { exact: true })).toBeVisible()
+  await region.getByRole("button", { name: "Show English" }).click()
+  await expect(region.getByText(answer.blocks[0].text)).toBeVisible()
+  await expect(region.getByText(yorubaBlock)).toHaveCount(0)
+  await expect(
+    region.getByRole("button", { name: "Show in Yorùbá" }),
+  ).toBeVisible()
+})
+
+test("A translation that could not be checked falls back to English with a note", async ({
+  page,
+}) => {
+  await mockChat(page, { ...translatedAnswer, translation: null })
+  await page.goto("/?intent=ask")
+  await sendQuestion(page)
+  const region = page.getByRole("region", { name: "Answer", exact: true })
+  await expect(region.getByText(answer.blocks[0].text)).toBeVisible()
+  await expect(
+    region.getByText(
+      "We couldn't translate this answer, so it's shown in English.",
+    ),
+  ).toBeVisible()
+})
+
+test("A non-English interface asks for answers in its language when enabled", async ({
+  page,
+}) => {
+  await page.addInitScript(() =>
+    localStorage.setItem(
+      "law-padi.preferences.v1",
+      JSON.stringify({ language: "yoruba" }),
+    ),
+  )
+  const mock = await mockChat(page, translatedAnswer, {
+    answerLanguages: ["en", "yo"],
+  })
+  await page.goto("/?intent=ask")
+  await expect(page.locator("html")).toHaveAttribute("lang", "yo")
+  await page.getByRole("textbox", { name: "Ìbéèrè rẹ" }).fill(question)
+  await page.getByRole("button", { name: "Fi ìbéèrè ránṣẹ́" }).click()
+  await expect.poll(() => mock.submissions.length).toBe(1)
+  expect(mock.submissions[0].answer_language).toBe("yo")
+})
+
+test("An English interface leaves the answer language to the question", async ({
+  page,
+}) => {
+  const mock = await mockChat(page, answer, { answerLanguages: ["en", "yo"] })
+  await page.goto("/?intent=ask")
+  await sendQuestion(page)
+  await expect.poll(() => mock.submissions.length).toBe(1)
+  expect(mock.submissions[0].answer_language).toBeNull()
 })

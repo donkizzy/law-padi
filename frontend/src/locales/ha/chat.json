@@ -80,7 +80,8 @@
     "reconnecting": "Ana sake haɗawa da tambayar da ka ajiye…",
     "connectionLost": "Haɗi ya yanke. Ana sake haɗawa…",
     "interrupted": "Haɗi ya katse. Muna duba ko amsarka ta kammala.",
-    "stopping": "Ana tsayarwa…"
+    "stopping": "Ana tsayarwa…",
+    "translating": "Ana fassara amsar zuwa harshenka…"
   },
   "conversation": {
     "confirmDelete": "A goge wannan tattaunawa? Ba za a iya dawo da ita ba.",
@@ -154,5 +155,25 @@
     "matchesLabel": "Abubuwan da suka dace da binciken",
     "ambiguous": "Wanne kake nufi?",
     "otherMatches": "Wasu sassan da suka dace"
+  },
+  "notices": {
+    "cancelled": "Ka dakatar da wannan amsar.",
+    "disabled": "Ba a samun bayani a yanzu. Har yanzu za ka iya bincike da karanta dokokin da aka wallafa.",
+    "too_large": "Wannan tambayar ta ƙunshi abubuwa da yawa a lokaci ɗaya. Ka gwada tambaya game da doka ɗaya, sashe ɗaya ko batu ɗaya.",
+    "no_match": "Ba mu sami sashen da aka wallafa wanda ya amsa wannan ba. Ka sake tambaya ta wata hanya, ko ka ambaci doka da sashe.",
+    "not_covered": "Da alama sassan da aka wallafa ba su amsa wannan kai tsaye ba. Ga sassan da suka fi kusa.",
+    "budget": "Mun kai iyakar abin da ake da shi don bayani. Har yanzu za ka iya karanta sassan da suka shafi wannan a ƙasa.",
+    "unverified": "Ba mu iya tabbatar da cewa bayanin ya dace da sassan da aka wallafa ba, don haka ga sassan da kansu.",
+    "unavailable": "Ba a samun bayani a yanzu. Ga sassan da aka wallafa waɗanda suka shafi wannan.",
+    "stalled": "Wannan amsar ta ɗauki lokaci mai tsawo. Don Allah ka sake gwadawa.",
+    "clarify_section": "Wane sashe kake nufi: {{choices}}?",
+    "coverage": "Wannan bugun ya ƙunshi {{laws}}."
+  },
+  "translation": {
+    "label": "An fassara daga Turanci",
+    "showEnglish": "Nuna na Turanci",
+    "showTranslation": "Nuna da {{language}}",
+    "beta": "Beta",
+    "unavailable": "Ba mu iya fassara wannan amsar ba, don haka an nuna ta da Turanci."
   }
 }
