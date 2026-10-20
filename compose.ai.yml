@@ -1,0 +1,21 @@
+# Local AI preview using the provider key in the ignored root .env.
+# docker compose -f compose.yml -f compose.override.yml -f compose.ai.yml up -d --no-build backend chat-worker
+x-local-ai-environment: &local-ai-environment
+  CHAT_ENABLED: "true"
+  CHAT_GENERATION_ENABLED: "true"
+  CHAT_GENERATION_KILL_SWITCH: "false"
+  CHAT_MAX_ACTIVE_GENERATIONS: "1"
+  CHAT_WORKER_CONCURRENCY: "1"
+  CHAT_DAILY_BUDGET_USD: "2"
+  FRONTEND_HOST: "http://localhost:5173"
+
+services:
+  backend:
+    environment: *local-ai-environment
+    volumes:
+      - ./backend/app:/app/backend/app:ro
+
+  chat-worker:
+    environment: *local-ai-environment
+    volumes:
+      - ./backend/app:/app/backend/app:ro
