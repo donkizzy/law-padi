@@ -67,6 +67,8 @@ def create_run_steps(
     session: Session,
     run: IngestionRun,
     stages: tuple[IngestionStage, ...] = PIPELINE_STAGES,
+    *,
+    commit: bool = True,
 ) -> list[IngestionStep]:
     existing_steps = session.exec(
         select(IngestionStep).where(IngestionStep.run_id == run.id)
@@ -92,7 +94,10 @@ def create_run_steps(
         session.flush()
         dependency_step_id = step.id
         steps.append(step)
-    session.commit()
+    if commit:
+        session.commit()
+    else:
+        session.flush()
     return steps
 
 

@@ -24,6 +24,7 @@ from app.ingestion.embedding import (
     evaluate_embedding_benchmark,
     select_best_embedding_run,
 )
+from app.ingestion.embedding_reuse import member_document_vectors, profile_fingerprint
 from app.ingestion.evaluation import (
     active_evaluation_item_count,
     load_gold_provisions_for_dataset,
@@ -68,6 +69,7 @@ from app.ingestion.rendering import render_page_thumbnail
 from app.ingestion.retrieval import RetrievalDocument, build_retrieval_documents
 from app.ingestion.service import (
     MAX_SOURCE_PAGES,
+    _release_source_and_review_gates,
     finalize_verified_upload,
     get_blob_store,
     get_datetime_utc,
@@ -96,6 +98,7 @@ from app.legal.enums import (
     IngestionStage,
     IngestionStepStatus,
     IngestionTaskStatus,
+    InstrumentType,
     LegalStatus,
     PageInclusionStatus,
     ReviewIssueSeverity,
@@ -254,6 +257,9 @@ def run_leased_task(
         if lease_lost.is_set():
             raise IngestionWorkerError("Task lease was lost during stage execution")
     except Exception as exc:
+        # A failed flush leaves SQLAlchemy unable to record task failure until
+        # its transaction is rolled back. Discard partial stage writes first.
+        session.rollback()
         return _handle_stage_failure(
             session,
             run=run,
@@ -619,7 +625,12 @@ def handle_local_ocr(
 
     source_content = _read_source_bytes(source)
     pages_by_number = {page.page_number: page for page in _pages_for_run(session, run)}
-    provider = TesseractOcrProvider()
+    instrument = session.get(LegalInstrument, source.legal_instrument_id)
+    provider = (
+        TesseractOcrProvider(preserve_lines=True)
+        if instrument and instrument.instrument_type == InstrumentType.ACT
+        else TesseractOcrProvider()
+    )
     managed_required_pages: list[int] = []
     for page_number in page_numbers:
         thumbnail = render_page_thumbnail(
@@ -885,11 +896,20 @@ def handle_parsing_structure(
     ]
     instrument_type = getattr(instrument, "instrument_type", "constitution")
     instrument_type_value = str(getattr(instrument_type, "value", instrument_type))
+    if instrument_type_value not in settings.INGESTION_ALLOWED_INSTRUMENT_TYPES:
+        raise IngestionWorkerError(
+            f"Ingestion is disabled for instrument type: {instrument_type_value}"
+        )
     graph = parse_instrument_pages(
         instrument_type=instrument_type_value,
         instrument_slug=instrument.slug,
         pages=parser_pages,
     )
+    run.pipeline_config = {
+        **(run.pipeline_config or {}),
+        "parser_version": graph.parser_version,
+        "instrument_parser": instrument_type_value,
+    }
     parsed_nodes = parsed_provisions_from_graph(graph)
     page_roles = [
         {"page_number": page.page_number, "role": _enum_value(page.role)}
@@ -994,7 +1014,7 @@ def handle_parsing_structure(
             "issue_count": issue_count,
             "blocking_issue_count": blocking_issue_count,
             "auto_approved_count": auto_approved_count,
-            "parser_version": PARSER_VERSION,
+            "parser_version": graph.parser_version,
             "legal_grade_quality": (
                 quality_report.to_policy_metrics() if quality_report else None
             ),
@@ -1063,7 +1083,24 @@ def handle_materializing(
         )
     _ensure_no_open_blocking_issues(session, candidates)
 
-    corpus_legal_status = _corpus_legal_status(run)
+    if (
+        str(instrument.instrument_type)
+        not in settings.INGESTION_ALLOWED_INSTRUMENT_TYPES
+    ):
+        raise IngestionWorkerError(
+            f"Ingestion is disabled for instrument type: {instrument.instrument_type}"
+        )
+    corpus_legal_status = _corpus_legal_status(run, instrument=instrument)
+    if instrument.instrument_type == InstrumentType.ACT:
+        run.pipeline_config = {
+            **(run.pipeline_config or {}),
+            "corpus_legal_status": "historical",
+            "source_edition_review": {
+                "edition": f"As enacted, {instrument.year}",
+                "notice": "As enacted, may have been amended.",
+                "instrument_slug": instrument.slug,
+            },
+        }
     provision_ids_by_candidate_id: dict[uuid.UUID, uuid.UUID] = {}
     materialized_version_ids: set[uuid.UUID] = set()
     created_provisions = 0
@@ -1148,9 +1185,10 @@ def handle_materializing(
         entries=entries,
     )
     release.source_manifest_hash = _sha256_json(manifest["entries"])
-    release.parser_version = PARSER_VERSION
+    release.parser_version = _run_parser_version(run)
     release.validation_report = {
         "entry_count": len(entries),
+        "instrument_slug": instrument.slug,
         "corpus_legal_status": corpus_legal_status.value,
         "source_edition_review": (run.pipeline_config or {}).get(
             "source_edition_review"
@@ -1219,6 +1257,7 @@ def handle_building_retrieval_documents(
     session: Session, run: IngestionRun, task: IngestionTask
 ) -> StageOutcome:
     release = _get_release_for_task(session, task)
+    _ensure_composite_member_gates(session, release)
     entries = _release_entries(session, release.id)
     if not entries:
         raise IngestionWorkerError("Release does not have entries to index")
@@ -1229,6 +1268,16 @@ def handle_building_retrieval_documents(
         entries=entries,
         versions_by_id=versions_by_id,
         provisions_by_id=provisions_by_id,
+        instruments_by_id={
+            instrument.id: instrument
+            for instrument in session.exec(
+                select(LegalInstrument).where(
+                    col(LegalInstrument.id).in_(
+                        {p.instrument_id for p in provisions_by_id.values()}
+                    )
+                )
+            ).all()
+        },
     )
     if not retrieval_documents:
         raise IngestionWorkerError("Release did not produce retrieval documents")
@@ -1299,6 +1348,7 @@ def handle_embedding(
     session: Session, run: IngestionRun, task: IngestionTask
 ) -> StageOutcome:
     release = _get_release_for_task(session, task)
+    _ensure_composite_member_gates(session, release)
     documents_payload = _retrieval_documents_payload(session, run, release.id)
     documents = _payload_list(documents_payload, "documents")
     texts = [str(document["retrieval_text"]) for document in documents]
@@ -1338,15 +1388,15 @@ def handle_embedding(
             batch_size = _profile_int(
                 profile, "batch_size", default=DEFAULT_EMBEDDING_BATCH_SIZE
             )
-            batch = _embed_with_checkpoints(
+            batch = _embed_release_documents(
                 session,
+                release=release,
+                documents=documents,
                 run=run,
                 profile=profile,
                 embedding_run=embedding_run,
                 provider=provider,
-                texts=texts,
                 batch_size=batch_size,
-                kind="documents",
             )
             if batch.dimensions != profile.vector_dimensions:
                 raise IngestionWorkerError(
@@ -1436,6 +1486,7 @@ def handle_embedding(
             )
             embedding_run.p95_latency_ms = _profile_float(profile, "p95_latency_ms")
             embedding_run.metrics = {
+                "profile_fingerprint": profile_fingerprint(profile),
                 "document_embedding_metrics": batch.metrics or {},
                 "query_embedding_metrics": query_batch.metrics or {},
                 "benchmark_dataset_version": benchmark_dataset_version,
@@ -1514,6 +1565,84 @@ def handle_embedding(
             "source_document_id": str(run.source_document_id),
             "release_id": str(release.id),
             "embedding_run_id": str(selected_run.id),
+        },
+    )
+
+
+def _ensure_composite_member_gates(session: Session, release: CorpusRelease) -> None:
+    if (release.validation_report or {}).get("composition") is not None:
+        gates = _release_source_and_review_gates(
+            session, _release_entries(session, release.id), release=release
+        )
+        if gates:
+            raise IngestionWorkerError(
+                f"Composite member gates do not pass: {', '.join(gates)}"
+            )
+
+
+def _embed_release_documents(
+    session: Session,
+    *,
+    release: CorpusRelease,
+    documents: list[dict[str, Any]],
+    run: IngestionRun,
+    profile: EmbeddingProfile,
+    embedding_run: EmbeddingRun,
+    provider: DenseEmbeddingProvider,
+    batch_size: int,
+) -> EmbeddingBatch:
+    if not (release.validation_report or {}).get("composition"):
+        return _embed_with_checkpoints(
+            session,
+            run=run,
+            profile=profile,
+            embedding_run=embedding_run,
+            provider=provider,
+            texts=[str(document["retrieval_text"]) for document in documents],
+            batch_size=batch_size,
+            kind="documents",
+        )
+    reusable = (
+        member_document_vectors(session, release, profile, documents)
+        if settings.RETRIEVAL_INDEX_BACKEND == "pgvector"
+        else {}
+    )
+    positions = [index for index in range(len(documents)) if index not in reusable]
+    batch = (
+        _embed_with_checkpoints(
+            session,
+            run=run,
+            profile=profile,
+            embedding_run=embedding_run,
+            provider=provider,
+            texts=[str(documents[index]["retrieval_text"]) for index in positions],
+            batch_size=batch_size,
+            kind="documents",
+        )
+        if positions
+        else EmbeddingBatch(
+            provider=str(profile.provider),
+            model_name=profile.model_name,
+            model_revision=profile.model_revision,
+            vectors=[],
+            cost_usd=0,
+        )
+    )
+    if len(batch.vectors) != len(positions):
+        raise IngestionWorkerError(
+            "Embedding vector count differs from missing documents"
+        )
+    values = {**reusable, **dict(zip(positions, batch.vectors, strict=True))}
+    return EmbeddingBatch(
+        provider=batch.provider,
+        model_name=batch.model_name,
+        model_revision=batch.model_revision,
+        vectors=[values[index] for index in range(len(documents))],
+        cost_usd=batch.cost_usd,
+        metrics={
+            **(batch.metrics or {}),
+            "reused_document_count": len(reusable),
+            "new_document_count": len(positions),
         },
     )
 
@@ -1654,6 +1783,7 @@ def handle_indexing(
     session: Session, run: IngestionRun, task: IngestionTask
 ) -> StageOutcome:
     release = _get_release_for_task(session, task)
+    _ensure_composite_member_gates(session, release)
     embedding_run = _get_embedding_run_for_task(session, task)
     profile = session.get(EmbeddingProfile, embedding_run.profile_id)
     if not profile:
@@ -2442,7 +2572,17 @@ def _candidate_text_for_materialization(
     return text.strip()
 
 
-def _corpus_legal_status(run: IngestionRun) -> LegalStatus:
+def _run_parser_version(run: IngestionRun) -> str:
+    return str((run.pipeline_config or {}).get("parser_version") or PARSER_VERSION)
+
+
+def _corpus_legal_status(
+    run: IngestionRun, *, instrument: LegalInstrument | None = None
+) -> LegalStatus:
+    if (instrument and instrument.instrument_type == InstrumentType.ACT) or (
+        run.pipeline_config or {}
+    ).get("instrument_parser") == "act":
+        return LegalStatus.HISTORICAL
     value = (run.pipeline_config or {}).get("corpus_legal_status", "current")
     if value not in {LegalStatus.CURRENT.value, LegalStatus.HISTORICAL.value}:
         raise IngestionWorkerError("Corpus legal status must be current or historical")
@@ -2650,7 +2790,7 @@ def _run_release(
     release = CorpusRelease(
         version=version,
         status=CorpusReleaseStatus.BUILDING,
-        parser_version=PARSER_VERSION,
+        parser_version=_run_parser_version(run),
         validation_report={
             "instrument_slug": instrument.slug,
             "materialized_run_id": str(run.id),
@@ -2677,7 +2817,7 @@ def _sync_release_entries(
                 .order_by(col(ProvisionVersion.id))
             ).all()
         )
-        if _corpus_legal_status(run) == LegalStatus.HISTORICAL
+        if _corpus_legal_status(run, instrument=instrument) == LegalStatus.HISTORICAL
         else _current_versions_for_instrument(session, instrument.id)
     )
     run_ids_by_version = _materialized_run_ids_by_version(
@@ -3451,7 +3591,9 @@ def _upsert_candidate(
     candidate.source_page_end = node.page_end
     candidate.source_spans = source_spans
     candidate.ancestor_headings = ancestor_headings
-    candidate.parser_version = PARSER_VERSION
+    candidate.parser_version = str(
+        (node.parser_metadata or {}).get("parser_version") or _run_parser_version(run)
+    )
     candidate.extractor_version = _extractor_version(source_spans)
     candidate.parser_confidence = node.parser_confidence
     candidate.extractor_confidence = _extractor_confidence(source_spans)

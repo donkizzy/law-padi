@@ -260,6 +260,32 @@ def test_worker_failure_retries_then_marks_run_failed(
     assert "SHA-256" in run.error_details["message"]
 
 
+def test_worker_records_database_failure_after_rolling_back_partial_stage(
+    db: Session, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    monkeypatch.setattr(settings, "INGESTION_STORAGE_DIR", str(tmp_path))
+    source, run = _stored_source_and_run(
+        db, tmp_path=tmp_path, pdf=_pdf_with_pages(["1. Safe page"]), max_attempts=1
+    )
+    original_title = source.title
+
+    def fail_flush(session: Session, _run: IngestionRun, _task: IngestionTask) -> None:
+        source.title = "x" * 513
+        session.add(source)
+        session.flush()
+
+    monkeypatch.setattr("app.ingestion.worker._handler_for", lambda _stage: fail_flush)
+    result = run_once(db, worker_id="worker-test", task_type="verifying_upload")
+
+    assert result is not None
+    assert result.task_status == IngestionTaskStatus.FAILED
+    db.refresh(run)
+    db.refresh(source)
+    assert source.title == original_title
+    assert run.status == IngestionRunStatus.FAILED
+    assert run.error_details["error_type"] == "DataError"
+
+
 def test_worker_renders_confirmed_pages_and_stores_native_extraction_artifacts(
     db: Session, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:

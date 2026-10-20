@@ -12,6 +12,14 @@ from sqlmodel import Session, col, func, select
 
 from app.core.config import settings
 from app.ingestion.blob_store import BlobStoreError, LocalBlobStore
+from app.ingestion.composition import (
+    act_review_gates,
+    composition_gates,
+    entry_snapshot,
+    manifest_hash,
+    member_snapshot,
+    release_entries,
+)
 from app.ingestion.contracts import (
     BlobStore,
     CompletedMultipartUploadPart,
@@ -71,6 +79,7 @@ from app.legal.models import (
     IngestionStep,
     IngestionTask,
     LegalInstrument,
+    ProvisionVersion,
     ReleasePromotionAttempt,
     RetrievalIndexBuild,
     ReviewDecisionRecord,
@@ -82,6 +91,7 @@ from app.legal.models import (
 )
 from app.legal.schemas import (
     AdminOperationalAlertPublic,
+    CompositeReleaseCreate,
     PageSelectionUpdate,
     ReviewDecisionCreate,
     ReviewIssueUpdate,
@@ -445,6 +455,7 @@ def create_source_upload_multipart_parts(
 def create_source_upload_session(
     session: Session, body: SourceUploadCreate, current_user: User
 ) -> SourceUpload:
+    _ensure_allowed_instrument_type(body.instrument_type)
     scope = "source_upload.create"
     request_hash = _idempotency_request_hash(body)
     record = _idempotency_record_for_request(
@@ -469,7 +480,7 @@ def create_source_upload_session(
     if body.mime_type != "application/pdf":
         raise HTTPException(
             status_code=status.HTTP_415_UNSUPPORTED_MEDIA_TYPE,
-            detail="V1 ingestion accepts Constitution PDF sources only",
+            detail="Ingestion accepts PDF sources only",
         )
 
     upload_id = uuid.uuid4()
@@ -480,6 +491,7 @@ def create_source_upload_session(
         created_by=current_user.id,
         instrument_slug=body.instrument_slug,
         instrument_title=body.instrument_title,
+        instrument_type=body.instrument_type,
         instrument_short_title=body.instrument_short_title,
         instrument_year=body.instrument_year,
         instrument_status=body.instrument_status,
@@ -641,7 +653,19 @@ def complete_source_upload(
         status=IngestionRunStatus.QUEUED,
         current_stage=IngestionStage.VERIFYING_UPLOAD,
         pipeline_config={
-            "instrument_parser": "constitution",
+            "instrument_parser": str(upload.instrument_type),
+            **(
+                {
+                    "corpus_legal_status": "historical",
+                    "source_edition_review": {
+                        "edition": f"As enacted, {upload.instrument_year}",
+                        "notice": "As enacted, may have been amended.",
+                        "instrument_slug": upload.instrument_slug,
+                    },
+                }
+                if upload.instrument_type == InstrumentType.ACT
+                else {}
+            ),
             "max_pages": MAX_SOURCE_PAGES,
             "expected_sha256": upload.expected_sha256,
             "expected_size": upload.expected_size,
@@ -1111,6 +1135,265 @@ def update_review_issue(
     return issue
 
 
+def compose_corpus_release(
+    session: Session, body: CompositeReleaseCreate, current_user: User
+) -> CorpusRelease:
+    scope = "corpus_release.compose"
+    request_hash = _idempotency_request_hash(body)
+    record = _idempotency_record_for_request(
+        session,
+        scope=scope,
+        idempotency_key=body.idempotency_key,
+        request_hash=request_hash,
+    )
+    if record and record.result_id:
+        return _get_release(session, record.result_id)
+    requested = [
+        (body.base_release_id, body.expected_base_version),
+        *[(item.release_id, item.expected_version) for item in body.members],
+    ]
+    members: list[CorpusRelease] = []
+    snapshots: list[dict[str, object]] = []
+    union: dict[uuid.UUID, CorpusReleaseEntry] = {}
+    versions_by_provision: dict[uuid.UUID, uuid.UUID] = {}
+    for index, (release_id, expected_version) in enumerate(requested):
+        member = session.exec(
+            select(CorpusRelease)
+            .where(CorpusRelease.id == release_id)
+            .with_for_update()
+        ).one_or_none()
+        if member is None:
+            raise HTTPException(
+                status_code=404, detail="Member corpus release was not found"
+            )
+        if index == 0:
+            # Concurrent identical requests serialize on the production base.
+            record = _idempotency_record_for_request(
+                session,
+                scope=scope,
+                idempotency_key=body.idempotency_key,
+                request_hash=request_hash,
+            )
+            if record and record.result_id:
+                return _get_release(session, record.result_id)
+        _check_expected_version(member.lock_version, expected_version)
+        if (index == 0 and member.status != CorpusReleaseStatus.PRODUCTION) or (
+            index > 0 and member.status != CorpusReleaseStatus.APPROVED
+        ):
+            raise HTTPException(
+                status_code=409,
+                detail="Composition requires the current production base and approved Act releases",
+            )
+        entries = release_entries(session, member.id)
+        try:
+            snapshot = member_snapshot(session, member)
+        except ValueError as exc:
+            raise HTTPException(status_code=409, detail=str(exc)) from exc
+        types = {item["type"] for item in snapshot["instruments"]}
+        if (index == 0 and str(InstrumentType.CONSTITUTION) not in types) or (
+            index > 0
+            and (
+                types != {str(InstrumentType.ACT)} or len(snapshot["instruments"]) != 1
+            )
+        ):
+            raise HTTPException(
+                status_code=409,
+                detail="The base must contain the Constitution; each added member must contain one Act",
+            )
+        if not member.source_manifest_hash:
+            raise HTTPException(
+                status_code=409,
+                detail="Each member requires a retained source manifest hash",
+            )
+        gates = _release_source_and_review_gates(session, entries, release=member)
+        gates.extend(act_review_gates(session, entries))
+        if gates:
+            raise HTTPException(
+                status_code=409,
+                detail={
+                    "message": "Member source/review gates must pass before composition",
+                    "release_id": str(member.id),
+                    "gates": sorted(set(gates)),
+                },
+            )
+        for entry in entries:
+            version = session.get(ProvisionVersion, entry.provision_version_id)
+            assert version is not None  # Checked by member_snapshot.
+            previous = versions_by_provision.setdefault(
+                version.provision_id, version.id
+            )
+            if previous != version.id:
+                raise HTTPException(
+                    status_code=409,
+                    detail="Members contain conflicting versions of the same provision",
+                )
+            existing = union.setdefault(version.id, entry)
+            if (existing.source_document_id, existing.ingestion_run_id) != (
+                entry.source_document_id,
+                entry.ingestion_run_id,
+            ):
+                raise HTTPException(
+                    status_code=409,
+                    detail="Members disagree about an entry's review provenance",
+                )
+        members.append(member)
+        snapshots.append(snapshot)
+    if session.exec(
+        select(CorpusRelease).where(CorpusRelease.version == body.version)
+    ).first():
+        raise HTTPException(status_code=409, detail="Release version already exists")
+    release = CorpusRelease(version=body.version, parser_version="composite-v1")
+    run = IngestionRun(
+        created_by=current_user.id,
+        status=IngestionRunStatus.QUEUED,
+        current_stage=IngestionStage.BUILDING_RETRIEVAL_DOCUMENTS,
+        pipeline_config={
+            "composition_release_id": str(release.id),
+            "auto_start_embedding": False,
+        },
+    )
+    snapshot_entries = entry_snapshot(session, list(union.values()))
+    release.source_manifest_hash = manifest_hash(snapshot_entries)
+    composition = {
+        "version": 1,
+        "base_release_id": str(body.base_release_id),
+        "run_id": str(run.id),
+        "members": snapshots,
+    }
+    release.validation_report = {
+        "composition": composition,
+        "entry_count": len(union),
+        "ingestion_run_ids": sorted(
+            {
+                str(entry.ingestion_run_id)
+                for entry in union.values()
+                if entry.ingestion_run_id
+            }
+        ),
+        "source_document_ids": sorted(
+            {str(entry.source_document_id) for entry in union.values()}
+        ),
+        "unresolved_gates": [
+            "retrieval_documents_pending",
+            "selected_embedding_run_missing",
+            "ready_retrieval_index_build_missing"
+            if settings.RETRIEVAL_INDEX_BACKEND == "pgvector"
+            else "ready_vector_index_missing",
+        ],
+    }
+    session.add_all([release, run])
+    session.flush()
+    for entry in union.values():
+        session.add(
+            CorpusReleaseEntry(
+                release_id=release.id,
+                provision_version_id=entry.provision_version_id,
+                source_document_id=entry.source_document_id,
+                ingestion_run_id=entry.ingestion_run_id,
+            )
+        )
+    steps = create_run_steps(session, run, commit=False)
+    for step in steps:
+        if step.stage == IngestionStage.BUILDING_RETRIEVAL_DOCUMENTS:
+            break
+        step.status = IngestionStepStatus.SKIPPED
+        step.metrics = {
+            "reason": "Reusing approved member releases; original ingestion provenance retained"
+        }
+        session.add(step)
+    enqueue_task(
+        session,
+        run=run,
+        step=step,
+        task_type=IngestionStage.BUILDING_RETRIEVAL_DOCUMENTS.value,
+        idempotency_key=f"{run.id}:building_retrieval_documents",
+        payload={"release_id": str(release.id)},
+        commit=False,
+    )
+    manifest = {
+        "manifest_version": 2,
+        "release_id": str(release.id),
+        "release_version": release.version,
+        "composition": composition,
+        "entries": snapshot_entries,
+        "source_document_ids": release.validation_report["source_document_ids"],
+        "ingestion_run_ids": release.validation_report["ingestion_run_ids"],
+        "source_documents": [
+            {
+                "id": str(source.id),
+                "source_document_id": str(source.id),
+                "title": source.title,
+                "authority": source.authority,
+                "source_url": source.source_url,
+                "sha256": source.sha256,
+                "page_count": source.page_count,
+                "verification_status": str(source.verification_status),
+            }
+            for source in session.exec(
+                select(SourceDocument)
+                .where(
+                    col(SourceDocument.id).in_(
+                        {entry.source_document_id for entry in union.values()}
+                    )
+                )
+                .order_by(col(SourceDocument.id))
+            ).all()
+        ],
+    }
+    blob = get_blob_store().put_artifact(
+        run_id=str(run.id),
+        artifact_type=IngestionArtifactType.RELEASE_MANIFEST.value,
+        filename=f"release-{release.version}.json",
+        content=json.dumps(manifest, sort_keys=True).encode(),
+        content_type="application/json",
+    )
+    session.add(
+        IngestionArtifact(
+            run_id=run.id,
+            artifact_type=IngestionArtifactType.RELEASE_MANIFEST,
+            storage_key=blob.key,
+            sha256=blob.sha256,
+            mime_type=blob.content_type,
+            artifact_metadata={
+                "release_id": str(release.id),
+                "source_manifest_hash": release.source_manifest_hash,
+            },
+        )
+    )
+    session.add(
+        AuditEvent(
+            actor_user_id=current_user.id,
+            action="corpus_release.compose",
+            entity_type="corpus_release",
+            entity_id=release.id,
+            payload={
+                "member_release_ids": [str(member.id) for member in members],
+                "source_manifest_hash": release.source_manifest_hash,
+            },
+        )
+    )
+    append_run_event(
+        session,
+        run,
+        event_type="release_composed",
+        message="Composite retrieval build queued from approved member releases",
+        payload={"release_id": str(release.id)},
+        commit=False,
+    )
+    _add_idempotency_record(
+        session,
+        scope=scope,
+        idempotency_key=body.idempotency_key,
+        request_hash=request_hash,
+        result_type="corpus_release",
+        result_id=release.id,
+        created_by=current_user.id,
+    )
+    session.commit()
+    session.refresh(release)
+    return release
+
+
 def validate_corpus_release(
     session: Session,
     release_id: uuid.UUID,
@@ -1168,7 +1451,9 @@ def validate_corpus_release(
     benchmark_item_count: int | None = None
     if not entries:
         unresolved_gates.append("release_has_no_entries")
-    unresolved_gates.extend(_release_source_and_review_gates(session, entries))
+    unresolved_gates.extend(
+        _release_source_and_review_gates(session, entries, release=release)
+    )
     if not embedding_run:
         unresolved_gates.append("selected_embedding_run_missing")
     elif (
@@ -1276,10 +1561,13 @@ def read_corpus_release_manifest(
 
 
 def _release_source_and_review_gates(
-    session: Session, entries: Sequence[CorpusReleaseEntry]
+    session: Session,
+    entries: Sequence[CorpusReleaseEntry],
+    *,
+    release: CorpusRelease | None = None,
 ) -> list[str]:
     """Recheck mutable source/review state immediately before approval/publication."""
-    gates: list[str] = []
+    gates: list[str] = composition_gates(session, release, entries) if release else []
     source_ids = {
         entry.source_document_id for entry in entries if entry.source_document_id
     }
@@ -1460,7 +1748,7 @@ def publish_corpus_release(
     entries = session.exec(
         select(CorpusReleaseEntry).where(CorpusReleaseEntry.release_id == release.id)
     ).all()
-    quality_gates = _release_source_and_review_gates(session, entries)
+    quality_gates = _release_source_and_review_gates(session, entries, release=release)
     if quality_gates:
         raise HTTPException(
             status_code=status.HTTP_409_CONFLICT,
@@ -1807,6 +2095,20 @@ def start_embedding(
             status_code=status.HTTP_409_CONFLICT,
             detail="Active embedding profiles must use 1,024 dimensions and pinned revisions",
         )
+    release_id = _release_id_for_run(session, run)
+    release = _get_release(session, release_id)
+    if (release.validation_report or {}).get("composition") is not None:
+        gates = _release_source_and_review_gates(
+            session, release_entries(session, release.id), release=release
+        )
+        if gates:
+            raise HTTPException(
+                status_code=409,
+                detail={
+                    "message": "Composite member gates must pass before embedding",
+                    "gates": gates,
+                },
+            )
     step = _get_run_step(session, run.id, IngestionStage.EMBEDDING)
     step.status = IngestionStepStatus.PENDING
     step.lock_version += 1
@@ -1825,7 +2127,7 @@ def start_embedding(
         idempotency_key=f"{run.id}:{IngestionStage.EMBEDDING.value}:manual",
         payload={
             "source_document_id": str(run.source_document_id),
-            "release_id": str(_release_id_for_run(session, run)),
+            "release_id": str(release_id),
         },
         priority=40,
     )
@@ -2147,17 +2449,39 @@ def _get_run(session: Session, run_id: uuid.UUID) -> IngestionRun:
 
 
 def _release_id_for_run(session: Session, run: IngestionRun) -> uuid.UUID:
-    release_id = session.exec(
-        select(CorpusReleaseEntry.release_id).where(
-            CorpusReleaseEntry.ingestion_run_id == run.id
-        )
+    composed_id = (run.pipeline_config or {}).get("composition_release_id")
+    if composed_id:
+        release = _get_release(session, uuid.UUID(str(composed_id)))
+        if ((release.validation_report or {}).get("composition") or {}).get(
+            "run_id"
+        ) != str(run.id):
+            raise HTTPException(
+                status_code=409,
+                detail="Composite run identity differs from its release",
+            )
+        return release.id
+    original = session.exec(
+        select(CorpusRelease).where(CorpusRelease.version == f"draft-{run.id.hex[:12]}")
     ).first()
-    if release_id is None:
+    if original:
+        return original.id
+    release_ids = session.exec(
+        select(CorpusReleaseEntry.release_id)
+        .where(CorpusReleaseEntry.ingestion_run_id == run.id)
+        .distinct()
+    ).all()
+    originals = [
+        item
+        for release_id in release_ids
+        if (item := session.get(CorpusRelease, release_id))
+        and not (item.validation_report or {}).get("composition")
+    ]
+    if len(originals) != 1:
         raise HTTPException(
             status_code=status.HTTP_409_CONFLICT,
-            detail="Ingestion run is not associated with a corpus release",
+            detail="Ingestion run does not identify a single original corpus release",
         )
-    return release_id
+    return originals[0].id
 
 
 def _get_source_document(
@@ -2226,24 +2550,33 @@ def _validate_pdf(content: bytes) -> int:
         )
 
 
-def _get_or_create_constitution_instrument(
+def _ensure_allowed_instrument_type(instrument_type: InstrumentType) -> None:
+    if str(instrument_type) not in settings.INGESTION_ALLOWED_INSTRUMENT_TYPES:
+        raise HTTPException(
+            status_code=422,
+            detail=f"Ingestion is disabled for instrument type: {instrument_type}",
+        )
+
+
+def _get_or_create_instrument(
     session: Session, upload: SourceUpload
 ) -> LegalInstrument:
+    _ensure_allowed_instrument_type(upload.instrument_type)
     instrument = session.exec(
         select(LegalInstrument).where(LegalInstrument.slug == upload.instrument_slug)
     ).first()
     if instrument:
-        if instrument.instrument_type != InstrumentType.CONSTITUTION:
+        if instrument.instrument_type != upload.instrument_type:
             raise HTTPException(
                 status_code=status.HTTP_409_CONFLICT,
-                detail="Instrument slug already belongs to a non-Constitution instrument",
+                detail="Instrument slug already belongs to a different instrument type",
             )
         return instrument
     instrument = LegalInstrument(
         slug=upload.instrument_slug,
         title=upload.instrument_title,
         short_title=upload.instrument_short_title,
-        instrument_type=InstrumentType.CONSTITUTION,
+        instrument_type=upload.instrument_type,
         jurisdiction="NG",
         year=upload.instrument_year,
         status=upload.instrument_status,
@@ -2270,6 +2603,20 @@ def finalize_verified_upload(
         select(SourceDocument).where(SourceDocument.sha256 == sha256)
     ).first()
     if existing_source is not None:
+        instrument = session.get(LegalInstrument, existing_source.legal_instrument_id)
+        if (
+            not instrument
+            or (
+                upload.instrument_type == InstrumentType.ACT
+                and instrument.slug != upload.instrument_slug
+            )
+            or instrument.instrument_type != upload.instrument_type
+        ):
+            raise HTTPException(
+                status_code=409,
+                detail="Source hash already belongs to a different legal instrument",
+            )
+        _ensure_allowed_instrument_type(upload.instrument_type)
         get_blob_store().delete_quarantine(upload.quarantine_key)
         source = existing_source
         upload.status = SourceUploadStatus.DUPLICATE
@@ -2286,7 +2633,7 @@ def finalize_verified_upload(
                 "source_url": upload.source_url,
             },
         )
-        instrument = _get_or_create_constitution_instrument(session, upload)
+        instrument = _get_or_create_instrument(session, upload)
         source = SourceDocument(
             legal_instrument_id=instrument.id,
             authority=upload.authority,
@@ -2865,6 +3212,9 @@ def _publish_pgvector_release(
         previous_release.status = CorpusReleaseStatus.RETIRED
         previous_release.lock_version += 1
         session.add(previous_release)
+        # Preserve atomic promotion while satisfying the immediate unique index
+        # regardless of the UUID order SQLAlchemy uses for pending updates.
+        session.flush()
     release.status = CorpusReleaseStatus.PRODUCTION
     release.approved_by = current_user.id
     release.approved_at = now
@@ -2873,14 +3223,19 @@ def _publish_pgvector_release(
     build.updated_at = now
     promotion.status = ReleasePromotionStatus.SUCCEEDED
     promotion.completed_at = now
-    contributing_run_ids = session.exec(
-        select(CorpusReleaseEntry.ingestion_run_id)
-        .where(
-            CorpusReleaseEntry.release_id == release.id,
-            col(CorpusReleaseEntry.ingestion_run_id).is_not(None),
-        )
-        .distinct()
-    ).all()
+    contributing_run_ids = set(
+        session.exec(
+            select(CorpusReleaseEntry.ingestion_run_id)
+            .where(
+                CorpusReleaseEntry.release_id == release.id,
+                col(CorpusReleaseEntry.ingestion_run_id).is_not(None),
+            )
+            .distinct()
+        ).all()
+    )
+    composition = (release.validation_report or {}).get("composition")
+    if composition:
+        contributing_run_ids.add(uuid.UUID(composition["run_id"]))
     for run_id in contributing_run_ids:
         if run_id is None:
             continue
@@ -3024,6 +3379,27 @@ def _mark_release_production_in_db(
     vector_index.updated_at = approved_at
     promotion.status = ReleasePromotionStatus.SUCCEEDED
     promotion.completed_at = approved_at
+    composition = (release.validation_report or {}).get("composition")
+    if composition:
+        run = _get_run(session, uuid.UUID(composition["run_id"]))
+        step = _get_run_step(session, run.id, IngestionStage.PUBLISHING)
+        run.status = IngestionRunStatus.PUBLISHED
+        run.current_stage = IngestionStage.PUBLISHING
+        run.completed_at = run.updated_at = approved_at
+        run.lock_version += 1
+        step.status = IngestionStepStatus.SUCCEEDED
+        step.completed_at = step.updated_at = approved_at
+        step.lock_version += 1
+        session.add_all([run, step])
+        append_run_event(
+            session,
+            run,
+            event_type="release_published",
+            message="Composite corpus release published",
+            step=step,
+            payload={"release_id": str(release.id)},
+            commit=False,
+        )
     session.add(release)
     session.add(vector_index)
     session.add(promotion)

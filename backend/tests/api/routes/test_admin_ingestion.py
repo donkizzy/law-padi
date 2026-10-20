@@ -651,7 +651,7 @@ def test_upload_session_rejects_non_pdf_sources(
     )
 
     assert response.status_code == 422
-    assert "Constitution PDF" in response.text
+    assert "PDF sources only" in response.text
 
 
 def test_worker_rejects_corrupt_pdf_and_keeps_it_out_of_canonical_storage(

@@ -17,6 +17,7 @@ from app.ingestion.service import (
     MULTIPART_THRESHOLD_BYTES,
     cancel_ingestion_run,
     complete_source_upload,
+    compose_corpus_release,
     create_source_upload_multipart_parts,
     create_source_upload_session,
     decide_review_candidate,
@@ -65,6 +66,7 @@ from app.legal.models import (
     IngestionRun,
     IngestionStep,
     IngestionTask,
+    LegalInstrument,
     Provision,
     ProvisionVersion,
     RetrievalIndexBuild,
@@ -82,6 +84,7 @@ from app.legal.schemas import (
     AuditEventPublic,
     AuditEventsPublic,
     CandidateRevisionPublic,
+    CompositeReleaseCreate,
     CorpusReleaseActorSeparationPublic,
     CorpusReleaseManifestPublic,
     CorpusReleasePromotionAttemptPublic,
@@ -1049,6 +1052,14 @@ def validate_release(
     return _release_public(session, release)
 
 
+@router.post("/corpus-releases/compose", status_code=201)
+def compose_release(
+    body: CompositeReleaseCreate, session: SessionDep, current_user: CurrentUser
+) -> CorpusReleasePublic:
+    require_admin_role(session, current_user, AdminRole.CORPUS_PUBLISHER)
+    return _release_public(session, compose_corpus_release(session, body, current_user))
+
+
 @router.get("/corpus-releases/{release_id}/manifest")
 def read_release_manifest(
     release_id: uuid.UUID,
@@ -1229,6 +1240,7 @@ def _upload_public(upload: SourceUpload) -> SourceUploadPublic:
         source_document_id=upload.source_document_id,
         instrument_slug=upload.instrument_slug,
         instrument_title=upload.instrument_title,
+        instrument_type=upload.instrument_type,
         source_title=upload.source_title,
         authority=upload.authority,
         source_url=upload.source_url,
@@ -1421,6 +1433,18 @@ def _review_public(
 
 
 def _release_public(session: Session, release: CorpusRelease) -> CorpusReleasePublic:
+    instruments = session.exec(
+        select(LegalInstrument)
+        .join(Provision, col(Provision.instrument_id) == col(LegalInstrument.id))
+        .join(ProvisionVersion, col(ProvisionVersion.provision_id) == col(Provision.id))
+        .join(
+            CorpusReleaseEntry,
+            col(CorpusReleaseEntry.provision_version_id) == col(ProvisionVersion.id),
+        )
+        .where(CorpusReleaseEntry.release_id == release.id)
+        .distinct()
+        .order_by(LegalInstrument.slug)
+    ).all()
     return CorpusReleasePublic(
         id=release.id,
         version=release.version,
@@ -1435,4 +1459,8 @@ def _release_public(session: Session, release: CorpusRelease) -> CorpusReleasePu
         lock_version=release.lock_version,
         created_at=release.created_at,
         evidence_count=release_entry_count(session, release.id),
+        instrument_slugs=[instrument.slug for instrument in instruments],
+        instrument_types=sorted(
+            {instrument.instrument_type for instrument in instruments}
+        ),
     )
