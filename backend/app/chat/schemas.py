@@ -4,18 +4,22 @@ from typing import Any, Literal
 
 from sqlmodel import Field, SQLModel
 
+from app.languages.codes import Language
 from app.legal.schemas import CitationOutcome, EvidenceItem
 
 
 class ConversationCreate(SQLModel):
     title: str | None = Field(default=None, max_length=255)
     release_version: str | None = Field(default=None, min_length=1, max_length=128)
+    preferred_language: Language | None = None
 
 
 class ChatCapabilities(SQLModel):
     conversations_enabled: bool
     explanations_enabled: bool
     supported_languages: list[str]
+    # Codes of the languages answers can be written in; English is first.
+    answer_languages: list[Language] = Field(default_factory=lambda: [Language.ENGLISH])
     question_max_length: int = 2000
     build_revision: str
     prompt_version: str
@@ -30,6 +34,7 @@ class ConversationPublic(SQLModel):
     title: str | None
     release_version: str
     edition_label: str
+    preferred_language: str | None = None
     created_at: datetime
     updated_at: datetime
 
@@ -61,6 +66,8 @@ class MessageCreate(SQLModel):
     question: str = Field(min_length=1, max_length=2000)
     idempotency_key: str = Field(min_length=1, max_length=128)
     selected_provision_version_id: uuid.UUID | None = None
+    # Overrides the language detected from the question for this answer.
+    answer_language: Language | None = None
 
 
 class MessageAccepted(SQLModel):
@@ -109,6 +116,18 @@ class ExplanationDraft(SQLModel):
     follow_up_questions: list[str] = Field(default_factory=list)
 
 
+class AnswerTranslation(SQLModel):
+    """A reader-language rendering of the verified English answer."""
+
+    language: Language
+    blocks: list[ExplanationBlock]
+    missing_facts: list[str] = Field(default_factory=list)
+    follow_up_questions: list[str] = Field(default_factory=list)
+    model: str
+    prompt_version: str
+    glossary_version: str | None = None
+
+
 class ExplanationAnswer(SQLModel):
     outcome: Literal[
         "completed",
@@ -129,3 +148,11 @@ class ExplanationAnswer(SQLModel):
     evidence: list[EvidenceItem] = Field(default_factory=list)
     related_laws: list[str] = Field(default_factory=list)
     notice: str | None = None
+    # Stable key and values so clients can show the notice in any language;
+    # notice keeps the English text.
+    notice_code: str | None = None
+    notice_params: dict[str, Any] = Field(default_factory=dict)
+    # Language the reader asked in, and the language this answer is for.
+    question_language: Language | None = None
+    answer_language: Language = Language.ENGLISH
+    translation: AnswerTranslation | None = None

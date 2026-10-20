@@ -17,6 +17,7 @@ from app.chat.budget import BudgetExhausted, reserve, settle
 from app.chat.events import emit_event
 from app.chat.provider import DeepSeekClient, ProviderError, ProviderResult
 from app.chat.schemas import ExplanationAnswer, ExplanationDraft
+from app.chat.translation import TranslationRejected, translate_answer, understand
 from app.chat.validation import (
     EvidenceValidationError,
     validate_draft,
@@ -25,6 +26,8 @@ from app.chat.validation import (
 from app.core.config import settings
 from app.core.db import engine
 from app.ingestion.pgvector_repository import PgVectorRetrievalError
+from app.languages.codes import Language, parse_language
+from app.languages.detect import detect
 from app.legal.enums import (
     AnswerStatus,
     CorpusReleaseStatus,
@@ -233,6 +236,16 @@ def _notice(key: str, prepared: Prepared | None = None) -> str:
     return _with_coverage(_NOTICE[key], prepared)
 
 
+def _notice_fields(key: str, prepared: Prepared | None = None) -> dict[str, Any]:
+    """English notice plus the key and values a client needs to translate it."""
+    laws = [law["label"] for law in prepared.covered_laws] if prepared else []
+    return {
+        "notice": _notice(key, prepared),
+        "notice_code": key,
+        "notice_params": {"laws": laws} if laws else {},
+    }
+
+
 def _conversation_context(
     session: Session, conversation_id: uuid.UUID, message: ConversationMessage
 ) -> list[dict[str, Any]]:
@@ -253,7 +266,9 @@ def _conversation_context(
     context: list[dict[str, Any]] = []
     for row in reversed(rows):
         if row.role == MessageRole.USER:
-            context.append({"role": "user", "question": row.content[:2000]})
+            context.append(
+                {"role": "user", "question": (row.english_text or row.content)[:2000]}
+            )
         elif row.evidence_snapshot:
             cited = {
                 identifier
@@ -429,7 +444,7 @@ def _previous_question(
         )
         .order_by(col(ConversationMessage.created_at).desc())
     ).first()
-    return previous.content if previous else None
+    return (previous.english_text or previous.content) if previous else None
 
 
 def _source_crossrefs(
@@ -637,7 +652,7 @@ def prepare_run(run_id: uuid.UUID) -> Prepared:
             or build.index_kind != conversation.index_kind
         ):
             raise PgVectorRetrievalError("Pinned conversation evidence is unavailable")
-        question = question_message.content
+        question = question_message.english_text or question_message.content
         previous_question: str | None = None
         conversation_context = _conversation_context(
             session, conversation.id, question_message
@@ -1014,7 +1029,9 @@ def _finish(
         if run is None or run.status != "running" or run.lease_owner != worker_id:
             return
         if run.cancellation_requested or settings.CHAT_GENERATION_KILL_SWITCH:
-            answer = ExplanationAnswer(outcome="cancelled", notice=_NOTICE["cancelled"])
+            answer = ExplanationAnswer(
+                outcome="cancelled", **_notice_fields("cancelled")
+            )
         content = "\n\n".join(block.text for block in answer.blocks)
         message = ConversationMessage(
             conversation_id=run.conversation_id,
@@ -1103,6 +1120,132 @@ def _finish(
         _logger.info("chat_run_finished %s", json.dumps(operational, sort_keys=True))
 
 
+@dataclass(frozen=True)
+class ReaderQuestion:
+    message_id: uuid.UUID
+    question: str
+    detected_language: str | None
+    answer_language: str | None
+    explains_selected_provision: bool
+
+
+def _reader_question(run_id: uuid.UUID) -> ReaderQuestion:
+    with Session(engine) as session:
+        run = session.get(GenerationRun, run_id)
+        message = session.get(ConversationMessage, run.user_message_id) if run else None
+        if run is None or message is None:
+            raise ValueError("Generation run was not found")
+        return ReaderQuestion(
+            message_id=message.id,
+            question=message.content,
+            detected_language=message.detected_language,
+            answer_language=run.answer_language,
+            explains_selected_provision=run.selected_provision_version_id is not None,
+        )
+
+
+def _record_understanding(
+    message_id: uuid.UUID, language: Language | None, english_text: str | None
+) -> None:
+    with Session(engine) as session:
+        message = session.get(ConversationMessage, message_id)
+        if message is None:
+            return
+        message.detected_language = language.value if language else "other"
+        message.english_text = english_text
+        session.add(message)
+        session.commit()
+
+
+async def _reader_languages(
+    provider: DeepSeekClient,
+    run_id: uuid.UUID,
+    reader: ReaderQuestion,
+    telemetry: dict[str, Any],
+) -> tuple[Language | None, Language]:
+    """Return the question's language and the language to answer in.
+
+    A question that is not clearly English is rendered in English once, before
+    retrieval, and stored so retries and follow-ups reuse it. Nothing changes
+    while English is the only enabled language.
+    """
+    enabled = settings.CHAT_LANGUAGES_ENABLED
+    explicit = parse_language(reader.answer_language)
+    if explicit not in enabled:
+        explicit = None
+    language = parse_language(reader.detected_language)
+    if (
+        reader.detected_language is None
+        and not reader.explains_selected_provision
+        and len(enabled) > 1
+    ):
+        detection = detect(reader.question)
+        language = detection.language
+        english: str | None = None
+        if not detection.confident:
+
+            async def call(
+                purpose: str, system: str, payload: dict[str, Any], max_tokens: int
+            ) -> ProviderResult:
+                return await _call(
+                    provider, run_id, purpose, system, payload, max_tokens=max_tokens
+                )
+
+            try:
+                understood = await understand(
+                    call, reader.question, settings.DEEPSEEK_MAX_OUTPUT_TOKENS
+                )
+            except (ProviderError, TranslationRejected) as exc:
+                # Retrieval still runs on the original wording.
+                telemetry["understanding"] = "fallback"
+                telemetry["understanding_reason"] = str(exc)[:200]
+            else:
+                telemetry["understanding"] = "completed"
+                language = understood.language
+                if language != Language.ENGLISH:
+                    english = understood.english_question
+        await asyncio.to_thread(
+            _record_understanding, reader.message_id, language, english
+        )
+    telemetry["question_language"] = language.value if language else None
+    target = explicit or (language if language in enabled else Language.ENGLISH)
+    return language, target
+
+
+async def _translate(
+    provider: DeepSeekClient,
+    run_id: uuid.UUID,
+    answer: ExplanationAnswer,
+    language: Language,
+    telemetry: dict[str, Any],
+) -> None:
+    """Attach a checked translation; on any failure the English answer stands."""
+
+    async def call(
+        purpose: str, system: str, payload: dict[str, Any], max_tokens: int
+    ) -> ProviderResult:
+        return await _call(
+            provider, run_id, purpose, system, payload, max_tokens=max_tokens
+        )
+
+    await asyncio.to_thread(_emit_progress, run_id, "translation.started")
+    started = time.perf_counter()
+    try:
+        answer.translation = await translate_answer(
+            call,
+            answer,
+            language,
+            max_tokens=settings.TRANSLATION_MAX_OUTPUT_TOKENS,
+            judge_max_tokens=settings.DEEPSEEK_VERIFIER_MAX_OUTPUT_TOKENS,
+        )
+    except (ProviderError, BudgetExhausted, ValueError) as exc:
+        telemetry["translation"] = "fallback"
+        telemetry["translation_reason"] = str(exc)[:200]
+    else:
+        telemetry["translation"] = "completed"
+    telemetry["translation_ms"] = round((time.perf_counter() - started) * 1000)
+
+
 async def process_run(
     run_id: uuid.UUID, worker_id: str, provider: DeepSeekClient | None = None
 ) -> None:
@@ -1116,6 +1259,10 @@ async def process_run(
     verifier_verdict_count: int | None = None
     try:
         async with asyncio.timeout(settings.CHAT_RUN_TIMEOUT_SECONDS):
+            reader = await asyncio.to_thread(_reader_question, run_id)
+            question_language, answer_language = await _reader_languages(
+                provider, run_id, reader, telemetry
+            )
             prepared = await asyncio.to_thread(prepare_run, run_id)
             telemetry["retrieval_ms"] = round((time.perf_counter() - started) * 1000)
             telemetry["retrieval_mode"] = prepared.lookup.retrieval_mode
@@ -1125,7 +1272,7 @@ async def process_run(
             await asyncio.to_thread(_emit_sources, prepared)
             if await asyncio.to_thread(_cancelled, run_id):
                 answer = ExplanationAnswer(
-                    outcome="cancelled", notice=_NOTICE["cancelled"]
+                    outcome="cancelled", **_notice_fields("cancelled")
                 )
             elif prepared.clarification_choices:
                 answer = ExplanationAnswer(
@@ -1133,6 +1280,8 @@ async def process_run(
                     notice="Which section do you mean: "
                     + ", ".join(prepared.clarification_choices)
                     + "?",
+                    notice_code="clarify_section",
+                    notice_params={"choices": prepared.clarification_choices},
                     follow_up_questions=[
                         f"Explain {citation}"
                         for citation in prepared.clarification_choices
@@ -1143,7 +1292,7 @@ async def process_run(
                     outcome="clarification_required",
                     evidence=prepared.all_evidence,
                     citation_outcomes=prepared.lookup.citation_outcomes,
-                    notice=_notice("too_large", prepared),
+                    **_notice_fields("too_large", prepared),
                 )
             elif not prepared.selected:
                 answer = ExplanationAnswer(
@@ -1151,9 +1300,11 @@ async def process_run(
                     evidence=prepared.all_evidence,
                     citation_outcomes=prepared.lookup.citation_outcomes,
                     related_laws=prepared.related_laws,
-                    notice=_with_coverage(prepared.lookup.message, prepared)
-                    if prepared.lookup.message
-                    else _notice("no_match", prepared),
+                    **(
+                        {"notice": _with_coverage(prepared.lookup.message, prepared)}
+                        if prepared.lookup.message
+                        else _notice_fields("no_match", prepared)
+                    ),
                 )
             else:
                 payload: dict[str, Any] = {
@@ -1213,7 +1364,7 @@ async def process_run(
                                 citation_outcomes=prepared.lookup.citation_outcomes,
                                 evidence=prepared.all_evidence,
                                 related_laws=prepared.related_laws,
-                                notice=_notice("not_covered", prepared),
+                                **_notice_fields("not_covered", prepared),
                             )
                             break
                         validation_stage = "deterministic"
@@ -1296,6 +1447,13 @@ async def process_run(
                         for block in kept_blocks
                         for identifier in block.evidence_ids
                     }
+                    edition = _edition_notice(
+                        [
+                            item
+                            for item in prepared.all_evidence
+                            if item.evidence_id in cited_ids
+                        ]
+                    )
                     drafted = ExplanationAnswer(
                         outcome="partial_evidence"
                         if any(
@@ -1309,13 +1467,8 @@ async def process_run(
                         citation_outcomes=prepared.lookup.citation_outcomes,
                         evidence=prepared.all_evidence,
                         related_laws=prepared.related_laws,
-                        notice=_edition_notice(
-                            [
-                                item
-                                for item in prepared.all_evidence
-                                if item.evidence_id in cited_ids
-                            ]
-                        ),
+                        notice=edition,
+                        notice_code="edition" if edition else None,
                     )
                     break
                 assert drafted is not None and provider_result is not None
@@ -1326,6 +1479,10 @@ async def process_run(
                     completion_tokens=completion_tokens,
                     model=provider_result.model,
                 )
+            answer.question_language = question_language
+            answer.answer_language = answer_language
+            if answer_language != Language.ENGLISH and answer.blocks:
+                await _translate(provider, run_id, answer, answer_language, telemetry)
             telemetry["total_ms"] = round((time.perf_counter() - started) * 1000)
             await asyncio.to_thread(
                 _finish,
@@ -1347,7 +1504,7 @@ async def process_run(
             ExplanationAnswer(
                 outcome="budget_exhausted",
                 evidence=prepared.all_evidence if prepared else [],
-                notice=_NOTICE["budget"],
+                **_notice_fields("budget"),
             ),
             telemetry=telemetry,
         )
@@ -1360,7 +1517,7 @@ async def process_run(
             ExplanationAnswer(
                 outcome="validation_failed",
                 evidence=prepared.all_evidence if prepared else [],
-                notice=_notice("unverified", prepared),
+                **_notice_fields("unverified", prepared),
             ),
             validation={
                 "deterministic_or_verifier": False,
@@ -1379,7 +1536,7 @@ async def process_run(
             _finish,
             run_id,
             worker_id,
-            ExplanationAnswer(outcome="cancelled", notice=_NOTICE["cancelled"]),
+            ExplanationAnswer(outcome="cancelled", **_notice_fields("cancelled")),
             telemetry=telemetry,
         )
     except ProviderError, TimeoutError, PgVectorRetrievalError:
@@ -1391,7 +1548,7 @@ async def process_run(
             ExplanationAnswer(
                 outcome="provider_failure",
                 evidence=prepared.all_evidence if prepared else [],
-                notice=_notice("unavailable", prepared),
+                **_notice_fields("unavailable", prepared),
             ),
             telemetry=telemetry,
         )
@@ -1404,7 +1561,7 @@ async def process_run(
             ExplanationAnswer(
                 outcome="provider_failure",
                 evidence=prepared.all_evidence if prepared else [],
-                notice=_notice("unavailable", prepared),
+                **_notice_fields("unavailable", prepared),
             ),
             telemetry=telemetry,
         )
@@ -1439,7 +1596,7 @@ def recover_expired() -> None:
             worker_id,
             ExplanationAnswer(
                 outcome="provider_failure",
-                notice=_NOTICE["stalled"],
+                **_notice_fields("stalled"),
             ),
         )
 
@@ -1499,7 +1656,7 @@ async def run_forever() -> None:
                     worker_id,
                     ExplanationAnswer(
                         outcome="cancelled",
-                        notice=_NOTICE["disabled"],
+                        **_notice_fields("disabled"),
                     ),
                 )
             await asyncio.sleep(2)

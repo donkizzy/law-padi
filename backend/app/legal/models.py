@@ -1096,6 +1096,11 @@ class ConversationMessage(SQLModel, table=True):
     )
     content: str = Field(sa_column=Column(Text, nullable=False))
     detected_language: str | None = Field(default=None, max_length=16, index=True)
+    # English rendering of a non-English question; retrieval and follow-ups
+    # use it, while content keeps what the reader wrote.
+    english_text: str | None = Field(
+        default=None, sa_column=Column(Text, nullable=True)
+    )
     answer_status: AnswerStatus | None = Field(
         default=None,
         sa_column=Column(String(length=32), nullable=True, index=True),
@@ -1192,6 +1197,8 @@ class GenerationRun(SQLModel, table=True):
     selected_provision_version_id: uuid.UUID | None = Field(
         default=None, foreign_key="provision_version.id", index=True
     )
+    # The reader's explicit answer language; None follows the question.
+    answer_language: str | None = Field(default=None, max_length=16)
     assistant_message_id: uuid.UUID | None = Field(
         default=None, foreign_key="conversation_message.id", ondelete="SET NULL"
     )

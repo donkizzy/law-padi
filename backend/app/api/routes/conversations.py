@@ -40,6 +40,7 @@ from app.core.config import settings
 from app.core.db import engine
 from app.deployment.chat_dispatch import dispatch_run, stage_dispatch
 from app.ingestion.pgvector_repository import PgVectorRetrievalError, active_target
+from app.languages.codes import DISPLAY_NAMES
 from app.legal.enums import MessageRole, VectorIndexStatus
 from app.legal.models import (
     Conversation,
@@ -159,6 +160,7 @@ def _public(session: Session, conversation: Conversation) -> ConversationPublic:
         title=conversation.title,
         release_version=release.version,
         edition_label=_edition_label(release),
+        preferred_language=conversation.preferred_language,
         created_at=conversation.created_at,
         updated_at=conversation.updated_at,
     )
@@ -179,7 +181,10 @@ def read_chat_capabilities() -> ChatCapabilities:
             and settings.CHAT_GENERATION_ENABLED
             and not settings.CHAT_GENERATION_KILL_SWITCH
         ),
-        supported_languages=["English"],
+        supported_languages=[
+            DISPLAY_NAMES[language] for language in settings.CHAT_LANGUAGES_ENABLED
+        ],
+        answer_languages=list(settings.CHAT_LANGUAGES_ENABLED),
         build_revision=settings.BUILD_REVISION,
         prompt_version=EXPLANATION_PROMPT_VERSION,
     )
@@ -268,6 +273,7 @@ def create_conversation(
         title=body.title.strip() if body.title else None,
         pinned_release_id=release.id,
         pinned_index_build_id=build_id,
+        preferred_language=body.preferred_language,
     )
     session.add(conversation)
     public = ConversationPublic(
@@ -275,6 +281,7 @@ def create_conversation(
         title=conversation.title,
         release_version=release.version,
         edition_label=_edition_label(release),
+        preferred_language=conversation.preferred_language,
         created_at=conversation.created_at,
         updated_at=conversation.updated_at,
     )
@@ -699,6 +706,7 @@ def submit_message(
         user_message_id=message.id,
         idempotency_key=body.idempotency_key,
         selected_provision_version_id=body.selected_provision_version_id,
+        answer_language=body.answer_language,
     )
     session.add(run)
     session.flush()
