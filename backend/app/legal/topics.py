@@ -16,6 +16,7 @@ from collections.abc import Collection
 from dataclasses import dataclass, replace
 from functools import cache
 
+from app.languages.normalize import fold
 from app.legal.instruments import ACJA_SLUG, CONSTITUTION_SLUG, POLICE_SLUG
 from app.legal.titles import catalogue_titles
 
@@ -121,7 +122,7 @@ def tokens(text: str) -> list[str]:
     """Normalise text to comparable content tokens."""
     return [
         _stem(word)
-        for word in _TOKEN.findall(text.lower().replace("’", "'").replace("'", ""))
+        for word in _TOKEN.findall(fold(text).lower().replace("'", ""))
         if word not in STOPWORDS
     ]
 

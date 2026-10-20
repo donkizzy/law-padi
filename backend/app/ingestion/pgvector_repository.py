@@ -21,6 +21,7 @@ from sqlmodel import Session, col, select
 
 from app.core.config import settings
 from app.ingestion.retrieval import RetrievalDocument, deterministic_segment_id
+from app.languages.normalize import fold
 from app.legal.models import (
     ActiveRetrievalTarget,
     CorpusReleaseEntry,
@@ -274,7 +275,8 @@ def lexical_tsquery(query: str) -> str | None:
     still favours segments that contain more of the words.
     """
     words: list[str] = []
-    for word in _LEXICAL_WORD.findall(query.lower()):
+    # Folding keeps "haƙƙi" one word instead of the fragments "ha" and "i".
+    for word in _LEXICAL_WORD.findall(fold(query).lower()):
         if (
             len(word) < 2
             or word in STOPWORDS

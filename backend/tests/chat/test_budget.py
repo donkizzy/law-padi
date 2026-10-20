@@ -234,3 +234,32 @@ def test_invalid_success_response_retains_possible_provider_charge(
             assert error.value.uncertain_charge is True
 
     asyncio.run(call())
+
+
+def test_reservations_and_settlement_use_the_calling_providers_prices(
+    budget_db: Session,
+) -> None:
+    pricing = budget.ProviderPricing(
+        input_usd_per_million=2.0, output_usd_per_million=10.0
+    )
+    run = _run(budget_db)
+    reservation = budget.reserve(
+        budget_db,
+        run_id=run.id,
+        purpose="translation",
+        prompt_chars=1000,
+        max_output_tokens=1000,
+        pricing=pricing,
+    )
+    budget_db.commit()
+    assert reservation.reserved_micro_usd == 12000
+    budget.settle(
+        budget_db,
+        reservation.id,
+        prompt_tokens=100,
+        completion_tokens=40,
+        pricing=pricing,
+    )
+    budget_db.commit()
+    budget_db.refresh(reservation)
+    assert reservation.actual_micro_usd == 600

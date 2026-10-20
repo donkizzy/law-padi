@@ -13,6 +13,8 @@ from pydantic import (
 )
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
+from app.languages.codes import Language
+
 
 class Settings(BaseSettings):
     model_config = SettingsConfigDict(
@@ -119,6 +121,13 @@ class Settings(BaseSettings):
     # Stays under CHAT_TASK_DISPATCH_DEADLINE_SECONDS so Cloud Tasks never
     # redispatches a run that is still thinking.
     CHAT_RUN_TIMEOUT_SECONDS: int = Field(default=270, ge=60)
+    # Reader languages whose answers are enabled. English answers are always
+    # produced; other languages are translated from the verified English answer
+    # and switched on one at a time as each passes its evaluation gate.
+    CHAT_LANGUAGES_ENABLED: list[Language] = [Language.ENGLISH]
+    TRANSLATION_PROVIDER: Literal["deepseek"] = "deepseek"
+    # Yorùbá and Igbo tone marks use far more tokens than the English answer.
+    TRANSLATION_MAX_OUTPUT_TOKENS: int = Field(default=6000, ge=1)
     INGESTION_WORKER_LEASE_SECONDS: int = Field(default=900, ge=1)
     QDRANT_URL: str | None = None
     QDRANT_API_KEY: str | None = None
@@ -131,6 +140,11 @@ class Settings(BaseSettings):
     AZURE_DOCUMENT_INTELLIGENCE_KEY: str | None = None
     AZURE_DOCUMENT_INTELLIGENCE_MODEL_ID: str = "prebuilt-layout"
     AZURE_DOCUMENT_INTELLIGENCE_API_VERSION: str = "2024-11-30"
+
+    @field_validator("CHAT_LANGUAGES_ENABLED")
+    @classmethod
+    def _english_always_enabled(cls, value: list[Language]) -> list[Language]:
+        return [Language.ENGLISH, *(lang for lang in value if lang != Language.ENGLISH)]
 
     @field_validator("DATABASE_URL", mode="before")
     @classmethod

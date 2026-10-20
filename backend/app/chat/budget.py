@@ -1,4 +1,6 @@
-"""Atomic Lagos-day/month reservations for every paid DeepSeek request.
+"""Atomic Lagos-day/month reservations for every paid model request.
+
+Each call is priced by its provider; DeepSeek prices are the default.
 
 The monthly generation allowance also cannot exceed the overall AI allowance.
 Query embeddings are disabled for the initial deployment, because metered HF
@@ -7,6 +9,7 @@ inference cannot be bounded safely by this token-based provider ledger.
 
 import math
 import uuid
+from dataclasses import dataclass
 from datetime import date, datetime
 from zoneinfo import ZoneInfo
 
@@ -26,6 +29,25 @@ _LAGOS = ZoneInfo("Africa/Lagos")
 
 class BudgetExhausted(RuntimeError):
     pass
+
+
+@dataclass(frozen=True)
+class ProviderPricing:
+    input_usd_per_million: float
+    output_usd_per_million: float
+
+    def micro_usd(self, input_units: int, output_tokens: int) -> int:
+        return math.ceil(
+            input_units * self.input_usd_per_million
+            + output_tokens * self.output_usd_per_million
+        )
+
+
+def deepseek_pricing() -> ProviderPricing:
+    return ProviderPricing(
+        settings.DEEPSEEK_INPUT_USD_PER_MILLION,
+        settings.DEEPSEEK_OUTPUT_USD_PER_MILLION,
+    )
 
 
 def _lagos_day() -> date:
@@ -52,13 +74,11 @@ def reserve(
     purpose: str,
     prompt_chars: int,
     max_output_tokens: int,
+    pricing: ProviderPricing | None = None,
 ) -> GenerationReservation:
     """Use a worst-case input estimate and peak pricing, without cache discounts."""
     day = _lagos_day()
-    amount = math.ceil(
-        prompt_chars * settings.DEEPSEEK_INPUT_USD_PER_MILLION
-        + max_output_tokens * settings.DEEPSEEK_OUTPUT_USD_PER_MILLION
-    )
+    amount = (pricing or deepseek_pricing()).micro_usd(prompt_chars, max_output_tokens)
     # Every reservation, including those on different days, locks the shared
     # month first. This serializes admission across all API/worker instances.
     month_ledger = _month_ledger(session, day.replace(day=1))
@@ -107,6 +127,7 @@ def settle(
     prompt_tokens: int | None = None,
     completion_tokens: int | None = None,
     uncertain: bool = False,
+    pricing: ProviderPricing | None = None,
 ) -> None:
     if (prompt_tokens is None) != (completion_tokens is None):
         raise ValueError("Both provider token counts are required for reconciliation")
@@ -137,10 +158,7 @@ def settle(
         .with_for_update()
     ).one()
     actual = (
-        math.ceil(
-            prompt_tokens * settings.DEEPSEEK_INPUT_USD_PER_MILLION
-            + completion_tokens * settings.DEEPSEEK_OUTPUT_USD_PER_MILLION
-        )
+        (pricing or deepseek_pricing()).micro_usd(prompt_tokens, completion_tokens)
         if prompt_tokens is not None and completion_tokens is not None
         else 0
     )
