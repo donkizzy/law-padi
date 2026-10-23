@@ -118,11 +118,6 @@ def _stem(word: str) -> str:
     return word
 
 
-def stem(word: str) -> str:
-    """The comparable stem of one lower-case word, such as "fund" for "funded"."""
-    return _stem(word)
-
-
 def tokens(text: str) -> list[str]:
     """Normalise text to comparable content tokens."""
     return [

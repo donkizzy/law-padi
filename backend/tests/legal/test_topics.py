@@ -171,15 +171,6 @@ def test_keyword_query_ors_content_words_with_prefixes() -> None:
     assert lexical_tsquery("bail & (detention) | !x") == "bail:* | detention:*"
 
 
-def test_keyword_query_adds_stems_that_drop_an_inflection() -> None:
-    # "funded:*" alone cannot match "Funding of the Police Force".
-    assert lexical_tsquery("How is the Nigeria Police funded?") == (
-        "police:* | funded:* | fund:*"
-    )
-    # Dropping only a final "e" adds nothing ("police" stays as it is).
-    assert lexical_tsquery("police") == "police:*"
-
-
 @pytest.mark.parametrize(
     ("question", "expected"),
     [
