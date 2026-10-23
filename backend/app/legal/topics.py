@@ -118,6 +118,11 @@ def _stem(word: str) -> str:
     return word
 
 
+def stem(word: str) -> str:
+    """The comparable stem of one lower-case word, such as "fund" for "funded"."""
+    return _stem(word)
+
+
 def tokens(text: str) -> list[str]:
     """Normalise text to comparable content tokens."""
     return [
@@ -1567,6 +1572,37 @@ STATUTE_TOPICS = (
             "search place",
             "search warrant safeguards",
         ),
+    ),
+    Topic(
+        "arrest-in-place",
+        (f"{ACJA_SLUG}:7", f"{POLICE_SLUG}:36"),
+        (
+            "arrest in lieu",
+            "arrest instead",
+            "arrest someone else",
+            "arrest family",
+            "arrest relative",
+            "arrest brother",
+            "arrest sister",
+            "arrest wife",
+            "arrest husband",
+            "arrest father",
+            "arrest mother",
+            "arrest son",
+            "arrest daughter",
+        ),
+    ),
+    Topic(
+        "police-funding",
+        (f"{POLICE_SLUG}:26",),
+        ("police funding", "police budget", "police finance"),
+    ),
+    # Named so a Reward Fund question ties with police-funding above and
+    # dense ranking decides between sections 26 and 91.
+    Topic(
+        "police-reward-fund",
+        (f"{POLICE_SLUG}:91",),
+        ("reward fund",),
     ),
 )
 

@@ -41,6 +41,7 @@ from app.legal.topics import (
     demoted_sections,
     rights_question,
     section_target,
+    stem,
     topic_sections,
 )
 
@@ -287,7 +288,18 @@ def lexical_tsquery(query: str) -> str | None:
         words.append(word)
     if not words:
         return None
-    return " | ".join(f"{word}:*" if len(word) >= 4 else word for word in words[:24])
+    terms: list[str] = []
+    for word in words[:24]:
+        terms.append(f"{word}:*" if len(word) >= 4 else word)
+        # The plain prefix misses other inflections: "funded:*" cannot match
+        # "funding" or "fund". Add the stem when it drops an inflection, not
+        # just a final "e" ("police" stays as it is).
+        root = stem(word)
+        if len(root) >= 4 and root != word and word != f"{root}e":
+            term = f"{root}:*"
+            if term not in terms:
+                terms.append(term)
+    return " | ".join(terms)
 
 
 def lexical_search(

@@ -171,6 +171,43 @@ def test_keyword_query_ors_content_words_with_prefixes() -> None:
     assert lexical_tsquery("bail & (detention) | !x") == "bail:* | detention:*"
 
 
+def test_keyword_query_adds_stems_that_drop_an_inflection() -> None:
+    # "funded:*" alone cannot match "Funding of the Police Force".
+    assert lexical_tsquery("How is the Nigeria Police funded?") == (
+        "police:* | funded:* | fund:*"
+    )
+    # Dropping only a final "e" adds nothing ("police" stays as it is).
+    assert lexical_tsquery("police") == "police:*"
+
+
+@pytest.mark.parametrize(
+    ("question", "expected"),
+    [
+        (
+            "Can the police arrest my brother because they cannot find me?",
+            ["acja-2015:7", "police-act-2020:36"],
+        ),
+        (
+            "Can the police arrest a family member in place of a suspect?",
+            ["acja-2015:7", "police-act-2020:36"],
+        ),
+        ("How is the Nigeria Police funded?", ["police-act-2020:26"]),
+        (
+            "What is the police reward fund?",
+            ["police-act-2020:26", "police-act-2020:91"],
+        ),
+        ("Can police arrest me for my debt?", []),
+    ],
+)
+def test_statute_topics_for_arrest_in_place_and_police_funding(
+    question: str, expected: list[str]
+) -> None:
+    sections = topic_sections(
+        question, instrument_slugs=("acja-2015", "police-act-2020")
+    )
+    assert sorted(number for number, _weight in sections) == expected
+
+
 def test_questions_in_the_constitutions_own_words_match_section_titles() -> None:
     assert title_sections("appeal from the code of conduct tribunal") == [
         "constitution-1999:246"
