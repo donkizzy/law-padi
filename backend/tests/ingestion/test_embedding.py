@@ -206,6 +206,57 @@ def test_evaluate_embedding_benchmark_computes_recall_and_ndcg_from_vectors() ->
     assert result.per_query[1]["matched_canonical_paths"] == []
 
 
+def test_evaluate_embedding_benchmark_credits_provisions_inside_the_expected_one() -> (
+    None
+):
+    documents = [
+        {
+            "id": "s8-2",
+            "payload": {"canonical_path": "acja-2015.part2.section8.subsection2"},
+        },
+        {"id": "s8", "payload": {"canonical_path": "acja-2015.part2.section8"}},
+        {"id": "s80", "payload": {"canonical_path": "acja-2015.part2.section80"}},
+    ]
+    result = evaluate_embedding_benchmark(
+        documents=documents,
+        document_vectors=[[1.0, 0.0], [0.9, 0.1], [0.0, 1.0]],
+        queries=[
+            EmbeddingBenchmarkQuery(
+                item_key="debt",
+                query_text="Can someone be arrested over a debt?",
+                expected_canonical_paths=["acja-2015.part2.section8"],
+            ),
+        ],
+        query_vectors=[[1.0, 0.0]],
+        top_k=2,
+    )
+
+    debt = result.per_query[0]
+    assert debt["matched_canonical_paths"] == ["acja-2015.part2.section8"]
+    assert debt["recall_at_10"] == 1.0
+    # s.8(2) at rank 1 and s.8 at rank 2 credit section 8 once, at rank 1.
+    assert debt["ndcg_at_10"] == 1.0
+
+    lookalike = evaluate_embedding_benchmark(
+        documents=documents,
+        document_vectors=[[1.0, 0.0], [0.9, 0.1], [0.0, 1.0]],
+        queries=[
+            EmbeddingBenchmarkQuery(
+                item_key="lookalike",
+                query_text="A query whose only hit is section 80.",
+                expected_canonical_paths=["acja-2015.part2.section8"],
+            )
+        ],
+        query_vectors=[[0.0, 1.0]],
+        top_k=1,
+    )
+    # Section 80 shares a prefix with section 8 but is not inside it.
+    assert lookalike.per_query[0]["top_canonical_paths"] == [
+        "acja-2015.part2.section80"
+    ]
+    assert lookalike.recall_at_10 == 0.0
+
+
 def test_evaluate_embedding_benchmark_requires_canonical_paths() -> None:
     try:
         evaluate_embedding_benchmark(

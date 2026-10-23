@@ -304,7 +304,13 @@ def evaluate_embedding_benchmark(
         )
         top_hits = ranked[:top_k]
         top_paths = [path for _score, path, _document_id in top_hits]
-        matched_paths = sorted(set(expected_paths) & set(top_paths))
+        matched_paths = sorted(
+            {
+                expected
+                for path in top_paths
+                if (expected := _expected_path_covering(path, expected_paths))
+            }
+        )
         recall = len(matched_paths) / len(expected_paths)
         ndcg = _ndcg_at_k(top_paths=top_paths, expected_paths=expected_paths)
         recall_scores.append(recall)
@@ -386,11 +392,24 @@ def _cosine_similarity(left: Sequence[float], right: Sequence[float]) -> float:
     return dot / (left_norm * right_norm)
 
 
+def _expected_path_covering(path: str, expected_paths: Sequence[str]) -> str | None:
+    # A hit on a provision inside the expected one (e.g. s.8(2) for s.8) is the
+    # expected provision answering the query.
+    for expected in expected_paths:
+        if path == expected or path.startswith(f"{expected}."):
+            return expected
+    return None
+
+
 def _ndcg_at_k(*, top_paths: Sequence[str], expected_paths: Sequence[str]) -> float:
     expected = set(expected_paths)
     dcg = 0.0
+    credited: set[str] = set()
     for rank, path in enumerate(top_paths, start=1):
-        if path in expected:
+        covering = _expected_path_covering(path, expected_paths)
+        # Credit each expected provision once, at its best rank.
+        if covering and covering not in credited:
+            credited.add(covering)
             dcg += 1 / math.log2(rank + 1)
     ideal_relevant = min(len(expected), len(top_paths))
     ideal_dcg = sum(1 / math.log2(rank + 1) for rank in range(1, ideal_relevant + 1))
