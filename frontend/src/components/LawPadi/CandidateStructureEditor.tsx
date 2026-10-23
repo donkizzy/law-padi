@@ -15,6 +15,7 @@ type StructurePatch = Omit<
 const kinds: ProvisionKind[] = [
   "chapter",
   "part",
+  "cross_heading",
   "section",
   "subsection",
   "paragraph",

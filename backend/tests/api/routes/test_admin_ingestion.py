@@ -1339,7 +1339,7 @@ def test_recover_missing_provision_preserves_origin_and_requires_review(
     ).first()
 
 
-@pytest.mark.parametrize("kind", ["part", "chapter", "section"])
+@pytest.mark.parametrize("kind", ["part", "chapter", "cross_heading", "section"])
 def test_recovered_structure_does_not_inherit_origin_body(
     client: TestClient,
     superuser_token_headers: dict[str, str],
@@ -1371,6 +1371,12 @@ def test_recovered_structure_does_not_inherit_origin_body(
         "source_spans": [{"page_number": 1, "text": "PRINTED STRUCTURAL HEADING"}],
         "reason": "Recover a printed structural heading without inventing body text.",
     }
+    blank_heading = client.post(
+        f"{settings.API_V1_STR}/admin/review-items/{original.id}/derived-items",
+        headers=superuser_token_headers,
+        json={**body, "heading": "   "},
+    )
+    assert blank_heading.status_code == 422
     response = client.post(
         f"{settings.API_V1_STR}/admin/review-items/{original.id}/derived-items",
         headers=superuser_token_headers,

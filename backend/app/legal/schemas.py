@@ -480,7 +480,12 @@ class ReviewItemDerive(ReviewItemUpdate):
     @model_validator(mode="after")
     def require_body_or_structural_heading(self) -> ReviewItemDerive:
         if not (self.revised_text or "").strip() and not (
-            self.kind in {ProvisionKind.CHAPTER, ProvisionKind.PART}
+            self.kind
+            in {
+                ProvisionKind.CHAPTER,
+                ProvisionKind.PART,
+                ProvisionKind.CROSS_HEADING,
+            }
             and (self.heading or "").strip()
         ):
             raise ValueError("A provision needs body text or a structural heading")

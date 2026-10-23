@@ -1141,7 +1141,7 @@ def derive_review_candidate(
         parent_candidate_id=body.parent_candidate_id,
         canonical_path=body.canonical_path,
         sort_key=body.sort_key,
-        # A recovered bodyless Part/Chapter must not inherit its origin's body.
+        # A recovered structural heading must not inherit its origin's body.
         # The original extraction is retained in the revision's before snapshot.
         raw_text=original.raw_text if body.revised_text is not None else None,
         source_page_start=body.source_page_start,

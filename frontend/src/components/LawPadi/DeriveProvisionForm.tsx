@@ -43,7 +43,9 @@ export function DeriveProvisionForm({
   }
   const structure = { ...seed, ...patch }
   const hasStructuralHeading =
-    (structure.kind === "part" || structure.kind === "chapter") &&
+    (structure.kind === "part" ||
+      structure.kind === "chapter" ||
+      structure.kind === "cross_heading") &&
     Boolean(structure.heading?.trim())
   const create = useMutation({
     mutationFn: () =>

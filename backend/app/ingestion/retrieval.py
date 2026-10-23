@@ -137,6 +137,7 @@ def citation_for_provision(
     label_by_kind = {
         "chapter": "Chapter",
         "part": "Part",
+        "cross_heading": "Heading",
         "section": "Section",
         "subsection": "Subsection",
         "paragraph": "Paragraph",

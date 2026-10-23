@@ -134,6 +134,7 @@ class IngestionArtifactType(StrEnum):
 class ProvisionKind(StrEnum):
     CHAPTER = "chapter"
     PART = "part"
+    CROSS_HEADING = "cross_heading"
     SECTION = "section"
     SUBSECTION = "subsection"
     PARAGRAPH = "paragraph"

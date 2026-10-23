@@ -46,6 +46,14 @@ def test_retrieval_citations_qualify_acts_and_preserve_constitution_labels() -> 
         instrument_type=InstrumentType.CONSTITUTION,
     )
     assert citation_for_provision(provision, constitution) == "Paragraph a"
+    heading = Provision(
+        instrument_id=act.id,
+        kind=ProvisionKind.CROSS_HEADING,
+        number="B",
+        heading="Search",
+        canonical_path="acja-2015.part2.headingB",
+    )
+    assert citation_for_provision(heading, act) == "Heading B, ACJA 2015"
 
 
 def test_retrieval_documents_include_citation_context_and_deterministic_segments() -> (
