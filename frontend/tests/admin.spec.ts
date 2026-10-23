@@ -11,6 +11,76 @@ const uploadId = "55555555-5555-4555-8555-555555555555"
 
 test.use({ storageState: { cookies: [], origins: [] } })
 
+test("Issue resolution requires evidence and an explicit blocking override", async ({
+  page,
+}) => {
+  await mockAdminApi(page)
+  let submitted: Record<string, unknown> | undefined
+  let resolved = false
+  await page.route("**/api/v1/admin/review-items?*", (route) => {
+    const item = reviewItem()
+    if (resolved) {
+      item.issues[0].status = "resolved"
+      item.blocking_issue_count = 0
+    }
+    return json(route, { data: [item], count: 1 })
+  })
+  await page.route("**/api/v1/admin/review-issues/*", (route) => {
+    submitted = route.request().postDataJSON()
+    resolved = true
+    return json(route, { ...reviewItem().issues[0], status: "resolved" })
+  })
+  await page.goto("/admin")
+  await page.getByRole("tab", { name: "Review queue" }).click()
+  await page.getByRole("button", { name: "Resolve review issue" }).click()
+  const dialog = page.getByRole("dialog", {
+    name: "Record review issue resolution",
+  })
+  const save = dialog.getByRole("button", { name: "Record resolution" })
+  await dialog
+    .getByLabel("Issue resolution reason")
+    .fill("Checked the retained source and repaired mapping.")
+  await dialog
+    .getByLabel("Blocking issue override reason")
+    .fill("Source comparison completed; obsolete extraction warning.")
+  await expect(save).toBeDisabled()
+  await dialog.getByLabel("Resolution evidence JSON").fill("[]")
+  await expect(dialog.getByRole("alert")).toContainText("JSON object")
+  await expect(save).toBeDisabled()
+  await dialog
+    .getByLabel("Resolution evidence JSON")
+    .fill('{"source_page":2,"mapping_checked":true}')
+  await save.click()
+  await expect(dialog).not.toBeVisible()
+  expect(submitted).toMatchObject({
+    expected_version: 2,
+    reason: "Checked the retained source and repaired mapping.",
+    evidence: { source_page: 2, mapping_checked: true },
+    superuser_override_reason:
+      "Source comparison completed; obsolete extraction warning.",
+  })
+  await expect(
+    page.getByRole("button", { name: "Resolve review issue" }),
+  ).toHaveCount(0)
+  await expect(
+    page.getByRole("button", { name: "Verify source" }),
+  ).toBeVisible()
+})
+
+test("Legal reviewers cannot override blocking issues in the UI", async ({
+  page,
+}) => {
+  await mockAdminApi(page, { isSuperuser: false, roles: ["legal_reviewer"] })
+  await page.goto("/admin")
+  await page.getByRole("tab", { name: "Review queue" }).click()
+  await expect(
+    page.getByText("Candidate requires source-span verification.").last(),
+  ).toBeVisible()
+  await expect(
+    page.getByRole("button", { name: "Resolve review issue" }),
+  ).toHaveCount(0)
+})
+
 test("Admin legal workspace is accessible and shows evidence operations", async ({
   page,
 }) => {

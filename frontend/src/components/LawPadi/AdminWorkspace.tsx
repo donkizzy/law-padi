@@ -58,6 +58,7 @@ import {
   SegmentedControl,
   SquircleButton,
 } from "@/components/LawPadi/primitives"
+import { ResolveReviewIssueForm } from "@/components/LawPadi/ResolveReviewIssueForm"
 import { Checkbox } from "@/components/ui/checkbox"
 import {
   Dialog,
@@ -660,6 +661,7 @@ export function AdminWorkspace() {
         {tab === "review" ? (
           <ReviewWorkspace
             canReview={canReview}
+            canOverride={isSuperuser}
             totalCount={reviewsQuery.data?.count ?? 0}
             pageOffset={reviewOffset}
             onPageChange={setReviewOffset}
@@ -1270,6 +1272,7 @@ function ReviewWorkspace({
   isLoading,
   isMutating,
   canReview = true,
+  canOverride = false,
   onSelect,
   onSave,
   onDecide,
@@ -1290,6 +1293,7 @@ function ReviewWorkspace({
   isLoading: boolean
   isMutating: boolean
   canReview?: boolean
+  canOverride?: boolean
   onSelect: (id: string) => void
   onSave: (id: string, body: ReviewItemUpdate) => void
   onDecide: (id: string, body: ReviewDecisionCreate) => void
@@ -1604,6 +1608,29 @@ function ReviewWorkspace({
                     <p className="mt-2 text-sm text-muted-foreground">
                       {issue.message}
                     </p>
+                    {issue.evidence ? (
+                      <details className="mt-2 text-xs">
+                        <summary className="cursor-pointer">
+                          Finding evidence
+                        </summary>
+                        <pre className="mt-2 overflow-auto whitespace-pre-wrap break-words">
+                          {JSON.stringify(issue.evidence, null, 2)}
+                        </pre>
+                      </details>
+                    ) : null}
+                    {issue.resolution_reason ? (
+                      <p className="mt-2 text-sm">{issue.resolution_reason}</p>
+                    ) : null}
+                    <ResolveReviewIssueForm
+                      issue={issue}
+                      candidateVersion={selected.lock_version}
+                      canOverride={canOverride}
+                      disabled={
+                        isMutating ||
+                        !canReview ||
+                        selected.status === "materialized"
+                      }
+                    />
                   </div>
                 ))}
               </div>
