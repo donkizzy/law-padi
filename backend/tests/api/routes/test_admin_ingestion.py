@@ -986,6 +986,51 @@ def test_run_control_mutations_are_idempotent(
     )
 
 
+def test_retry_keeps_the_failed_stage_task_payload(
+    client: TestClient,
+    superuser_token_headers: dict[str, str],
+    db: Session,
+) -> None:
+    _source, run = _source_and_run(db)
+    run.status = IngestionRunStatus.FAILED
+    run.current_stage = IngestionStage.EMBEDDING
+    release_id = str(uuid.uuid4())
+    db.add(run)
+    db.add(
+        IngestionTask(
+            run_id=run.id,
+            task_type=IngestionStage.EMBEDDING.value,
+            status=IngestionTaskStatus.FAILED,
+            idempotency_key=f"{run.id}:embedding:manual",
+            payload={"release_id": release_id, "source_document_id": "source"},
+        )
+    )
+    db.commit()
+    db.refresh(run)
+
+    response = client.post(
+        f"{settings.API_V1_STR}/admin/ingestion-runs/{run.id}/retry",
+        headers=superuser_token_headers,
+        json={
+            "idempotency_key": f"retry-{uuid.uuid4().hex}",
+            "expected_version": run.lock_version,
+        },
+    )
+
+    assert response.status_code == 200
+    retry_task = db.exec(
+        select(IngestionTask).where(
+            IngestionTask.run_id == run.id,
+            IngestionTask.status == IngestionTaskStatus.PENDING,
+        )
+    ).one()
+    assert retry_task.payload == {
+        "release_id": release_id,
+        "source_document_id": "source",
+        "retry": True,
+    }
+
+
 def test_resume_cancelled_run_requeues_current_stage_once(
     client: TestClient,
     superuser_token_headers: dict[str, str],

@@ -2484,12 +2484,22 @@ def retry_ingestion_run(
     run.updated_at = get_datetime_utc()
     session.add(run)
     stage_value = _enum_value(run.current_stage)
+    # Stages such as embedding read their release from the task payload, so the
+    # retry carries over the payload of the stage's latest task.
+    previous_task = session.exec(
+        select(IngestionTask)
+        .where(
+            IngestionTask.run_id == run.id,
+            IngestionTask.task_type == stage_value,
+        )
+        .order_by(col(IngestionTask.created_at).desc())
+    ).first()
     task = IngestionTask(
         run_id=run.id,
         task_type=stage_value,
         status=IngestionTaskStatus.PENDING,
         idempotency_key=f"{run.id}:{stage_value}:retry:{run.lock_version}",
-        payload={"retry": True},
+        payload={**(previous_task.payload if previous_task else {}), "retry": True},
         priority=5,
     )
     session.add(task)
