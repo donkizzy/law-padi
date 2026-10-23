@@ -787,6 +787,13 @@ class InstrumentIdentity(SQLModel):
     short_citation: str | None = None
 
 
+class ProvisionNotice(SQLModel):
+    # Stable key and params so clients can show the notice in the reader's language.
+    code: str
+    text: str
+    params: dict[str, str] = Field(default_factory=dict)
+
+
 class ProvisionReference(InstrumentIdentity):
     id: uuid.UUID
     canonical_path: str
@@ -797,6 +804,7 @@ class ProvisionReference(InstrumentIdentity):
     citation: str
     has_text: bool
     authoritative_text: str | None = None
+    notices: list[ProvisionNotice] = Field(default_factory=list)
 
 
 class LegalSearchResult(InstrumentIdentity):
@@ -825,6 +833,7 @@ class LegalSearchResult(InstrumentIdentity):
     source_content_url: str
     ancestors: list[ProvisionReference]
     children: list[ProvisionReference]
+    notices: list[ProvisionNotice] = Field(default_factory=list)
 
 
 class CitationOutcome(SQLModel):
@@ -855,6 +864,7 @@ class EvidenceItem(InstrumentIdentity):
     source_content_url: str
     source_page_start: int | None = None
     source_page_end: int | None = None
+    notices: list[ProvisionNotice] = Field(default_factory=list)
 
 
 class LegalSearchResponse(SQLModel):

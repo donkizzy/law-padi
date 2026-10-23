@@ -20,6 +20,7 @@ import {
 } from "@/lib/legal-provisions"
 import { referencePath } from "@/lib/seo"
 import { EditionNotice } from "./EditionNotice"
+import { ProvisionNotices } from "./ProvisionNotices"
 import { SourceActions } from "./SourceActions"
 
 type Props = {
@@ -72,6 +73,7 @@ function SourceContent({
           instrument={evidence}
           historical={evidence.legal_status === "historical"}
         />
+        <ProvisionNotices notices={evidence.notices} />
       </div>
       <section>
         <h3 className="mb-3 text-overline uppercase text-muted-foreground">

@@ -93,5 +93,9 @@
     "removeFailed": "Aṣàwákiri rẹ kò lè yọ àmì-ìwé yìí kúrò.",
     "stillSaved": "Àmì-ìwé rẹ ṣì wà ní ìpamọ́.",
     "open": "Ṣí abala"
+  },
+  "provisionNotices": {
+    "repeats_other_provision": "Òfin tí wọ́n tẹ̀ jáde kọ ọ̀rọ̀ kan náà síbí gẹ́gẹ́ bí abala {{repeated}}, lábẹ́ àkọlé “{{heading}}”. A kò mọ ọ̀rọ̀ gidi tí abala {{section}} yẹ kí ó ní láti inú ẹ̀dà kankan tí ó wà.",
+    "missing_page_secondary_source": "Apá kan fọ́ọ̀mù yìí kò sí nínú ẹ̀dà àwòrán òṣìṣẹ́ tí a lò níbí. Ọ̀rọ̀ tí ó sọnù wá láti inú ẹ̀dà méjì tí a tẹ̀ lọ́tọ̀ọ̀tọ̀, tí wọ́n bá ara wọn mu, tí wọ́n sì bá apá tí ó kù nínú àwòrán náà mu."
   }
 }

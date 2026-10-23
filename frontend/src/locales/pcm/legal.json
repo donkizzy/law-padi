@@ -93,5 +93,9 @@
     "removeFailed": "Your browser no fit comot dis bookmark.",
     "stillSaved": "Your bookmark still dey saved.",
     "open": "Open section"
+  },
+  "provisionNotices": {
+    "repeats_other_provision": "Di Act wey dem publish put di same words for here as section {{repeated}}, under di heading “{{heading}}”. Nobody sabi di correct words for section {{section}} from any copy wey dey available.",
+    "missing_page_secondary_source": "Part of dis form no dey di official scan wey we use for here. Di words wey miss come from two different typed copies of di Act wey agree with each other and with di part of di scan wey remain."
   }
 }

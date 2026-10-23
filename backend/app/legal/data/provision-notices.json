@@ -1,0 +1,30 @@
+{
+  "source": {
+    "note": "Reader notices for individual provisions whose published wording needs a caveat. Each notice applies to the provision at canonical_path and to every provision beneath it. English text is authoritative; clients translate by code and params.",
+    "review": "docs/legal-admin-review-2026-10-20.md (ACJA 2015 second-source comparison, 23 October 2026)"
+  },
+  "notices": [
+    {
+      "canonical_path": "acja-2015.part15.section120",
+      "code": "repeats_other_provision",
+      "params": {
+        "repeated": "121",
+        "section": "120",
+        "heading": "Discretion in ex parte application"
+      },
+      "text": "The published Act prints the same wording here as section 121, under the heading “Discretion in ex parte application”. The intended text of section 120 is not known from any available copy."
+    },
+    {
+      "canonical_path": "acja-2015.schedule1.item8",
+      "code": "missing_page_secondary_source",
+      "params": {},
+      "text": "Part of this form is missing from the official scan used here. The missing wording comes from two independent retyped editions of the Act that agree with each other and with the surviving scan."
+    },
+    {
+      "canonical_path": "acja-2015.schedule1.item9",
+      "code": "missing_page_secondary_source",
+      "params": {},
+      "text": "Part of this form is missing from the official scan used here. The missing wording comes from two independent retyped editions of the Act that agree with each other and with the surviving scan."
+    }
+  ]
+}

@@ -21,6 +21,7 @@ from app.legal.models import (
     ProvisionVersion,
     SourceDocument,
 )
+from app.legal.notices import provision_notices
 from app.legal.references import SectionReference, matches_reference
 from app.legal.release_scope import release_instruments
 from app.legal.schemas import InstrumentIdentity, LegalSearchResult, ProvisionReference
@@ -169,6 +170,7 @@ class PublicCorpus:
             citation=self.citation(provision),
             has_text=version is not None,
             authoritative_text=version.text if context and version else None,
+            notices=provision_notices(provision.canonical_path),
         )
 
     def children(self, parent_id: uuid.UUID | None) -> list[Provision]:
@@ -216,6 +218,7 @@ class PublicCorpus:
             source_content_url=f"{settings.API_V1_STR}/legal/sources/{source.id}/content?{urlencode({'release_version': self.release.version, 'index_kind': self.index_kind})}",
             ancestors=[self.reference(p, context=context) for p in ancestors],
             children=[self.reference(p) for p in self.children(provision.id)],
+            notices=provision_notices(provision.canonical_path),
         )
 
 

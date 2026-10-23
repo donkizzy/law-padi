@@ -20,6 +20,7 @@ import {
   statusLabel,
 } from "@/lib/legal-provisions"
 import { EditionNotice } from "./EditionNotice"
+import { ProvisionNotices } from "./ProvisionNotices"
 import { SourceActions } from "./SourceActions"
 
 export function SourcePanel({
@@ -115,6 +116,7 @@ export function SourcePanelContent({
         instrument={provision}
         historical={provision.legal_status === "historical"}
       />
+      <ProvisionNotices notices={provision.notices} />
       <SourceActions source={provision} />
       <section>
         <h3 className="mb-3 text-xs font-bold uppercase text-muted-foreground">

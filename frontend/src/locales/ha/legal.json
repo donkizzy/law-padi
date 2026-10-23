@@ -93,5 +93,9 @@
     "removeFailed": "Burauzarka ba ta iya cire wannan alama ba.",
     "stillSaved": "Alamarka tana nan a ajiye.",
     "open": "Buɗe sashe"
+  },
+  "provisionNotices": {
+    "repeats_other_provision": "Dokar da aka wallafa ta buga kalmomi iri ɗaya a nan kamar sashe na {{repeated}}, ƙarƙashin taken “{{heading}}”. Ba a san ainihin rubutun sashe na {{section}} daga kowace kwafi da ake da ita ba.",
+    "missing_page_secondary_source": "Wani ɓangare na wannan fom ɗin ba ya cikin kwafin hukuma da aka duba da aka yi amfani da shi a nan. Kalmomin da suka ɓace sun fito ne daga kwafi biyu na Dokar da aka sake bugawa daban-daban, waɗanda suka yi daidai da juna da kuma sauran ɓangaren kwafin."
   }
 }

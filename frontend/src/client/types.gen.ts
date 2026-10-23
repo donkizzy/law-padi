@@ -1306,6 +1306,10 @@ export type EvidenceItem = {
      * Source Page End
      */
     source_page_end?: number | null;
+    /**
+     * Notices
+     */
+    notices?: Array<ProvisionNotice>;
 };
 
 /**
@@ -2109,6 +2113,10 @@ export type LegalSearchResult = {
      * Children
      */
     children: Array<ProvisionReference>;
+    /**
+     * Notices
+     */
+    notices?: Array<ProvisionNotice>;
 };
 
 /**
@@ -2514,7 +2522,27 @@ export type PrivateUserCreate = {
 /**
  * ProvisionKind
  */
-export type ProvisionKind = 'chapter' | 'part' | 'section' | 'subsection' | 'paragraph' | 'schedule' | 'schedule_item';
+export type ProvisionKind = 'chapter' | 'part' | 'cross_heading' | 'section' | 'subsection' | 'paragraph' | 'schedule' | 'schedule_item';
+
+/**
+ * ProvisionNotice
+ */
+export type ProvisionNotice = {
+    /**
+     * Code
+     */
+    code: string;
+    /**
+     * Text
+     */
+    text: string;
+    /**
+     * Params
+     */
+    params?: {
+        [key: string]: string;
+    };
+};
 
 /**
  * ProvisionReference
@@ -2570,6 +2598,10 @@ export type ProvisionReference = {
      * Authoritative Text
      */
     authoritative_text?: string | null;
+    /**
+     * Notices
+     */
+    notices?: Array<ProvisionNotice>;
 };
 
 /**

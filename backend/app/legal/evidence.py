@@ -128,6 +128,7 @@ def evidence_item(
         source_content_url=result.source_content_url,
         source_page_start=result.source_page_start,
         source_page_end=result.source_page_end,
+        notices=result.notices,
     )
 
 

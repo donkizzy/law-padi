@@ -93,5 +93,9 @@
     "removeFailed": "Ihe nchọgharị gị enweghị ike iwepụ akara a.",
     "stillSaved": "Akara gị ka echekwara.",
     "open": "Mepee nkebi"
+  },
+  "provisionNotices": {
+    "repeats_other_provision": "Iwu e bipụtara dere otu okwu ahụ ebe a dị ka nkebi {{repeated}}, n’okpuru isiokwu “{{heading}}”. Amaghị ezi okwu nkebi {{section}} kwesịrị inwe site na nnomi ọ bụla dị.",
+    "missing_page_secondary_source": "Akụkụ nke fọm a adịghị na nnomi gọọmentị e sere foto ya nke e ji mee ihe ebe a. Okwu ndị na-efu sitere na nnomi abụọ nke Iwu ahụ e degharịrị iche iche, ndị kwekọrọ n’onwe ha na akụkụ fọdụrụ na nnomi ahụ."
   }
 }

@@ -336,3 +336,47 @@ test("Old Constitution links and bookmarks work, while cross-law URLs are unavai
     /noindex/,
   )
 })
+
+test("Provision reader notices show on the section page and in its source panel", async ({
+  page,
+}) => {
+  await mockLaws(page)
+  const notice =
+    "The published Act prints the same wording here as section 121, under the heading “Discretion in ex parte application”. The intended text of section 120 is not known from any available copy."
+  await page.route("**/api/v1/legal/provisions/**", (route) =>
+    route.fulfill({
+      json: {
+        data: [
+          {
+            ...provision(acja),
+            notices: [
+              {
+                code: "repeats_other_provision",
+                params: {
+                  repeated: "121",
+                  section: "120",
+                  heading: "Discretion in ex parte application",
+                },
+                text: notice,
+              },
+            ],
+          },
+        ],
+        count: 1,
+        outcome: "exact",
+        retrieval_mode: "exact",
+        release_version: release,
+        edition_label: "Synthetic published source editions",
+      },
+    }),
+  )
+  await page.goto(`/laws/${acja}/${paths[acja]}?release=${release}`)
+  const article = page.getByRole("article", { name: "Legal provision" })
+  await expect(article.getByRole("note")).toHaveText(notice)
+  await article.getByRole("button", { name: "ACJA s.9", exact: true }).click()
+  const panel = page.getByRole("complementary", {
+    name: "Section details",
+    exact: true,
+  })
+  await expect(panel.getByRole("note")).toHaveText(notice)
+})

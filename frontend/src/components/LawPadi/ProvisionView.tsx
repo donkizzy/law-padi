@@ -25,6 +25,7 @@ import {
   statusLabel,
 } from "@/lib/legal-provisions"
 import { EditionNotice } from "./EditionNotice"
+import { ProvisionNotices } from "./ProvisionNotices"
 
 export function ProvisionLink({
   provision,
@@ -204,6 +205,7 @@ export function ProvisionView({
         instrument={provision}
         historical={provision.legal_status === "historical"}
       />
+      <ProvisionNotices notices={provision.notices} />
       <p className="text-sm text-muted-foreground">
         {provision.source_page_start
           ? t("provision.sourcePage", {

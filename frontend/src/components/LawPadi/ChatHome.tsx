@@ -45,6 +45,7 @@ import { bestContainingSource } from "@/lib/source-ranking"
 import { cn } from "@/lib/utils"
 import { AnswerFeedback } from "./AnswerFeedback"
 import { EditionNotice } from "./EditionNotice"
+import { ProvisionNotices, uniqueNotices } from "./ProvisionNotices"
 
 type ExplanationAnswer = {
   outcome: string
@@ -561,6 +562,9 @@ function AnswerView({
           historical={Boolean(historical)}
           notice={answerEditionNotice(answer)}
         />
+        <ProvisionNotices
+          notices={uniqueNotices(answer.evidence.map((item) => item.notices))}
+        />
         <AnswerActions answer={answer} />
         <LookupGaps outcomes={answer.citation_outcomes} />
         {bestSource && (
@@ -644,6 +648,10 @@ function AnswerView({
           historical={Boolean(historical)}
           notice={answerEditionNotice(answer)}
           className="mt-5 border-t border-border pt-4"
+        />
+        <ProvisionNotices
+          className="mt-3"
+          notices={uniqueNotices(cited.map((item) => item.notices))}
         />
       </div>
       <LookupGaps outcomes={answer.citation_outcomes} />

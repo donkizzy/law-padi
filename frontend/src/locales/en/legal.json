@@ -93,5 +93,9 @@
     "removeFailed": "Your browser could not remove this bookmark.",
     "stillSaved": "Your bookmark is still saved.",
     "open": "Open section"
+  },
+  "provisionNotices": {
+    "repeats_other_provision": "The published Act prints the same wording here as section {{repeated}}, under the heading “{{heading}}”. The intended text of section {{section}} is not known from any available copy.",
+    "missing_page_secondary_source": "Part of this form is missing from the official scan used here. The missing wording comes from two independent retyped editions of the Act that agree with each other and with the surviving scan."
   }
 }
