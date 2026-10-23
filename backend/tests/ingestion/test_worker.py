@@ -20,6 +20,7 @@ from app.ingestion.ocr import OcrPageInput, OcrPageResult, OcrWord
 from app.ingestion.pgvector_repository import dense_search, hybrid_search
 from app.ingestion.qdrant import QdrantPoint, QdrantSearchHit
 from app.ingestion.rendering import RenderedPageThumbnail
+from app.ingestion.service import start_embedding
 from app.ingestion.worker import (
     NORMALIZER_VERSION,
     IngestionWorkerError,
@@ -86,6 +87,7 @@ from app.legal.models import (
     VectorIndex,
 )
 from app.legal.parser import PARSER_VERSION, legal_text_sha256, normalize_legal_text
+from app.models import User
 
 
 @pytest.fixture(autouse=True)
@@ -3428,6 +3430,58 @@ def test_embedding_honors_configured_batch_size(
     ).one()
     assert embedding_run.status == EmbeddingRunStatus.SUCCEEDED
     assert embedding_run.recall_at_10 == 1
+
+
+def test_embedding_can_be_started_again_after_documents_are_rebuilt(
+    db: Session, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    monkeypatch.setattr(settings, "INGESTION_STORAGE_DIR", str(tmp_path))
+    _, run, release, _profile = _release_with_retrieval_documents(db, tmp_path=tmp_path)
+    actor = db.exec(select(User).where(col(User.is_superuser).is_(True))).one()
+    run.status = IngestionRunStatus.READY_TO_EMBED
+    run.current_stage = IngestionStage.EMBEDDING
+    db.add(run)
+    db.commit()
+    db.refresh(run)
+    start_embedding(
+        db,
+        run.id,
+        expected_version=run.lock_version,
+        idempotency_key=f"start-{uuid.uuid4().hex}",
+        current_user=actor,
+    )
+    first = db.exec(
+        select(IngestionTask).where(
+            IngestionTask.run_id == run.id,
+            IngestionTask.task_type == IngestionStage.EMBEDDING.value,
+        )
+    ).one()
+    first.status = IngestionTaskStatus.FAILED
+    # The run fails, its documents are rebuilt and it is ready to embed again.
+    db.refresh(run)
+    run.status = IngestionRunStatus.READY_TO_EMBED
+    run.lock_version += 1
+    db.add_all([first, run])
+    db.commit()
+    db.refresh(run)
+
+    start_embedding(
+        db,
+        run.id,
+        expected_version=run.lock_version,
+        idempotency_key=f"start-{uuid.uuid4().hex}",
+        current_user=actor,
+    )
+
+    pending = db.exec(
+        select(IngestionTask).where(
+            IngestionTask.run_id == run.id,
+            IngestionTask.task_type == IngestionStage.EMBEDDING.value,
+            IngestionTask.status == IngestionTaskStatus.PENDING,
+        )
+    ).one()
+    assert pending.id != first.id
+    assert pending.payload["release_id"] == str(release.id)
 
 
 def test_retrieval_documents_can_be_rebuilt_after_retrieval_text_changes(

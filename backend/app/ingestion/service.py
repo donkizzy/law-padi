@@ -2424,7 +2424,12 @@ def start_embedding(
         run=run,
         step=step,
         task_type=IngestionStage.EMBEDDING.value,
-        idempotency_key=f"{run.id}:{IngestionStage.EMBEDDING.value}:manual",
+        # A run can be embedded again after its documents are rebuilt; a fixed
+        # key would return the earlier task and queue nothing. The request
+        # itself stays idempotent through its idempotency record.
+        idempotency_key=(
+            f"{run.id}:{IngestionStage.EMBEDDING.value}:manual:{run.lock_version}"
+        ),
         payload={
             "source_document_id": str(run.source_document_id),
             "release_id": str(release_id),
