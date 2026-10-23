@@ -27,6 +27,7 @@ from app.ingestion.worker import (
     _embed_with_checkpoints,
     _normalize_page_text,
     _upsert_historical_version_from_candidate,
+    handle_embedding,
     handle_profiling,
     run_once,
     run_until_idle,
@@ -3426,6 +3427,69 @@ def test_embedding_honors_configured_batch_size(
     ).one()
     assert embedding_run.status == EmbeddingRunStatus.SUCCEEDED
     assert embedding_run.recall_at_10 == 1
+
+
+def test_embedding_can_be_rescored_after_its_benchmark_result_changes(
+    db: Session, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    monkeypatch.setattr(settings, "INGESTION_STORAGE_DIR", str(tmp_path))
+    _, run, release, profile = _release_with_retrieval_documents(db, tmp_path=tmp_path)
+
+    class FakeEmbeddingProvider:
+        def embed(self, texts: list[str]) -> EmbeddingBatch:
+            return EmbeddingBatch(
+                provider="fake",
+                model_name=profile.model_name,
+                model_revision=profile.model_revision,
+                vectors=[[1.0] + [0.0] * 1023 for _ in texts],
+            )
+
+    monkeypatch.setattr(
+        "app.ingestion.worker._embedding_provider_for_profile",
+        lambda _profile: FakeEmbeddingProvider(),
+    )
+    item = db.exec(
+        select(EvaluationItem)
+        .join(EvaluationDataset)
+        .where(
+            EvaluationDataset.version
+            == profile.configuration["benchmark_dataset_version"]
+        )
+    ).one()
+    expected_paths = item.expected_canonical_paths
+    item.expected_canonical_paths = [f"{expected_paths[0]}-elsewhere"]
+    db.add(item)
+    db.commit()
+    task = IngestionTask(
+        run_id=run.id,
+        task_type=IngestionStage.EMBEDDING.value,
+        idempotency_key=f"{run.id}:embedding:rescore",
+        payload={"release_id": str(release.id)},
+    )
+
+    with pytest.raises(IngestionWorkerError, match="Recall@10"):
+        handle_embedding(db, run, task)
+
+    # The same vectors now score differently; the new artifact sits beside
+    # the first instead of colliding with it in the immutable store.
+    item.expected_canonical_paths = expected_paths
+    db.add(item)
+    db.commit()
+    handle_embedding(db, run, task)
+
+    embedding_run = db.exec(
+        select(EmbeddingRun).where(EmbeddingRun.release_id == release.id)
+    ).one()
+    assert embedding_run.status == EmbeddingRunStatus.SUCCEEDED
+    assert embedding_run.recall_at_10 == 1.0
+    assert embedding_run.selected_for_release is True
+    artifacts = db.exec(
+        select(IngestionArtifact).where(
+            IngestionArtifact.run_id == run.id,
+            IngestionArtifact.artifact_type == IngestionArtifactType.EMBEDDINGS,
+        )
+    ).all()
+    assert len({artifact.storage_key for artifact in artifacts}) == 2
 
 
 def test_embedding_retry_reuses_completed_batches_and_invalidates_changed_inputs(

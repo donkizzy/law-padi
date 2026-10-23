@@ -1446,11 +1446,16 @@ def handle_embedding(
                     {"indices": vector.indices, "values": vector.values}
                     for vector in sparse_vectors
                 ]
+            content = json.dumps(artifact_payload, sort_keys=True).encode()
+            # Artifacts are immutable, so a re-scored run (same vectors, new
+            # benchmark result) is stored beside the earlier one, not over it.
+            # Readers take the newest artifact for the embedding run.
+            content_hash = hashlib.sha256(content).hexdigest()[:16]
             blob = get_blob_store().put_artifact(
                 run_id=str(run.id),
                 artifact_type=IngestionArtifactType.EMBEDDINGS.value,
-                filename=f"embeddings-{profile.name}.json",
-                content=json.dumps(artifact_payload, sort_keys=True).encode(),
+                filename=f"embeddings-{profile.name}-{content_hash}.json",
+                content=content,
                 content_type="application/json",
                 metadata={
                     "release_id": str(release.id),
