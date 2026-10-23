@@ -26,6 +26,20 @@ def test_retrieval_citations_qualify_acts_and_preserve_constitution_labels() -> 
         canonical_path="acja-2015.part2.section9.subsection1.paragrapha",
     )
     assert citation_for_provision(provision, act) == "Section 9(1)(a), ACJA 2015"
+    nested = Provision(
+        instrument_id=act.id,
+        kind=ProvisionKind.PARAGRAPH,
+        number="iv",
+        canonical_path="acja-2015.part15.section123.paragraphb.paragraphiv",
+    )
+    assert citation_for_provision(nested, act) == "Section 123(b)(iv), ACJA 2015"
+    deep = Provision(
+        instrument_id=act.id,
+        kind=ProvisionKind.PARAGRAPH,
+        number="ii",
+        canonical_path="acja-2015.part2.section15.subsection1.paragraphd.paragraphii",
+    )
+    assert citation_for_provision(deep, act) == "Section 15(1)(d)(ii), ACJA 2015"
     constitution = LegalInstrument(
         slug="constitution-1999",
         title="Constitution",

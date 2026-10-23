@@ -148,13 +148,17 @@ def citation_for_provision(
     citation = f"{label} {provision.number}" if provision.number else label
     if instrument is not None:
         if instrument.instrument_type != InstrumentType.CONSTITUTION:
+            # Nested paragraphs, e.g. 123(b)(iv), each keep their own label.
             match = re.search(
-                r"\.section(\d+[a-z]?)(?:\.subsection(\d+[a-z]?))?(?:\.paragraph([a-z]+))?(?=\.|$)",
+                r"\.section(\d+[a-z]?)((?:\.(?:subsection\d+[a-z]?|paragraph[a-z]+))*)$",
                 provision.canonical_path,
             )
             if match:
                 citation = f"Section {match.group(1)}" + "".join(
-                    f"({number})" for number in match.groups()[1:] if number
+                    f"({number})"
+                    for number in re.findall(
+                        r"\.(?:subsection|paragraph)([0-9a-z]+)", match.group(2)
+                    )
                 )
         return qualify_citation(citation, instrument)
     if not provision.canonical_path.startswith(("constitution-1999.", "constitution.")):
