@@ -87,7 +87,7 @@ from app.legal.models import (
     VectorIndex,
 )
 from app.legal.parser import PARSER_VERSION, legal_text_sha256, normalize_legal_text
-from app.models import User
+from tests.utils.user import create_random_user
 
 
 @pytest.fixture(autouse=True)
@@ -3437,7 +3437,7 @@ def test_embedding_can_be_started_again_after_documents_are_rebuilt(
 ) -> None:
     monkeypatch.setattr(settings, "INGESTION_STORAGE_DIR", str(tmp_path))
     _, run, release, _profile = _release_with_retrieval_documents(db, tmp_path=tmp_path)
-    actor = db.exec(select(User).where(col(User.is_superuser).is_(True))).one()
+    actor = create_random_user(db)
     run.status = IngestionRunStatus.READY_TO_EMBED
     run.current_stage = IngestionStage.EMBEDDING
     db.add(run)
