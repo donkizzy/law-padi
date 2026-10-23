@@ -283,3 +283,34 @@ A post-materialisation audit compared every live candidate with its provision: i
 | Police Act `07e6dc81` | verified | 953 materialised | 931 | 938 | ready to embed |
 
 The releases without entries are bodyless Part and cross-heading roots (ACJA 49; Police Act 17 Parts and 5 cross-headings). Retrieval documents outnumber entries because long provisions are split into chunks. Draft releases `draft-7b4b9bc40a9c` and `draft-07e6dc81c9d5` are building. The production Constitution release `draft-c8d50d87fae9` is unchanged. Embedding, release validation, composition and publication have not been started.
+
+## Embedding and benchmark scoring (23 October 2026)
+
+### Benchmarks
+
+The Constitution benchmark `constitution-source-edition-retrieval-2026-10-05-v1` was missing from the database; it had not been present since the 7 October recovery. It was restored from `docs/constitution-source-edition-benchmark.json` (50 queries, content hash `57bcfc5f…`). The user approved new Act benchmarks: `acja-2015-retrieval-v1` has 35 queries and `police-act-2020-retrieval-v1` has 32. All three were loaded with `backend/scripts/load_retrieval_benchmark.py`. Each release is now graded by the dataset for each instrument it contains. The embedding profile is unchanged, so the live Constitution vectors can still be reused when the combined release is built.
+
+### Fixes found while embedding
+
+- **Scoring.** Benchmark scoring now counts a hit on a provision inside the expected one, so s.8(2) counts for s.8. nDCG credits each expected provision once, at its best rank.
+- **Retry payload.** Retrying a failed run dropped its task payload, so a retried embedding run failed with "Task does not identify a corpus release". Retry now carries over the latest payload that holds the stage's inputs.
+- **Re-scored results.** The embeddings file had a fixed name per profile, so re-scoring was refused by the write-once store. The name now carries a content hash.
+
+### Results
+
+| Run | Documents | Recall@10 | nDCG@10 | State |
+| --- | --- | --- | --- | --- |
+| ACJA `7b4b9bc4` | 1,948 | 0.971 (34/35) | 0.916 | Indexed and index validated; ready to publish |
+| Police Act `07e6dc81` | 938 | 0.9375 (30/32) | 0.922 | Failed at embedding: below the 0.95 gate |
+
+### Real retrieval misses
+
+These are not benchmark artefacts. Simulating the live hybrid ranking (vector, keyword at weight 0.15, topic hints and section titles) also misses them:
+
+| Query | Expected | Vector rank | Keyword | Fused rank |
+| --- | --- | --- | --- | --- |
+| "Can the police arrest my brother because they cannot find me?" | ACJA s.7 | 78 | outside top 50 | not found |
+| "Can the police arrest a family member in place of a suspect?" | Police s.36 | 13 | outside top 50 | 18 |
+| "How is the Nigeria Police funded?" | Police s.26 | 11 | no match: `funded:*` misses "funding" and "fund" | 11 |
+
+No topic hint or title match fires for any of them. The "arrest in place of a suspect" provisions are one-liners whose wording is far from everyday phrasing. The funding question shares only two of three title words with "Funding of the Police Force", below the 75% title threshold. No retrieval change has been made; proposals await the user's decision. The ACJA release has not been validated as a corpus release, composed or published.
