@@ -20,7 +20,7 @@ from app.ingestion.ocr import OcrPageInput, OcrPageResult, OcrWord
 from app.ingestion.pgvector_repository import dense_search, hybrid_search
 from app.ingestion.qdrant import QdrantPoint, QdrantSearchHit
 from app.ingestion.rendering import RenderedPageThumbnail
-from app.ingestion.service import start_embedding
+from app.ingestion.service import _release_source_and_review_gates, start_embedding
 from app.ingestion.worker import (
     NORMALIZER_VERSION,
     IngestionWorkerError,
@@ -3430,6 +3430,47 @@ def test_embedding_honors_configured_batch_size(
     ).one()
     assert embedding_run.status == EmbeddingRunStatus.SUCCEEDED
     assert embedding_run.recall_at_10 == 1
+
+
+def test_release_gates_ignore_rejected_candidates_and_their_findings(
+    db: Session, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    monkeypatch.setattr(settings, "INGESTION_STORAGE_DIR", str(tmp_path))
+    source, run, release, _profile = _release_with_retrieval_documents(
+        db, tmp_path=tmp_path
+    )
+    approved = _approved_candidate(db, run=run, source=source, text="Verified text")
+    rejected = _approved_candidate(
+        db,
+        run=run,
+        source=source,
+        text="Duplicate scan (of section 37",
+        canonical_path=f"{approved.canonical_path}.rejected-duplicate",
+        sort_key="999",
+    )
+    rejected.status = ExtractionCandidateStatus.REJECTED
+    db.add(rejected)
+    db.add(
+        ReviewIssue(
+            candidate_id=rejected.id,
+            issue_type="unbalanced_punctuation",
+            blocking=True,
+            message="Unbalanced brackets in a rejected duplicate.",
+        )
+    )
+    db.commit()
+    entries = db.exec(
+        select(CorpusReleaseEntry).where(CorpusReleaseEntry.release_id == release.id)
+    ).all()
+
+    assert _release_source_and_review_gates(db, entries, release=release) == []
+
+    approved.status = ExtractionCandidateStatus.NEEDS_REVIEW
+    db.add(approved)
+    db.commit()
+    assert _release_source_and_review_gates(db, entries, release=release) == [
+        "release_candidate_not_approved"
+    ]
 
 
 def test_embedding_can_be_started_again_after_documents_are_rebuilt(

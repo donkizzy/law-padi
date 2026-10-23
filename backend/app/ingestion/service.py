@@ -1888,8 +1888,13 @@ def _release_source_and_review_gates(
     run_ids = {entry.ingestion_run_id for entry in entries if entry.ingestion_run_id}
     if not run_ids:
         return gates
+    # Rejected candidates are a final review decision and are never released,
+    # as in the review and materialization gates.
     candidates = session.exec(
-        select(ExtractionCandidate).where(col(ExtractionCandidate.run_id).in_(run_ids))
+        select(ExtractionCandidate).where(
+            col(ExtractionCandidate.run_id).in_(run_ids),
+            ExtractionCandidate.status != ExtractionCandidateStatus.REJECTED,
+        )
     ).all()
     if any(
         candidate.status
