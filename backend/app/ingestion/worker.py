@@ -2462,10 +2462,14 @@ def _pages_for_run(session: Session, run: IngestionRun) -> list[SourcePage]:
 def _approved_candidates_for_run(
     session: Session, run: IngestionRun
 ) -> list[ExtractionCandidate]:
+    # Rejected candidates are a final review decision and are never materialized.
     candidates = list(
         session.exec(
             select(ExtractionCandidate)
-            .where(ExtractionCandidate.run_id == run.id)
+            .where(
+                ExtractionCandidate.run_id == run.id,
+                ExtractionCandidate.status != ExtractionCandidateStatus.REJECTED,
+            )
             .order_by(col(ExtractionCandidate.sort_key), col(ExtractionCandidate.id))
         ).all()
     )

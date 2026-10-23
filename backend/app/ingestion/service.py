@@ -3248,36 +3248,15 @@ def _maybe_complete_review_and_queue_materialization(
                     ExtractionCandidateStatus.APPROVED,
                     ExtractionCandidateStatus.AUTO_APPROVED,
                     ExtractionCandidateStatus.MATERIALIZED,
+                    ExtractionCandidateStatus.REJECTED,
                 ]
             ),
         )
     ).first()
     if unfinished:
         return
-    candidates = session.exec(
-        select(ExtractionCandidate).where(ExtractionCandidate.run_id == run.id)
-    ).all()
-    if not candidates:
-        return
-    if any(
-        item.status
-        not in {
-            ExtractionCandidateStatus.APPROVED,
-            ExtractionCandidateStatus.AUTO_APPROVED,
-            ExtractionCandidateStatus.MATERIALIZED,
-        }
-        for item in candidates
-    ):
-        return
-    candidate_ids = [item.id for item in candidates]
-    unresolved_blocking_issue = session.exec(
-        select(ReviewIssue).where(
-            col(ReviewIssue.candidate_id).in_(candidate_ids),
-            ReviewIssue.blocking == True,  # noqa: E712
-            ReviewIssue.status == ReviewIssueStatus.OPEN,
-        )
-    ).first()
-    if unresolved_blocking_issue:
+    candidates = _live_review_candidates(session, run.id)
+    if not _review_candidates_ready_for_materialization(session, candidates):
         return
 
     source = session.get(SourceDocument, candidate.source_document_id)
@@ -3305,13 +3284,26 @@ def _queue_materialization_for_verified_source(
         )
     ).all()
     for run in runs:
-        candidates = session.exec(
-            select(ExtractionCandidate).where(ExtractionCandidate.run_id == run.id)
-        ).all()
+        candidates = _live_review_candidates(session, run.id)
         if _review_candidates_ready_for_materialization(session, candidates):
             _complete_review_and_queue_materialization(
                 session, run=run, source=source, candidates=candidates
             )
+
+
+def _live_review_candidates(
+    session: Session, run_id: uuid.UUID
+) -> list[ExtractionCandidate]:
+    # Rejected candidates (duplicate scans, junk fragments) are a final review
+    # decision: they are never materialized and their findings do not block.
+    return list(
+        session.exec(
+            select(ExtractionCandidate).where(
+                ExtractionCandidate.run_id == run_id,
+                ExtractionCandidate.status != ExtractionCandidateStatus.REJECTED,
+            )
+        ).all()
+    )
 
 
 def _review_candidates_ready_for_materialization(

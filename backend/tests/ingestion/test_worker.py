@@ -1497,6 +1497,64 @@ def test_materialization_requires_document_source_verification(
     assert "verified" in run.error_details["message"]
 
 
+def test_materialization_skips_rejected_candidates_and_their_findings(
+    db: Session, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    monkeypatch.setattr(settings, "INGESTION_STORAGE_DIR", str(tmp_path))
+    pdf = _pdf_with_pages([f"37. Right to privacy {uuid.uuid4().hex}"])
+    source, run = _stored_source_and_run(db, tmp_path=tmp_path, pdf=pdf, max_attempts=1)
+    _clear_run_tasks(db, run)
+    source.verification_status = VerificationStatus.VERIFIED
+    source.verified_at = datetime.now(UTC)
+    db.add(source)
+    approved = _approved_candidate(db, run=run, source=source, text="Verified text")
+    rejected = _approved_candidate(
+        db,
+        run=run,
+        source=source,
+        text="Duplicate scan (of section 37",
+        canonical_path=f"{approved.canonical_path}.rejected-duplicate",
+        sort_key="999",
+    )
+    rejected.status = ExtractionCandidateStatus.REJECTED
+    rejected.blocking_issue_count = 1
+    db.add(rejected)
+    db.add(
+        ReviewIssue(
+            candidate_id=rejected.id,
+            issue_type="unbalanced_punctuation",
+            blocking=True,
+            message="Unbalanced brackets in a rejected duplicate.",
+        )
+    )
+    materializing_step = db.exec(
+        select(IngestionStep).where(
+            IngestionStep.run_id == run.id,
+            IngestionStep.stage == IngestionStage.MATERIALIZING,
+        )
+    ).one()
+    db.commit()
+    enqueue_task(
+        db,
+        run=run,
+        step=materializing_step,
+        task_type=IngestionStage.MATERIALIZING.value,
+        idempotency_key=f"{run.id}:materialize-with-rejected",
+        payload={"source_document_id": str(source.id)},
+    )
+
+    result = run_once(db, worker_id="worker-test")
+
+    assert result is not None
+    assert result.task_status == IngestionTaskStatus.SUCCEEDED
+    db.refresh(approved)
+    db.refresh(rejected)
+    assert approved.status == ExtractionCandidateStatus.MATERIALIZED
+    assert approved.materialized_version_id is not None
+    assert rejected.status == ExtractionCandidateStatus.REJECTED
+    assert rejected.materialized_provision_id is None
+
+
 def test_materialization_blocks_changed_current_law_without_revision_metadata(
     db: Session, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:

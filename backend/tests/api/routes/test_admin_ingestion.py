@@ -1958,7 +1958,28 @@ def test_final_review_approval_requires_explicit_source_verification(
         status=ExtractionCandidateStatus.NEEDS_REVIEW,
         blocking_issue_count=0,
     )
-    db.add_all([run, review_step, candidate])
+    # A rejected duplicate scan and its open finding must not hold the run back.
+    rejected = ExtractionCandidate(
+        run_id=run.id,
+        source_document_id=source.id,
+        kind=ProvisionKind.SECTION,
+        number="37",
+        canonical_path=f"constitution.1999.rejected-duplicate.{uuid.uuid4().hex}",
+        sort_key="999",
+        raw_text="Every citizen is entitled (to privacy.",
+        status=ExtractionCandidateStatus.REJECTED,
+        blocking_issue_count=1,
+    )
+    db.add_all([run, review_step, candidate, rejected])
+    db.commit()
+    db.add(
+        ReviewIssue(
+            candidate_id=rejected.id,
+            issue_type="unbalanced_punctuation",
+            blocking=True,
+            message="Unbalanced brackets in a rejected duplicate.",
+        )
+    )
     db.commit()
     db.refresh(candidate)
 
