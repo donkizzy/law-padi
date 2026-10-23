@@ -314,3 +314,31 @@ These are not benchmark artefacts. Simulating the live hybrid ranking (vector, k
 | "How is the Nigeria Police funded?" | Police s.26 | 11 | no match: `funded:*` misses "funding" and "fund" | 11 |
 
 No topic hint or title match fires for any of them. The "arrest in place of a suspect" provisions are one-liners whose wording is far from everyday phrasing. The funding question shares only two of three title words with "Funding of the Police Force", below the 75% title threshold. No retrieval change has been made; proposals await the user's decision. The ACJA release has not been validated as a corpus release, composed or published.
+
+### Search fixes for the real misses (23 October 2026)
+
+With the user's approval, three changes were tried for the three real misses:
+
+1. **Keyword stemming: reverted.** Adding stems such as `fund:*` for "funded" also added `arrest:*`, which matches hundreds of ACJA mentions. ACJA s.8 fell from first to fifth for "Can someone be arrested over a debt or breach of contract?". The change was reverted in `2de6a36`, and the keyword query is back to its earlier form.
+2. **Statute topics: kept.** `arrest-in-place` routes to ACJA s.7 and Police Act s.36; `police-funding` routes to Police Act s.26. A `police-reward-fund` topic for s.91 makes Reward Fund questions tie with s.26, so vector ranking chooses between them.
+3. **Reviewed search phrasing: kept.** `backend/app/legal/data/retrieval-phrasing.json` adds plain-language phrasing to the search text of ACJA s.7, Police Act s.36 and Police Act s.26. It is embedded and keyword-indexed but never shown to readers; they still see the statutory text.
+
+Two more pipeline defects were fixed along the way:
+
+- **Retrieval documents could not be rebuilt.** The file name was fixed per release, so the write-once store refused a rebuilt version. The name now carries a content hash.
+- **A second embedding start queued nothing.** `start_embedding` reused the fixed task key `<run>:embedding:manual`, so after a rebuild the run sat at "queued" with no task. The key now includes the run's lock version. The stranded Police Act run was given that task, with an `embedding_task_requeued` event.
+
+### Final results
+
+| Run | Recall@10 | nDCG@10 | State |
+| --- | --- | --- | --- |
+| ACJA `7b4b9bc4` | 0.971 (34/35) | 0.916 | Indexed and index validated; ready to publish |
+| Police Act `07e6dc81` | 1.0 (32/32) | 0.984 | Indexed and index validated; ready to publish |
+
+Real hybrid search on both Act indexes ranks all three former misses first. Unrelated checks also rank first: arrest without warrant (Police s.38), police bail (s.62), remand limits (ACJA s.296), the Reward Fund (s.91) and private business (s.95). "Can someone be arrested over a debt?" ranks ACJA s.8 sixth, as it did before these changes. The Constitution plain-language benchmarks are identical to the baseline taken before the changes.
+
+**Caveats**
+
+- The Police Act benchmark is no longer independent for its two previously missed queries, because the phrasing was written for those provisions. A held-out Act query set should confirm the gain.
+- ACJA's member index predates the phrasing. ACJA s.7 still ranks first there through the topic hint, and the phrasing takes effect when the combined release rebuilds its retrieval documents.
+- Neither Act release has been validated as a corpus release, composed or published.
