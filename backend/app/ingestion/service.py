@@ -27,7 +27,10 @@ from app.ingestion.contracts import (
     MultipartUpload,
     MultipartUploadPartUrl,
 )
-from app.ingestion.evaluation import active_evaluation_item_count
+from app.ingestion.evaluation import (
+    active_evaluation_item_count,
+    benchmark_dataset_versions,
+)
 from app.ingestion.pdf import PdfInspectionError, inspect_pdf_bytes
 from app.ingestion.pgvector_repository import validate_index_build
 from app.ingestion.qdrant import QdrantHttpIndexAdapter, QdrantIndexError
@@ -1755,13 +1758,19 @@ def validate_corpus_release(
     if embedding_run and not embedding_run.benchmark_dataset_version:
         unresolved_gates.append("benchmark_dataset_version_missing")
     elif embedding_run and embedding_run.benchmark_dataset_version:
-        benchmark_item_count = active_evaluation_item_count(
-            session,
-            embedding_run.benchmark_dataset_version,
-            dataset_kind=EvaluationDatasetKind.RETRIEVAL_BENCHMARK,
-            item_kind=EvaluationItemKind.RETRIEVAL_QUERY,
-        )
-        if benchmark_item_count <= 0:
+        dataset_counts = [
+            active_evaluation_item_count(
+                session,
+                dataset_version,
+                dataset_kind=EvaluationDatasetKind.RETRIEVAL_BENCHMARK,
+                item_kind=EvaluationItemKind.RETRIEVAL_QUERY,
+            )
+            for dataset_version in benchmark_dataset_versions(
+                embedding_run.benchmark_dataset_version
+            )
+        ]
+        benchmark_item_count = sum(dataset_counts)
+        if not dataset_counts or any(count <= 0 for count in dataset_counts):
             unresolved_gates.append("benchmark_dataset_missing_or_empty")
     if settings.RETRIEVAL_INDEX_BACKEND == "pgvector":
         if not retrieval_index_build:

@@ -1774,9 +1774,12 @@ def test_active_embedding_profiles_must_share_one_persisted_benchmark_dataset(
     db.add_all([openai_profile, bge_profile])
     db.commit()
 
-    assert _benchmark_dataset_for_embedding_profiles(
-        db, [openai_profile, bge_profile]
-    ) == (dataset_version, 1)
+    release = CorpusRelease(version=f"draft-{uuid.uuid4().hex}")
+    recorded, queries = _benchmark_dataset_for_embedding_profiles(
+        db, [openai_profile, bge_profile], release
+    )
+    assert recorded == dataset_version
+    assert [query.item_key for query in queries] == ["privacy-exact-reference"]
 
     bge_profile.configuration = {
         "benchmark_dataset_version": f"other-{uuid.uuid4().hex}"
@@ -1784,7 +1787,90 @@ def test_active_embedding_profiles_must_share_one_persisted_benchmark_dataset(
     db.add(bge_profile)
     db.commit()
     with pytest.raises(IngestionWorkerError, match="same benchmark dataset"):
-        _benchmark_dataset_for_embedding_profiles(db, [openai_profile, bge_profile])
+        _benchmark_dataset_for_embedding_profiles(
+            db, [openai_profile, bge_profile], release
+        )
+
+
+def test_embedding_benchmark_grades_each_release_instrument_with_its_own_dataset(
+    db: Session, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    monkeypatch.setattr(settings, "INGESTION_STORAGE_DIR", str(tmp_path))
+    source, _run, release, profile = _release_with_retrieval_documents(
+        db, tmp_path=tmp_path, create_benchmark_dataset=False
+    )
+    constitution = db.get(LegalInstrument, source.legal_instrument_id)
+    assert constitution
+    pinned_version = str(profile.configuration["benchmark_dataset_version"])
+    _create_retrieval_benchmark_dataset(
+        db,
+        version=pinned_version,
+        canonical_path=f"{constitution.slug}.section37",
+        instrument_slug=constitution.slug,
+    )
+    act = LegalInstrument(
+        slug=f"act-{uuid.uuid4().hex[:12]}",
+        title="Test Act",
+        instrument_type=InstrumentType.ACT,
+    )
+    db.add(act)
+    db.commit()
+    act_provision = Provision(
+        instrument_id=act.id,
+        kind=ProvisionKind.SECTION,
+        number="1",
+        canonical_path=f"{act.slug}.section1",
+        sort_key="001",
+    )
+    db.add(act_provision)
+    db.commit()
+    act_text = "This Act applies to criminal trials."
+    act_version = ProvisionVersion(
+        provision_id=act_provision.id,
+        text=act_text,
+        normalized_text=normalize_legal_text(act_text),
+        valid_from=date(2015, 5, 13),
+        legal_status=LegalStatus.HISTORICAL,
+        source_document_id=source.id,
+        text_sha256=legal_text_sha256(act_text),
+    )
+    db.add(act_version)
+    db.commit()
+    db.add(
+        CorpusReleaseEntry(
+            release_id=release.id,
+            provision_version_id=act_version.id,
+            source_document_id=source.id,
+        )
+    )
+    db.commit()
+
+    # An Act in the release without its own benchmark cannot be graded.
+    with pytest.raises(IngestionWorkerError, match=f"{act.slug} needs exactly one"):
+        _benchmark_dataset_for_embedding_profiles(db, [profile], release)
+
+    act_version_name = f"act-golden-{uuid.uuid4().hex[:8]}"
+    _create_retrieval_benchmark_dataset(
+        db,
+        version=act_version_name,
+        canonical_path=act_provision.canonical_path,
+        instrument_slug=act.slug,
+    )
+
+    recorded, queries = _benchmark_dataset_for_embedding_profiles(
+        db, [profile], release
+    )
+
+    by_slug = {act.slug: act_version_name, constitution.slug: pinned_version}
+    expected = [by_slug[slug] for slug in sorted(by_slug)]
+    assert recorded == "+".join(expected)
+    assert sorted(query.item_key for query in queries) == sorted(
+        f"{version}/privacy-exact-reference" for version in expected
+    )
+    assert {path for query in queries for path in query.expected_canonical_paths} == {
+        f"{constitution.slug}.section37",
+        act_provision.canonical_path,
+    }
 
 
 def test_worker_embeds_indexes_and_validates_ready_vector_index(
@@ -2778,7 +2864,11 @@ def _create_legal_grade_dataset(
 
 
 def _create_retrieval_benchmark_dataset(
-    db: Session, *, version: str, canonical_path: str
+    db: Session,
+    *,
+    version: str,
+    canonical_path: str,
+    instrument_slug: str | None = None,
 ) -> EvaluationDataset:
     dataset = EvaluationDataset(
         version=version,
@@ -2786,6 +2876,7 @@ def _create_retrieval_benchmark_dataset(
         dataset_kind=EvaluationDatasetKind.RETRIEVAL_BENCHMARK,
         language="en",
         jurisdiction="NG",
+        instrument_slug=instrument_slug,
         content_sha256=legal_text_sha256(version + canonical_path),
     )
     db.add(dataset)

@@ -17,6 +17,44 @@ class RetrievalEvaluationQuery:
     metadata: dict[str, Any]
 
 
+# A release covering several instruments is benchmarked against one dataset per
+# instrument; the embedding run records their versions joined by this separator.
+BENCHMARK_VERSION_SEPARATOR = "+"
+
+
+def benchmark_dataset_versions(recorded: str) -> list[str]:
+    return [
+        version for version in recorded.split(BENCHMARK_VERSION_SEPARATOR) if version
+    ]
+
+
+def active_retrieval_benchmark(
+    session: Session, dataset_version: str
+) -> EvaluationDataset | None:
+    return _active_dataset(
+        session,
+        version=dataset_version,
+        dataset_kind=EvaluationDatasetKind.RETRIEVAL_BENCHMARK,
+    )
+
+
+def active_retrieval_benchmark_versions(
+    session: Session, instrument_slug: str
+) -> list[str]:
+    return list(
+        session.exec(
+            select(EvaluationDataset.version)
+            .where(
+                EvaluationDataset.instrument_slug == instrument_slug,
+                EvaluationDataset.dataset_kind
+                == EvaluationDatasetKind.RETRIEVAL_BENCHMARK,
+                EvaluationDataset.is_active == True,  # noqa: E712
+            )
+            .order_by(col(EvaluationDataset.version))
+        ).all()
+    )
+
+
 @dataclass(frozen=True)
 class OcrEvaluationPage:
     item_key: str

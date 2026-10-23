@@ -6,7 +6,7 @@ import tempfile
 import threading
 import uuid
 from collections.abc import Callable
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 from datetime import date, datetime
 from typing import Any, BinaryIO, cast
 
@@ -26,7 +26,11 @@ from app.ingestion.embedding import (
 )
 from app.ingestion.embedding_reuse import member_document_vectors, profile_fingerprint
 from app.ingestion.evaluation import (
+    BENCHMARK_VERSION_SEPARATOR,
+    RetrievalEvaluationQuery,
     active_evaluation_item_count,
+    active_retrieval_benchmark,
+    active_retrieval_benchmark_versions,
     load_gold_provisions_for_dataset,
     load_retrieval_evaluation_queries,
 )
@@ -140,6 +144,7 @@ from app.legal.parser import (
 from app.legal.parser import (
     SourcePage as ParserSourcePage,
 )
+from app.legal.release_scope import release_instruments
 
 AUTO_APPROVAL_MIN_CONFIDENCE = 0.9
 
@@ -1357,14 +1362,9 @@ def handle_embedding(
     profiles = _active_embedding_profiles(session)
     if not profiles:
         raise IngestionWorkerError("No active embedding profiles are configured")
-    benchmark_dataset_version, benchmark_query_count = (
-        _benchmark_dataset_for_embedding_profiles(session, profiles)
+    benchmark_dataset_version, benchmark_queries = (
+        _benchmark_dataset_for_embedding_profiles(session, profiles, release)
     )
-    benchmark_queries = load_retrieval_evaluation_queries(
-        session, benchmark_dataset_version
-    )
-    if len(benchmark_queries) != benchmark_query_count:
-        raise IngestionWorkerError("Embedding benchmark query count changed during run")
 
     sparse_vectors = (
         SparseLegalEncoder().encode(texts)
@@ -3047,8 +3047,8 @@ def _active_embedding_profiles(session: Session) -> list[EmbeddingProfile]:
 
 
 def _benchmark_dataset_for_embedding_profiles(
-    session: Session, profiles: list[EmbeddingProfile]
-) -> tuple[str, int]:
+    session: Session, profiles: list[EmbeddingProfile], release: CorpusRelease
+) -> tuple[str, list[RetrievalEvaluationQuery]]:
     profile_versions = [
         _profile_string(profile, "benchmark_dataset_version") for profile in profiles
     ]
@@ -3061,18 +3061,70 @@ def _benchmark_dataset_for_embedding_profiles(
         raise IngestionWorkerError(
             "Active embedding profiles must use the same benchmark dataset version"
         )
-    dataset_version = next(iter(versions))
-    query_count = active_evaluation_item_count(
-        session,
-        dataset_version,
-        dataset_kind=EvaluationDatasetKind.RETRIEVAL_BENCHMARK,
-        item_kind=EvaluationItemKind.RETRIEVAL_QUERY,
-    )
-    if query_count <= 0:
+    pinned_version = next(iter(versions))
+    dataset_versions = _benchmark_versions_for_release(session, release, pinned_version)
+    recorded = BENCHMARK_VERSION_SEPARATOR.join(dataset_versions)
+    if len(recorded) > 128:
         raise IngestionWorkerError(
-            f"Embedding benchmark dataset {dataset_version} is not active or has no retrieval queries"
+            f"Benchmark dataset versions are too long to record: {recorded}"
         )
-    return dataset_version, query_count
+    queries: list[RetrievalEvaluationQuery] = []
+    for dataset_version in dataset_versions:
+        query_count = active_evaluation_item_count(
+            session,
+            dataset_version,
+            dataset_kind=EvaluationDatasetKind.RETRIEVAL_BENCHMARK,
+            item_kind=EvaluationItemKind.RETRIEVAL_QUERY,
+        )
+        if query_count <= 0:
+            raise IngestionWorkerError(
+                f"Embedding benchmark dataset {dataset_version} is not active or has no retrieval queries"
+            )
+        loaded = load_retrieval_evaluation_queries(session, dataset_version)
+        if len(loaded) != query_count:
+            raise IngestionWorkerError(
+                "Embedding benchmark query count changed during run"
+            )
+        if len(dataset_versions) > 1:
+            # Item keys are only unique within a dataset.
+            loaded = [
+                replace(query, item_key=f"{dataset_version}/{query.item_key}")
+                for query in loaded
+            ]
+        queries.extend(loaded)
+    return recorded, queries
+
+
+def _benchmark_versions_for_release(
+    session: Session, release: CorpusRelease, pinned_version: str
+) -> list[str]:
+    pinned = active_retrieval_benchmark(session, pinned_version)
+    if pinned is None or pinned.instrument_slug is None:
+        # A dataset not tied to one instrument benchmarks every release.
+        return [pinned_version]
+    # Each instrument in the release is graded by its own dataset: the profile's
+    # pinned dataset for its instrument, otherwise the instrument's one active
+    # retrieval benchmark. The profile stays unchanged, so its fingerprint and
+    # vector reuse are unaffected when another instrument gains a benchmark.
+    slugs = sorted(
+        instrument.slug
+        for instrument in release_instruments(session, release.id).values()
+    )
+    if not slugs:
+        raise IngestionWorkerError("Release does not identify any legal instrument")
+    dataset_versions: list[str] = []
+    for slug in slugs:
+        if slug == pinned.instrument_slug:
+            dataset_versions.append(pinned_version)
+            continue
+        candidates = active_retrieval_benchmark_versions(session, slug)
+        if len(candidates) != 1:
+            raise IngestionWorkerError(
+                f"Release instrument {slug} needs exactly one active retrieval "
+                f"benchmark dataset; found {len(candidates)}"
+            )
+        dataset_versions.append(candidates[0])
+    return dataset_versions
 
 
 def _retrieval_documents_payload(
