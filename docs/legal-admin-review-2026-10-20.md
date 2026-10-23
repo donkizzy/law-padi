@@ -45,3 +45,32 @@ The Part XVII root mapping was narrowed from a whole page to the five heading bo
 The admin now supports audited structure/source-mapping edits, recovering missing provisions without altering the origin, nullable metadata clearing, page/path filters, readable audit reasons, and imported-run boundary confirmation. Graph validation rejects duplicate paths, cycles, cross-run parents, invalid page ranges, and edits to cancelled/materialised candidates. Raw source extractions and before/after snapshots are retained.
 
 The initial full isolated backend run passed 667 tests with 4 skipped and 89% coverage. Structural recovery has since been extended to allow a bodyless Part/Chapter only when it has a heading. A live reparenting save exposed a UUID audit-serialization bug; the failed transaction rolled back, the serializer was repaired, and non-null reparenting regression coverage was added. All 54 admin backend tests then passed. Application Mypy/ty, Ruff, frontend build and Biome passed. Explicitly checking the whole legacy test file with Mypy also reports pre-existing fixture/type errors; these are outside the application type-check scope. Authored frontend regression specs have not yet been run as a suite; the live recovery, metadata-only structure, reparenting, filtering, readback and approval flows were checked through computer use.
+
+## Source verification and materialisation (23 October 2026)
+
+### Pre-flight audit
+
+A read-only audit found no pending candidates or open issues on either live run. Both runs' page boundaries were already confirmed (Police Act 20 October, ACJA 21 October). Pressing **Confirm reviewed boundaries** again returns every approved candidate to needs review, so it was not pressed.
+
+Two defects blocked the hand-off, and both were fixed with regression tests:
+
+- **Rejected candidates blocked completion.** The review gate (`service.py`) and the materialisation worker (`worker.py`) counted rejected candidates as unfinished, and counted open findings on rejected records as blocking. ACJA's 298 rejected duplicates and 46 findings on them would have held the run at review forever. Rejection is now treated as a final decision: rejected candidates are never materialised and their findings do not block.
+- **Nested paragraph citations were truncated in retrieval text.** `citation_for_provision` kept only one paragraph level, so ACJA 123(b)(i)–(vi) were all cited "Section 123(b)". Every level is now kept ("Section 123(b)(iv)"). Reader-facing citations in `public_corpus.py` were already correct.
+
+### Actions, with the user's authorisation
+
+- A safety dump was taken at ignored path `backend/storage/backups/app-before-materialize-acts-20261023T100456Z.dump`.
+- Both source documents were verified through `verify_source_document` as the as-enacted historical editions. Each reason records the known defects: ACJA section 120 and the missing page for Forms 8–9, and the Police Act Part XV/XVI numbering.
+- The worker ran inside the backend container, with `INGESTION_ALLOWED_INSTRUMENT_TYPES=["constitution","act"]` set for that command only; `.env` is unchanged. The first local attempt failed on the container-only storage path and rolled back with nothing written. Both runs were retried through `retry_ingestion_run`.
+- A rebuild of retrieval documents with corrected citations was refused by the immutable artifact store. The original artifacts were kept, and both runs were restored to ready to embed with a `retrieval_documents_rebuild_withdrawn` event. The corrected citations take effect when the composite release rebuilds retrieval documents. The per-run member artifacts keep the truncated citations, so nested Roman items are re-embedded at composition.
+
+### Result
+
+A post-materialisation audit compared every live candidate with its provision: identity, kind, number, heading, sort key, parent and version text all match, and every version has historical status. No rejected candidate was materialised.
+
+| Run | Source | Candidates | Release entries | Retrieval documents | State |
+| --- | --- | --- | --- | --- | --- |
+| ACJA `7b4b9bc4` | verified | 1,979 materialised, 298 rejected | 1,930 | 1,948 | ready to embed |
+| Police Act `07e6dc81` | verified | 953 materialised | 931 | 938 | ready to embed |
+
+The releases without entries are bodyless Part and cross-heading roots (ACJA 49; Police Act 17 Parts and 5 cross-headings). Retrieval documents outnumber entries because long provisions are split into chunks. Draft releases `draft-7b4b9bc40a9c` and `draft-07e6dc81c9d5` are building. The production Constitution release `draft-c8d50d87fae9` is unchanged. Embedding, release validation, composition and publication have not been started.
