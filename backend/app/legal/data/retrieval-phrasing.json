@@ -1,0 +1,20 @@
+{
+  "source": {
+    "note": "Plain-language phrasing added to the search text of individual provisions whose statutory wording is far from how people ask about them. It is embedded and keyword-indexed with the provision but is never shown to readers and is not statutory text. Each entry applies only to the provision at canonical_path.",
+    "review": "Approved by the user on 23 October 2026; see docs/legal-admin-review-2026-10-20.md (Embedding and benchmark scoring)."
+  },
+  "phrasing": [
+    {
+      "canonical_path": "acja-2015.part2.section7",
+      "text": "In plain words: the police or anyone else may not arrest a relative, friend or any other person in place of the suspect they are looking for, for example to pressure the suspect to come forward."
+    },
+    {
+      "canonical_path": "police-act-2020.part7.section36",
+      "text": "In plain words: the police or anyone else may not arrest a relative, friend or any other person in place of the suspect they are looking for, for example to pressure the suspect to come forward."
+    },
+    {
+      "canonical_path": "police-act-2020.part6.section26",
+      "text": "In plain words: how the Nigeria Police Force is funded, through its General Fund, budget allocations and other money paid to the Force."
+    }
+  ]
+}

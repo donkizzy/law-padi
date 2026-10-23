@@ -12,6 +12,7 @@ from app.legal.models import (
     Provision,
     ProvisionVersion,
 )
+from app.legal.retrieval_phrasing import retrieval_phrasing
 
 DEFAULT_MAX_RETRIEVAL_TEXT_CHARS = 2800
 _CLAUSE_BOUNDARY_RE = re.compile(r"(?<=[.;:])\s+(?=\(?[0-9a-zA-Z])")
@@ -90,6 +91,7 @@ def build_retrieval_documents(
                 ancestor_headings=ancestor_headings,
                 heading=provision.heading,
                 text=segment_text,
+                phrasing=retrieval_phrasing(provision.canonical_path),
             )
             payload: dict[str, object] = {
                 "release_version": release_version,
@@ -192,10 +194,15 @@ def retrieval_text_for(
     ancestor_headings: list[str],
     heading: str | None,
     text: str,
+    phrasing: str | None = None,
 ) -> str:
     parts = [citation, *ancestor_headings]
     if heading:
         parts.append(heading)
+    # Reviewed everyday phrasing helps search find terse provisions; it is
+    # search text only and never replaces the authoritative wording.
+    if phrasing:
+        parts.append(phrasing)
     parts.append(text)
     return "\n".join(part.strip() for part in parts if part and part.strip())
 

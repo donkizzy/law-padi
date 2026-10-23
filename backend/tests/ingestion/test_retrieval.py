@@ -140,3 +140,74 @@ def test_retrieval_documents_include_citation_context_and_deterministic_segments
         "constitution.1999.chapter4.section37"
     )
     assert first_result[0].payload["segment_count"] == 3
+
+
+def test_reviewed_phrasing_is_search_text_only_and_applies_to_one_provision() -> None:
+    act = LegalInstrument(
+        slug="police-act-2020",
+        title="Nigeria Police Act 2020",
+        short_title="Police Act 2020",
+        instrument_type=InstrumentType.ACT,
+    )
+    source_id = uuid.uuid4()
+    section = Provision(
+        id=uuid.uuid4(),
+        instrument_id=act.id,
+        kind=ProvisionKind.SECTION,
+        number="36",
+        heading="Arrest in lieu prohibited.",
+        canonical_path="police-act-2020.part7.section36",
+        sort_key="036",
+    )
+    neighbour = Provision(
+        id=uuid.uuid4(),
+        instrument_id=act.id,
+        kind=ProvisionKind.SECTION,
+        number="37",
+        heading="Humane treatment of arrested suspect.",
+        canonical_path="police-act-2020.part7.section37",
+        sort_key="037",
+    )
+    versions = {}
+    entries = []
+    for provision, text in (
+        (section, "A person shall not be arrested in place of a suspect."),
+        (neighbour, "A suspect shall be accorded humane treatment."),
+    ):
+        version = ProvisionVersion(
+            id=uuid.uuid4(),
+            provision_id=provision.id,
+            text=text,
+            normalized_text=text.lower(),
+            valid_from=date(2020, 9, 16),
+            legal_status=LegalStatus.HISTORICAL,
+            source_document_id=source_id,
+            text_sha256=legal_text_sha256(text),
+        )
+        versions[version.id] = version
+        entries.append(
+            CorpusReleaseEntry(
+                id=uuid.uuid4(),
+                release_id=uuid.uuid4(),
+                provision_version_id=version.id,
+                source_document_id=source_id,
+            )
+        )
+
+    documents = build_retrieval_documents(
+        release_version="draft-test",
+        entries=entries,
+        versions_by_id=versions,
+        provisions_by_id={section.id: section, neighbour.id: neighbour},
+        instruments_by_id={act.id: act},
+    )
+
+    by_path = {document.payload["canonical_path"]: document for document in documents}
+    arrest = by_path[section.canonical_path]
+    assert "In plain words:" in arrest.retrieval_text
+    assert "relative" in arrest.retrieval_text
+    # Readers only ever see the statutory wording.
+    assert arrest.authoritative_text == (
+        "A person shall not be arrested in place of a suspect."
+    )
+    assert "In plain words:" not in by_path[neighbour.canonical_path].retrieval_text
