@@ -40,6 +40,24 @@ def test_retrieval_citations_qualify_acts_and_preserve_constitution_labels() -> 
         canonical_path="acja-2015.part2.section15.subsection1.paragraphd.paragraphii",
     )
     assert citation_for_provision(deep, act) == "Section 15(1)(d)(ii), ACJA 2015"
+    first_schedule_form = Provision(
+        instrument_id=act.id,
+        kind=ProvisionKind.SCHEDULE_ITEM,
+        number="1",
+        canonical_path="acja-2015.schedule1.item1",
+    )
+    third_schedule_item = Provision(
+        instrument_id=act.id,
+        kind=ProvisionKind.SCHEDULE_ITEM,
+        number="1",
+        canonical_path="acja-2015.schedule3.item1",
+    )
+    assert citation_for_provision(first_schedule_form, act) == (
+        "Schedule 1, Item 1, ACJA 2015"
+    )
+    assert citation_for_provision(third_schedule_item, act) == (
+        "Schedule 3, Item 1, ACJA 2015"
+    )
     constitution = LegalInstrument(
         slug="constitution-1999",
         title="Constitution",

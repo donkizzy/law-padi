@@ -163,6 +163,12 @@ def citation_for_provision(
                         r"\.(?:subsection|paragraph)([0-9a-z]+)", match.group(2)
                     )
                 )
+            # Items are numbered within each Schedule, so name the Schedule too.
+            schedule = re.search(
+                r"\.schedule(\w+)\.item(\w+)$", provision.canonical_path
+            )
+            if schedule:
+                citation = f"Schedule {schedule.group(1)}, Item {schedule.group(2)}"
         return qualify_citation(citation, instrument)
     if not provision.canonical_path.startswith(("constitution-1999.", "constitution.")):
         raise ValueError(
