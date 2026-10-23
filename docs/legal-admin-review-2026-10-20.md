@@ -351,3 +351,20 @@ Real hybrid search on both Act indexes ranks all three former misses first. Unre
 | ACJA `draft-7b4b9bc40a9c` | 1,930 | `acja-2015-retrieval-v1` (35) | approved | none |
 
 ACJA was first held by `release_candidate_not_approved` and `release_blocking_review_issue_open`. Both came only from its 298 rejected duplicate-scan candidates and the 46 open findings on them; all 1,979 live candidates are materialized. The release gate was corrected in `c6617e8` to exclude rejected candidates, as the review and materialization gates already did. ACJA was then re-validated. Nothing has been composed or published; the production release remains `draft-c8d50d87fae9`.
+
+### Combined release (23 October 2026)
+
+`composite-2026-10-23-constitution-acja-police` (release `e152d7ab`, run `0a9bd208`) combines the production Constitution release `draft-c8d50d87fae9` with the approved ACJA and Police Act releases. It holds 4,672 entries (1,811 Constitution, 1,930 ACJA, 931 Police Act) in 4,715 retrieval documents.
+
+Before embedding, a check of the combined documents found that ACJA schedule-item citations omitted their Schedule. Form 1 of the First Schedule and item 1 of the Third Schedule were both cited "Schedule Item 1, ACJA 2015". This was fixed in `5474477`, and the composite documents were rebuilt; every Act citation is now unique. Nested citations, such as "Section 123(b)(iv)", and the reviewed phrasing for ACJA s.7 and Police Act ss.26 and 36 are present in the search text and absent from reader text.
+
+Embedding reused 2,751 document vectors and embedded the changed ACJA documents.
+
+| Benchmark | Recall@10 |
+| --- | --- |
+| Constitution | 1.000 (50/50) |
+| ACJA | 0.971 (34/35) |
+| Police Act | 1.000 (32/32) |
+| **Combined** | **0.991 (116/117)**, nDCG@10 0.928 |
+
+The one miss is ACJA q003, "Can the police arrest my brother because they cannot find me?". The vector ranking returns the identically worded Police Act s.36 second, but not ACJA s.7. In live search, the `arrest-in-place` topic boosts both. Indexing and index validation succeeded, and the run is ready to publish. The release has not yet been validated as a corpus release or published; production remains `draft-c8d50d87fae9`.
