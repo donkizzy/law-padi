@@ -342,3 +342,12 @@ Real hybrid search on both Act indexes ranks all three former misses first. Unre
 - The Police Act benchmark is no longer independent for its two previously missed queries, because the phrasing was written for those provisions. A held-out Act query set should confirm the gain.
 - ACJA's member index predates the phrasing. ACJA s.7 still ranks first there through the topic hint, and the phrasing takes effect when the combined release rebuilds its retrieval documents.
 - Neither Act release has been validated as a corpus release, composed or published.
+
+### Release validation (23 October 2026)
+
+| Release | Entries | Benchmark | Status | Unresolved gates |
+| --- | --- | --- | --- | --- |
+| Police Act `draft-07e6dc81c9d5` | 931 | `police-act-2020-retrieval-v1` (32) | approved | none |
+| ACJA `draft-7b4b9bc40a9c` | 1,930 | `acja-2015-retrieval-v1` (35) | approved | none |
+
+ACJA was first held by `release_candidate_not_approved` and `release_blocking_review_issue_open`. Both came only from its 298 rejected duplicate-scan candidates and the 46 open findings on them; all 1,979 live candidates are materialized. The release gate was corrected in `c6617e8` to exclude rejected candidates, as the review and materialization gates already did. ACJA was then re-validated. Nothing has been composed or published; the production release remains `draft-c8d50d87fae9`.
