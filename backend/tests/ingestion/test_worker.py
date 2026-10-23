@@ -11,7 +11,7 @@ import pytest
 from fastapi.testclient import TestClient
 from pypdf import PdfWriter
 from pypdf.generic import DictionaryObject, NameObject, StreamObject
-from sqlmodel import Session, delete, select
+from sqlmodel import Session, col, delete, select
 
 from app.core.config import settings
 from app.ingestion.blob_store import LocalBlobStore
@@ -27,6 +27,7 @@ from app.ingestion.worker import (
     _embed_with_checkpoints,
     _normalize_page_text,
     _upsert_historical_version_from_candidate,
+    handle_building_retrieval_documents,
     handle_embedding,
     handle_profiling,
     run_once,
@@ -3427,6 +3428,43 @@ def test_embedding_honors_configured_batch_size(
     ).one()
     assert embedding_run.status == EmbeddingRunStatus.SUCCEEDED
     assert embedding_run.recall_at_10 == 1
+
+
+def test_retrieval_documents_can_be_rebuilt_after_retrieval_text_changes(
+    db: Session, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    monkeypatch.setattr(settings, "INGESTION_STORAGE_DIR", str(tmp_path))
+    _, run, release, _profile = _release_with_retrieval_documents(db, tmp_path=tmp_path)
+    task = IngestionTask(
+        run_id=run.id,
+        task_type=IngestionStage.BUILDING_RETRIEVAL_DOCUMENTS.value,
+        idempotency_key=f"{run.id}:building:rebuild",
+        payload={"release_id": str(release.id)},
+    )
+    handle_building_retrieval_documents(db, run, task)
+    monkeypatch.setattr(
+        "app.ingestion.retrieval.retrieval_phrasing",
+        lambda _path: "In plain words: privacy at home.",
+    )
+
+    # Changed search text produces a new artifact beside the first instead of
+    # colliding with it in the immutable store.
+    handle_building_retrieval_documents(db, run, task)
+
+    artifacts = db.exec(
+        select(IngestionArtifact)
+        .where(
+            IngestionArtifact.run_id == run.id,
+            IngestionArtifact.artifact_type
+            == IngestionArtifactType.RETRIEVAL_DOCUMENTS,
+        )
+        .order_by(col(IngestionArtifact.created_at).desc())
+    ).all()
+    newest = json.loads(LocalBlobStore(tmp_path).read_bytes(artifacts[0].storage_key))
+    assert (
+        "In plain words: privacy at home." in (newest["documents"][0]["retrieval_text"])
+    )
+    assert len({artifact.storage_key for artifact in artifacts}) >= 2
 
 
 def test_embedding_can_be_rescored_after_its_benchmark_result_changes(

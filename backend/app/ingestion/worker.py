@@ -1292,11 +1292,16 @@ def handle_building_retrieval_documents(
         "document_count": len(retrieval_documents),
         "documents": [document.to_json() for document in retrieval_documents],
     }
+    content = json.dumps(payload, sort_keys=True).encode()
+    # Artifacts are immutable: rebuilt documents (for example after a
+    # retrieval-text change) are stored beside earlier ones, and readers take
+    # the newest artifact for the release.
+    content_hash = hashlib.sha256(content).hexdigest()[:16]
     blob = get_blob_store().put_artifact(
         run_id=str(run.id),
         artifact_type=IngestionArtifactType.RETRIEVAL_DOCUMENTS.value,
-        filename=f"retrieval-documents-{release.version}.json",
-        content=json.dumps(payload, sort_keys=True).encode(),
+        filename=f"retrieval-documents-{release.version}-{content_hash}.json",
+        content=content,
         content_type="application/json",
         metadata={"release_id": str(release.id)},
     )
