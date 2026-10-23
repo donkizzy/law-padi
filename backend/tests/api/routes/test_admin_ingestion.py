@@ -1003,6 +1003,18 @@ def test_retry_keeps_the_failed_stage_task_payload(
             status=IngestionTaskStatus.FAILED,
             idempotency_key=f"{run.id}:embedding:manual",
             payload={"release_id": release_id, "source_document_id": "source"},
+            created_at=datetime(2026, 10, 23, 10, 0, tzinfo=UTC),
+        )
+    )
+    # A later retry that held only the flag must not hide the stage's inputs.
+    db.add(
+        IngestionTask(
+            run_id=run.id,
+            task_type=IngestionStage.EMBEDDING.value,
+            status=IngestionTaskStatus.FAILED,
+            idempotency_key=f"{run.id}:embedding:retry:old",
+            payload={"retry": True},
+            created_at=datetime(2026, 10, 23, 11, 0, tzinfo=UTC),
         )
     )
     db.commit()
