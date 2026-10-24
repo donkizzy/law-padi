@@ -368,3 +368,5 @@ Embedding reused 2,751 document vectors and embedded the changed ACJA documents.
 | **Combined** | **0.991 (116/117)**, nDCG@10 0.928 |
 
 The one miss is ACJA q003, "Can the police arrest my brother because they cannot find me?". The vector ranking returns the identically worded Police Act s.36 second, but not ACJA s.7. In live search, the `arrest-in-place` topic boosts both. Indexing and index validation succeeded, and the run is ready to publish. The release has not yet been validated as a corpus release or published; production remains `draft-c8d50d87fae9`.
+
+The combined release was validated on 24 October 2026 and is **approved with no unresolved gates**. The validation covered 4,672 entries and all 117 benchmark queries from the three datasets (minimum Recall@10 0.95). It also confirmed the selected embedding run `9d13854a` and the ready pgvector index build `5fcc6f1b`. It has not been published; production remains `draft-c8d50d87fae9`.
