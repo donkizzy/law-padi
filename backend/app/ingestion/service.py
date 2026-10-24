@@ -93,6 +93,7 @@ from app.legal.models import (
     SourceUpload,
     VectorIndex,
 )
+from app.legal.release_scope import release_instruments
 from app.legal.schemas import (
     AdminOperationalAlertPublic,
     CompositeReleaseCreate,
@@ -2049,6 +2050,19 @@ def publish_corpus_release(
         raise HTTPException(
             status_code=status.HTTP_409_CONFLICT,
             detail="Release must validate cleanly before publication",
+        )
+    # Publication replaces the whole live corpus, so an Act-only release (a
+    # member for composition) would take the Constitution away from readers.
+    if InstrumentType.CONSTITUTION not in {
+        instrument.instrument_type
+        for instrument in release_instruments(session, release.id).values()
+    }:
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail=(
+                "Only a release that contains the Constitution can be published; "
+                "compose Act releases with the Constitution first"
+            ),
         )
     entries = session.exec(
         select(CorpusReleaseEntry).where(CorpusReleaseEntry.release_id == release.id)
