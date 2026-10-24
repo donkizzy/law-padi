@@ -472,6 +472,41 @@ test("Publish waits for validation and uses the updated release version", async 
   expect(published).toBe(true)
 })
 
+test("An approved Act-only release is labelled and cannot be published", async ({
+  page,
+}) => {
+  await mockAdminApi(page)
+  const actOnly = {
+    ...corpusRelease(),
+    version: "draft-acja-only",
+    status: "approved",
+    instrument_slugs: ["acja-2015"],
+    instrument_types: ["act"],
+  }
+  let published = false
+  await page.route("**/api/v1/admin/corpus-releases", (route) =>
+    json(route, { data: [actOnly], count: 1 }),
+  )
+  await page.route(
+    `**/api/v1/admin/corpus-releases/${releaseId}/publish`,
+    (route) => {
+      published = true
+      return json(route, { release: actOnly, promotion_status: "succeeded" })
+    },
+  )
+  await page.goto("/admin")
+  await page.getByRole("tab", { name: "Corpus releases" }).click()
+
+  await expect(page.getByText("Act only · for Compose release")).toBeVisible()
+  await expect(
+    page.getByText(/Publishing it would replace the live Constitution/),
+  ).toBeVisible()
+  await expect(
+    page.getByRole("button", { name: "Publish", exact: true }),
+  ).toBeDisabled()
+  expect(published).toBe(false)
+})
+
 test("Admin can complete a PDF upload session from the browser", async ({
   page,
 }) => {
@@ -1672,6 +1707,8 @@ function corpusRelease() {
     lock_version: 3,
     created_at: new Date().toISOString(),
     evidence_count: 1,
+    instrument_slugs: ["constitution-1999"],
+    instrument_types: ["constitution"],
   }
 }
 

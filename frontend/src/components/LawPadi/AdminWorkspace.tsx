@@ -2010,6 +2010,12 @@ function ProtectedImage({
   )
 }
 
+// Publishing replaces the whole live corpus, so only a release that contains
+// the Constitution can go live; an Act-only release is a member to compose.
+function containsConstitution(release: CorpusReleasePublic) {
+  return release.instrument_types?.includes("constitution") ?? false
+}
+
 function ReleaseWorkspace({
   releases,
   selected,
@@ -2107,6 +2113,11 @@ function ReleaseWorkspace({
                   <p className="mt-1 text-xs text-muted-foreground">
                     {release.evidence_count} entries
                   </p>
+                  {containsConstitution(release) ? null : (
+                    <p className="mt-1 text-xs font-semibold text-muted-foreground">
+                      Act only · for Compose release
+                    </p>
+                  )}
                 </div>
                 <StatusPill status={release.status} />
               </div>
@@ -2553,6 +2564,7 @@ function ReleaseWorkspace({
                 disabled={
                   isMutating ||
                   !canPublish ||
+                  !containsConstitution(selected) ||
                   selected.status !== "approved" ||
                   unresolvedGates.length > 0 ||
                   isEvidenceLoading ||
@@ -2573,6 +2585,13 @@ function ReleaseWorkspace({
                 Publish
               </SquircleButton>
             </div>
+            {containsConstitution(selected) ? null : (
+              <p className="text-sm text-muted-foreground" role="note">
+                This release holds an Act without the Constitution. Publishing
+                it would replace the live Constitution, so add it to a release
+                with Compose release and publish that instead.
+              </p>
+            )}
             {selected.status === "building" ||
             selected.status === "validating" ? (
               <p className="text-sm text-muted-foreground" role="note">
