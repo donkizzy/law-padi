@@ -29,6 +29,8 @@ services:
         value: "false"
       - key: CHAT_GENERATION_KILL_SWITCH
         value: "true"
+      - key: DEEPSEEK_MODEL
+        value: deepseek-flash
       - key: CHAT_PROVIDER_CAPACITY_APPROVED
         value: "false"
       - key: CHAT_DISPATCH_MODE

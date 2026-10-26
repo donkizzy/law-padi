@@ -106,9 +106,10 @@ class Settings(BaseSettings):
     CHAT_EVIDENCE_MAX_CHARS: int = Field(default=24000, ge=1000)
     DEEPSEEK_API_KEY: str | None = None
     DEEPSEEK_BASE_URL: str = "https://api.deepseek.com"
-    DEEPSEEK_MODEL: str = "deepseek-v4-pro"
-    DEEPSEEK_INPUT_USD_PER_MILLION: float = Field(default=1.32, ge=0)
-    DEEPSEEK_OUTPUT_USD_PER_MILLION: float = Field(default=3.96, ge=0)
+    DEEPSEEK_MODEL: str = "deepseek-flash"
+    # Flash peak-hour rates; off-peak is half, so budgets never under-count.
+    DEEPSEEK_INPUT_USD_PER_MILLION: float = Field(default=0.30, ge=0)
+    DEEPSEEK_OUTPUT_USD_PER_MILLION: float = Field(default=1.20, ge=0)
     DEEPSEEK_MAX_OUTPUT_TOKENS: int = Field(default=2000, ge=1)
     # Thinking tokens count toward the output limit, so each stage has its own.
     # The verifier reasons in its JSON instead: with thinking it used its whole
@@ -219,7 +220,7 @@ class Settings(BaseSettings):
             and not self.CHAT_PROVIDER_CAPACITY_APPROVED
         ):
             raise ValueError(
-                "CHAT_PROVIDER_CAPACITY_APPROVED is required above the documented DeepSeek Pro limit"
+                "CHAT_PROVIDER_CAPACITY_APPROVED is required above the documented DeepSeek concurrency limit"
             )
         if self.CHAT_DISPATCH_MODE == "cloud_tasks":
             required = {

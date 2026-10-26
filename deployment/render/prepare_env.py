@@ -46,6 +46,7 @@ def main():
         CHAT_ENABLED="true",
         CHAT_GENERATION_ENABLED="false",
         CHAT_GENERATION_KILL_SWITCH="true",
+        DEEPSEEK_MODEL="deepseek-flash",
         CHAT_PROVIDER_CAPACITY_APPROVED="false",
         CHAT_DISPATCH_MODE="poll",
         CHAT_MAX_ACTIVE_GENERATIONS="1",

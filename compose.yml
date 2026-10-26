@@ -96,7 +96,7 @@ services:
       CHAT_ACCOUNT_BURST_LIMIT: ${CHAT_ACCOUNT_BURST_LIMIT:-10}
       CHAT_DAILY_BUDGET_USD: ${CHAT_DAILY_BUDGET_USD:-100}
       DEEPSEEK_API_KEY: ${DEEPSEEK_API_KEY:-}
-      DEEPSEEK_MODEL: ${DEEPSEEK_MODEL:-deepseek-v4-pro}
+      DEEPSEEK_MODEL: ${DEEPSEEK_MODEL:-deepseek-flash}
       QDRANT_URL: ${QDRANT_URL:-}
       QDRANT_API_KEY: ${QDRANT_API_KEY:-}
       MANAGED_OCR_PROVIDER: ${MANAGED_OCR_PROVIDER:-disabled}
@@ -224,7 +224,7 @@ services:
       CHAT_DAILY_BUDGET_USD: ${CHAT_DAILY_BUDGET_USD:-100}
       DEEPSEEK_API_KEY: ${DEEPSEEK_API_KEY:-}
       DEEPSEEK_BASE_URL: ${DEEPSEEK_BASE_URL:-https://api.deepseek.com}
-      DEEPSEEK_MODEL: ${DEEPSEEK_MODEL:-deepseek-v4-pro}
+      DEEPSEEK_MODEL: ${DEEPSEEK_MODEL:-deepseek-flash}
     volumes:
       - app-ingestion-source-documents:/app/backend/storage/source-documents
 
