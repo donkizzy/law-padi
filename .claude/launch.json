@@ -52,6 +52,38 @@
         "8000"
       ],
       "port": 8000
+    },
+    {
+      "name": "api-8001",
+      "runtimeExecutable": "env",
+      "runtimeArgs": [
+        "FRONTEND_HOST=http://localhost:5182",
+        "RATE_LIMIT_ENABLED=false",
+        "uv",
+        "run",
+        "--directory",
+        "backend",
+        "fastapi",
+        "dev",
+        "--port",
+        "8001"
+      ],
+      "port": 8001
+    },
+    {
+      "name": "frontend-5182",
+      "runtimeExecutable": "env",
+      "runtimeArgs": [
+        "VITE_API_URL=http://localhost:8001",
+        "bunx",
+        "vite",
+        "frontend",
+        "--port",
+        "5182",
+        "--strictPort"
+      ],
+      "port": 5182,
+      "autoPort": false
     }
   ]
 }
