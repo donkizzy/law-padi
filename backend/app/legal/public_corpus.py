@@ -273,12 +273,14 @@ def load_public_corpus(
                 and parent.kind != ProvisionKind.SECTION
             ):
                 raise PgVectorRetrievalError("Subsection is not attached to a section")
+            # Acts nest sub-paragraphs, as in section 123(b)(i).
             if child.kind == ProvisionKind.PARAGRAPH and parent.kind not in (
                 ProvisionKind.SECTION,
                 ProvisionKind.SUBSECTION,
+                ProvisionKind.PARAGRAPH,
             ):
                 raise PgVectorRetrievalError(
-                    "Paragraph is not attached to a section or subsection"
+                    "Paragraph is not attached to a section, subsection or paragraph"
                 )
             seen.add(parent.id)
             provisions[parent.id] = parent
@@ -398,12 +400,14 @@ def load_reference_corpus(
                 and parent.kind != ProvisionKind.SECTION
             ):
                 raise PgVectorRetrievalError("Subsection is not attached to a section")
+            # Acts nest sub-paragraphs, as in section 123(b)(i).
             if child.kind == ProvisionKind.PARAGRAPH and parent.kind not in (
                 ProvisionKind.SECTION,
                 ProvisionKind.SUBSECTION,
+                ProvisionKind.PARAGRAPH,
             ):
                 raise PgVectorRetrievalError(
-                    "Paragraph is not attached to a section or subsection"
+                    "Paragraph is not attached to a section, subsection or paragraph"
                 )
             seen.add(parent.id)
             provisions[parent.id] = parent
@@ -495,12 +499,14 @@ def load_ranked_corpus(
                 and parent.kind != ProvisionKind.SECTION
             ):
                 raise PgVectorRetrievalError("Subsection is not attached to a section")
+            # Acts nest sub-paragraphs, as in section 123(b)(i).
             if child.kind == ProvisionKind.PARAGRAPH and parent.kind not in (
                 ProvisionKind.SECTION,
                 ProvisionKind.SUBSECTION,
+                ProvisionKind.PARAGRAPH,
             ):
                 raise PgVectorRetrievalError(
-                    "Paragraph is not attached to a section or subsection"
+                    "Paragraph is not attached to a section, subsection or paragraph"
                 )
             seen.add(parent.id)
             provisions[parent.id] = parent

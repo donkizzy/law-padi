@@ -8,7 +8,7 @@ from uuid import uuid4
 
 import pytest
 from fastapi.testclient import TestClient
-from sqlmodel import Session
+from sqlmodel import Session, select
 
 from app.chat.worker import _relative_query, _source_crossrefs
 from app.ingestion.pgvector_repository import (
@@ -260,3 +260,56 @@ def test_act_titles_use_arrangement_headings_beyond_the_partial_catalogue(
     corpus.provisions[child.id] = child
     assert corpus.reference(parent).title == "Synthetic arrangement heading"
     assert corpus.reference(child).title == "Synthetic arrangement heading"
+
+
+def test_nested_act_paragraphs_load_into_the_public_corpus(
+    client: TestClient, db: Session, statute_corpus
+) -> None:
+    section = db.exec(
+        select(Provision).where(Provision.canonical_path == "acja-2015.section9")
+    ).one()
+    version = db.exec(
+        select(ProvisionVersion).where(ProvisionVersion.provision_id == section.id)
+    ).one()
+    parent_id = section.id
+    for path, number in (
+        ("acja-2015.section9.paragraphb", "b"),
+        ("acja-2015.section9.paragraphb.paragraphi", "i"),
+    ):
+        paragraph = Provision(
+            instrument_id=section.instrument_id,
+            kind=ProvisionKind.PARAGRAPH,
+            number=number,
+            canonical_path=path,
+            sort_key=f"009.{number}",
+            parent_id=parent_id,
+        )
+        db.add(paragraph)
+        db.flush()
+        text = f"Synthetic paragraph ({number})."
+        nested = ProvisionVersion(
+            provision_id=paragraph.id,
+            source_document_id=version.source_document_id,
+            text=text,
+            normalized_text=text.lower(),
+            text_sha256=legal_text_sha256(text),
+            valid_from=date(2020, 1, 1),
+            legal_status=LegalStatus.HISTORICAL,
+        )
+        db.add(nested)
+        db.flush()
+        db.add(
+            CorpusReleaseEntry(
+                release_id=statute_corpus.id,
+                provision_version_id=nested.id,
+                source_document_id=version.source_document_id,
+            )
+        )
+        parent_id = paragraph.id
+    db.commit()
+
+    corpus = load_public_corpus(db, statute_corpus)
+    assert parent_id in corpus.provisions
+    response = client.get("/api/v1/legal/instruments")
+    assert response.status_code == 200
+    assert "acja-2015" in {item["slug"] for item in response.json()["data"]}
