@@ -26,9 +26,11 @@ services:
       - key: CHAT_ENABLED
         value: "true"
       - key: CHAT_GENERATION_ENABLED
-        value: "false"
-      - key: CHAT_GENERATION_KILL_SWITCH
         value: "true"
+      - key: CHAT_GENERATION_KILL_SWITCH
+        value: "false"
+      - key: CHAT_LANGUAGES_ENABLED
+        value: '["en","pcm","yo","ha","ig"]'
       - key: DEEPSEEK_MODEL
         value: deepseek-flash
       - key: CHAT_PROVIDER_CAPACITY_APPROVED

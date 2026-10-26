@@ -139,11 +139,12 @@ and the same revision. The edge forwards only the public `/api/v1/` namespace,
 replaces trusted headers and preserves streamed responses. Publish static assets
 and the Worker together only when their backend version is verified.
 
-Public launch includes AI chat. Keep `CHAT_GENERATION_ENABLED=false`,
-`CHAT_GENERATION_KILL_SWITCH=true` and capacity approval false until the current
-prompt/build and lexical retrieval configuration pass the required 200-case
-evaluation and human grounding review. Then explicitly update those three
-controls together and verify a bounded live answer plus spend accounting.
+Public launch includes AI chat with reader-language translations.
+`render.yaml` and `prepare_env.py` enable generation
+(`CHAT_GENERATION_ENABLED=true`, `CHAT_GENERATION_KILL_SWITCH=false`) on
+`DEEPSEEK_MODEL=deepseek-flash`, with all five `CHAT_LANGUAGES_ENABLED`.
+Translated answers need generation, so turning it off also stops translation.
+Capacity approval stays false. To pause spend, set the kill switch to `true`.
 An earlier incomplete collector or different build cannot open this gate.
 
 Use HTTPS API email delivery or a supported alternate mail port before claiming

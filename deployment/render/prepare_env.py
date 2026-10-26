@@ -44,8 +44,9 @@ def main():
         SERVE_FRONTEND="false",
         FRONTEND_HOST="https://constitition-ng.amosgodwin500.workers.dev",
         CHAT_ENABLED="true",
-        CHAT_GENERATION_ENABLED="false",
-        CHAT_GENERATION_KILL_SWITCH="true",
+        CHAT_GENERATION_ENABLED="true",
+        CHAT_GENERATION_KILL_SWITCH="false",
+        CHAT_LANGUAGES_ENABLED='["en","pcm","yo","ha","ig"]',
         DEEPSEEK_MODEL="deepseek-flash",
         CHAT_PROVIDER_CAPACITY_APPROVED="false",
         CHAT_DISPATCH_MODE="poll",
@@ -99,7 +100,7 @@ def main():
         for key, value in sorted(values.items()):
             handle.write(f"{key}={json.dumps(value)}\n")
     print(
-        f"Prepared ignored chmod-600 deployment/render.env for {revision}; generation remains disabled."
+        f"Prepared ignored chmod-600 deployment/render.env for {revision}; generation and translations are enabled."
     )
 
 
