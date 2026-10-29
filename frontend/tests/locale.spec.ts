@@ -40,6 +40,51 @@ test("English is the default language", async ({ page }) => {
   await expect(page.locator("html")).toHaveAttribute("lang", "en")
 })
 
+test("Translated Browse does not repeat the edition warning in English", async ({
+  page,
+}) => {
+  await mockApi(page)
+  await page.route("**/api/v1/legal/instruments**", (route) =>
+    route.fulfill({
+      json: {
+        data: [
+          {
+            slug: "constitution-1999",
+            title: "1999 Constitution",
+            short_title: "1999 Constitution",
+            section_count: 320,
+            edition_label: "LFN 2004",
+            edition_note:
+              "Historical source edition. Later amendments may differ.",
+          },
+        ],
+        count: 1,
+      },
+    }),
+  )
+  await page.route("**/api/v1/legal/tree**", (route) =>
+    route.fulfill({
+      json: {
+        data: [],
+        count: 0,
+        release_version: "published-test",
+        edition_label: "LFN 2004",
+      },
+    }),
+  )
+  await page.goto("/laws")
+  await page.getByRole("button", { name: "Language: English" }).click()
+  await page.getByRole("menuitemradio", { name: "Yorùbá", exact: true }).click()
+  await expect(page.locator("html")).toHaveAttribute("lang", "yo")
+  await expect(
+    page.getByText("Àwọn abala 320 tí a tẹ̀jáde", { exact: true }),
+  ).toBeVisible()
+  await expect(
+    page.getByText("Historical source edition. Later amendments may differ."),
+  ).toHaveCount(0)
+  await expect(page.getByText(/Èyí ni Òfin-Ìpìlẹ̀ 1999/)).toBeVisible()
+})
+
 test("Switching to Yorùbá changes the interface and the page language", async ({
   page,
 }) => {
@@ -82,4 +127,23 @@ test("Settings offers every complete language and switches back to English", asy
   await page.getByRole("radio", { name: "English" }).check()
   await expect(page.locator("html")).toHaveAttribute("lang", "en")
   await expect(page.getByRole("tab", { name: "Preferences" })).toBeVisible()
+})
+
+test("Unreviewed interface languages are explicitly labelled Beta", async ({
+  page,
+}) => {
+  await mockApi(page)
+  await page.goto("/?intent=ask")
+  await page.getByRole("button", { name: "Language: English" }).click()
+  for (const language of ["Pidgin", "Yorùbá", "Hausa", "Igbo"]) {
+    const choice = page.getByRole("menuitemradio", {
+      name: language,
+      exact: true,
+    })
+    await expect(choice).toContainText("Beta")
+    await expect(choice).toHaveAttribute("aria-description", "Beta")
+  }
+  await expect(
+    page.getByRole("menuitemradio", { name: "English", exact: true }),
+  ).not.toContainText("Beta")
 })

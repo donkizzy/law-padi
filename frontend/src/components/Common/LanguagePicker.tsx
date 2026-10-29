@@ -43,7 +43,7 @@ export function useLanguagePreference() {
 
 /** Compact header control. */
 export function LanguageMenu({ className }: { className?: string }) {
-  const { t, i18n } = useTranslation()
+  const { t, i18n } = useTranslation(["common", "chat"])
   const { value, options, setLanguage } = useLanguagePreference()
   if (options.length <= 2) return null
   return (
@@ -75,10 +75,24 @@ export function LanguageMenu({ className }: { className?: string }) {
           {options.map((option) => (
             <DropdownMenuRadioItem
               key={option.value}
+              aria-label={option.label}
+              aria-description={
+                option.lang && option.lang !== "en"
+                  ? t("chat:translation.beta")
+                  : undefined
+              }
               lang={option.lang}
               value={option.value}
             >
               {option.label}
+              {option.lang && option.lang !== "en" && (
+                <span
+                  aria-hidden
+                  className="sq-xs bg-secondary px-1.5 py-0.5 text-xs text-muted-foreground"
+                >
+                  {t("chat:translation.beta")}
+                </span>
+              )}
             </DropdownMenuRadioItem>
           ))}
         </DropdownMenuRadioGroup>
@@ -89,7 +103,7 @@ export function LanguageMenu({ className }: { className?: string }) {
 
 /** Full list for the Settings page. */
 export function LanguageChoice() {
-  const { t } = useTranslation()
+  const { t } = useTranslation(["common", "chat"])
   const { value, options, setLanguage } = useLanguagePreference()
   const name = useId()
   return (
@@ -107,6 +121,12 @@ export function LanguageChoice() {
           key={option.value}
         >
           <input
+            aria-label={option.label}
+            aria-description={
+              option.lang && option.lang !== "en"
+                ? t("chat:translation.beta")
+                : undefined
+            }
             checked={value === option.value}
             className="accent-[color:var(--primary)]"
             name={name}
@@ -115,6 +135,14 @@ export function LanguageChoice() {
             value={option.value}
           />
           <span lang={option.lang}>{option.label}</span>
+          {option.lang && option.lang !== "en" && (
+            <span
+              aria-hidden
+              className="sq-xs ml-auto bg-secondary px-1.5 py-0.5 text-xs text-muted-foreground"
+            >
+              {t("chat:translation.beta")}
+            </span>
+          )}
         </label>
       ))}
     </fieldset>

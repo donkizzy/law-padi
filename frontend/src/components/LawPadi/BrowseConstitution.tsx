@@ -78,8 +78,7 @@ export function BrowseConstitution({
       />
       {selected && (
         <p className="mb-5 text-label font-normal text-muted-foreground">
-          {t("browse.sectionCount", { count: selected.section_count })} ·{" "}
-          {selected.edition_note}
+          {t("browse.sectionCount", { count: selected.section_count })}
         </p>
       )}
       {parent && (

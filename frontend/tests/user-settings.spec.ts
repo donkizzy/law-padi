@@ -41,6 +41,9 @@ async function mockSettings(page: Page, signedIn = false) {
       },
     }),
   )
+  await page.route("**/api/v1/legal/instruments**", (route) =>
+    route.fulfill({ json: { data: [], count: 0 } }),
+  )
   await page.route("**/api/v1/users/me**", (route) => {
     if (route.request().url().includes("password")) {
       passwordWrites.push(route.request().postDataJSON())
@@ -57,6 +60,45 @@ async function mockSettings(page: Page, signedIn = false) {
   })
   return { profileWrites, passwordWrites }
 }
+
+test("Settings lists every published law with its own source caveat", async ({
+  page,
+}) => {
+  await mockSettings(page)
+  const laws = [
+    {
+      slug: "constitution-1999",
+      edition_label: "LFN 2004",
+      edition_note: "Constitution: later amendments are not included.",
+    },
+    {
+      slug: "acja-2015",
+      edition_label: "As enacted, 2015",
+      edition_note: "ACJA: as enacted, may have been amended.",
+    },
+    {
+      slug: "police-act-2020",
+      edition_label: "As enacted, 2020",
+      edition_note: "Police Act: as enacted, may have been amended.",
+    },
+  ]
+  await page.route("**/api/v1/legal/instruments**", (route) =>
+    route.fulfill({ json: { data: laws, count: laws.length } }),
+  )
+  await page.goto("/settings")
+  for (const label of [
+    "1999 Constitution (2004 edition)",
+    "ACJA 2015 (as enacted)",
+    "Police Act 2020 (as enacted)",
+  ])
+    await expect(page.getByText(label, { exact: true })).toBeVisible()
+  for (const note of [
+    "This is the 1999 Constitution as published in 2004. Later amendments aren't included yet, so a section may have changed since.",
+    "ACJA 2015: As enacted, may have been amended.",
+    "Police Act 2020: As enacted, may have been amended.",
+  ])
+    await expect(page.getByText(note, { exact: true })).toBeVisible()
+})
 
 test("Guest settings shows honest identity, supported language, and a sign-in path", async ({
   page,

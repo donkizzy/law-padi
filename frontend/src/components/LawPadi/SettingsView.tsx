@@ -19,7 +19,7 @@ import {
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import useAuth, { isLoggedIn } from "@/hooks/useAuth"
 import { useChatCapabilities } from "@/hooks/useChatCapabilities"
-import { useLegalRelease } from "@/hooks/useLegalCorpus"
+import { useLegalInstruments, useLegalRelease } from "@/hooks/useLegalCorpus"
 import { clearSavedProvisions } from "@/hooks/useSavedProvisions"
 import {
   clearDrafts,
@@ -91,6 +91,8 @@ export function SettingsView() {
   const { user } = useAuth()
   const capabilities = useChatCapabilities()
   const release = useLegalRelease()
+  const instruments = useLegalInstruments(release.data?.release_version)
+  const laws = instruments.data?.data ?? []
   const { preferences, error: storageError } = useWorkspacePreferences()
   const [edited, setEdited] = useState(preferences)
   const [dirty, setDirty] = useState(false)
@@ -184,9 +186,19 @@ export function SettingsView() {
                 {t("available.edition")}
               </dt>
               <dd>
-                {release.data
-                  ? editionName(release.data.edition_label)
-                  : t("available.editionUnavailable")}
+                {laws.length ? (
+                  <ul className="grid gap-2">
+                    {laws.map((law) => (
+                      <li key={law.slug}>
+                        {editionName(law.edition_label, law.slug)}
+                      </li>
+                    ))}
+                  </ul>
+                ) : release.data ? (
+                  editionName(release.data.edition_label)
+                ) : (
+                  t("available.editionUnavailable")
+                )}
               </dd>
               <dt className="text-muted-foreground">
                 {t("available.explanations")}
@@ -199,18 +211,33 @@ export function SettingsView() {
                     : t("available.paused")}
               </dd>
             </dl>
-            <EditionNotice
-              className="mt-5"
-              label={release.data?.edition_label}
-              historical={release.data?.legal_statuses.includes("historical")}
-            />
-            {(release.isError || capabilities.isError) && (
+            {laws.length ? (
+              <div className="mt-5 grid gap-3">
+                {laws.map((law) => (
+                  <EditionNotice
+                    key={law.slug}
+                    label={law.edition_label}
+                    instrument={law.slug}
+                  />
+                ))}
+              </div>
+            ) : (
+              <EditionNotice
+                className="mt-5"
+                label={release.data?.edition_label}
+                historical={release.data?.legal_statuses.includes("historical")}
+              />
+            )}
+            {(release.isError ||
+              capabilities.isError ||
+              instruments.isError) && (
               <InlineAction
                 className="mt-3"
                 type="button"
                 onClick={() => {
                   void release.refetch()
                   void capabilities.refetch()
+                  void instruments.refetch()
                 }}
               >
                 {t("common:actions.checkAgain")}
