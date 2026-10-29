@@ -1,6 +1,6 @@
 import { type RefObject, useEffect, useId, useRef } from "react"
 import { useTranslation } from "react-i18next"
-import { FiSend } from "react-icons/fi"
+import { FiArrowUp, FiBookOpen, FiSearch } from "react-icons/fi"
 
 import { SquircleButton } from "@/components/LawPadi/primitives"
 import { useWorkspacePreferences } from "@/hooks/useWorkspacePreferences"
@@ -66,8 +66,8 @@ export function ChatComposer({
   return (
     <div
       className={cn(
-        "sq-lg border border-input bg-card p-3 shadow-[var(--shadow-subtle)] transition",
-        "focus-within:border-primary/35 focus-within:ring-[3px] focus-within:ring-ring/15",
+        "sq-lg border border-border bg-card p-3 shadow-[var(--shadow-subtle)] transition-[border-color,box-shadow] duration-200 sm:p-3.5",
+        "focus-within:border-primary/35 focus-within:ring-[3px] focus-within:ring-ring/10",
         disabled && "opacity-60",
         className,
       )}
@@ -77,9 +77,9 @@ export function ChatComposer({
         aria-label={t("composer.label")}
         aria-describedby={hintId}
         className={cn(
-          "block w-full resize-none bg-transparent px-1 text-[0.98rem] leading-7 text-foreground outline-none",
+          "block w-full resize-none bg-transparent px-2 py-2 text-body-lg text-foreground outline-none [overflow-wrap:anywhere]",
           "placeholder:text-muted-foreground",
-          compact ? "min-h-16" : "min-h-24",
+          compact ? "min-h-11" : "min-h-24",
         )}
         disabled={disabled}
         maxLength={2000}
@@ -107,15 +107,22 @@ export function ChatComposer({
         value={value}
       />
 
-      <div className="mt-3 flex flex-wrap items-center justify-between gap-3 border-t border-border pt-3">
-        <div className="flex min-w-0 flex-wrap items-center gap-2">
-          <span className="sq-sm bg-secondary px-3 py-2 text-label text-muted-foreground">
-            {purpose === "explanation"
-              ? t("composer.explanation")
-              : t("composer.search")}
+      <div className="mt-2 flex items-end justify-between gap-3">
+        <div className="flex min-w-0 flex-wrap items-center gap-x-3 gap-y-1 self-center px-2">
+          <span className="inline-flex max-w-full items-center gap-2 py-1 text-label font-medium text-muted-foreground [overflow-wrap:anywhere]">
+            {purpose === "explanation" ? (
+              <FiBookOpen className="size-4 shrink-0" aria-hidden />
+            ) : (
+              <FiSearch className="size-4 shrink-0" aria-hidden />
+            )}
+            <span>
+              {purpose === "explanation"
+                ? t("composer.explanation")
+                : t("composer.search")}
+            </span>
           </span>
           {contextLabel ? (
-            <span className="text-label font-normal text-muted-foreground">
+            <span className="text-label font-normal text-muted-foreground/80 [overflow-wrap:anywhere]">
               {contextLabel}
             </span>
           ) : null}
@@ -123,7 +130,7 @@ export function ChatComposer({
 
         <SquircleButton
           aria-label={loading ? t("composer.sending") : t("composer.send")}
-          className="min-w-11 px-0"
+          className="sq-sm size-11 shrink-0 px-0 shadow-none enabled:active:scale-95 disabled:border-border disabled:bg-secondary disabled:text-muted-foreground disabled:opacity-100"
           disabled={!value.trim() || disabled || value.length > 2000}
           loading={loading}
           onClick={submit}
@@ -132,20 +139,23 @@ export function ChatComposer({
           {loading ? (
             <span className="sr-only">{t("composer.sending")}</span>
           ) : (
-            <FiSend className="size-4" aria-hidden />
+            <FiArrowUp className="size-5" strokeWidth={2.4} aria-hidden />
           )}
         </SquircleButton>
       </div>
       <div
         id={hintId}
-        className="mt-2 flex justify-between gap-3 px-1 text-xs text-muted-foreground"
+        className="mt-2 flex justify-between gap-3 px-2 text-label font-normal text-muted-foreground/80"
       >
         <span>
           {preferences.enterToSend
             ? t("composer.enterHint")
             : t("composer.modEnterHint")}
         </span>
-        <span aria-live={value.length >= 1900 ? "polite" : "off"}>
+        <span
+          className="shrink-0 tabular-nums"
+          aria-live={value.length >= 1900 ? "polite" : "off"}
+        >
           {count.format(value.length)}/{count.format(2000)}
         </span>
       </div>
