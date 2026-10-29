@@ -406,9 +406,9 @@ export function EmptyState({
         <LiaBalanceScaleSolid className="size-6" aria-hidden />
       </div>
       <h2 className="font-display text-title-2 text-foreground">{title}</h2>
-      <p className="mt-3 max-w-lg text-sm leading-7 text-muted-foreground">
+      <div className="mt-3 max-w-lg text-sm leading-7 text-muted-foreground">
         {children}
-      </p>
+      </div>
     </div>
   )
 }
@@ -487,8 +487,8 @@ export function InlineAction({
   return (
     <Comp
       className={cn(
-        "sq-sm inline-flex min-h-10 items-center gap-2 border border-border bg-card px-3 py-2 text-xs font-semibold text-[color:var(--legal-blue)]",
-        "transition hover:border-[color:var(--legal-blue)]/35 hover:bg-[color:var(--legal-blue-soft)] focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-ring/25",
+        "sq-sm inline-flex min-h-10 items-center gap-2 border border-primary/20 bg-accent px-3 py-2 text-xs font-semibold text-accent-foreground",
+        "transition hover:border-primary/40 hover:bg-primary hover:text-primary-foreground focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-ring/25",
         className,
       )}
       type="button"

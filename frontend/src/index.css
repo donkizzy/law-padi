@@ -195,6 +195,8 @@
   }
   html {
     text-rendering: optimizeLegibility;
+    /* Keep focused/scrolled controls clear of the sticky header and toasts. */
+    scroll-padding-block: 5rem 6rem;
   }
   body {
     @apply bg-background text-foreground;
@@ -262,7 +264,47 @@
   border-radius: var(--sq-lg);
 }
 
+@keyframes answer-pixel {
+  0%,
+  65%,
+  100% {
+    opacity: 0.15;
+  }
+  25% {
+    opacity: 1;
+  }
+}
+
+@keyframes answer-shimmer {
+  to {
+    background-position: -200% 0;
+  }
+}
+
+.answer-loading-pixel {
+  opacity: 0.15;
+  animation: answer-pixel 650ms ease-in-out infinite;
+}
+
+.answer-loading-label {
+  color: var(--primary);
+  background-image: linear-gradient(
+    90deg,
+    var(--primary) 35%,
+    var(--accent-foreground) 50%,
+    var(--primary) 65%
+  );
+  background-size: 200% 100%;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  animation: answer-shimmer 2s linear infinite;
+}
+
 @media (prefers-reduced-motion: reduce) {
+  .answer-loading-pixel,
+  .answer-loading-label {
+    animation: none;
+  }
   *,
   *::before,
   *::after {

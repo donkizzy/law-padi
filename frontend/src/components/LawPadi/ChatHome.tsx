@@ -13,6 +13,7 @@ import type {
   MessagePublic,
 } from "@/client"
 import { ConversationsService } from "@/client"
+import { AnswerLoading } from "@/components/LawPadi/AnswerLoading"
 import { ChatComposer } from "@/components/LawPadi/ChatComposer"
 import { ChatEvidencePanel } from "@/components/LawPadi/ChatEvidencePanel"
 import {
@@ -692,10 +693,11 @@ function PendingAnswer({
   return (
     <section aria-label={t("pending.label")} className="grid gap-4">
       <LookupGaps outcomes={outcomes} />
-      <div className="sq-lg grid gap-3 border border-border bg-card p-5">
-        <p className="text-body text-muted-foreground" role="status">
-          {t(`progress.${progress ?? "finding"}`)}
-        </p>
+      <div className="grid gap-3 py-4">
+        <AnswerLoading
+          progress={progress ?? "finding"}
+          label={t(`progress.${progress ?? "finding"}`)}
+        />
         {reading.length > 0 && (
           <p className="text-label font-normal text-muted-foreground">
             {t("pending.reading", {
@@ -709,11 +711,6 @@ function PendingAnswer({
             })}
           </p>
         )}
-        <div aria-hidden className="grid gap-2">
-          <div className="sq-xs h-3 w-11/12 animate-pulse bg-muted" />
-          <div className="sq-xs h-3 w-9/12 animate-pulse bg-muted" />
-          <div className="sq-xs h-3 w-10/12 animate-pulse bg-muted" />
-        </div>
       </div>
     </section>
   )
@@ -1376,14 +1373,18 @@ export function ChatHome() {
 
         {conversation.isPending && search.c && <SkeletonBlock />}
         {conversation.isError && (
-          <ErrorState title={t("conversation.unavailable")}>
+          <ErrorState
+            title={t("conversation.unavailable")}
+            action={
+              <InlineAction
+                type="button"
+                onClick={() => void conversation.refetch()}
+              >
+                {t("common:actions.tryAgain")}
+              </InlineAction>
+            }
+          >
             {requestError(conversation.error)}
-            <InlineAction
-              type="button"
-              onClick={() => void conversation.refetch()}
-            >
-              {t("common:actions.tryAgain")}
-            </InlineAction>
           </ErrorState>
         )}
         <div ref={messageListRef} className="grid flex-1 content-start gap-6">
@@ -1433,9 +1434,10 @@ export function ChatHome() {
             </div>
           )}
           {progress && !awaitingAnswer && (
-            <p role="status" className="text-body text-muted-foreground">
-              {t(`progress.${progress}`)}
-            </p>
+            <AnswerLoading
+              progress={progress}
+              label={t(`progress.${progress}`)}
+            />
           )}
           {activeRunId && (
             <SquircleButton

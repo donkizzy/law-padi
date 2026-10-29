@@ -491,6 +491,101 @@ for (const mobile of [false, true]) {
   })
 }
 
+test("Sidebar search and collapse preserve navigation alignment", async ({
+  page,
+}, testInfo) => {
+  await page.setViewportSize({ width: 1440, height: 1000 })
+  await mockChat(page)
+  await page.goto("/?intent=ask")
+  await sendQuestion(page)
+  await expect(
+    page.getByRole("region", { name: "Answer", exact: true }),
+  ).toBeVisible()
+  const sidebar = page.locator('[data-slot="sidebar-inner"]')
+  const newChat = sidebar.getByRole("button", {
+    name: "New conversation",
+    exact: true,
+  })
+  const find = sidebar.getByRole("link", {
+    name: "Find a section",
+    exact: true,
+  })
+  const iconCenter = (locator: typeof find) =>
+    locator.locator("svg").evaluate((element) => {
+      const rect = element.getBoundingClientRect()
+      return rect.x + rect.width / 2
+    })
+  expect(
+    await newChat.evaluate((element) => element.getBoundingClientRect().x),
+  ).toBe(await find.evaluate((element) => element.getBoundingClientRect().x))
+  await page.screenshot({ path: testInfo.outputPath("sidebar-expanded.png") })
+
+  const searchButton = sidebar.getByRole("button", {
+    name: "Search conversations",
+  })
+  const search = sidebar.getByRole("textbox", { name: "Search conversations" })
+  await expect(search).toBeHidden()
+  await searchButton.click()
+  await expect(search).toBeFocused()
+  await search.fill("privacy")
+  await search.press("Escape")
+  await expect(searchButton).toBeFocused()
+  await searchButton.click()
+  await expect(search).toHaveValue("")
+  await sidebar.getByRole("button", { name: "Close", exact: true }).click()
+
+  await sidebar.getByRole("button", { name: "Collapse Sidebar" }).click()
+  await expect(
+    page.locator('[data-slot="sidebar"][data-state="collapsed"]'),
+  ).toBeVisible()
+  await expect(page.locator('[data-slot="sidebar-container"]')).toHaveCSS(
+    "width",
+    "48px",
+  )
+  expect(await iconCenter(newChat)).toBe(await iconCenter(find))
+  expect(
+    await iconCenter(sidebar.getByRole("button", { name: "Open Sidebar" })),
+  ).toBe(await iconCenter(find))
+  await expect(searchButton).toBeHidden()
+  await page.screenshot({ path: testInfo.outputPath("sidebar-collapsed.png") })
+  await sidebar.getByRole("button", { name: "Open Sidebar" }).click()
+  await expect(searchButton).toBeVisible()
+})
+
+test("Answer loading rotates research phrases and respects reduced motion", async ({
+  page,
+}, testInfo) => {
+  let releaseEvents!: () => void
+  const events = new Promise<void>((resolve) => {
+    releaseEvents = resolve
+  })
+  await page.clock.install()
+  await page.emulateMedia({ reducedMotion: "reduce" })
+  await mockChat(page, answer, { events })
+  await page.goto("/?intent=ask")
+  await sendQuestion(page)
+  const pending = page.getByRole("region", { name: "Answer in progress" })
+  await expect(
+    pending.getByText("Consulting the text…", { exact: true }),
+  ).toBeVisible()
+  await page.clock.pauseAt(new Date())
+  await page.clock.runFor(4000)
+  await expect(
+    pending.getByText("Tracing the provisions…", { exact: true }),
+  ).toBeVisible()
+  await expect(pending.getByText("4s", { exact: true })).toBeVisible()
+  await expect(pending.locator(".answer-loading-pixel").first()).toHaveCSS(
+    "animation-name",
+    "none",
+  )
+  await page.screenshot({ path: testInfo.outputPath("answer-loading.png") })
+  releaseEvents()
+  await expect(
+    page.getByRole("region", { name: "Answer", exact: true }),
+  ).toBeVisible()
+  await expect(pending).toHaveCount(0)
+})
+
 test("New detaches an active answer without disabling the new editor", async ({
   page,
 }) => {

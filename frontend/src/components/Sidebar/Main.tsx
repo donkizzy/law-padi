@@ -40,9 +40,9 @@ export function Main({ items }: MainProps) {
   }
 
   return (
-    <SidebarGroup>
+    <SidebarGroup className="px-0">
       <SidebarGroupContent>
-        <SidebarMenu>
+        <SidebarMenu className="gap-1">
           {items.map((item) => {
             const isActive =
               (currentPath === item.path &&
@@ -56,6 +56,7 @@ export function Main({ items }: MainProps) {
             return (
               <SidebarMenuItem key={item.title}>
                 <SidebarMenuButton
+                  className="sq-xs h-9 gap-2 px-2 font-medium text-sidebar-foreground/80 transition-colors [&>svg]:size-4"
                   tooltip={item.title}
                   isActive={isActive}
                   asChild
@@ -66,8 +67,10 @@ export function Main({ items }: MainProps) {
                     onClick={handleMenuClick}
                     activeOptions={{ includeSearch: true }}
                   >
-                    <item.icon />
-                    <span>{item.title}</span>
+                    <item.icon aria-hidden />
+                    <span className="min-w-0 flex-1 truncate">
+                      {item.title}
+                    </span>
                     {item.count ? (
                       <span className="ml-auto text-xs text-muted-foreground">
                         {item.count}

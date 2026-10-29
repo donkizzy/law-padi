@@ -32,16 +32,16 @@ function Layout() {
       <SidebarInset className="min-h-svh bg-background">
         <header className="sticky top-0 z-30 flex h-16 shrink-0 items-center gap-3 border-b border-border/80 bg-background/85 px-4 backdrop-blur-xl sm:px-6">
           <SidebarTrigger className="-ml-1 text-muted-foreground" />
-          <div className="md:hidden">
-            <Logo variant="full" />
+          <div className="min-w-0 flex-1 md:hidden [&>a]:flex">
+            <Logo variant="full" className="max-w-full" />
           </div>
-          <div className="hidden min-w-0 items-center gap-2 text-xs font-semibold text-muted-foreground sm:flex">
+          <div className="hidden min-w-0 items-center gap-2 text-xs font-semibold text-muted-foreground lg:flex">
             <span>{t("header.explore")}</span>
             <span aria-hidden className="sq-xs size-1.5 bg-primary" />
             <span>{t("header.sources")}</span>
           </div>
 
-          <div className="ml-auto flex items-center gap-1.5">
+          <div className="ml-auto flex shrink-0 items-center gap-1.5">
             <NewConversationButton compact className="hidden sm:inline-flex" />
             <SquircleButton
               asChild
