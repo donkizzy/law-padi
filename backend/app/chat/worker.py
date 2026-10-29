@@ -625,6 +625,69 @@ def _prompt_items(evidence: list[EvidenceItem]) -> list[dict[str, Any]]:
     return [values[item.evidence_id] for item in evidence]
 
 
+def _shown_evidence(prepared: Prepared, cited_ids: set[str]) -> list[EvidenceItem]:
+    """Sources behind a delivered explanation: what it cited or was asked about.
+
+    Retrieval also pulls near matches and context the explanation never used;
+    listing them beside the answer padded it with unrelated sections.
+    """
+    asked = {
+        identifier
+        for row in prepared.lookup.citation_outcomes
+        for identifier in row.evidence_ids
+    }
+    shown = [
+        item
+        for item in prepared.all_evidence
+        if item.evidence_id in cited_ids or item.evidence_id in asked
+    ]
+    return shown or prepared.all_evidence
+
+
+# Best matches kept before any context is trimmed.
+_KEEP_MATCHES = 4
+
+
+def _prompt_bytes(base: dict[str, Any], prompt_evidence: list[dict[str, Any]]) -> int:
+    return len(
+        json.dumps({**base, "evidence": prompt_evidence}, ensure_ascii=False).encode()
+    )
+
+
+def _fit_prompt(
+    selected: list[EvidenceItem],
+    context: list[EvidenceItem],
+    base: dict[str, Any],
+    limit: int,
+) -> tuple[list[EvidenceItem], list[EvidenceItem], list[dict[str, Any]], int]:
+    """Shrink the evidence packet to the budget instead of refusing the question.
+
+    Broad questions pull in long sections, and refusing them looked like a
+    failure to understand. The lowest-ranked matches go first, because the
+    context carries the restrictions and scope rules that change an answer.
+    Then context is trimmed from the end; a question is only too large when its
+    single best match is.
+    """
+    selected = list(selected)
+    context = list(context)
+
+    def measure() -> tuple[list[dict[str, Any]], int]:
+        items = _prompt_items([*selected, *context])
+        return items, _prompt_bytes(base, items)
+
+    items, size = measure()
+    while size > limit and len(selected) > _KEEP_MATCHES:
+        selected.pop()
+        items, size = measure()
+    while size > limit and context:
+        context.pop()
+        items, size = measure()
+    while size > limit and len(selected) > 1:
+        selected.pop()
+        items, size = measure()
+    return selected, context, items, size
+
+
 def prepare_run(run_id: uuid.UUID) -> Prepared:
     with Session(engine) as session:
         run = session.get(GenerationRun, run_id)
@@ -832,18 +895,18 @@ def prepare_run(run_id: uuid.UUID) -> Prepared:
                 key=lambda value: (value.slug != CONSTITUTION_SLUG, value.slug),
             )
         ]
-        prompt_bytes = len(
-            json.dumps(
-                {
-                    "question": question,
-                    "previous_question": previous_question,
-                    "conversation_context": conversation_context,
-                    "evidence": prompt_evidence,
-                    "covered_laws": covered_laws,
-                },
-                ensure_ascii=False,
-            ).encode()
+        selected, context, prompt_evidence, prompt_bytes = _fit_prompt(
+            selected,
+            context,
+            {
+                "question": question,
+                "previous_question": previous_question,
+                "conversation_context": conversation_context,
+                "covered_laws": covered_laws,
+            },
+            settings.CHAT_EVIDENCE_MAX_CHARS,
         )
+        all_evidence = [*lookup.evidence, *context]
         return Prepared(
             run_id=run.id,
             conversation_id=conversation.id,
@@ -1475,7 +1538,7 @@ async def process_run(
                         missing_facts=draft.missing_facts[:4],
                         follow_up_questions=follow_ups,
                         citation_outcomes=prepared.lookup.citation_outcomes,
-                        evidence=prepared.all_evidence,
+                        evidence=_shown_evidence(prepared, cited_ids),
                         related_laws=prepared.related_laws,
                         notice=edition,
                         notice_code="edition" if edition else None,

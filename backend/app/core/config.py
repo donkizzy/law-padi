@@ -103,7 +103,7 @@ class Settings(BaseSettings):
     GCS_BACKUP_PREFIX: str = "database-backups"
     BACKUP_MAX_BYTES: int = Field(default=100_000_000, ge=1, le=500_000_000)
     BACKUP_TIMEOUT_SECONDS: int = Field(default=120, ge=1, le=180)
-    CHAT_EVIDENCE_MAX_CHARS: int = Field(default=24000, ge=1000)
+    CHAT_EVIDENCE_MAX_CHARS: int = Field(default=36000, ge=1000)
     DEEPSEEK_API_KEY: str | None = None
     DEEPSEEK_BASE_URL: str = "https://api.deepseek.com"
     DEEPSEEK_MODEL: str = "deepseek-flash"
