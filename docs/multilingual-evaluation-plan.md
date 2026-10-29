@@ -97,3 +97,20 @@ cd backend && uv run python scripts/retrieval_benchmark.py ../docs/plain-languag
 - **Spelling variants.** Hausa uses Nigerian `'y` spelling; the `ƴ` form folds to the same match form. Igbo `nwaanyị`/`nwanyị` and Yorùbá loanword spellings (Kọmíṣọ́nà/Kọmísánà) vary. Alternatives cover the common ones.
 - **Keyword cases.** Pidgin speakers type legal titles in English, so the Pidgin keyword cases stay close to English. The Yorùbá, Hausa and Igbo keyword cases mix in English names where the local press does (Grand Kadi, federal character, Code of Conduct Tribunal).
 - **Translation eval set.** The ~60 answers per language for gates 2 and 3 are not built yet.
+
+## Implemented fix-pass tooling (27 October 2026)
+
+`backend/scripts/evaluate_reader_retrieval.py` now evaluates all 525 existing
+English/native benchmark and held-out queries through the actual search API,
+pinned to one published release. It records per-split English comparisons and
+returns a failure status when retrieval parity is not demonstrated. This replaces
+the earlier future-tense translated-mode instructions for release-gate runs;
+`retrieval_benchmark.py` remains useful for individual ranking-signal diagnostics.
+
+Answer translation now uses `answer-translation-v2` / `translation-judge-v2`.
+The judge covers blocks, missing-fact prompts and follow-ups; rejected output can
+be repaired once, within the same spend/deadline controls. The English fallback
+and every deterministic safeguard remain. Existing v1 captures do not validate
+v2. See [the native review checklist](reader-language-review-checklist.md) for the
+uncompleted human and ≥60-answer-per-language gates. No language is marked
+native-reviewed by these code changes.
