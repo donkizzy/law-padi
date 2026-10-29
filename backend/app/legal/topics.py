@@ -10,6 +10,7 @@ Section titles come from the source PDF's "Arrangement of sections" and are
 navigation aids, not legal text.
 """
 
+import difflib
 import itertools
 import re
 from collections.abc import Collection
@@ -1527,7 +1528,7 @@ TOPICS = tuple(
 )
 
 # Navigation hints only. Actual wording always comes from release-scoped versions.
-STATUTE_TOPICS = (
+STATUTE_TOPICS: tuple[Topic, ...] = (
     Topic(
         "phone-search",
         (f"{ACJA_SLUG}:9", f"{POLICE_SLUG}:49"),
@@ -1609,7 +1610,1184 @@ STATUTE_TOPICS = (
         (f"{POLICE_SLUG}:91",),
         ("reward fund",),
     ),
+    Topic(
+        "sitting-leader-court",
+        (f"{CONSTITUTION_SLUG}:308",),
+        (
+            "court while office",
+            "taken court office",
+            "sued while office",
+            "sued in office",
+            "charged while office",
+            "criminal case office",
+            "prosecuted while office",
+            "civil case office",
+            "immune governor",
+            "immune president",
+            "legal action governor",
+            "legal action president",
+        ),
+    ),
+    Topic(
+        "election-disputes",
+        (
+            f"{CONSTITUTION_SLUG}:285",
+            f"{CONSTITUTION_SLUG}:239",
+            f"{CONSTITUTION_SLUG}:246",
+        ),
+        (
+            "election dispute",
+            "election disputes",
+            "dispute election",
+            "election tribunal",
+            "election petition",
+            "election case",
+            "challenge election",
+            "challenge result",
+            "contest election",
+            "contest result",
+            "disputed election",
+            "election result court",
+            "petition tribunal",
+            "governorship tribunal",
+            "presidential tribunal",
+        ),
+    ),
+    Topic(
+        "community-policing",
+        (
+            f"{POLICE_SLUG}:113",
+            f"{POLICE_SLUG}:114",
+            f"{POLICE_SLUG}:115",
+            f"{POLICE_SLUG}:116",
+            f"{POLICE_SLUG}:118",
+        ),
+        (
+            "community policing",
+            "community police",
+            "community policing committee",
+            "neighbourhood watch",
+            "local policing committee",
+            "vigilante police",
+        ),
+    ),
+    Topic(
+        "capital-offence-bail",
+        (
+            f"{ACJA_SLUG}:161",
+            f"{CONSTITUTION_SLUG}:35",
+        ),
+        (
+            "bail murder",
+            "bail capital",
+            "bail armed robbery",
+            "bail treason",
+            "bail death penalty",
+            "murder suspect bail",
+            "capital offence bail",
+            "accused murder bail",
+            "bail kidnapping",
+        ),
+    ),
+    Topic(
+        "general-bail-right",
+        (
+            f"{ACJA_SLUG}:158",
+            f"{ACJA_SLUG}:165",
+            f"{ACJA_SLUG}:167",
+            f"{CONSTITUTION_SLUG}:35",
+        ),
+        (
+            "right bail",
+            "entitled bail",
+            "bail right",
+            "granted bail",
+            "conditions bail",
+            "bail conditions",
+            "who stands surety",
+            "bail surety",
+            "bail bond",
+        ),
+    ),
+    Topic(
+        "plea-bargain",
+        (f"{ACJA_SLUG}:270",),
+        (
+            "plea bargain",
+            "plea bargaining",
+            "plead guilty deal",
+            "negotiate plea",
+            "plea deal",
+            "guilty plea agreement",
+        ),
+    ),
+    Topic(
+        "remand",
+        (
+            f"{ACJA_SLUG}:293",
+            f"{ACJA_SLUG}:294",
+            f"{ACJA_SLUG}:295",
+            f"{ACJA_SLUG}:296",
+            f"{ACJA_SLUG}:299",
+        ),
+        (
+            "remand",
+            "remanded",
+            "remand prison",
+            "prison custody trial",
+            "awaiting trial",
+            "held trial",
+            "pending trial custody",
+            "prison before trial",
+            "send prison trial",
+            "jail before trial",
+            "pretrial detention",
+            "magistrate prison",
+        ),
+    ),
+    Topic(
+        "bail-forfeiture",
+        (
+            f"{ACJA_SLUG}:179",
+            f"{ACJA_SLUG}:181",
+            f"{ACJA_SLUG}:183",
+            f"{ACJA_SLUG}:184",
+            f"{ACJA_SLUG}:185",
+        ),
+        (
+            "surety fails",
+            "surety produce",
+            "forfeit bail",
+            "bail forfeited",
+            "forfeiture bail",
+            "jump bail",
+            "skip bail",
+            "absconds bail",
+            "recognizance forfeited",
+            "defendant fails appear",
+        ),
+    ),
+    Topic(
+        "child-suspect",
+        (
+            f"{ACJA_SLUG}:452",
+            f"{ACJA_SLUG}:264",
+            f"{ACJA_SLUG}:265",
+            f"{ACJA_SLUG}:371",
+            f"{ACJA_SLUG}:405",
+        ),
+        (
+            "child offender",
+            "child suspect",
+            "minor arrested",
+            "juvenile",
+            "underage arrested",
+            "child tried",
+            "child crime",
+            "teenager arrested",
+            "tried adult",
+            "tried as adult",
+            "treated adult",
+            "years old arrested",
+            "aged arrested",
+            "age offender",
+        ),
+    ),
+    Topic(
+        "police-complaints",
+        (
+            f"{POLICE_SLUG}:131",
+            f"{POLICE_SLUG}:132",
+            f"{POLICE_SLUG}:133",
+            f"{POLICE_SLUG}:134",
+        ),
+        (
+            "report police",
+            "complain police",
+            "complaint police",
+            "police misconduct",
+            "police harassment",
+            "police brutality",
+            "police extortion",
+            "complaints unit",
+            "report officer",
+            "police wrongdoing",
+            "police abuse",
+        ),
+    ),
+    Topic(
+        "fair-hearing-notice",
+        (
+            f"{CONSTITUTION_SLUG}:36",
+            f"{ACJA_SLUG}:122",
+        ),
+        (
+            "served court",
+            "served papers",
+            "service court papers",
+            "notice court",
+            "court without notice",
+            "judgment without hearing",
+            "right heard",
+            "never heard",
+            "not served",
+        ),
+    ),
+    Topic(
+        "military-takeover",
+        (f"{CONSTITUTION_SLUG}:1",),
+        (
+            "military takeover",
+            "military take over",
+            "take over government",
+            "coup",
+            "overthrow government",
+            "military rule",
+            "seize power",
+            "military government",
+            "soldiers government",
+        ),
+    ),
+    Topic(
+        "term-limits",
+        (
+            f"{CONSTITUTION_SLUG}:135",
+            f"{CONSTITUTION_SLUG}:137",
+        ),
+        (
+            "third term",
+            "three terms",
+            "term limit",
+            "two terms",
+            "stay power",
+            "how long rule",
+            "years rule",
+            "years president",
+            "years governor",
+            "extend tenure",
+            "tenure extension",
+        ),
+    ),
+    Topic(
+        "raid-seizure",
+        (
+            f"{ACJA_SLUG}:143",
+            f"{ACJA_SLUG}:144",
+            f"{ACJA_SLUG}:148",
+            f"{POLICE_SLUG}:48",
+            f"{POLICE_SLUG}:58",
+            f"{CONSTITUTION_SLUG}:37",
+        ),
+        (
+            "police raid",
+            "raid house",
+            "search house",
+            "search home",
+            "search my house",
+            "seize laptop",
+            "seized laptop",
+            "took laptop",
+            "seize property",
+            "night search",
+            "3am",
+            "midnight police",
+            "entered house",
+        ),
+    ),
+    Topic(
+        "detention-time-limits",
+        (
+            f"{CONSTITUTION_SLUG}:35",
+            f"{ACJA_SLUG}:296",
+            f"{ACJA_SLUG}:32",
+            f"{POLICE_SLUG}:64",
+            f"{POLICE_SLUG}:43",
+        ),
+        (
+            "how long hold",
+            "how long keep",
+            "how long detain",
+            "held weekend",
+            "hold until monday",
+            "kept overnight",
+            "keep overnight",
+            "detained days",
+            "detained months",
+            "six months detained",
+            "weeks detained",
+        ),
+    ),
+    Topic(
+        "torture-confession",
+        (
+            f"{CONSTITUTION_SLUG}:34",
+            f"{ACJA_SLUG}:8",
+            f"{POLICE_SLUG}:37",
+        ),
+        (
+            "beat confession",
+            "force confession",
+            "confession torture",
+            "tortured",
+            "beaten police",
+            "forced confess",
+            "police beat",
+            "inhuman treatment suspect",
+        ),
+    ),
+    Topic(
+        "customary-vs-private-arrest",
+        (
+            f"{ACJA_SLUG}:20",
+            f"{ACJA_SLUG}:23",
+            f"{ACJA_SLUG}:21",
+        ),
+        (
+            "private person arrest",
+            "citizen arrest",
+            "security guard arrest",
+            "guard held",
+            "hand over police",
+            "handed over police",
+            "shop arrest",
+            "vigilante arrest",
+        ),
+    ),
+    Topic(
+        "hold-wrongful-compensation",
+        (
+            f"{CONSTITUTION_SLUG}:35",
+            f"{CONSTITUTION_SLUG}:46",
+            f"{ACJA_SLUG}:314",
+        ),
+        (
+            "compensation arrest",
+            "compensation wrongful",
+            "apology arrest",
+            "sue police",
+            "sue wrongful arrest",
+            "damages wrongful arrest",
+            "damages detention",
+        ),
+    ),
+    Topic(
+        "emergency-powers",
+        (f"{CONSTITUTION_SLUG}:305",),
+        (
+            "state emergency",
+            "emergency rule",
+            "declare emergency",
+            "emergency powers",
+            "emergency proclamation",
+        ),
+    ),
+    Topic(
+        "treaty-law",
+        (f"{CONSTITUTION_SLUG}:12",),
+        (
+            "treaty law",
+            "treaty force",
+            "sign treaty",
+            "international agreement",
+            "ratify treaty",
+            "treaty become law",
+        ),
+    ),
+    Topic(
+        "local-government-dissolution",
+        (f"{CONSTITUTION_SLUG}:7",),
+        (
+            "sack local government",
+            "dissolve local government",
+            "local government chairmen",
+            "dissolve council",
+            "caretaker committee",
+            "remove council",
+        ),
+    ),
+    Topic(
+        "minerals-oil",
+        (f"{CONSTITUTION_SLUG}:44",),
+        (
+            "oil minerals",
+            "own minerals",
+            "own oil",
+            "mineral ownership",
+            "natural gas",
+            "crude oil",
+            "who owns oil",
+        ),
+    ),
+    Topic(
+        "police-appointment",
+        (
+            f"{POLICE_SLUG}:7",
+            f"{CONSTITUTION_SLUG}:215",
+            f"{CONSTITUTION_SLUG}:216",
+        ),
+        (
+            "appoint inspector",
+            "inspector general",
+            "igp tenure",
+            "igp appoint",
+            "remove igp",
+            "police chief appoint",
+        ),
+    ),
+    Topic(
+        "executive-immunity-term",
+        (f"{CONSTITUTION_SLUG}:137",),
+        (
+            "successor term",
+            "complete term",
+            "serve out term",
+            "finish term",
+            "oath twice",
+        ),
+    ),
 )
+
+_PART_TOPICS = (
+    Topic(
+        "speedy-trial",
+        (
+            f"{ACJA_SLUG}:396",
+            f"{ACJA_SLUG}:306",
+            f"{ACJA_SLUG}:266",
+        ),
+        (
+            "speedy trial",
+            "trial delay",
+            "delay trial",
+            "adjournment limit",
+            "case adjourned",
+            "adjourned many times",
+            "day to day trial",
+            "how soon trial",
+            "how soon tried",
+            "tried quickly",
+            "trial how long",
+            "how long trial",
+            "trial taking long",
+            "stay proceedings",
+            "interlocutory appeal",
+            "adjourn case",
+        ),
+    ),
+    Topic(
+        "mental-incapacity",
+        (
+            f"{ACJA_SLUG}:278",
+            f"{ACJA_SLUG}:279",
+            f"{ACJA_SLUG}:281",
+            f"{ACJA_SLUG}:284",
+            f"{ACJA_SLUG}:288",
+        ),
+        (
+            "unsound mind",
+            "mentally ill",
+            "mental illness",
+            "insane defendant",
+            "insanity",
+            "unfit plead",
+            "mentally unfit",
+            "mental health defendant",
+            "mental patient trial",
+        ),
+    ),
+    Topic(
+        "sentencing",
+        (
+            f"{ACJA_SLUG}:311",
+            f"{ACJA_SLUG}:416",
+            f"{ACJA_SLUG}:418",
+            f"{ACJA_SLUG}:419",
+            f"{ACJA_SLUG}:312",
+        ),
+        (
+            "sentencing",
+            "pass sentence",
+            "sentence hearing",
+            "how sentence decided",
+            "mitigation",
+            "plea mercy",
+            "consecutive sentence",
+            "prison term judge",
+            "judge sentence",
+        ),
+    ),
+    Topic(
+        "victim-compensation",
+        (
+            f"{ACJA_SLUG}:314",
+            f"{ACJA_SLUG}:319",
+            f"{ACJA_SLUG}:321",
+            f"{ACJA_SLUG}:328",
+        ),
+        (
+            "victim compensation",
+            "compensate victim",
+            "restitution",
+            "pay victim",
+            "compensation order",
+            "return stolen property",
+            "victim paid",
+        ),
+    ),
+    Topic(
+        "non-custodial",
+        (
+            f"{ACJA_SLUG}:460",
+            f"{ACJA_SLUG}:461",
+            f"{ACJA_SLUG}:462",
+            f"{ACJA_SLUG}:453",
+            f"{ACJA_SLUG}:455",
+        ),
+        (
+            "community service",
+            "probation",
+            "suspended sentence",
+            "non custodial",
+            "alternative prison",
+            "probation officer",
+            "avoid prison",
+        ),
+    ),
+    Topic(
+        "parole",
+        (f"{ACJA_SLUG}:468",),
+        (
+            "parole",
+            "early release prisoner",
+            "release before sentence ends",
+            "prisoner release early",
+        ),
+    ),
+    Topic(
+        "death-sentence",
+        (
+            f"{ACJA_SLUG}:401",
+            f"{ACJA_SLUG}:402",
+            f"{ACJA_SLUG}:403",
+            f"{ACJA_SLUG}:407",
+            f"{ACJA_SLUG}:409",
+            f"{ACJA_SLUG}:411",
+        ),
+        (
+            "death sentence",
+            "execution",
+            "hanging",
+            "carry out death",
+            "capital punishment",
+            "prerogative mercy",
+            "death row",
+        ),
+    ),
+    Topic(
+        "deportation",
+        (
+            f"{ACJA_SLUG}:439",
+            f"{ACJA_SLUG}:440",
+            f"{ACJA_SLUG}:448",
+            f"{ACJA_SLUG}:451",
+        ),
+        (
+            "deportation",
+            "deported",
+            "expel foreigner",
+            "citizens deported",
+        ),
+    ),
+    Topic(
+        "open-court",
+        (
+            f"{ACJA_SLUG}:259",
+            f"{ACJA_SLUG}:260",
+            f"{ACJA_SLUG}:261",
+            f"{ACJA_SLUG}:262",
+        ),
+        (
+            "public hearing",
+            "open court",
+            "press court",
+            "children court",
+            "exclude public",
+            "closed court",
+            "media trial",
+        ),
+    ),
+    Topic(
+        "witnesses",
+        (
+            f"{ACJA_SLUG}:241",
+            f"{ACJA_SLUG}:246",
+            f"{ACJA_SLUG}:250",
+            f"{ACJA_SLUG}:251",
+            f"{ACJA_SLUG}:256",
+        ),
+        (
+            "witness summons",
+            "compel witness",
+            "witness refuses",
+            "witness expenses",
+            "oath court",
+            "subpoena",
+            "witness attend court",
+            "witness fails",
+        ),
+    ),
+    Topic(
+        "no-case-submission",
+        (
+            f"{ACJA_SLUG}:302",
+            f"{ACJA_SLUG}:303",
+        ),
+        (
+            "no case submission",
+            "case to answer",
+            "dismiss case evidence",
+            "discharge no case",
+            "insufficient evidence trial",
+        ),
+    ),
+    Topic(
+        "charge-form",
+        (
+            f"{ACJA_SLUG}:194",
+            f"{ACJA_SLUG}:196",
+            f"{ACJA_SLUG}:193",
+        ),
+        (
+            "charge sheet",
+            "particulars charge",
+            "how charge written",
+            "framing charge",
+            "charge contents",
+        ),
+    ),
+    Topic(
+        "double-jeopardy",
+        (
+            f"{ACJA_SLUG}:238",
+            f"{ACJA_SLUG}:239",
+            f"{ACJA_SLUG}:277",
+            f"{CONSTITUTION_SLUG}:36",
+        ),
+        (
+            "tried twice",
+            "double jeopardy",
+            "acquitted again",
+            "same offence twice",
+            "retried acquittal",
+        ),
+    ),
+    Topic(
+        "attorney-general-powers",
+        (
+            f"{ACJA_SLUG}:104",
+            f"{ACJA_SLUG}:105",
+            f"{ACJA_SLUG}:106",
+            f"{ACJA_SLUG}:107",
+            f"{ACJA_SLUG}:108",
+            f"{CONSTITUTION_SLUG}:174",
+        ),
+        (
+            "attorney general prosecution",
+            "withdraw prosecution",
+            "nolle prosequi",
+            "take over case",
+            "discontinue case",
+            "director public prosecutions",
+            "state prosecutes",
+            "attorney general powers",
+        ),
+    ),
+    Topic(
+        "private-prosecution",
+        (
+            f"{ACJA_SLUG}:109",
+            f"{ACJA_SLUG}:110",
+            f"{ACJA_SLUG}:383",
+            f"{ACJA_SLUG}:384",
+        ),
+        (
+            "private prosecution",
+            "private complaint",
+            "private person prosecute",
+            "file complaint court",
+            "lay complaint",
+        ),
+    ),
+    Topic(
+        "court-summons",
+        (
+            f"{ACJA_SLUG}:116",
+            f"{ACJA_SLUG}:117",
+            f"{ACJA_SLUG}:122",
+            f"{ACJA_SLUG}:131",
+        ),
+        (
+            "court summons",
+            "summons served",
+            "service summons",
+            "summons ignored",
+            "refuse summons",
+            "ignore summons",
+        ),
+    ),
+    Topic(
+        "search-warrants",
+        (
+            f"{ACJA_SLUG}:143",
+            f"{ACJA_SLUG}:146",
+            f"{ACJA_SLUG}:148",
+            f"{ACJA_SLUG}:149",
+            f"{ACJA_SLUG}:150",
+        ),
+        (
+            "search warrant",
+            "apply search warrant",
+            "warrant search",
+            "who signs warrant",
+            "warrant time search",
+            "closed place search",
+        ),
+    ),
+    Topic(
+        "arrest-warrants",
+        (
+            f"{ACJA_SLUG}:35",
+            f"{ACJA_SLUG}:36",
+            f"{ACJA_SLUG}:43",
+            f"{ACJA_SLUG}:44",
+        ),
+        (
+            "arrest warrant",
+            "warrant arrest",
+            "warrant of arrest",
+            "execute warrant",
+            "issue warrant",
+        ),
+    ),
+    Topic(
+        "keep-the-peace",
+        (
+            f"{ACJA_SLUG}:54",
+            f"{ACJA_SLUG}:55",
+            f"{ACJA_SLUG}:56",
+        ),
+        (
+            "keep peace",
+            "good behaviour",
+            "bond peace",
+            "habitual offender security",
+            "security peace",
+        ),
+    ),
+    Topic(
+        "public-nuisance",
+        (
+            f"{ACJA_SLUG}:72",
+            f"{ACJA_SLUG}:79",
+        ),
+        (
+            "public nuisance",
+            "nuisance order",
+            "remove nuisance",
+        ),
+    ),
+    Topic(
+        "court-venue",
+        (
+            f"{ACJA_SLUG}:93",
+            f"{ACJA_SLUG}:98",
+            f"{ACJA_SLUG}:101",
+            f"{ACJA_SLUG}:102",
+        ),
+        (
+            "which court trial",
+            "place trial",
+            "transfer case",
+            "change venue",
+            "wrong court",
+            "trial location",
+            "move case",
+        ),
+    ),
+    Topic(
+        "corporate-liability",
+        (
+            f"{ACJA_SLUG}:477",
+            f"{ACJA_SLUG}:478",
+            f"{ACJA_SLUG}:479",
+        ),
+        (
+            "company prosecuted",
+            "corporation crime",
+            "trial company",
+            "corporate liability",
+            "company charged",
+        ),
+    ),
+    Topic(
+        "magistrate-appeal",
+        (f"{ACJA_SLUG}:485",),
+        (
+            "appeal magistrate",
+            "magistrate decision appeal",
+            "appeal high court",
+        ),
+    ),
+    Topic(
+        "justice-monitoring",
+        (
+            f"{ACJA_SLUG}:469",
+            f"{ACJA_SLUG}:470",
+        ),
+        (
+            "monitoring committee",
+            "criminal justice committee",
+            "reform committee",
+        ),
+    ),
+    Topic(
+        "guilty-plea",
+        (
+            f"{ACJA_SLUG}:273",
+            f"{ACJA_SLUG}:274",
+            f"{ACJA_SLUG}:275",
+        ),
+        (
+            "plead guilty",
+            "pleading guilty",
+            "effect guilty plea",
+            "plea not guilty",
+            "plea charge",
+        ),
+    ),
+    Topic(
+        "lawyer-in-court",
+        (
+            f"{ACJA_SLUG}:267",
+            f"{ACJA_SLUG}:349",
+        ),
+        (
+            "lawyer court",
+            "prosecutor lawyer",
+            "legal practitioner absent",
+            "lawyer missing trial",
+        ),
+    ),
+    Topic(
+        "fines",
+        (
+            f"{ACJA_SLUG}:420",
+            f"{ACJA_SLUG}:422",
+            f"{ACJA_SLUG}:429",
+            f"{ACJA_SLUG}:433",
+            f"{ACJA_SLUG}:426",
+        ),
+        (
+            "fine",
+            "pay fine",
+            "default fine",
+            "fine instalments",
+            "imprison default fine",
+            "cannot pay fine",
+        ),
+    ),
+    Topic(
+        "forfeiture-property",
+        (
+            f"{ACJA_SLUG}:333",
+            f"{ACJA_SLUG}:346",
+            f"{ACJA_SLUG}:343",
+            f"{ACJA_SLUG}:345",
+        ),
+        (
+            "forfeiture",
+            "confiscate property",
+            "seize instrument crime",
+            "destroy counterfeit",
+            "proceeds crime",
+        ),
+    ),
+    Topic(
+        "seized-property",
+        (
+            f"{ACJA_SLUG}:329",
+            f"{ACJA_SLUG}:330",
+            f"{ACJA_SLUG}:331",
+            f"{ACJA_SLUG}:337",
+            f"{ACJA_SLUG}:342",
+        ),
+        (
+            "seized property return",
+            "police hold property",
+            "recover seized",
+            "property custody court",
+            "property disposal",
+        ),
+    ),
+    Topic(
+        "vary-bail",
+        (
+            f"{ACJA_SLUG}:168",
+            f"{ACJA_SLUG}:169",
+            f"{ACJA_SLUG}:175",
+            f"{ACJA_SLUG}:176",
+        ),
+        (
+            "vary bail",
+            "reduce bail",
+            "bail amount",
+            "change bail",
+            "review bail",
+            "bail too high",
+        ),
+    ),
+    Topic(
+        "bondsperson",
+        (
+            f"{ACJA_SLUG}:187",
+            f"{ACJA_SLUG}:188",
+        ),
+        (
+            "bondsperson",
+            "professional surety",
+            "bail agent",
+        ),
+    ),
+    Topic(
+        "police-gender",
+        (f"{POLICE_SLUG}:135",),
+        (
+            "women police",
+            "female officers",
+            "gender discrimination police",
+            "equal promotion police",
+            "gender police",
+            "women join police",
+        ),
+    ),
+    Topic(
+        "special-constables",
+        (
+            f"{POLICE_SLUG}:105",
+            f"{POLICE_SLUG}:106",
+            f"{POLICE_SLUG}:108",
+            f"{POLICE_SLUG}:111",
+        ),
+        (
+            "special constable",
+            "special constables",
+            "volunteer police",
+            "emergency constable",
+        ),
+    ),
+    Topic(
+        "traffic-wardens",
+        (
+            f"{POLICE_SLUG}:120",
+            f"{POLICE_SLUG}:124",
+            f"{POLICE_SLUG}:126",
+            f"{POLICE_SLUG}:128",
+        ),
+        (
+            "traffic warden",
+            "traffic wardens",
+            "road marshal",
+            "traffic offence officer",
+        ),
+    ),
+    Topic(
+        "lost-property",
+        (
+            f"{POLICE_SLUG}:88",
+            f"{POLICE_SLUG}:90",
+        ),
+        (
+            "lost property",
+            "found property",
+            "unclaimed property",
+            "missing person",
+            "report missing",
+            "found item police",
+        ),
+    ),
+    Topic(
+        "unlawful-orders",
+        (
+            f"{POLICE_SLUG}:137",
+            f"{POLICE_SLUG}:96",
+        ),
+        (
+            "illegal order",
+            "unlawful order",
+            "disobey order",
+            "superior order",
+            "boss order police",
+        ),
+    ),
+    Topic(
+        "attack-police",
+        (
+            f"{POLICE_SLUG}:98",
+            f"{POLICE_SLUG}:99",
+            f"{POLICE_SLUG}:101",
+            f"{POLICE_SLUG}:102",
+        ),
+        (
+            "hit police",
+            "assault police",
+            "attack officer",
+            "impersonate police",
+            "fake police",
+            "obstruct police",
+        ),
+    ),
+    Topic(
+        "record-arrest",
+        (
+            f"{POLICE_SLUG}:44",
+            f"{POLICE_SLUG}:89",
+            f"{ACJA_SLUG}:15",
+        ),
+        (
+            "record arrest",
+            "arrest register",
+            "write arrest",
+            "station record",
+            "arrest book",
+            "custody record",
+        ),
+    ),
+    Topic(
+        "igp-powers",
+        (
+            f"{POLICE_SLUG}:9",
+            f"{POLICE_SLUG}:10",
+            f"{POLICE_SLUG}:7",
+        ),
+        (
+            "inspector general powers",
+            "igp duties",
+            "igp functions",
+            "igp removal",
+        ),
+    ),
+    Topic(
+        "police-council",
+        (f"{POLICE_SLUG}:6",),
+        (
+            "police council",
+            "police service commission",
+        ),
+    ),
+    Topic(
+        "join-police",
+        (
+            f"{POLICE_SLUG}:17",
+            f"{POLICE_SLUG}:18",
+            f"{POLICE_SLUG}:19",
+        ),
+        (
+            "join police",
+            "recruit police",
+            "police recruitment",
+            "police training",
+            "police oath",
+            "become police officer",
+        ),
+    ),
+    Topic(
+        "police-welfare",
+        (
+            f"{POLICE_SLUG}:15",
+            f"{POLICE_SLUG}:20",
+            f"{POLICE_SLUG}:92",
+        ),
+        (
+            "police pension",
+            "police salary",
+            "police pay",
+            "police welfare",
+            "police gratuity",
+            "police gallantry",
+        ),
+    ),
+    Topic(
+        "police-conflict",
+        (
+            f"{POLICE_SLUG}:93",
+            f"{POLICE_SLUG}:94",
+            f"{POLICE_SLUG}:95",
+        ),
+        (
+            "officer indebted",
+            "officer debt",
+            "police business",
+            "police conflict interest",
+            "officer private business",
+        ),
+    ),
+    Topic(
+        "police-prosecution",
+        (
+            f"{POLICE_SLUG}:66",
+            f"{POLICE_SLUG}:104",
+        ),
+        (
+            "police prosecute",
+            "police power prosecute",
+            "police prosecution",
+        ),
+    ),
+    Topic(
+        "criminal-records",
+        (
+            f"{POLICE_SLUG}:67",
+            f"{POLICE_SLUG}:68",
+        ),
+        (
+            "fingerprint",
+            "criminal record",
+            "criminal records registry",
+            "take fingerprints",
+        ),
+    ),
+    Topic(
+        "police-functions",
+        (
+            f"{POLICE_SLUG}:4",
+            f"{POLICE_SLUG}:5",
+            f"{POLICE_SLUG}:3",
+        ),
+        (
+            "police duties",
+            "functions police",
+            "role police",
+            "police responsibilities",
+            "police mandate",
+        ),
+    ),
+    Topic(
+        "police-complaint-outcome",
+        (
+            f"{POLICE_SLUG}:134",
+            f"{POLICE_SLUG}:131",
+            f"{POLICE_SLUG}:133",
+        ),
+        (
+            "complaint outcome",
+            "police discipline",
+            "police sanction",
+            "punish officer",
+            "officer disciplined",
+        ),
+    ),
+)
+STATUTE_TOPICS = STATUTE_TOPICS + _PART_TOPICS
 
 # Provisions that change how the main answer applies, added as context when a
 # section is explained: restrictions on rights, and the paired
@@ -1624,6 +2802,7 @@ COMPANIONS: dict[str, tuple[str, ...]] = {
     "40": ("45", "46"),
     "41": ("45", "46"),
     "131": ("137",),
+    "135": ("137",),
     "177": ("182",),
     "65": ("66",),
     "106": ("107",),
@@ -1645,7 +2824,17 @@ COMPANIONS[f"{CONSTITUTION_SLUG}:37"] += (
     f"{POLICE_SLUG}:49",
     f"{POLICE_SLUG}:52",
 )
-for _topic in STATUTE_TOPICS:
+# Only the original arrest-and-search hints carry rights companions; later
+# subject topics steer ranking without redefining what accompanies a section.
+_COMPANION_TOPICS = STATUTE_TOPICS[
+    : next(
+        index
+        for index, topic in enumerate(STATUTE_TOPICS)
+        if topic.slug == "police-reward-fund"
+    )
+    + 1
+]
+for _topic in _COMPANION_TOPICS:
     for _target in _topic.sections:
         COMPANIONS[_target] = tuple(
             f"{CONSTITUTION_SLUG}:{number}"
@@ -1766,6 +2955,39 @@ def section_title(
     return title
 
 
+@cache
+def _vocabulary() -> frozenset[str]:
+    return frozenset(
+        word
+        for topic in (*TOPICS, *STATUTE_TOPICS)
+        for phrase in topic.phrases
+        for word in tokens(phrase)
+        if len(word) >= 5
+    )
+
+
+def _correct_typos(query_tokens: list[str]) -> list[str]:
+    """Repair obvious misspellings against the guide's own vocabulary.
+
+    Only longer words are touched, and only when exactly one guide word is a
+    very close match, so ordinary words are never rewritten.
+    """
+    vocabulary = _vocabulary()
+    corrected: list[str] = []
+    for token in query_tokens:
+        if len(token) >= 5 and token not in vocabulary:
+            close = difflib.get_close_matches(token, vocabulary, n=2, cutoff=0.8)
+            if len(close) == 1 or (
+                len(close) == 2
+                and difflib.SequenceMatcher(None, token, close[0]).ratio()
+                - difflib.SequenceMatcher(None, token, close[1]).ratio()
+                >= 0.08
+            ):
+                token = close[0]
+        corrected.append(token)
+    return corrected
+
+
 def match_topics(
     query: str, *, limit: int = 3, topics: tuple[Topic, ...] = TOPICS
 ) -> list[TopicMatch]:
@@ -1773,7 +2995,7 @@ def match_topics(
 
     A phrase matches when all its words appear close together, in any order.
     """
-    query_tokens = tokens(query)
+    query_tokens = _correct_typos(tokens(query))
     if not query_tokens:
         return []
     matches: list[TopicMatch] = []

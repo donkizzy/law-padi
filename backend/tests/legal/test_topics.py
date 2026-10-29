@@ -300,3 +300,33 @@ def test_native_privacy_keywords_have_a_provider_independent_navigation_hint(
     query: str,
 ) -> None:
     assert topic_sections(query)[0][0] == "constitution-1999:37"
+
+
+def test_subject_topics_cover_statute_and_everyday_phrasing() -> None:
+    slugs = {"constitution-1999", "acja-2015", "police-act-2020"}
+
+    def targets(question: str) -> set[str]:
+        return {
+            target for target, _ in topic_sections(question, instrument_slugs=slugs)
+        }
+
+    assert "constitution-1999:308" in targets(
+        "can a governor be taken to court while in office"
+    )
+    assert "constitution-1999:285" in targets("how are election disputes handled")
+    assert "police-act-2020:113" in targets("what is community policing")
+    assert "acja-2015:161" in targets("can someone accused of murder get bail")
+    assert "acja-2015:270" in targets("how does a plea bargain work")
+    assert "constitution-1999:1" in targets("can the military take over government")
+
+
+def test_obvious_typos_are_repaired_without_rewriting_ordinary_words() -> None:
+    slugs = {"constitution-1999", "acja-2015", "police-act-2020"}
+    targets = {
+        target
+        for target, _ in topic_sections(
+            "arrest wiyhout warant by polise", instrument_slugs=slugs
+        )
+    }
+    assert {"acja-2015:18", "police-act-2020:38"} <= targets
+    assert not topic_sections("what is the weather like today", instrument_slugs=slugs)
