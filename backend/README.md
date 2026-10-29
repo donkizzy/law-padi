@@ -72,19 +72,28 @@ If you use GitHub Actions, the tests will run automatically.
 
 ### Test a Running Stack
 
-If your stack is already up and you just want to run the tests, you can use:
+Run the guarded workspace runner from `backend/` to pass Pytest arguments:
 
 ```bash
-docker compose exec backend bash scripts/tests-start.sh
+uv run python scripts/test_runner.py -x
 ```
 
-The `/app/backend/scripts/tests-start.sh` script calls `pytest`. If you need to pass extra arguments to `pytest`, you can pass them to that command and they will be forwarded.
+It creates/migrates a companion database ending in `_test`; destructive fixtures
+reject other database names. Application images may omit the tests, so the
+workspace runner is the supported local entry point.
 
-For example, to stop on first error:
+For repeatable full browser tests, including real signup/login/reset flows, run
+the isolated browser runner:
 
 ```bash
-docker compose exec backend bash scripts/tests-start.sh -x
+uv run python scripts/browser_test_runner.py
 ```
+
+It creates a unique `_e2e_test` database and QA account, keeps rate limits on,
+starts its own loopback API/frontend, and cleans up only its own database and
+processes. PostgreSQL, Mailpit, Bun and matching Playwright browsers are required.
+The root `bun run test` command uses this runner. Artifacts are under
+`output/playwright/isolated-*`.
 
 ### Test Coverage
 
@@ -143,3 +152,13 @@ Once you are done, regenerate the templates used by the application:
 ```console
 $ bun run email:export
 ```
+
+## Local AI worker updates
+
+Use the bounded Compose AI-preview workflow in `compose.ai.yml`. Before replacing
+an existing worker, let active generations finish and identify any standalone
+`uv run python -m app.chat.worker` process left from an earlier session. Keep one
+managed local polling workflow; old Python workers retain imported prompts and
+language logic until restarted. Restart the Compose worker after worker-code
+updates and confirm the stored translation `prompt_version` on a labelled QA
+answer. A separate API reload does not update a standalone worker.

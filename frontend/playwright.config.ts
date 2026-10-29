@@ -40,7 +40,7 @@ export default defineConfig({
       name: 'chromium',
       use: {
         ...devices['Desktop Chrome'],
-        storageState: 'playwright/.auth/user.json',
+        storageState: process.env.PLAYWRIGHT_AUTH_FILE ?? 'playwright/.auth/user.json',
       },
       dependencies: ['setup'],
     },

@@ -1,7 +1,8 @@
 import { expect, test as setup } from "@playwright/test"
 import { firstSuperuser, firstSuperuserPassword } from "./config.ts"
 
-const authFile = "playwright/.auth/user.json"
+const authFile =
+  process.env.PLAYWRIGHT_AUTH_FILE ?? "playwright/.auth/user.json"
 
 setup("authenticate", async ({ page }) => {
   const requests: string[] = []

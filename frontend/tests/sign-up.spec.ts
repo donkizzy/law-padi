@@ -77,7 +77,7 @@ test("Sign up returns to the page the visitor came from", async ({ page }) => {
   await expect(page).toHaveURL(/\/saved$/)
 })
 
-test("Sign-in ignores redirects to other sites", async ({ page }) => {
+test("Sign-in ignores redirects to other sites", async ({ page, baseURL }) => {
   const email = randomEmail()
   const password = randomPassword()
 
@@ -93,7 +93,7 @@ test("Sign-in ignores redirects to other sites", async ({ page }) => {
   await page.getByTestId("email-input").fill(email)
   await page.getByTestId("password-input").fill(password)
   await page.getByRole("button", { name: "Log In" }).click()
-  await expect(page).toHaveURL(/^http:\/\/localhost:\d+\/$/)
+  await expect(page).toHaveURL(new URL("/", baseURL!).href)
 })
 
 test("Sign up with invalid email", async ({ page }) => {

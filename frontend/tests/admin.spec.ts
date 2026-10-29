@@ -959,6 +959,24 @@ async function mockAdminApi(
   let revisionText: string | null = null
 
   await mockSignedIn(page, "playwright-admin-token")
+  // The shared sidebar reads chat history. Keep its fake bearer token away
+  // from the live API, where a 401 would sign this mocked admin out.
+  await page.route("**/api/v1/conversations**", (route) =>
+    json(
+      route,
+      new URL(route.request().url()).pathname.endsWith("/capabilities")
+        ? {
+            conversations_enabled: true,
+            explanations_enabled: true,
+            supported_languages: ["English"],
+            answer_languages: ["en"],
+            question_max_length: 2000,
+            build_revision: "test",
+            prompt_version: "test",
+          }
+        : { data: [], count: 0 },
+    ),
+  )
   await page.route("**/api/v1/users/me", async (route) =>
     json(route, {
       id: "99999999-9999-4999-8999-999999999999",

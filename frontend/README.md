@@ -93,31 +93,47 @@ The frontend code is structured as follows:
 
 ## End-to-End Testing with Playwright
 
-The frontend includes initial end-to-end tests using Playwright. To run the tests, you need to have the Docker Compose stack running. Start the stack with the following command:
+From the repository root, start the local PostgreSQL and email-capture services:
 
 ```bash
-docker compose run --rm backend bash scripts/prestart.sh
-docker compose up -d --wait backend
+docker compose up -d db mailpit
 ```
 
-Then, you can run the tests with the following command:
+Install workspace/backend dependencies and the required Playwright engines, then
+run the suite from the repository root:
 
 ```bash
-bunx playwright test
+bun run test
 ```
 
-You can also run your tests in UI mode to see the browser and interact with it running:
+The default test command creates a unique disposable `_e2e_test` database,
+seeds a QA account, and starts API/frontend servers on temporary loopback ports.
+Rate limits remain enabled. The runner stops its processes and removes its own
+database on exit; the shared app corpus and rate counters are preserved. Logs,
+test results and run-specific browser state are in `output/playwright/isolated-*`.
+The database user needs permission to create/drop these disposable databases.
+
+Pass Playwright arguments through the root command:
 
 ```bash
-bunx playwright test --ui
+bun run test tests/login.spec.ts
 ```
 
-To stop and remove the Docker Compose stack and clean the data created in tests, use the following command:
+For interactive testing against the running shared local stack, use:
 
 ```bash
-docker compose down -v
+bun run test:live --ui
 ```
 
-To update the tests, navigate to the tests directory and modify the existing test files or add new ones as needed.
+Shared-stack auth runs use its real rate allowances, so repeated runs can receive
+429 responses. The isolated command is the repeatable regression workflow.
+
+Focused Firefox/WebKit language/layout checks can run from `frontend/` with
+`bunx playwright test --config=playwright.qa.config.ts`. Install matching engines
+with `bunx playwright install firefox webkit` if the cache has a different revision.
+
+Keep regression cases in `frontend/tests/` and backend behavior checks in
+`backend/tests/`. See the [production QA tracker](../docs/production-qa-2026-10-27.md)
+for current findings and evidence limitations.
 
 For more information on writing and running Playwright tests, refer to the official [Playwright documentation](https://playwright.dev/docs/intro).

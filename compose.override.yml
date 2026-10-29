@@ -50,15 +50,20 @@ services:
           target: /app/backend
           ignore:
             - .venv
+            - app/frontend
+            - htmlcov
+            - .coverage
         - path: ./backend/pyproject.toml
           action: rebuild
         - path: ./frontend
           action: rebuild
           ignore:
-            - ./frontend/node_modules
-            - ./frontend/dist
-            - ./frontend/blob-report
-            - ./frontend/test-results
+            - node_modules
+            - dist
+            - blob-report
+            - playwright-report
+            - test-results
+            - playwright/.auth
     # TODO: remove once coverage is done locally
     volumes:
       - ./backend/htmlcov:/app/backend/htmlcov

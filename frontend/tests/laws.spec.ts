@@ -175,12 +175,33 @@ async function mockLaws(page: Page) {
 for (const mobile of [false, true]) {
   test(`${mobile ? "Mobile" : "Desktop"}: switch laws, read an Act, inspect its source and save it`, async ({
     page,
+    browserName,
   }) => {
     await page.setViewportSize(
       mobile ? { width: 390, height: 844 } : { width: 1440, height: 1000 },
     )
     await mockLaws(page)
-    await page.context().grantPermissions(["clipboard-read", "clipboard-write"])
+    if (browserName === "chromium") {
+      await page
+        .context()
+        .grantPermissions(["clipboard-read", "clipboard-write"])
+    } else {
+      // These engines do not expose Chromium's clipboard permission names.
+      // Verify the copy payload through the same API; native clipboard access
+      // remains covered by the Chromium version of this flow.
+      await page.addInitScript(() => {
+        let text = ""
+        Object.defineProperty(navigator, "clipboard", {
+          configurable: true,
+          value: {
+            writeText: async (value: string) => {
+              text = value
+            },
+            readText: async () => text,
+          },
+        })
+      })
+    }
     await page.goto(`/laws/${constitution}?release=${release}`)
     const picker = page.getByRole("combobox", { name: "Law", exact: true })
     await expect(picker.locator("option")).toHaveCount(3)
