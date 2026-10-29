@@ -271,3 +271,32 @@ def test_phone_search_wording_has_published_act_topic_hints() -> None:
         target.startswith("constitution-1999:")
         for target, _ in topic_sections(question)
     )
+
+
+@pytest.mark.parametrize(
+    "query",
+    [
+        "What are the qualifications to become a Governor?",
+        "qualifications for becoming governor",
+        "Who is eligible to run for governor?",
+    ],
+)
+def test_governor_eligibility_prioritises_qualification_and_keeps_limits_as_context(
+    query: str,
+) -> None:
+    hints = topic_sections(query)
+    assert hints[0][0] == "constitution-1999:177"
+    assert "constitution-1999:182" in companion_sections("constitution-1999:177")
+
+
+def test_governor_disqualification_is_not_positive_eligibility() -> None:
+    assert (
+        topic_sections("What disqualifies a governor?")[0][0] == "constitution-1999:182"
+    )
+
+
+@pytest.mark.parametrize("query", ["sirri", "nzuzo", "ìpamọ́", "asiri"])
+def test_native_privacy_keywords_have_a_provider_independent_navigation_hint(
+    query: str,
+) -> None:
+    assert topic_sections(query)[0][0] == "constitution-1999:37"

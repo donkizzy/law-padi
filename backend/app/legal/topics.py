@@ -179,6 +179,10 @@ TOPICS: tuple[Topic, ...] = (
         ("37",),
         (
             "privacy",
+            "sirri",
+            "nzuzo",
+            "ìpamọ́",
+            "àsírí",
             "private life",
             "family life",
             "phone",
@@ -1250,7 +1254,7 @@ TOPICS: tuple[Topic, ...] = (
     ),
     Topic(
         "governor-qualification",
-        ("177", "182"),
+        ("177",),
         (
             "qualify governor",
             "qualification governor",
@@ -1262,7 +1266,13 @@ TOPICS: tuple[Topic, ...] = (
             "how old governor",
             "requirements governor",
             "governorship candidate",
+            "eligible governor",
         ),
+    ),
+    Topic(
+        "governor-disqualification",
+        ("182",),
+        ("disqualify governor", "ineligible governor", "barred governor"),
     ),
     Topic(
         "governorship-election",
@@ -1805,7 +1815,20 @@ def _title_tokens(
     instrument_slug: str = CONSTITUTION_SLUG,
 ) -> tuple[tuple[str, frozenset[str]], ...]:
     return tuple(
-        (f"{instrument_slug}:{number}", frozenset(tokens(title)))
+        (
+            f"{instrument_slug}:{number}",
+            frozenset(
+                tokens(
+                    # The source repeats "Disqualifications" for different
+                    # offices. Use the same contextual title the reader sees,
+                    # or "governor disqualification" only matches s.183's
+                    # different rule about holding another job.
+                    section_title(f"{instrument_slug}.section{number}") or title
+                    if title.casefold() == "disqualifications"
+                    else title
+                )
+            ),
+        )
         for number, title in _titles(instrument_slug)["sections"].items()
     )
 

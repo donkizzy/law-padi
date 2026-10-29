@@ -775,6 +775,36 @@ test("A translated search says what was searched and translates server messages"
   ).toBeVisible()
 })
 
+test("Uncorroborated results show a warning and neutral match heading", async ({
+  page,
+}) => {
+  await mockCorpus(page)
+  await page.route("**/api/v1/legal/search", (route) =>
+    route.fulfill({
+      json: {
+        ...response("matches"),
+        message:
+          "The published provisions don't seem to answer this directly. These are the closest sections we found.",
+        message_code: "not_covered",
+      },
+    }),
+  )
+  await page.goto("/?intent=find&q=Who+won+the+World+Cup", {
+    waitUntil: "domcontentloaded",
+  })
+  await expect(
+    page
+      .getByRole("status")
+      .filter({ hasText: "don't seem to answer this directly" }),
+  ).toBeVisible()
+  await expect(
+    page.getByRole("heading", { name: "Search matches", exact: true }),
+  ).toBeVisible()
+  await expect(
+    page.getByRole("heading", { name: "Best match", exact: true }),
+  ).toHaveCount(0)
+})
+
 test("An English search shows the server message as sent", async ({ page }) => {
   await mockCorpus(page)
   await page.route("**/api/v1/legal/search", (route) =>

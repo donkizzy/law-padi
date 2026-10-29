@@ -16,6 +16,8 @@ from app.legal.references import (
         "Section 33 subsection 2 paragraph a",
         "section 33, subsection (2), paragraph (a)",
         "What does Section 33(2)(a) say?",
+        "Explain Section 33(2)(a) to me",
+        "Explain Section 33(2)(a) to us, please",
     ],
 )
 def test_reference_formats_resolve_to_identical_hierarchy(query: str) -> None:

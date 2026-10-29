@@ -179,7 +179,9 @@ def _search(
             .where(
                 RetrievalIndexBuild.release_id == release.id,
                 RetrievalIndexBuild.index_kind == body.index_kind,
-                RetrievalIndexBuild.status == VectorIndexStatus.READY,
+                col(RetrievalIndexBuild.status).in_(
+                    [VectorIndexStatus.READY, VectorIndexStatus.PROMOTED]
+                ),
             )
             .order_by(col(RetrievalIndexBuild.created_at).desc())
         ).first()

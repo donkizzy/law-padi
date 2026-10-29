@@ -370,9 +370,11 @@ function SearchResults({
                 {search.data.outcome === "matches" && selected && (
                   <div className="sq-md border border-primary/30 bg-primary/5 p-4">
                     <h2 className="font-display text-xl">
-                      {selected.canonical_path === bestMatch?.canonical_path
-                        ? t("results.bestMatch")
-                        : t("results.selected")}
+                      {search.data.message_code === "not_covered"
+                        ? t("results.matchesLabel")
+                        : selected.canonical_path === bestMatch?.canonical_path
+                          ? t("results.bestMatch")
+                          : t("results.selected")}
                     </h2>
                     <p className="mt-1 text-body text-muted-foreground">
                       {selected.citation}

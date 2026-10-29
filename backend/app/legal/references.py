@@ -342,6 +342,9 @@ def parse_section_reference(
             ):
                 return _unknown_law()
             range_match = _RANGE.match(remaining)
+            # An explanation addressed "to me/us" is prose, not a range.
+            if re.match(r"\s+to\s+(?:me|us)\b", remaining, re.I):
+                break
             separator = _CONTINUATION.match(remaining) if not range_match else None
             if not range_match and not separator:
                 if prose and re.match(r"\s*;", remaining):

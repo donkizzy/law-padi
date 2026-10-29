@@ -41,7 +41,7 @@ from app.legal.schemas import (
     LegalSearchResponse,
     LegalSearchResult,
 )
-from app.legal.topics import demoted_sections, rights_question
+from app.legal.topics import demoted_sections, rights_question, topic_sections
 
 AMBIGUOUS_MESSAGE = "This section number appears more than once in this edition. Choose the one you mean."
 NOT_IN_CONSTITUTION_MESSAGE = (
@@ -49,12 +49,14 @@ NOT_IN_CONSTITUTION_MESSAGE = (
 )
 PARTIAL_MESSAGE = "We found some of these sections, but not all of them."
 SIMPLER_SEARCH_MESSAGE = "Search is running in a simpler mode right now, so these keyword matches may be less precise."
+NEARBY_SEARCH_MESSAGE = "The published provisions don't seem to answer this directly. These are the closest sections we found."
 # Stable keys for the fixed messages, so clients can show them in any language.
 _MESSAGE_CODES = {
     AMBIGUOUS_MESSAGE: "ambiguous_section",
     NOT_IN_CONSTITUTION_MESSAGE: "section_not_found",
     PARTIAL_MESSAGE: "partial_sections",
     SIMPLER_SEARCH_MESSAGE: "simpler_search",
+    NEARBY_SEARCH_MESSAGE: "not_covered",
     REFERENCE_FORMAT_MESSAGE: "reference_format",
     UNKNOWN_LAW_MESSAGE: "unknown_law",
 }
@@ -297,6 +299,27 @@ def semantic_lookup(
             and len(release_instruments(session, release.id, index_kind=index_kind))
             > 1,
         )
+    # Dense search always has nearest neighbours, including for unrelated
+    # input. A rank is not a relevance confidence score. Disclose when the
+    # leading candidate has neither a keyword match nor a curated topic hint;
+    # retain it for inspection instead of inventing an uncalibrated cutoff.
+    if (
+        ranked
+        and retrieval_mode == "hybrid"
+        and ranked[0].lexical_rank is None
+        and not topic_sections(
+            query,
+            instrument_slugs=(instrument_slug,)
+            if instrument_slug
+            else tuple(
+                item.slug
+                for item in release_instruments(
+                    session, release.id, index_kind=index_kind
+                ).values()
+            ),
+        )
+    ):
+        message = NEARBY_SEARCH_MESSAGE
     corpus = load_ranked_corpus(
         session,
         release,

@@ -537,3 +537,103 @@ def test_full_public_index_is_release_scoped_and_contains_hub_metadata(
         ).status_code
         == 404
     )
+
+
+@pytest.mark.parametrize("query", ["zxqvplm nonsense xyz", "Who won the World Cup?"])
+def test_dense_neighbours_without_a_direct_match_are_disclosed(
+    client: TestClient, corpus, monkeypatch: pytest.MonkeyPatch, query: str
+) -> None:
+    assert corpus
+
+    class Provider:
+        def embed(self, texts):
+            assert texts == [query]
+            return EmbeddingBatch(
+                provider="test",
+                model_name="test",
+                model_revision="pinned",
+                vectors=[[1.0] + [0.0] * 1023],
+            )
+
+    monkeypatch.setattr(search, "_query_embedding_provider", lambda _: Provider())
+    body = client.post("/api/v1/legal/search", json={"query": query}).json()
+    assert body[
+        "data"
+    ]  # Nearest neighbours remain inspectable, not certified relevant.
+    assert body["message_code"] == "not_covered"
+    assert "don't seem to answer" in body["message"]
+
+
+def test_curated_topic_does_not_receive_an_unrelated_query_warning(
+    client: TestClient, corpus, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    assert corpus
+
+    class Provider:
+        def embed(self, _texts):
+            return EmbeddingBatch(
+                provider="test",
+                model_name="test",
+                model_revision="pinned",
+                vectors=[[1.0] + [0.0] * 1023],
+            )
+
+    monkeypatch.setattr(search, "_query_embedding_provider", lambda _: Provider())
+    body = client.post("/api/v1/legal/search", json={"query": "privacy"}).json()
+    assert body["message_code"] != "not_covered"
+
+
+@pytest.mark.parametrize(
+    "release_status", [CorpusReleaseStatus.PRODUCTION, CorpusReleaseStatus.RETIRED]
+)
+def test_pinned_semantic_search_accepts_a_promoted_published_build(
+    client: TestClient,
+    db: Session,
+    corpus,
+    monkeypatch: pytest.MonkeyPatch,
+    release_status: CorpusReleaseStatus,
+) -> None:
+    release, *_ = corpus
+    release.status = release_status
+    build = db.exec(
+        select(RetrievalIndexBuild).where(RetrievalIndexBuild.release_id == release.id)
+    ).one()
+    build.status = VectorIndexStatus.PROMOTED
+    db.add(release)
+    db.add(build)
+    db.commit()
+
+    class Provider:
+        def embed(self, _texts):
+            return EmbeddingBatch(
+                provider="test",
+                model_name="test",
+                model_revision="pinned",
+                vectors=[[1.0] + [0.0] * 1023],
+            )
+
+    monkeypatch.setattr(search, "_query_embedding_provider", lambda _: Provider())
+    response = client.post(
+        "/api/v1/legal/search",
+        json={"query": "privacy", "release_version": release.version},
+    )
+    assert response.status_code == 200, response.text
+    assert response.json()["release_version"] == release.version
+    assert response.json()["data"][0]["canonical_path"].endswith("section37")
+
+
+def test_failed_pinned_index_is_not_mistaken_for_a_promoted_build(
+    client: TestClient, db: Session, corpus
+) -> None:
+    release, *_ = corpus
+    build = db.exec(
+        select(RetrievalIndexBuild).where(RetrievalIndexBuild.release_id == release.id)
+    ).one()
+    build.status = VectorIndexStatus.FAILED
+    db.add(build)
+    db.commit()
+    response = client.post(
+        "/api/v1/legal/search",
+        json={"query": "privacy", "release_version": release.version},
+    )
+    assert response.status_code == 503
