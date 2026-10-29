@@ -86,3 +86,38 @@ def test_one_pidgin_marker_outweighs_english_loanwords() -> None:
     detection = detect("wetin constitution talk about police checking my phone?")
     assert detection.language == Language.PIDGIN
     assert not detection.confident
+
+
+@pytest.mark.parametrize(
+    ("question", "language"),
+    [
+        ("sirri", Language.HAUSA),
+        ("nzuzo", Language.IGBO),
+        ("ipamo", Language.YORUBA),
+        ("Kedu ihe Section 37 kwuru banyere nzuzo?", Language.IGBO),
+        ("police fit search my phone?", Language.PIDGIN),
+        ("I fit change my religion?", Language.PIDGIN),
+        ("Police no fit arrest me?", Language.PIDGIN),
+    ],
+)
+def test_content_words_and_contextual_pidgin_do_not_skip_understanding(
+    question: str, language: Language
+) -> None:
+    detection = detect(question)
+    assert detection.language == language
+    assert not detection.confident
+
+
+@pytest.mark.parametrize(
+    "question",
+    [
+        "Am I fit for office?",
+        "Can I keep fit in prison?",
+        "I don’t know",
+        "I donʼt know",
+        "my right to bail",
+    ],
+)
+def test_english_collisions_and_curly_apostrophes_remain_english(question: str) -> None:
+    assert detect(question).language == Language.ENGLISH
+    assert detect(question).confident

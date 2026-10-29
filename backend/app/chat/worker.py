@@ -1219,6 +1219,8 @@ async def _translate(
     answer: ExplanationAnswer,
     language: Language,
     telemetry: dict[str, Any],
+    *,
+    timeout_seconds: float = 60.0,
 ) -> None:
     """Attach a checked translation; on any failure the English answer stands."""
 
@@ -1232,16 +1234,19 @@ async def _translate(
     await asyncio.to_thread(_emit_progress, run_id, "translation.started")
     started = time.perf_counter()
     try:
-        answer.translation = await translate_answer(
-            call,
-            answer,
-            language,
-            max_tokens=settings.TRANSLATION_MAX_OUTPUT_TOKENS,
-            judge_max_tokens=settings.DEEPSEEK_VERIFIER_MAX_OUTPUT_TOKENS,
-        )
-    except (ProviderError, BudgetExhausted, ValueError) as exc:
+        async with asyncio.timeout(timeout_seconds):
+            answer.translation = await translate_answer(
+                call,
+                answer,
+                language,
+                max_tokens=settings.TRANSLATION_MAX_OUTPUT_TOKENS,
+                judge_max_tokens=settings.DEEPSEEK_VERIFIER_MAX_OUTPUT_TOKENS,
+            )
+    except (ProviderError, BudgetExhausted, ValueError, TimeoutError) as exc:
         telemetry["translation"] = "fallback"
-        telemetry["translation_reason"] = str(exc)[:200]
+        telemetry["translation_reason"] = (
+            "Translation timed out" if isinstance(exc, TimeoutError) else str(exc)[:200]
+        )
     else:
         telemetry["translation"] = "completed"
     telemetry["translation_ms"] = round((time.perf_counter() - started) * 1000)
@@ -1487,7 +1492,22 @@ async def process_run(
             answer.question_language = question_language
             answer.answer_language = answer_language
             if answer_language != Language.ENGLISH and answer.blocks:
-                await _translate(provider, run_id, answer, answer_language, telemetry)
+                await _translate(
+                    provider,
+                    run_id,
+                    answer,
+                    answer_language,
+                    telemetry,
+                    timeout_seconds=min(
+                        60.0,
+                        max(
+                            0.0,
+                            settings.CHAT_RUN_TIMEOUT_SECONDS
+                            - (time.perf_counter() - started)
+                            - 5.0,
+                        ),
+                    ),
+                )
             telemetry["total_ms"] = round((time.perf_counter() - started) * 1000)
             await asyncio.to_thread(
                 _finish,

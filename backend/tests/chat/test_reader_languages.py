@@ -75,6 +75,7 @@ class LanguageProvider:
                     {
                         "index": pair["index"],
                         "back_translation": _ENGLISH_BLOCK,
+                        "language_matches": True,
                         "meaning_preserved": self.meaning_preserved,
                         "conditions_preserved": True,
                     }
@@ -369,7 +370,12 @@ def test_judgment_requires_one_passing_check_per_block() -> None:
     translation.check_judgment(
         {
             "checks": [
-                {"index": 0, "meaning_preserved": True, "conditions_preserved": True}
+                {
+                    "index": 0,
+                    "language_matches": True,
+                    "meaning_preserved": True,
+                    "conditions_preserved": True,
+                }
             ]
         },
         1,
@@ -382,6 +388,7 @@ def test_judgment_requires_one_passing_check_per_block() -> None:
                 "checks": [
                     {
                         "index": 0,
+                        "language_matches": True,
                         "meaning_preserved": True,
                         "conditions_preserved": False,
                     }
@@ -412,3 +419,99 @@ def test_glossary_terms_are_limited_to_the_answer() -> None:
     assert terms["Constitution"] == "Constitution"
     assert "right" in terms
     assert "bail" not in terms
+
+
+def test_rejected_translation_is_repaired_once_and_every_text_is_judged() -> None:
+    answer = _answer(_ENGLISH_BLOCK, follow_ups=("What does Section 37 say?",))
+    answer.missing_facts = ["Whether you were arrested"]
+    calls: list[tuple[str, dict[str, Any]]] = []
+
+    async def call(
+        purpose: str, _system: str, payload: dict[str, Any], _tokens: int
+    ) -> ProviderResult:
+        calls.append((purpose, payload))
+        if purpose == "translation_check":
+            assert len(payload["pairs"]) == 3
+            assert payload["pairs"][1]["english"] == answer.missing_facts[0]
+            assert payload["pairs"][2]["english"] == answer.follow_up_questions[0]
+            value = {
+                "checks": [
+                    {
+                        "index": i,
+                        "language_matches": True,
+                        "meaning_preserved": True,
+                        "conditions_preserved": True,
+                    }
+                    for i in range(3)
+                ]
+            }
+        else:
+            value = {
+                "blocks": [_ENGLISH_BLOCK if len(calls) == 1 else _YORUBA_BLOCK],
+                "missing_facts": ["Bóyá wọ́n ti mú ọ"],
+                "follow_up_questions": ["Kí ni Section 37 sọ?"],
+            }
+        return ProviderResult(
+            value=value, model="test", prompt_tokens=10, completion_tokens=10
+        )
+
+    result = asyncio.run(
+        translation.translate_answer(
+            call, answer, Language.YORUBA, max_tokens=1000, judge_max_tokens=1000
+        )
+    )
+    assert result.blocks[0].text == _YORUBA_BLOCK
+    assert [purpose for purpose, _ in calls] == [
+        "translation",
+        "translation",
+        "translation_check",
+    ]
+    assert "still in English" in calls[1][1]["revision_reason"]
+
+
+def test_wrong_language_or_unchecked_conditions_are_never_accepted() -> None:
+    with pytest.raises(translation.TranslationRejected, match="requested language"):
+        translation.check_judgment(
+            {
+                "checks": [
+                    {
+                        "index": 0,
+                        "language_matches": False,
+                        "meaning_preserved": True,
+                        "conditions_preserved": True,
+                    }
+                ]
+            },
+            1,
+        )
+    with pytest.raises(translation.TranslationRejected, match="number"):
+        _translate(
+            _answer("Section 35 of the Constitution protects liberty."),
+            ["Section 35 ti Constitution ṣe ààbò fún òmìnira fún 48 wákàtí."],
+        )
+
+
+def test_translation_deadline_preserves_verified_english(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    async def slow_translation(*_args: Any, **_kwargs: Any) -> None:
+        await asyncio.sleep(1)
+
+    monkeypatch.setattr(worker, "translate_answer", slow_translation)
+    monkeypatch.setattr(worker, "_emit_progress", lambda *_args: None)
+    answer = _answer(_ENGLISH_BLOCK)
+    telemetry: dict[str, Any] = {}
+    asyncio.run(
+        worker._translate(
+            LanguageProvider(),
+            UUID(int=0),
+            answer,
+            Language.YORUBA,
+            telemetry,
+            timeout_seconds=0.001,
+        )
+    )  # type: ignore[arg-type]
+    assert answer.blocks[0].text == _ENGLISH_BLOCK
+    assert answer.translation is None
+    assert telemetry["translation"] == "fallback"
+    assert telemetry["translation_reason"] == "Translation timed out"

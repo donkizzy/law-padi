@@ -23,7 +23,7 @@ _SIGNATURE_LETTERS: dict[Language, frozenset[str]] = {
 _LEXICONS: dict[Language, frozenset[str]] = {
     Language.PIDGIN: frozenset(
         "wetin dey abeg una wey na oga dem don sabi pikin wahala comot "
-        "abi sef shey wan go fit make e im waka chop".split()
+        "abi sef shey wan go make e im waka chop".split()
     ),
     Language.YORUBA: frozenset(
         "ni ti se je ati mo o won kini bawo nibo eto ofin olopa ijoba "
@@ -42,6 +42,18 @@ _LEXICONS: dict[Language, frozenset[str]] = {
 _PIDGIN_MARKERS = frozenset(
     "wetin dey abeg una wey sabi pikin wahala comot abi sef shey oga waka "
     "chop wan don".split()
+)
+# Distinctive content words matter for short searches and unaccented writing.
+# Ambiguous English words such as "fit", "go" and "make" stay out of this list.
+_CONTENT_MARKERS: dict[Language, frozenset[str]] = {
+    Language.YORUBA: frozenset("ipamo asiri ominira olopa ofin".split()),
+    Language.HAUSA: frozenset("sirri hakki yanci kotu doka gwamnati".split()),
+    Language.IGBO: frozenset("nzuzo ikike ntozu kedu kwuru banyere okpukpe".split()),
+}
+_PIDGIN_FIT = re.compile(
+    r"\b(?:i|you|we|they|police|person|government|e|dem|she|he)\s+"
+    r"(?:no\s+)?fit\s+(?:search|arrest|read|hold|detain|change|marry|vote|"
+    r"own|buy|sue|run|become|take|refuse)\b"
 )
 # Words that collide with English ("e", "make", "go", "na") are ignored when
 # deciding that a question is English.
@@ -67,9 +79,13 @@ def detect(text: str) -> Detection:
         if any(ch in letters for ch in composed):
             return Detection(language, confident=False)
     # "don't" stays one word, so it never reads as Pidgin "don".
-    words = _WORD.findall(fold(composed).lower().replace("'", ""))
-    if any(word in _PIDGIN_MARKERS for word in words):
+    folded = fold(composed).lower().replace("’", "'").replace("ʼ", "'")
+    words = _WORD.findall(folded.replace("'", ""))
+    if _PIDGIN_FIT.search(folded) or any(word in _PIDGIN_MARKERS for word in words):
         return Detection(Language.PIDGIN, confident=False)
+    for language, markers in _CONTENT_MARKERS.items():
+        if any(word in markers for word in words):
+            return Detection(language, confident=False)
     scores = {
         language: sum(word in lexicon for word in words)
         for language, lexicon in _LEXICONS.items()
