@@ -1,0 +1,700 @@
+{
+  "source": {
+    "title": "Employees’ Compensation Act 2010",
+    "printed_arrangement_title": "EMPLOYEE’S COMPENSATION ACT, 2010",
+    "sha256": "111cbe332b2d2793e564794492a2cb7851051a38bcccaab9c71e047f37230d6b",
+    "source_url": "https://admin.theiguides.org/Media/Documents/Employee%20Compensation%20Act.pdf",
+    "extracted_from": "Own Arrangement of Sections, PDF pages 3–6; main Act only",
+    "review_status": "needs_review",
+    "note": "Navigation-title evidence only. Printed arrangement visually inspected on all four pages. No certification of legal currency, authenticity or full-body wording."
+  },
+  "expected_section_count": 74,
+  "chapters": {},
+  "parts": {
+    "1": "PRELIMINARY PROVISIONS",
+    "2": "PROCEDURES FOR MAKING CLAIMS",
+    "3": "COMPENSATION FOR DEATH, INJURY OR DISEASE",
+    "4": "SCALE OF COMPENSATION",
+    "5": "POWERS AND FUNCTIONS OF THE BOARD",
+    "6": "EMPLOYERS’ ASSESSMENT AND CONTRIBUTIONS",
+    "7": "FINANCIAL PROVISIONS",
+    "8": "ESTABLISHMENT OF THE INVESTMENT COMMITTEE, ETC.",
+    "9": "MISCELLANEOUS PROVISIONS"
+  },
+  "sections": {
+    "1": "Objectives of the Act.",
+    "2": "Scope and Application, etc.",
+    "3": "Exemptions",
+    "4": "Employee’s Notification of injury.",
+    "5": "Employer’s obligation to Report Death, injury or disease of an Employee.",
+    "6": "Application for Compensation.",
+    "7": "Compensation for Injury.",
+    "8": "Compensation for Mental Stress.",
+    "9": "Compensation for Occupational Disease.",
+    "10": "Compensation for Hearing Impairment.",
+    "11": "Compensation for Injuries occurring outside the normal Workplace.",
+    "12": "Limitation of Actions, Subrogation, etc.",
+    "13": "Compensation cannot be Waived.",
+    "14": "Contribution by Employees for Compensation Prohibited.",
+    "15": "Compensation not assignable or liable to attachment.",
+    "16": "Vocational Rehabilitation, etc.",
+    "17": "Compensation in Fatal Cases.",
+    "18": "Compensation relating to enemy warlike actions.",
+    "19": "Period for making Payments.",
+    "20": "Proof of existence of Dependants.",
+    "21": "Permanent Total Disability.",
+    "22": "Permanent Partial Disability or Disfigurement.",
+    "23": "Period of payment for permanent total or partial disability.",
+    "24": "Temporary Total Disability.",
+    "25": "Temporary Partial Disability.",
+    "26": "Health Care and Disability Support.",
+    "27": "Duty of Accredited Medical Practitioner and other Specialists.",
+    "28": "Retirement Benefits.",
+    "29": "Payment of Retirement Benefits.",
+    "30": "Reconsidering Benefits.",
+    "31": "Powers of the Board.",
+    "32": "Functions of the Board.",
+    "33": "Employers’ Contribution to the Fund.",
+    "34": "Assessments.",
+    "35": "Assessment Payable.",
+    "36": "Liability for Assessment, etc.",
+    "37": "Assessment Rates.",
+    "38": "Employer Classification.",
+    "39": "Employer to Provide Estimate of Payrolls.",
+    "40": "Statement and Estimate of Earnings.",
+    "41": "Employer’s Experience Accounts.",
+    "42": "Super Assessment.",
+    "43": "Merit Rating.",
+    "44": "Liability for Assessment of Independent Contractors and Sub-Contractors.",
+    "45": "Security for Payment of Assessment or Provision of Security.",
+    "46": "Penalty for Non-payment of Assessment or Provision of Security.",
+    "47": "Decision of the Board.",
+    "48": "Provisional Assessment.",
+    "49": "Temporary Industry.",
+    "50": "Employer Commencing or Recommencing a Business.",
+    "51": "Employer Ceasing to be an Employer.",
+    "52": "Records of Remuneration and Operations.",
+    "53": "Examination.",
+    "54": "Enforcement Powers.",
+    "55": "Right of Appeal.",
+    "56": "Establishment of the Compensation Fund.",
+    "57": "Management of the Fund, etc.",
+    "58": "Expenditures of the Fund.",
+    "59": "Annual Estimates, etc.",
+    "60": "Accounts and Audit.",
+    "61": "Annual Reports, etc.",
+    "62": "Establishment of the Investment Committee.",
+    "63": "Functions of the Investment Committee.",
+    "64": "Power to make Regulations.",
+    "65": "Providing False Information.",
+    "66": "Confidentiality.",
+    "67": "Non-Compellability.",
+    "68": "Records and Notices.",
+    "69": "Illiteracy.",
+    "70": "Priority as to amounts due to the Fund in the Case of employer’s Insolvency.",
+    "71": "General Penalty.",
+    "72": "Repeal of Cap. 470 LFN and Savings.",
+    "73": "Interpretation.",
+    "74": "Citation."
+  },
+  "notes": {
+    "transcription_method": "Titles from this source’s arrangement only. Join line wraps with one space except after the retained printed hyphen in Sub-Contractors. Preserve case, punctuation and raw label readings. Part-map keys use ordinal Arabic identities; printed labels are retained below.",
+    "glitches": [
+      {
+        "section_key": "3",
+        "note": "Printed Exemptions has no terminal period; retained."
+      },
+      {
+        "section_key": "44",
+        "note": "Printed Sub- line break Contractors. Joined as Sub-Contractors., retaining the printed hyphen; raw lines retained."
+      },
+      {
+        "section_key": "72",
+        "note": "Arrangement prints Cap. 470 LFN; retained without replacing it by the body’s Cap W6 reference."
+      },
+      {
+        "part_key": "1",
+        "note": "Arrangement prints PART 1, while subsequent part labels are Roman numerals; raw value retained."
+      }
+    ],
+    "raw_arrangement_parts": [
+      {
+        "key": "1",
+        "raw_label": "1",
+        "raw_heading": "PART 1—PRELIMINARY PROVISIONS",
+        "page_number": 3
+      },
+      {
+        "key": "2",
+        "raw_label": "II",
+        "raw_heading": "PART II—PROCEDURES FOR MAKING CLAIMS",
+        "page_number": 3
+      },
+      {
+        "key": "3",
+        "raw_label": "III",
+        "raw_heading": "PART III—COMPENSATION FOR DEATH, INJURY OR DISEASE",
+        "page_number": 3
+      },
+      {
+        "key": "4",
+        "raw_label": "IV",
+        "raw_heading": "PART IV—SCALE OF COMPENSATION",
+        "page_number": 4
+      },
+      {
+        "key": "5",
+        "raw_label": "V",
+        "raw_heading": "PART V—POWERS AND FUNCTIONS OF THE BOARD",
+        "page_number": 4
+      },
+      {
+        "key": "6",
+        "raw_label": "VI",
+        "raw_heading": "PART VI—EMPLOYERS’ ASSESSMENT AND CONTRIBUTIONS",
+        "page_number": 4
+      },
+      {
+        "key": "7",
+        "raw_label": "VII",
+        "raw_heading": "PART VII—FINANCIAL PROVISIONS",
+        "page_number": 5
+      },
+      {
+        "key": "8",
+        "raw_label": "VIII",
+        "raw_heading": "PART VIII—ESTABLISHMENT OF THE INVESTMENT COMMITTEE, ETC.",
+        "page_number": 5
+      },
+      {
+        "key": "9",
+        "raw_label": "IX",
+        "raw_heading": "PART IX—MISCELLANEOUS PROVISIONS",
+        "page_number": 5
+      }
+    ],
+    "raw_arrangement_extraction": {
+      "1": {
+        "page_number": 3,
+        "raw_label": "1",
+        "raw_title_lines": [
+          "Objectives of the Act."
+        ]
+      },
+      "2": {
+        "page_number": 3,
+        "raw_label": "2",
+        "raw_title_lines": [
+          "Scope and Application, etc."
+        ]
+      },
+      "3": {
+        "page_number": 3,
+        "raw_label": "3",
+        "raw_title_lines": [
+          "Exemptions"
+        ]
+      },
+      "4": {
+        "page_number": 3,
+        "raw_label": "4",
+        "raw_title_lines": [
+          "Employee’s Notification of injury."
+        ]
+      },
+      "5": {
+        "page_number": 3,
+        "raw_label": "5",
+        "raw_title_lines": [
+          "Employer’s obligation to Report Death, injury or disease of an",
+          "Employee."
+        ]
+      },
+      "6": {
+        "page_number": 3,
+        "raw_label": "6",
+        "raw_title_lines": [
+          "Application for Compensation."
+        ]
+      },
+      "7": {
+        "page_number": 3,
+        "raw_label": "7",
+        "raw_title_lines": [
+          "Compensation for Injury."
+        ]
+      },
+      "8": {
+        "page_number": 3,
+        "raw_label": "8",
+        "raw_title_lines": [
+          "Compensation for Mental Stress."
+        ]
+      },
+      "9": {
+        "page_number": 3,
+        "raw_label": "9",
+        "raw_title_lines": [
+          "Compensation for Occupational Disease."
+        ]
+      },
+      "10": {
+        "page_number": 3,
+        "raw_label": "10",
+        "raw_title_lines": [
+          "Compensation for Hearing Impairment."
+        ]
+      },
+      "11": {
+        "page_number": 3,
+        "raw_label": "11",
+        "raw_title_lines": [
+          "Compensation for Injuries occurring outside the normal Workplace."
+        ]
+      },
+      "12": {
+        "page_number": 3,
+        "raw_label": "12",
+        "raw_title_lines": [
+          "Limitation of Actions, Subrogation, etc."
+        ]
+      },
+      "13": {
+        "page_number": 3,
+        "raw_label": "13",
+        "raw_title_lines": [
+          "Compensation cannot be Waived."
+        ]
+      },
+      "14": {
+        "page_number": 3,
+        "raw_label": "14",
+        "raw_title_lines": [
+          "Contribution by Employees for Compensation Prohibited."
+        ]
+      },
+      "15": {
+        "page_number": 3,
+        "raw_label": "15",
+        "raw_title_lines": [
+          "Compensation not assignable or liable to attachment."
+        ]
+      },
+      "16": {
+        "page_number": 3,
+        "raw_label": "16",
+        "raw_title_lines": [
+          "Vocational Rehabilitation, etc."
+        ]
+      },
+      "17": {
+        "page_number": 4,
+        "raw_label": "17",
+        "raw_title_lines": [
+          "Compensation in Fatal Cases."
+        ]
+      },
+      "18": {
+        "page_number": 4,
+        "raw_label": "18",
+        "raw_title_lines": [
+          "Compensation relating to enemy warlike actions."
+        ]
+      },
+      "19": {
+        "page_number": 4,
+        "raw_label": "19",
+        "raw_title_lines": [
+          "Period for making Payments."
+        ]
+      },
+      "20": {
+        "page_number": 4,
+        "raw_label": "20",
+        "raw_title_lines": [
+          "Proof of existence of Dependants."
+        ]
+      },
+      "21": {
+        "page_number": 4,
+        "raw_label": "21",
+        "raw_title_lines": [
+          "Permanent Total Disability."
+        ]
+      },
+      "22": {
+        "page_number": 4,
+        "raw_label": "22",
+        "raw_title_lines": [
+          "Permanent Partial Disability or Disfigurement."
+        ]
+      },
+      "23": {
+        "page_number": 4,
+        "raw_label": "23",
+        "raw_title_lines": [
+          "Period of payment for permanent total or partial disability."
+        ]
+      },
+      "24": {
+        "page_number": 4,
+        "raw_label": "24",
+        "raw_title_lines": [
+          "Temporary Total Disability."
+        ]
+      },
+      "25": {
+        "page_number": 4,
+        "raw_label": "25",
+        "raw_title_lines": [
+          "Temporary Partial Disability."
+        ]
+      },
+      "26": {
+        "page_number": 4,
+        "raw_label": "26",
+        "raw_title_lines": [
+          "Health Care and Disability Support."
+        ]
+      },
+      "27": {
+        "page_number": 4,
+        "raw_label": "27",
+        "raw_title_lines": [
+          "Duty of Accredited Medical Practitioner and other Specialists."
+        ]
+      },
+      "28": {
+        "page_number": 4,
+        "raw_label": "28",
+        "raw_title_lines": [
+          "Retirement Benefits."
+        ]
+      },
+      "29": {
+        "page_number": 4,
+        "raw_label": "29",
+        "raw_title_lines": [
+          "Payment of Retirement Benefits."
+        ]
+      },
+      "30": {
+        "page_number": 4,
+        "raw_label": "30",
+        "raw_title_lines": [
+          "Reconsidering Benefits."
+        ]
+      },
+      "31": {
+        "page_number": 4,
+        "raw_label": "31",
+        "raw_title_lines": [
+          "Powers of the Board."
+        ]
+      },
+      "32": {
+        "page_number": 4,
+        "raw_label": "32",
+        "raw_title_lines": [
+          "Functions of the Board."
+        ]
+      },
+      "33": {
+        "page_number": 4,
+        "raw_label": "33",
+        "raw_title_lines": [
+          "Employers’ Contribution to the Fund."
+        ]
+      },
+      "34": {
+        "page_number": 4,
+        "raw_label": "34",
+        "raw_title_lines": [
+          "Assessments."
+        ]
+      },
+      "35": {
+        "page_number": 4,
+        "raw_label": "35",
+        "raw_title_lines": [
+          "Assessment Payable."
+        ]
+      },
+      "36": {
+        "page_number": 4,
+        "raw_label": "36",
+        "raw_title_lines": [
+          "Liability for Assessment, etc."
+        ]
+      },
+      "37": {
+        "page_number": 4,
+        "raw_label": "37",
+        "raw_title_lines": [
+          "Assessment Rates."
+        ]
+      },
+      "38": {
+        "page_number": 4,
+        "raw_label": "38",
+        "raw_title_lines": [
+          "Employer Classification."
+        ]
+      },
+      "39": {
+        "page_number": 4,
+        "raw_label": "39",
+        "raw_title_lines": [
+          "Employer to Provide Estimate of Payrolls."
+        ]
+      },
+      "40": {
+        "page_number": 4,
+        "raw_label": "40",
+        "raw_title_lines": [
+          "Statement and Estimate of Earnings."
+        ]
+      },
+      "41": {
+        "page_number": 4,
+        "raw_label": "41",
+        "raw_title_lines": [
+          "Employer’s Experience Accounts."
+        ]
+      },
+      "42": {
+        "page_number": 4,
+        "raw_label": "42",
+        "raw_title_lines": [
+          "Super Assessment."
+        ]
+      },
+      "43": {
+        "page_number": 4,
+        "raw_label": "43",
+        "raw_title_lines": [
+          "Merit Rating."
+        ]
+      },
+      "44": {
+        "page_number": 5,
+        "raw_label": "44",
+        "raw_title_lines": [
+          "Liability for Assessment of Independent Contractors and Sub-",
+          "Contractors."
+        ]
+      },
+      "45": {
+        "page_number": 5,
+        "raw_label": "45",
+        "raw_title_lines": [
+          "Security for Payment of Assessment or Provision of Security."
+        ]
+      },
+      "46": {
+        "page_number": 5,
+        "raw_label": "46",
+        "raw_title_lines": [
+          "Penalty for Non-payment of Assessment or Provision of Security."
+        ]
+      },
+      "47": {
+        "page_number": 5,
+        "raw_label": "47",
+        "raw_title_lines": [
+          "Decision of the Board."
+        ]
+      },
+      "48": {
+        "page_number": 5,
+        "raw_label": "48",
+        "raw_title_lines": [
+          "Provisional Assessment."
+        ]
+      },
+      "49": {
+        "page_number": 5,
+        "raw_label": "49",
+        "raw_title_lines": [
+          "Temporary Industry."
+        ]
+      },
+      "50": {
+        "page_number": 5,
+        "raw_label": "50",
+        "raw_title_lines": [
+          "Employer Commencing or Recommencing a Business."
+        ]
+      },
+      "51": {
+        "page_number": 5,
+        "raw_label": "51",
+        "raw_title_lines": [
+          "Employer Ceasing to be an Employer."
+        ]
+      },
+      "52": {
+        "page_number": 5,
+        "raw_label": "52",
+        "raw_title_lines": [
+          "Records of Remuneration and Operations."
+        ]
+      },
+      "53": {
+        "page_number": 5,
+        "raw_label": "53",
+        "raw_title_lines": [
+          "Examination."
+        ]
+      },
+      "54": {
+        "page_number": 5,
+        "raw_label": "54",
+        "raw_title_lines": [
+          "Enforcement Powers."
+        ]
+      },
+      "55": {
+        "page_number": 5,
+        "raw_label": "55",
+        "raw_title_lines": [
+          "Right of Appeal."
+        ]
+      },
+      "56": {
+        "page_number": 5,
+        "raw_label": "56",
+        "raw_title_lines": [
+          "Establishment of the Compensation Fund."
+        ]
+      },
+      "57": {
+        "page_number": 5,
+        "raw_label": "57",
+        "raw_title_lines": [
+          "Management of the Fund, etc."
+        ]
+      },
+      "58": {
+        "page_number": 5,
+        "raw_label": "58",
+        "raw_title_lines": [
+          "Expenditures of the Fund."
+        ]
+      },
+      "59": {
+        "page_number": 5,
+        "raw_label": "59",
+        "raw_title_lines": [
+          "Annual Estimates, etc."
+        ]
+      },
+      "60": {
+        "page_number": 5,
+        "raw_label": "60",
+        "raw_title_lines": [
+          "Accounts and Audit."
+        ]
+      },
+      "61": {
+        "page_number": 5,
+        "raw_label": "61",
+        "raw_title_lines": [
+          "Annual Reports, etc."
+        ]
+      },
+      "62": {
+        "page_number": 5,
+        "raw_label": "62",
+        "raw_title_lines": [
+          "Establishment of the Investment Committee."
+        ]
+      },
+      "63": {
+        "page_number": 5,
+        "raw_label": "63",
+        "raw_title_lines": [
+          "Functions of the Investment Committee."
+        ]
+      },
+      "64": {
+        "page_number": 5,
+        "raw_label": "64",
+        "raw_title_lines": [
+          "Power to make Regulations."
+        ]
+      },
+      "65": {
+        "page_number": 5,
+        "raw_label": "65",
+        "raw_title_lines": [
+          "Providing False Information."
+        ]
+      },
+      "66": {
+        "page_number": 5,
+        "raw_label": "66",
+        "raw_title_lines": [
+          "Confidentiality."
+        ]
+      },
+      "67": {
+        "page_number": 5,
+        "raw_label": "67",
+        "raw_title_lines": [
+          "Non-Compellability."
+        ]
+      },
+      "68": {
+        "page_number": 5,
+        "raw_label": "68",
+        "raw_title_lines": [
+          "Records and Notices."
+        ]
+      },
+      "69": {
+        "page_number": 5,
+        "raw_label": "69",
+        "raw_title_lines": [
+          "Illiteracy."
+        ]
+      },
+      "70": {
+        "page_number": 6,
+        "raw_label": "70",
+        "raw_title_lines": [
+          "Priority as to amounts due to the Fund in the Case of employer’s",
+          "Insolvency."
+        ]
+      },
+      "71": {
+        "page_number": 6,
+        "raw_label": "71",
+        "raw_title_lines": [
+          "General Penalty."
+        ]
+      },
+      "72": {
+        "page_number": 6,
+        "raw_label": "72",
+        "raw_title_lines": [
+          "Repeal of Cap. 470 LFN and Savings."
+        ]
+      },
+      "73": {
+        "page_number": 6,
+        "raw_label": "73",
+        "raw_title_lines": [
+          "Interpretation."
+        ]
+      },
+      "74": {
+        "page_number": 6,
+        "raw_label": "74",
+        "raw_title_lines": [
+          "Citation."
+        ]
+      }
+    }
+  }
+}

@@ -29,14 +29,17 @@ _BACK_MATTER = re.compile(
 )
 _BARE_SECTION = re.compile(r"^(\d+[a-z]?)\s+(?=\(\d+\))(.+)$", re.I)
 _ACT_SECTION = re.compile(r"^[^\w(]*(\d+[a-z]?)\s*(?:[.\-–—]|,(?=\s|\())\s*(.*)$", re.I)
-_PLURAL_SCHEDULE = re.compile(r"^SCHEDULES\s*$", re.I)
+_PLURAL_SCHEDULE = re.compile(
+    r"^SCHEDULES(?:\s+(?:Sections?|s\.|ss\.)\s*\S.*)?\s*$", re.I
+)
 _REFERENCED_SCHEDULE = re.compile(
     r"^[^\w(]*SCHEDULE\s+((?:Sections?|s\.|ss\.)\s*\S.*)$", re.I
 )
 _NUMBERED_SCHEDULE = re.compile(
-    r"^[^\w(]*(FIRST|SECOND|THIRD|FOURTH|FIFTH|SIXTH|SEVENTH|EIGHTH?|NINTH|TENTH|ELEVENTH|TWELFTH|THIRTEENTH|FOURTEENTH|FIFTEENTH|\d+(?:ST|ND|RD|TH)?)\s+SCHEDULE\b\s*(.*)$",
+    r"^[^\w(]*(FIRST|SECOND|THIRD|FOURTH|FIFTH|SIXTH|SEVENTH|EIGHTH?|NINTH|TENTH|ELEVENTH|TWELFTH|THIRTEENTH|FOURTEENTH|FIFTEENTH|\d+(?:ST|ND|RD|TH)?)\s+S\s?CHEDULE\b\s*(.*)$",
     re.I,
 )
+_OUTLINE_ITEM = re.compile(r"^\d+(?:\.\d+)+\.?\s")
 _ARRANGEMENT_ENTRY = re.compile(r"^(\d+[a-z]?)\s*[.\-–—]?\s+([A-Z].+)$", re.I)
 # Title block after the arrangement: "CHAPTER L5", the long title, bracketed notes.
 _TITLE_BLOCK = re.compile(
@@ -343,7 +346,7 @@ def parse_act_pages(pages: list[SourcePage], instrument_slug: str) -> ActParse:
             else:
                 current_part = structure(ProvisionKind.PART, number, heading, page)
             continue
-        plural = _PLURAL_SCHEDULE.match(line) and line.strip().isupper()
+        plural = _PLURAL_SCHEDULE.match(line) and line.split()[0].isupper()
         if plural and index + 1 < len(lines) and _schedule_heading(lines[index + 1][1]):
             # A "SCHEDULES" title that introduces numbered schedules is not one.
             finish()
@@ -356,6 +359,11 @@ def parse_act_pages(pages: list[SourcePage], instrument_slug: str) -> ActParse:
                     f"Unnumbered plural schedule heading on page {page}"
                 )
             label = schedule[0] if schedule else None
+            if schedule and re.search(r"\bS\s+CHEDULE\b", line, re.I):
+                result.issues.append(
+                    f'Schedule heading "{line}" on page {page} has a split letter; '
+                    "the source spelling is retained"
+                )
             if label and label.upper() == "EIGHT":
                 result.issues.append(
                     f'Schedule heading "{line}" on page {page} is read as the '
@@ -376,6 +384,13 @@ def parse_act_pages(pages: list[SourcePage], instrument_slug: str) -> ActParse:
             # Unnumbered forms, tables and Roman clauses in a schedule are text
             # on the schedule node until an explicit numbered item appears.
             current = current_schedule
+            continue
+        if current_schedule and _OUTLINE_ITEM.match(line):
+            # "1.1.1 Diseases caused by ..." is an outline entry inside a schedule
+            # list, not a numbered item.
+            if current:
+                current.page_end = page
+            text_lines.append(line)
             continue
         section = _section_marker(line)
         split_section = (
@@ -402,6 +417,19 @@ def parse_act_pages(pages: list[SourcePage], instrument_slug: str) -> ActParse:
             )
             path = f"{prefix}.{'item' if current_schedule else 'section'}{number}"
             numeric = re.match(r"\d+", number)
+            if (
+                not current_schedule
+                and numeric
+                and int(numeric.group()) >= 1000
+                and current
+            ):
+                # A wrapped margin note ("Act No. 2,\n2004.") starts a line with a
+                # calendar year. No Act has a thousand sections.
+                result.issues.append(
+                    f"Year-like marker {number} on page {page} kept as text"
+                )
+                text_lines.append(line)
+                continue
             if (
                 not current_schedule
                 and numeric

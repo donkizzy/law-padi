@@ -382,3 +382,30 @@ def test_ocr_split_numbers_and_roman_first_subsection_are_read_and_flagged() -> 
     assert any(
         "read as section 74" in issue for issue in split.metadata["parser_issues"]
     )
+
+
+def test_year_markers_split_schedule_letters_and_outline_items_stay_text() -> None:
+    graph = parse_instrument_pages(
+        instrument_type="act",
+        instrument_slug="test-act",
+        pages=[
+            SourcePage(1, "ARRANGEMENT OF SECTIONS\n1. Pensions.\n2. Short title.\n"),
+            SourcePage(
+                2,
+                "1. Pensions\n(1) Benefits are paid under the Pension Reform Act,\n"
+                "2004. This line is a wrapped margin note year.\n"
+                "2. Short title\nThis Act may be cited as the Test Act.\n"
+                "SCHEDULES Section 9 (1)(d)\nFIRST S CHEDULE\nLIST OF DISEASES\n"
+                "1. Diseases Caused by Agents\n1.1. Chemical Agents\n"
+                "1.1.1 Diseases caused by lead.\n2. Target Organ Systems\n",
+            ),
+        ],
+    )
+    nodes = graph.node_by_path
+    issues = " ".join(graph.metadata["parser_issues"])
+    assert "Year-like marker 2004" in issues
+    assert "has a split letter" in issues
+    assert "test-act.section3" not in nodes
+    assert "SCHEDULES" not in (nodes["test-act.section2"].text or "")
+    assert "1.1.1 Diseases caused by lead." in nodes["test-act.schedule1.item1"].text
+    assert "test-act.schedule1.item2" in nodes
