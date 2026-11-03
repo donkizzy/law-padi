@@ -1,0 +1,670 @@
+{
+  "source": {
+    "title": "Labour Act",
+    "sha256": "cc7a9a8835ca1decd02d79d318053e3eb6f09d535a5f29a9fd02d512b6056341",
+    "source_url": "https://lawsofnigeria.placng.org/laws/L1.pdf",
+    "extracted_from": "Own Arrangement of Sections, PDF pages 1–4; main Act only",
+    "review_status": "needs_review",
+    "note": "Navigation-title evidence only. Source/current-law status and full wording remain unreviewed. Printed titles transcribed from retained arrangement images; extracted readings retained in separate notes. No body or third-party headings supplied."
+  },
+  "expected_section_count": 92,
+  "chapters": {},
+  "parts": {},
+  "sections": {
+    "1": "Manner of payment.",
+    "2": "Agreement as to place and manner of spending wages illegal.",
+    "3": "Wages not to be paid on certain premises.",
+    "4": "Advances.",
+    "5": "Deductions (including deductions for overpayment of wages).",
+    "6": "Authority of employer to open shop.",
+    "7": "Written particulars of terms of employment.",
+    "8": "Medical examination.",
+    "9": "Contracts: general.",
+    "10": "Transfer to other employment.",
+    "11": "Termination of contracts by notice.",
+    "12": "Common employment not a defence.",
+    "13": "Hours of work and overtime.",
+    "14": "Provision of transport.",
+    "15": "Periodicity of payment of wages.",
+    "16": "Sick leave.",
+    "17": "Duty of employer to provide work.",
+    "18": "Annual holidays with pay.",
+    "19": "Calculation of leave pay and sickness benefits.",
+    "20": "Redundancy.",
+    "21": "Offences.",
+    "22": "Exemptions.",
+    "23": "Prohibition of recruiting except under permit or licence.",
+    "24": "Employer’s permit.",
+    "25": "Recruiter’s licence.",
+    "26": "Restrictions on recruiting.",
+    "27": "Recruiting: miscellaneous provisions.",
+    "28": "Health.",
+    "29": "Transport.",
+    "30": "Expenses and maintenance.",
+    "31": "Repatriation.",
+    "32": "Capitation fee.",
+    "33": "Procedural requirements.",
+    "34": "Right to be accompanied by family.",
+    "35": "Deferment of wages.",
+    "36": "Power of prohibition.",
+    "37": "International agreements.",
+    "38": "Duration of contract and return passages.",
+    "39": "Procedure prior to leaving Nigeria.",
+    "40": "Special terms and conditions of contract.",
+    "41": "Surrender of permits.",
+    "42": "Embarkation check.",
+    "43": "Exemption from customs on repatriation.",
+    "44": "Right to be accompanied by family at employer’s expense.",
+    "45": "Inducing recruiting by fraud, etc.",
+    "46": "Neglect or ill-treatment.",
+    "47": "Other offences.",
+    "48": "Application.",
+    "49": "Contracts of apprenticeship.",
+    "50": "Attestation.",
+    "51": "Retention of apprentice after expiry of contract.",
+    "52": "Regulations.",
+    "53": "Offences.",
+    "54": "Maternity protection.",
+    "55": "Night work.",
+    "56": "Underground work.",
+    "57": "Regulations.",
+    "58": "Offences.",
+    "59": "General.",
+    "60": "Night work.",
+    "61": "Shipping.",
+    "62": "Register of young persons in industrial undertakings.",
+    "63": "Regulations.",
+    "64": "Offences.",
+    "65": "Regulations.",
+    "66": "Labour health areas.",
+    "67": "Regulations.",
+    "68": "Registration of employers.",
+    "69": "Labour schemes.",
+    "70": "Employment exchanges.",
+    "71": "Fee-charging employment agencies.",
+    "72": "Offences.",
+    "73": "Prohibition of forced labour.",
+    "74": "Labour required in emergencies and for communal obligations.",
+    "75": "Records.",
+    "76": "Returns.",
+    "77": "Authorised labour officers.",
+    "78": "Powers of authorised labour officers.",
+    "79": "Delegation of functions.",
+    "80": "Jurisdiction.",
+    "81": "Labour complaints.",
+    "82": "Powers of the court.",
+    "83": "Procedure.",
+    "84": "Compensation, and provision of food.",
+    "85": "Costs.",
+    "86": "Application to public authorities.",
+    "87": "Contracts made abroad.",
+    "88": "Regulations.",
+    "89": "Savings and exemptions.",
+    "90": "Repeal, and transitional and saving provisions.",
+    "91": "Interpretation.",
+    "92": "Short title."
+  },
+  "notes": {
+    "transcription_method": "Copy words and terminal punctuation as printed; join source line wraps with one space. Image/extraction differences explicitly recorded. Empty chapter/part maps are intentional: this catalogue supplies section titles only.",
+    "glitches": [
+      {
+        "section_key": "7",
+        "page_number": 1,
+        "raw_extracted_label": "7",
+        "raw_extracted_title": "Written particulars of tenns of employment.",
+        "printed_image_transcription": "Written particulars of terms of employment.",
+        "note": "Separate visual transcription from this source arrangement. Raw extracted values retained; no source file changed."
+      },
+      {
+        "section_key": "24",
+        "page_number": 2,
+        "raw_extracted_label": "24",
+        "raw_extracted_title": "Employer's permit.",
+        "printed_image_transcription": "Employer’s permit.",
+        "note": "Separate visual transcription from this source arrangement. Raw extracted values retained; no source file changed."
+      },
+      {
+        "section_key": "25",
+        "page_number": 2,
+        "raw_extracted_label": "25",
+        "raw_extracted_title": "Recruiter's licence.",
+        "printed_image_transcription": "Recruiter’s licence.",
+        "note": "Separate visual transcription from this source arrangement. Raw extracted values retained; no source file changed."
+      },
+      {
+        "section_key": "39",
+        "page_number": 2,
+        "raw_extracted_label": "39",
+        "raw_extracted_title": "Procedure prior to leaving Nigeria",
+        "printed_image_transcription": "Procedure prior to leaving Nigeria.",
+        "note": "Separate visual transcription from this source arrangement. Raw extracted values retained; no source file changed."
+      },
+      {
+        "section_key": "40",
+        "page_number": 2,
+        "raw_extracted_label": "40",
+        "raw_extracted_title": "Special terms and conditions of contra(,i.",
+        "printed_image_transcription": "Special terms and conditions of contract.",
+        "note": "Separate visual transcription from this source arrangement. Raw extracted values retained; no source file changed."
+      },
+      {
+        "section_key": "44",
+        "page_number": 2,
+        "raw_extracted_label": "44",
+        "raw_extracted_title": "Right to be accompanied by family at employer's expense.",
+        "printed_image_transcription": "Right to be accompanied by family at employer’s expense.",
+        "note": "Separate visual transcription from this source arrangement. Raw extracted values retained; no source file changed."
+      },
+      {
+        "section_key": "46",
+        "page_number": 2,
+        "raw_extracted_label": "46",
+        "raw_extracted_title": "Neglect or ill-treatment",
+        "printed_image_transcription": "Neglect or ill-treatment.",
+        "note": "Separate visual transcription from this source arrangement. Raw extracted values retained; no source file changed."
+      },
+      {
+        "section_key": "47",
+        "page_number": 2,
+        "raw_extracted_label": "4 7",
+        "raw_extracted_title": "Other offences.",
+        "printed_image_transcription": "Other offences.",
+        "note": "Separate visual transcription from this source arrangement. Raw extracted values retained; no source file changed."
+      },
+      {
+        "section_key": "48",
+        "page_number": 2,
+        "raw_extracted_label": "48",
+        "raw_extracted_title": "Application__",
+        "printed_image_transcription": "Application.",
+        "note": "Separate visual transcription from this source arrangement. Raw extracted values retained; no source file changed."
+      },
+      {
+        "section_key": "80",
+        "page_number": 4,
+        "raw_extracted_label": "80",
+        "raw_extracted_title": "Jmisdiction.",
+        "printed_image_transcription": "Jurisdiction.",
+        "note": "Separate visual transcription from this source arrangement. Raw extracted values retained; no source file changed."
+      },
+      {
+        "section_key": "82",
+        "page_number": 4,
+        "raw_extracted_label": "82",
+        "raw_extracted_title": "Powers of the court",
+        "printed_image_transcription": "Powers of the court.",
+        "note": "Separate visual transcription from this source arrangement. Raw extracted values retained; no source file changed."
+      },
+      {
+        "section_key": "74",
+        "page_number": 3,
+        "raw_arrangement_label": "74",
+        "raw_body_label": "7 4.",
+        "body_page_number": 41,
+        "note": "Body glitch recorded only; section title is taken from arrangement p3, not body p41."
+      }
+    ],
+    "raw_arrangement_extraction": {
+      "1": {
+        "page_number": 1,
+        "raw_label": "1",
+        "raw_title": "Manner of payment."
+      },
+      "2": {
+        "page_number": 1,
+        "raw_label": "2",
+        "raw_title": "Agreement as to place and manner of spending wages illegal."
+      },
+      "3": {
+        "page_number": 1,
+        "raw_label": "3",
+        "raw_title": "Wages not to be paid on certain premises."
+      },
+      "4": {
+        "page_number": 1,
+        "raw_label": "4",
+        "raw_title": "Advances."
+      },
+      "5": {
+        "page_number": 1,
+        "raw_label": "5",
+        "raw_title": "Deductions (including deductions for overpayment of wages)."
+      },
+      "6": {
+        "page_number": 1,
+        "raw_label": "6",
+        "raw_title": "Authority of employer to open shop."
+      },
+      "7": {
+        "page_number": 1,
+        "raw_label": "7",
+        "raw_title": "Written particulars of tenns of employment."
+      },
+      "8": {
+        "page_number": 1,
+        "raw_label": "8",
+        "raw_title": "Medical examination."
+      },
+      "9": {
+        "page_number": 1,
+        "raw_label": "9",
+        "raw_title": "Contracts: general."
+      },
+      "10": {
+        "page_number": 1,
+        "raw_label": "10",
+        "raw_title": "Transfer to other employment."
+      },
+      "11": {
+        "page_number": 1,
+        "raw_label": "11",
+        "raw_title": "Termination of contracts by notice."
+      },
+      "12": {
+        "page_number": 1,
+        "raw_label": "12",
+        "raw_title": "Common employment not a defence."
+      },
+      "13": {
+        "page_number": 1,
+        "raw_label": "13",
+        "raw_title": "Hours of work and overtime."
+      },
+      "14": {
+        "page_number": 1,
+        "raw_label": "14",
+        "raw_title": "Provision of transport."
+      },
+      "15": {
+        "page_number": 1,
+        "raw_label": "15",
+        "raw_title": "Periodicity of payment of wages."
+      },
+      "16": {
+        "page_number": 1,
+        "raw_label": "16",
+        "raw_title": "Sick leave."
+      },
+      "17": {
+        "page_number": 1,
+        "raw_label": "17",
+        "raw_title": "Duty of employer to provide work."
+      },
+      "18": {
+        "page_number": 1,
+        "raw_label": "18",
+        "raw_title": "Annual holidays with pay."
+      },
+      "19": {
+        "page_number": 1,
+        "raw_label": "19",
+        "raw_title": "Calculation of leave pay and sickness benefits."
+      },
+      "20": {
+        "page_number": 1,
+        "raw_label": "20",
+        "raw_title": "Redundancy."
+      },
+      "21": {
+        "page_number": 1,
+        "raw_label": "21",
+        "raw_title": "Offences."
+      },
+      "22": {
+        "page_number": 1,
+        "raw_label": "22",
+        "raw_title": "Exemptions."
+      },
+      "23": {
+        "page_number": 2,
+        "raw_label": "23",
+        "raw_title": "Prohibition of recruiting except under permit or licence."
+      },
+      "24": {
+        "page_number": 2,
+        "raw_label": "24",
+        "raw_title": "Employer's permit."
+      },
+      "25": {
+        "page_number": 2,
+        "raw_label": "25",
+        "raw_title": "Recruiter's licence."
+      },
+      "26": {
+        "page_number": 2,
+        "raw_label": "26",
+        "raw_title": "Restrictions on recruiting."
+      },
+      "27": {
+        "page_number": 2,
+        "raw_label": "27",
+        "raw_title": "Recruiting: miscellaneous provisions."
+      },
+      "28": {
+        "page_number": 2,
+        "raw_label": "28",
+        "raw_title": "Health."
+      },
+      "29": {
+        "page_number": 2,
+        "raw_label": "29",
+        "raw_title": "Transport."
+      },
+      "30": {
+        "page_number": 2,
+        "raw_label": "30",
+        "raw_title": "Expenses and maintenance."
+      },
+      "31": {
+        "page_number": 2,
+        "raw_label": "31",
+        "raw_title": "Repatriation."
+      },
+      "32": {
+        "page_number": 2,
+        "raw_label": "32",
+        "raw_title": "Capitation fee."
+      },
+      "33": {
+        "page_number": 2,
+        "raw_label": "33",
+        "raw_title": "Procedural requirements."
+      },
+      "34": {
+        "page_number": 2,
+        "raw_label": "34",
+        "raw_title": "Right to be accompanied by family."
+      },
+      "35": {
+        "page_number": 2,
+        "raw_label": "35",
+        "raw_title": "Deferment of wages."
+      },
+      "36": {
+        "page_number": 2,
+        "raw_label": "36",
+        "raw_title": "Power of prohibition."
+      },
+      "37": {
+        "page_number": 2,
+        "raw_label": "37",
+        "raw_title": "International agreements."
+      },
+      "38": {
+        "page_number": 2,
+        "raw_label": "38",
+        "raw_title": "Duration of contract and return passages."
+      },
+      "39": {
+        "page_number": 2,
+        "raw_label": "39",
+        "raw_title": "Procedure prior to leaving Nigeria"
+      },
+      "40": {
+        "page_number": 2,
+        "raw_label": "40",
+        "raw_title": "Special terms and conditions of contra(,i."
+      },
+      "41": {
+        "page_number": 2,
+        "raw_label": "41",
+        "raw_title": "Surrender of permits."
+      },
+      "42": {
+        "page_number": 2,
+        "raw_label": "42",
+        "raw_title": "Embarkation check."
+      },
+      "43": {
+        "page_number": 2,
+        "raw_label": "43",
+        "raw_title": "Exemption from customs on repatriation."
+      },
+      "44": {
+        "page_number": 2,
+        "raw_label": "44",
+        "raw_title": "Right to be accompanied by family at employer's expense."
+      },
+      "45": {
+        "page_number": 2,
+        "raw_label": "45",
+        "raw_title": "Inducing recruiting by fraud, etc."
+      },
+      "46": {
+        "page_number": 2,
+        "raw_label": "46",
+        "raw_title": "Neglect or ill-treatment"
+      },
+      "47": {
+        "page_number": 2,
+        "raw_label": "4 7",
+        "raw_title": "Other offences."
+      },
+      "48": {
+        "page_number": 2,
+        "raw_label": "48",
+        "raw_title": "Application__"
+      },
+      "49": {
+        "page_number": 2,
+        "raw_label": "49",
+        "raw_title": "Contracts of apprenticeship."
+      },
+      "50": {
+        "page_number": 2,
+        "raw_label": "50",
+        "raw_title": "Attestation."
+      },
+      "51": {
+        "page_number": 3,
+        "raw_label": "51",
+        "raw_title": "Retention of apprentice after expiry of contract."
+      },
+      "52": {
+        "page_number": 3,
+        "raw_label": "52",
+        "raw_title": "Regulations."
+      },
+      "53": {
+        "page_number": 3,
+        "raw_label": "53",
+        "raw_title": "Offences."
+      },
+      "54": {
+        "page_number": 3,
+        "raw_label": "54",
+        "raw_title": "Maternity protection."
+      },
+      "55": {
+        "page_number": 3,
+        "raw_label": "55",
+        "raw_title": "Night work."
+      },
+      "56": {
+        "page_number": 3,
+        "raw_label": "56",
+        "raw_title": "Underground work."
+      },
+      "57": {
+        "page_number": 3,
+        "raw_label": "57",
+        "raw_title": "Regulations."
+      },
+      "58": {
+        "page_number": 3,
+        "raw_label": "58",
+        "raw_title": "Offences."
+      },
+      "59": {
+        "page_number": 3,
+        "raw_label": "59",
+        "raw_title": "General."
+      },
+      "60": {
+        "page_number": 3,
+        "raw_label": "60",
+        "raw_title": "Night work."
+      },
+      "61": {
+        "page_number": 3,
+        "raw_label": "61",
+        "raw_title": "Shipping."
+      },
+      "62": {
+        "page_number": 3,
+        "raw_label": "62",
+        "raw_title": "Register of young persons in industrial undertakings."
+      },
+      "63": {
+        "page_number": 3,
+        "raw_label": "63",
+        "raw_title": "Regulations."
+      },
+      "64": {
+        "page_number": 3,
+        "raw_label": "64",
+        "raw_title": "Offences."
+      },
+      "65": {
+        "page_number": 3,
+        "raw_label": "65",
+        "raw_title": "Regulations."
+      },
+      "66": {
+        "page_number": 3,
+        "raw_label": "66",
+        "raw_title": "Labour health areas."
+      },
+      "67": {
+        "page_number": 3,
+        "raw_label": "67",
+        "raw_title": "Regulations."
+      },
+      "68": {
+        "page_number": 3,
+        "raw_label": "68",
+        "raw_title": "Registration of employers."
+      },
+      "69": {
+        "page_number": 3,
+        "raw_label": "69",
+        "raw_title": "Labour schemes."
+      },
+      "70": {
+        "page_number": 3,
+        "raw_label": "70",
+        "raw_title": "Employment exchanges."
+      },
+      "71": {
+        "page_number": 3,
+        "raw_label": "71",
+        "raw_title": "Fee-charging employment agencies."
+      },
+      "72": {
+        "page_number": 3,
+        "raw_label": "72",
+        "raw_title": "Offences."
+      },
+      "73": {
+        "page_number": 3,
+        "raw_label": "73",
+        "raw_title": "Prohibition of forced labour."
+      },
+      "74": {
+        "page_number": 3,
+        "raw_label": "74",
+        "raw_title": "Labour required in emergencies and for communal obligations."
+      },
+      "75": {
+        "page_number": 3,
+        "raw_label": "75",
+        "raw_title": "Records."
+      },
+      "76": {
+        "page_number": 3,
+        "raw_label": "76",
+        "raw_title": "Returns."
+      },
+      "77": {
+        "page_number": 3,
+        "raw_label": "77",
+        "raw_title": "Authorised labour officers."
+      },
+      "78": {
+        "page_number": 4,
+        "raw_label": "78",
+        "raw_title": "Powers of authorised labour officers."
+      },
+      "79": {
+        "page_number": 4,
+        "raw_label": "79",
+        "raw_title": "Delegation of functions."
+      },
+      "80": {
+        "page_number": 4,
+        "raw_label": "80",
+        "raw_title": "Jmisdiction."
+      },
+      "81": {
+        "page_number": 4,
+        "raw_label": "81",
+        "raw_title": "Labour complaints."
+      },
+      "82": {
+        "page_number": 4,
+        "raw_label": "82",
+        "raw_title": "Powers of the court"
+      },
+      "83": {
+        "page_number": 4,
+        "raw_label": "83",
+        "raw_title": "Procedure."
+      },
+      "84": {
+        "page_number": 4,
+        "raw_label": "84",
+        "raw_title": "Compensation, and provision of food."
+      },
+      "85": {
+        "page_number": 4,
+        "raw_label": "85",
+        "raw_title": "Costs."
+      },
+      "86": {
+        "page_number": 4,
+        "raw_label": "86",
+        "raw_title": "Application to public authorities."
+      },
+      "87": {
+        "page_number": 4,
+        "raw_label": "87",
+        "raw_title": "Contracts made abroad."
+      },
+      "88": {
+        "page_number": 4,
+        "raw_label": "88",
+        "raw_title": "Regulations."
+      },
+      "89": {
+        "page_number": 4,
+        "raw_label": "89",
+        "raw_title": "Savings and exemptions."
+      },
+      "90": {
+        "page_number": 4,
+        "raw_label": "90",
+        "raw_title": "Repeal, and transitional and saving provisions."
+      },
+      "91": {
+        "page_number": 4,
+        "raw_label": "91",
+        "raw_title": "Interpretation."
+      },
+      "92": {
+        "page_number": 4,
+        "raw_label": "92",
+        "raw_title": "Short title."
+      }
+    }
+  }
+}

@@ -320,3 +320,65 @@ def test_schedules_title_ordinals_and_source_spelling() -> None:
     )
     schedules = {n.number for n in graph.nodes if n.kind == "schedule"}
     assert schedules == {"8", "11"}
+
+
+def test_title_block_after_arrangement_and_subsidiary_legislation_back_matter() -> None:
+    graph = parse_instrument_pages(
+        instrument_type="act",
+        instrument_slug="test-act",
+        pages=[
+            SourcePage(
+                1,
+                "ARRANGEMENT OF SECTIONS\n1. First heading.\n2. Short title.\n"
+                "CHAPTER L5\nTEST ACT\nAn Act to do a synthetic thing.\n[1978 No. 6.]\n"
+                "1. Synthetic first section.\n(1) A synthetic clause.\n2. Short title\nThis Act may be cited as the Test Act.\n"
+                "TEST ACT\nSUBSIDIARY LEGISLATION\nNo Subsidiary",
+            )
+        ],
+    )
+    nodes = graph.node_by_path
+    assert nodes["test-act.section2"].heading == "Short title."
+    assert nodes["test-act.section2"].text == "This Act may be cited as the Test Act."
+
+
+def test_ocr_split_numbers_and_roman_first_subsection_are_read_and_flagged() -> None:
+    graph = parse_instrument_pages(
+        instrument_type="act",
+        instrument_slug="test-act",
+        pages=[
+            SourcePage(
+                1,
+                "ARRANGEMENT OF SECTIONS\n1. Manner of payment.\n2. Advances.\n"
+                "3. Records.\n4 . Offences.\n1 0. Short title.\n",
+            ),
+            SourcePage(
+                2,
+                "1. Manner of payment\n(I) Wages are paid in legal tender.\n"
+                "2. Advances\n(1) An advance is limited.\n"
+                "3. Records\nAn employer keeps records.\n",
+            ),
+        ],
+    )
+    issues = " ".join(graph.metadata["parser_issues"])
+    # The arrangement is read through the "(I)" first subsection, so section 1
+    # is a body section and not an arrangement repeat.
+    assert "Arrangement repeats" not in issues
+    assert graph.node_by_path["test-act.section1"].text.startswith("(I) Wages")
+
+    pages = [
+        SourcePage(
+            1, "ARRANGEMENT OF SECTIONS\n73. Forced labour.\n7 4. Emergencies.\n"
+        ),
+        SourcePage(
+            2,
+            "73. Forced labour\n(1) A person shall not require forced labour.\n"
+            "7 4. Emergencies\n(1) The Minister may make regulations.\n",
+        ),
+    ]
+    split = parse_instrument_pages(
+        instrument_type="act", instrument_slug="test-act", pages=pages
+    )
+    assert "test-act.section74" in split.node_by_path
+    assert any(
+        "read as section 74" in issue for issue in split.metadata["parser_issues"]
+    )

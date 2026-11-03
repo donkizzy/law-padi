@@ -24,7 +24,7 @@ ACT_PARSER_VERSION = "act-hierarchy-v3"
 _ARRANGEMENT = re.compile(r"arrangement\s+of\s+(?:sections|provisions)", re.I)
 _ENACTMENT = re.compile(r"^[^\w(]*(?:BE\s+IT\s+)?ENACTED\b", re.I)
 _BACK_MATTER = re.compile(
-    r"^(?:I\s+ASSENT|I,?\s+certify\b|EXPLANATORY\s+MEMORANDUM\s*$|Schedule\s+to\s+(?:the\s+)?(?:Administration|Nigeria Police).+Bill|Printed\s+and\s+Published)\b",
+    r"^(?:I\s+ASSENT|I,?\s+certify\b|EXPLANATORY\s+MEMORANDUM\s*$|SUBSIDIARY\s+LEGISLATION\s*$|Schedule\s+to\s+(?:the\s+)?(?:Administration|Nigeria Police).+Bill|Printed\s+and\s+Published)\b",
     re.I,
 )
 _BARE_SECTION = re.compile(r"^(\d+[a-z]?)\s+(?=\(\d+\))(.+)$", re.I)
@@ -38,6 +38,26 @@ _NUMBERED_SCHEDULE = re.compile(
     re.I,
 )
 _ARRANGEMENT_ENTRY = re.compile(r"^(\d+[a-z]?)\s*[.\-–—]?\s+([A-Z].+)$", re.I)
+# Title block after the arrangement: "CHAPTER L5", the long title, bracketed notes.
+_TITLE_BLOCK = re.compile(
+    r"^(?:CHAPTER\s+[A-Z]*\d+\b|An\s+Act\s+to\b|\[.*|[A-Z][A-Z\s,()&-]{3,}\bACT(?:,?\s+\d{4})?$)",
+    re.I,
+)
+
+
+# OCR splits some two-digit numbers ("7 4. Labour required ..."). A split marker
+# is only read as a section when the joined number is the next one in sequence.
+_SPLIT_NUMBER = re.compile(r"^(\d)\s(\d)[._]*\s+(\S.*)$")
+# A text layer may spell the first subsection "(I)" or "(l)" for "(1)".
+_FIRST_SUBSECTION = re.compile(r"^\((?:1|I|l)\)")
+
+
+def _next_in_sequence(line: str, previous: int) -> tuple[str, str] | None:
+    """Return (number, rest) when line is a split two-digit number that follows previous."""
+    match = _SPLIT_NUMBER.match(line)
+    if match and int(match.group(1) + match.group(2)) == previous + 1:
+        return match.group(1) + match.group(2), match.group(3)
+    return None
 
 
 def _section_marker(line: str) -> re.Match[str] | None:
@@ -134,8 +154,8 @@ def _body_start(lines: list[tuple[int, str]]) -> int:
     for i in range(arrangement + 1, len(lines)):
         match = _section_marker(lines[i][1])
         if match and (
-            match.group(2).startswith("(1)")
-            or (i + 1 < len(lines) and lines[i + 1][1].startswith("(1)"))
+            _FIRST_SUBSECTION.match(match.group(2))
+            or (i + 1 < len(lines) and _FIRST_SUBSECTION.match(lines[i + 1][1]))
         ):
             # Retain a preceding part heading on the same body page.
             return next(
@@ -157,6 +177,7 @@ def _arrangement(
     issues: list[str] = []
     active = False
     current: str | None = None
+    previous = 0
     for page, line in lines:
         if _ARRANGEMENT.search(line):
             active = True
@@ -174,14 +195,24 @@ def _arrangement(
             current = None
             continue
         match = _section_marker(line) or _ARRANGEMENT_ENTRY.match(line)
-        if match and match.group(2).strip():
-            current = match.group(1).lower()
-            title = match.group(2).strip()
+        split = None if match else _next_in_sequence(line, previous)
+        if split:
+            issues.append(
+                f"Arrangement entry '{line[:40]}' on page {page} is read as section "
+                f"{split[0]}; the source spacing is not retained"
+            )
+        entry = (match.group(1).lower(), match.group(2)) if match else split
+        if entry and entry[1].strip():
+            current, title = entry[0], entry[1].strip()
+            if current.isdigit():
+                previous = int(current)
             if current in titles:
                 issues.append(f"Arrangement repeats section {current}")
             titles[current] = title
         elif re.fullmatch(r"\d+[a-z]?[.,]?", line, re.I):
             issues.append(f"Unresolved arrangement marker on page {page}: {line}")
+            current = None
+        elif current and _TITLE_BLOCK.match(line):
             current = None
         elif current:
             titles[current] += " " + line
@@ -271,6 +302,9 @@ def parse_act_pages(pages: list[SourcePage], instrument_slug: str) -> ActParse:
     for index in range(start, len(lines)):
         page, line = lines[index]
         if _BACK_MATTER.match(line):
+            # A repeated all-caps Act title just before the back matter is not text.
+            while text_lines and _TITLE_BLOCK.match(text_lines[-1]):
+                text_lines.pop()
             finish()
             break
         if _ARRANGEMENT.search(line):
@@ -344,6 +378,17 @@ def parse_act_pages(pages: list[SourcePage], instrument_slug: str) -> ActParse:
             current = current_schedule
             continue
         section = _section_marker(line)
+        split_section = (
+            None
+            if section or current_schedule
+            else _next_in_sequence(line, last_section)
+        )
+        if split_section and split_section[0] in titles:
+            result.issues.append(
+                f"Section marker '{line[:40]}' on page {page} is read as section "
+                f"{split_section[0]}; the source spacing is not retained"
+            )
+            section = _section_marker(f"{split_section[0]}. {split_section[1]}")
         if section:
             number, rest = section.group(1).lower(), section.group(2).strip()
             # "1.—(1)" marks the section number; the dash is not wording.

@@ -1,0 +1,342 @@
+{
+  "source": {
+    "title": "Land Use Act 1978",
+    "sha256": "f6c4941db41a264ba32f94acf693b4eefbbfb37a4467daa954e6b325aaa71553",
+    "source_url": "https://faolex.fao.org/docs/pdf/nig67625.pdf",
+    "extracted_from": "Own Arrangement of Sections, PDF pages 1–3; main Act only",
+    "review_status": "needs_review",
+    "note": "Navigation-title evidence only. Source/current-law status and full wording remain unreviewed. Printed titles transcribed from retained arrangement images; extracted readings retained in separate notes. No body or third-party headings supplied."
+  },
+  "expected_section_count": 52,
+  "chapters": {},
+  "parts": {},
+  "sections": {
+    "1": "Vesting of all land in the State.",
+    "2": "Control and management of land; advisory bodies.",
+    "3": "Designation of urban areas.",
+    "4": "Applicable law for the interim management of land.",
+    "5": "Powers of the Governor in relation to land.",
+    "6": "Powers of local government in relation to land not in urban areas.",
+    "7": "Restriction on rights of persons under the age of 21.",
+    "8": "Special contracts.",
+    "9": "Certificates of occupancy.",
+    "10": "Conditions and provisions implied in certificate of occupancy.",
+    "11": "Power of Governor or public officer to enter and inspect land and improvements.",
+    "12": "Power of Governor to grant licences to take building materials.",
+    "13": "Duty of occupier of statutory right of occupancy to maintain beacons.",
+    "14": "Exclusive rights of occupiers.",
+    "15": "The right of improvements.",
+    "16": "Principles to be observed in fixing and revising rents.",
+    "17": "Power of Governor to grant rights of occupancy free of rent or at reduced rent.",
+    "18": "Acceptance of rent not to operate as a waiver of forfeiture.",
+    "19": "Penal rent.",
+    "20": "Additional penal rent for unlawful alienation.",
+    "21": "Prohibition of alienation of customary right of occupancy except with requisite consent or approval.",
+    "22": "Prohibition of alienation of statutory right of occupancy without the consent of Governor.",
+    "23": "Sub-underleases,",
+    "24": "Devolution of rights of occupancy on death.",
+    "25": "Effect of deed or will where non-customary law applies.",
+    "26": "Null-and-void transactions and instruments.",
+    "27": "Surrender of statutory rights of occupancy.",
+    "28": "Power of Governor to revoke rights of occupancy.",
+    "29": "Compensation payable on revocation of right of occupancy by Governor in certain cases.",
+    "30": "Reference of dispute as to compensation.",
+    "31": "Exclusion of the application of the Public Lands Acquisition (Miscellaneous Provisions) Act 1976.",
+    "32": "Debt due to Government not extinguished by revocation.",
+    "33": "Option to accept resettlement in case of revocation of right of occupancy.",
+    "34": "Transitional provisions on land in urban areas.",
+    "35": "Compensation for improvements in certain cases.",
+    "36": "Transitional provisions on land not in urban areas.",
+    "37": "Penalty for false claims, etc., in respect of land.",
+    "38": "Preservation of power of Governor to revoke rights of occupancy.",
+    "39": "Jurisdiction of High Courts.",
+    "40": "Special provisions in respect of pending proceedings.",
+    "41": "Jurisdiction of area courts or customary courts, etc.",
+    "42": "Proceedings for recovery of rent in respect of certificate of occupancy, etc.",
+    "43": "Prohibition of, and penalties for, unauthorised use of land.",
+    "44": "Service of notices.",
+    "45": "Delegation of powers.",
+    "46": "Power to make regulations.",
+    "47": "Exclusion of certain proceedings.",
+    "48": "Modification of existing laws.",
+    "49": "Exemption with respect to Federal Government lands, etc.",
+    "50": "Validity of laws, etc.",
+    "51": "Interpretation.",
+    "52": "Short title."
+  },
+  "notes": {
+    "transcription_method": "Copy words and terminal punctuation as printed; join source line wraps with one space. Image/extraction differences explicitly recorded. Empty chapter/part maps are intentional: this catalogue supplies section titles only.",
+    "glitches": [
+      {
+        "section_key": "23",
+        "note": "Arrangement prints Sub-underleases, with terminal comma; retained."
+      },
+      {
+        "section_key": "31",
+        "note": "Raw arrangement label is spaced 31 .; title wraps onto Act 1976. Join line wrap with one space, retaining words and punctuation."
+      }
+    ],
+    "raw_arrangement_extraction": {
+      "1": {
+        "page_number": 1,
+        "raw_label": "1",
+        "raw_title": "Vesting of all land in the State."
+      },
+      "2": {
+        "page_number": 1,
+        "raw_label": "2",
+        "raw_title": "Control and management of land; advisory bodies."
+      },
+      "3": {
+        "page_number": 1,
+        "raw_label": "3",
+        "raw_title": "Designation of urban areas."
+      },
+      "4": {
+        "page_number": 1,
+        "raw_label": "4",
+        "raw_title": "Applicable law for the interim management of land."
+      },
+      "5": {
+        "page_number": 1,
+        "raw_label": "5",
+        "raw_title": "Powers of the Governor in relation to land."
+      },
+      "6": {
+        "page_number": 1,
+        "raw_label": "6",
+        "raw_title": "Powers of local government in relation to land not in urban areas."
+      },
+      "7": {
+        "page_number": 1,
+        "raw_label": "7",
+        "raw_title": "Restriction on rights of persons under the age of 21."
+      },
+      "8": {
+        "page_number": 1,
+        "raw_label": "8",
+        "raw_title": "Special contracts."
+      },
+      "9": {
+        "page_number": 1,
+        "raw_label": "9",
+        "raw_title": "Certificates of occupancy."
+      },
+      "10": {
+        "page_number": 1,
+        "raw_label": "10",
+        "raw_title": "Conditions and provisions implied in certificate of occupancy."
+      },
+      "11": {
+        "page_number": 1,
+        "raw_label": "11",
+        "raw_title": "Power of Governor or public officer to enter and inspect land and improvements."
+      },
+      "12": {
+        "page_number": 1,
+        "raw_label": "12",
+        "raw_title": "Power of Governor to grant licences to take building materials."
+      },
+      "13": {
+        "page_number": 1,
+        "raw_label": "13",
+        "raw_title": "Duty of occupier of statutory right of occupancy to maintain beacons."
+      },
+      "14": {
+        "page_number": 1,
+        "raw_label": "14",
+        "raw_title": "Exclusive rights of occupiers."
+      },
+      "15": {
+        "page_number": 1,
+        "raw_label": "15",
+        "raw_title": "The right of improvements."
+      },
+      "16": {
+        "page_number": 1,
+        "raw_label": "16",
+        "raw_title": "Principles to be observed in fixing and revising rents."
+      },
+      "17": {
+        "page_number": 1,
+        "raw_label": "17",
+        "raw_title": "Power of Governor to grant rights of occupancy free of rent or at reduced rent."
+      },
+      "18": {
+        "page_number": 1,
+        "raw_label": "18",
+        "raw_title": "Acceptance of rent not to operate as a waiver of forfeiture."
+      },
+      "19": {
+        "page_number": 1,
+        "raw_label": "19",
+        "raw_title": "Penal rent."
+      },
+      "20": {
+        "page_number": 1,
+        "raw_label": "20",
+        "raw_title": "Additional penal rent for unlawful alienation."
+      },
+      "21": {
+        "page_number": 2,
+        "raw_label": "21",
+        "raw_title": "Prohibition of alienation of customary right of occupancy except with requisite consent or approval."
+      },
+      "22": {
+        "page_number": 2,
+        "raw_label": "22",
+        "raw_title": "Prohibition of alienation of statutory right of occupancy without the consent of Governor."
+      },
+      "23": {
+        "page_number": 2,
+        "raw_label": "23",
+        "raw_title": "Sub-underleases,"
+      },
+      "24": {
+        "page_number": 2,
+        "raw_label": "24",
+        "raw_title": "Devolution of rights of occupancy on death."
+      },
+      "25": {
+        "page_number": 2,
+        "raw_label": "25",
+        "raw_title": "Effect of deed or will where non-customary law applies."
+      },
+      "26": {
+        "page_number": 2,
+        "raw_label": "26",
+        "raw_title": "Null-and-void transactions and instruments."
+      },
+      "27": {
+        "page_number": 2,
+        "raw_label": "27",
+        "raw_title": "Surrender of statutory rights of occupancy."
+      },
+      "28": {
+        "page_number": 2,
+        "raw_label": "28",
+        "raw_title": "Power of Governor to revoke rights of occupancy."
+      },
+      "29": {
+        "page_number": 2,
+        "raw_label": "29",
+        "raw_title": "Compensation payable on revocation of right of occupancy by Governor in certain cases."
+      },
+      "30": {
+        "page_number": 2,
+        "raw_label": "30",
+        "raw_title": "Reference of dispute as to compensation."
+      },
+      "31": {
+        "page_number": 2,
+        "raw_label": "31",
+        "raw_title": "Exclusion of the application of the Public Lands Acquisition (Miscellaneous Provisions) Act 1976."
+      },
+      "32": {
+        "page_number": 2,
+        "raw_label": "32",
+        "raw_title": "Debt due to Government not extinguished by revocation."
+      },
+      "33": {
+        "page_number": 2,
+        "raw_label": "33",
+        "raw_title": "Option to accept resettlement in case of revocation of right of occupancy."
+      },
+      "34": {
+        "page_number": 2,
+        "raw_label": "34",
+        "raw_title": "Transitional provisions on land in urban areas."
+      },
+      "35": {
+        "page_number": 2,
+        "raw_label": "35",
+        "raw_title": "Compensation for improvements in certain cases."
+      },
+      "36": {
+        "page_number": 2,
+        "raw_label": "36",
+        "raw_title": "Transitional provisions on land not in urban areas."
+      },
+      "37": {
+        "page_number": 2,
+        "raw_label": "37",
+        "raw_title": "Penalty for false claims, etc., in respect of land."
+      },
+      "38": {
+        "page_number": 2,
+        "raw_label": "38",
+        "raw_title": "Preservation of power of Governor to revoke rights of occupancy."
+      },
+      "39": {
+        "page_number": 2,
+        "raw_label": "39",
+        "raw_title": "Jurisdiction of High Courts."
+      },
+      "40": {
+        "page_number": 2,
+        "raw_label": "40",
+        "raw_title": "Special provisions in respect of pending proceedings."
+      },
+      "41": {
+        "page_number": 2,
+        "raw_label": "41",
+        "raw_title": "Jurisdiction of area courts or customary courts, etc."
+      },
+      "42": {
+        "page_number": 2,
+        "raw_label": "42",
+        "raw_title": "Proceedings for recovery of rent in respect of certificate of occupancy, etc."
+      },
+      "43": {
+        "page_number": 2,
+        "raw_label": "43",
+        "raw_title": "Prohibition of, and penalties for, unauthorised use of land."
+      },
+      "44": {
+        "page_number": 2,
+        "raw_label": "44",
+        "raw_title": "Service of notices."
+      },
+      "45": {
+        "page_number": 3,
+        "raw_label": "45",
+        "raw_title": "Delegation of powers."
+      },
+      "46": {
+        "page_number": 3,
+        "raw_label": "46",
+        "raw_title": "Power to make regulations."
+      },
+      "47": {
+        "page_number": 3,
+        "raw_label": "47",
+        "raw_title": "Exclusion of certain proceedings."
+      },
+      "48": {
+        "page_number": 3,
+        "raw_label": "48",
+        "raw_title": "Modification of existing laws."
+      },
+      "49": {
+        "page_number": 3,
+        "raw_label": "49",
+        "raw_title": "Exemption with respect to Federal Government lands, etc."
+      },
+      "50": {
+        "page_number": 3,
+        "raw_label": "50",
+        "raw_title": "Validity of laws, etc."
+      },
+      "51": {
+        "page_number": 3,
+        "raw_label": "51",
+        "raw_title": "Interpretation."
+      },
+      "52": {
+        "page_number": 3,
+        "raw_label": "52",
+        "raw_title": "Short title."
+      }
+    }
+  }
+}
