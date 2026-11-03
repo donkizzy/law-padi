@@ -242,3 +242,81 @@ def test_catalogue_count_cannot_replace_a_missing_source_arrangement() -> None:
     assert issue.blocking
     assert issue.evidence["arrangement_missing"]
     assert issue.evidence["missing_arrangement_sections"] == ["1"]
+
+
+def _synthetic_gazette_pages() -> list[SourcePage]:
+    header = "A 7{n} 2023 No. 1 Synthetic Act, 2023"
+    return [
+        SourcePage(
+            1,
+            header.format(n=17)
+            + "\nARRANGEMENT OF SECTIONS\nPART I - PRELIMINARY\n1. First heading.\n2. Second heading.\n"
+            "3. Third heading.\nSCHEDULE\n" + header.format(n=17),
+        ),
+        SourcePage(
+            2,
+            header.format(n=18)
+            + "\nENACTED by the National Assembly\nPART I - PRELIMINARY\n"
+            "1.—(1) Synthetic first clause.\n(2) Synthetic second clause.\nSchedule\n"
+            "2. Synthetic second section refers to Part XII of this Act\n"
+            "Part XII of this Act with respect to the matter, and\n"
+            + header.format(n=18),
+        ),
+        SourcePage(
+            3,
+            header.format(n=19)
+            + "\n3.—(1) Synthetic third clause, applied as in section\n"
+            "2 (1) of the Synthetic Act.\n"
+            "2 (1) wrapped cross reference kept as text.\n[First Schedule.]\n"
+            "SCHEDULE Section 3(2)\n1. Synthetic schedule item.\n"
+            "I, certify, in accordance with the Authentication Act.\n"
+            "4. Not a section.\n" + header.format(n=19),
+        ),
+    ]
+
+
+def test_gazette_layout_headers_margin_notes_and_wrapped_references() -> None:
+    graph = parse_instrument_pages(
+        instrument_type="act",
+        instrument_slug="test-act",
+        pages=_synthetic_gazette_pages(),
+    )
+    nodes = graph.node_by_path
+    sections = [node.number for node in graph.nodes if node.kind == "section"]
+    assert sections == ["1", "2", "3"]
+    assert nodes["test-act.part1.section1.subsection1"].text.startswith(
+        "(1) Synthetic first"
+    )
+    assert "test-act.part1.section1.subsection2" in nodes
+    # Running page headers are dropped; margin note "Schedule" is not a heading.
+    assert all("No. 1 Synthetic Act" not in (node.text or "") for node in graph.nodes)
+    assert not any(
+        node.kind == "schedule" and node.page_start == 2 for node in graph.nodes
+    )
+    # Wrapped "Part XII of this Act" is text; "2 (1)" after section 3 is text.
+    assert not any(node.kind == "part" and node.number == "12" for node in graph.nodes)
+    assert "wrapped cross reference kept as text." in (
+        nodes["test-act.part1.section3"].text or ""
+    )
+    assert "[First Schedule.]" in (nodes["test-act.part1.section3"].text or "")
+    # A capitalised heading with a section reference opens the schedule; the
+    # certification line ends the body.
+    assert nodes["test-act.schedule1.item1"].text == "Synthetic schedule item."
+    assert not [n for n in graph.nodes if n.number == "4"]
+
+
+def test_schedules_title_ordinals_and_source_spelling() -> None:
+    graph = parse_instrument_pages(
+        instrument_type="act",
+        instrument_slug="test-act",
+        pages=[
+            SourcePage(
+                1,
+                "ARRANGEMENT OF SECTIONS\n1. First heading.\nENACTED by the National Assembly\n"
+                "1. Synthetic section text.\nSCHEDULES\nEIGHT SCHEDULE\nSynthetic title\n"
+                "1. Item.\nELEVENTH SCHEDULE\n1. Another item.",
+            )
+        ],
+    )
+    schedules = {n.number for n in graph.nodes if n.kind == "schedule"}
+    assert schedules == {"8", "11"}

@@ -666,6 +666,11 @@ def _normalize_number(value: str) -> str:
         "EIGHTH": "8",
         "NINTH": "9",
         "TENTH": "10",
+        "ELEVENTH": "11",
+        "TWELFTH": "12",
+        "THIRTEENTH": "13",
+        "FOURTEENTH": "14",
+        "FIFTEENTH": "15",
     }.get(cleaned)
     if ordinal:
         return ordinal
