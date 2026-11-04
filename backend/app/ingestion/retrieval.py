@@ -16,6 +16,13 @@ from app.legal.retrieval_phrasing import retrieval_phrasing
 
 DEFAULT_MAX_RETRIEVAL_TEXT_CHARS = 2800
 _CLAUSE_BOUNDARY_RE = re.compile(r"(?<=[.;:])\s+(?=\(?[0-9a-zA-Z])")
+# A line opening with a quoted term that "means" or "includes" starts a
+# definition in an interpretation section.
+_DEFINITION_START_RE = re.compile(
+    r"^(?=[“\"][^”\"\n]{1,80}[”\"]\s*(?:means|includes|has|refers)\b)",
+    re.MULTILINE,
+)
+_MIN_DEFINITIONS_TO_SPLIT = 3
 
 
 @dataclass(frozen=True)
@@ -219,7 +226,30 @@ def split_legal_text(text: str, *, max_chars: int) -> list[str]:
         return []
     if len(cleaned) <= max_chars:
         return [cleaned]
+    definitions = _split_definitions(cleaned)
+    if definitions:
+        return [
+            segment
+            for definition in definitions
+            for segment in _split_clauses(definition, max_chars=max_chars)
+        ]
+    return _split_clauses(cleaned, max_chars=max_chars)
 
+
+def _split_definitions(text: str) -> list[str]:
+    # One segment per defined term, so a question about one term is not
+    # diluted by the rest of a long interpretation section. The opening
+    # words ("In this Act -") stay with the first definition.
+    pieces = [piece.strip() for piece in _DEFINITION_START_RE.split(text)]
+    pieces = [piece for piece in pieces if piece]
+    if pieces and not _DEFINITION_START_RE.match(pieces[0]):
+        pieces[:2] = ["\n".join(pieces[:2])]
+    if len(pieces) < _MIN_DEFINITIONS_TO_SPLIT:
+        return []
+    return pieces
+
+
+def _split_clauses(cleaned: str, *, max_chars: int) -> list[str]:
     pieces = _CLAUSE_BOUNDARY_RE.split(cleaned)
     segments: list[str] = []
     current = ""

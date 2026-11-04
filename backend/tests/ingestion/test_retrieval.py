@@ -1,7 +1,11 @@
 import uuid
 from datetime import date
 
-from app.ingestion.retrieval import build_retrieval_documents, citation_for_provision
+from app.ingestion.retrieval import (
+    build_retrieval_documents,
+    citation_for_provision,
+    split_legal_text,
+)
 from app.legal.enums import InstrumentType, LegalStatus, ProvisionKind
 from app.legal.models import (
     CorpusReleaseEntry,
@@ -229,3 +233,43 @@ def test_reviewed_phrasing_is_search_text_only_and_applies_to_one_provision() ->
         "A person shall not be arrested in place of a suspect."
     )
     assert "In plain words:" not in by_path[neighbour.canonical_path].retrieval_text
+
+
+def test_long_interpretation_section_splits_one_segment_per_definition() -> None:
+    text = (
+        "In this Act —\n"
+        "“applicable law” means any law enacted by the National Assembly;\n"
+        "“court ” means any court of competent jurisdiction;\n"
+        "“personal data” means any information relating to an individual,\n"
+        "including a name or an identification number; and\n"
+        "“sensitive personal data” includes data relating to —\n"
+        "(a) health status, or\n"
+        "(b) political opinions."
+    )
+
+    segments = split_legal_text(text, max_chars=120)
+
+    assert segments == [
+        "In this Act —\n“applicable law” means any law enacted by the National "
+        "Assembly;",
+        "“court ” means any court of competent jurisdiction;",
+        "“personal data” means any information relating to an individual,\n"
+        "including a name or an identification number; and",
+        "“sensitive personal data” includes data relating to —\n"
+        "(a) health status, or\n(b) political opinions.",
+    ]
+
+
+def test_definition_split_only_applies_to_long_lists_of_definitions() -> None:
+    short = "In this Act —\n“court” means a court;\n“Minister” means the Minister."
+    assert split_legal_text(short, max_chars=2800) == [short]
+
+    # One quoted term in a long provision is not a definitions list.
+    prose = (
+        "The Commission may issue an order. "
+        + "It shall state the reasons for the order. " * 4
+        + "\n“Order” means an order under this section."
+    )
+    segments = split_legal_text(prose, max_chars=100)
+    assert not segments[0].startswith("“")
+    assert all(len(segment) <= 100 for segment in segments)
