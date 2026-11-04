@@ -1,0 +1,178 @@
+{
+  "version": "childs-rights-act-2003-retrieval-v1",
+  "status": "approved by the user on 4 November 2026",
+  "description": "Retrieval benchmark for the Child's Rights Act 2003 (as enacted). Each query names the one section that best answers it; Recall@10 is measured against this release's own retrieval documents. Queries mix everyday and legal wording and were checked against the approved text on 4 November 2026.",
+  "instrument_slug": "childs-rights-act-2003",
+  "queries": [
+    {
+      "query": "Must the best interest of the child come first in every decision about a child?",
+      "path": "childs-rights-act-2003.part1.section1",
+      "note": "s.1 best interest is the primary consideration."
+    },
+    {
+      "query": "Does every child have a right to a name and to have their birth registered?",
+      "path": "childs-rights-act-2003.part2.section5",
+      "note": "s.5(1) name; s.5(2) birth registration."
+    },
+    {
+      "query": "Can anyone read a child's letters or listen to their phone calls?",
+      "path": "childs-rights-act-2003.part2.section8",
+      "note": "s.8 privacy of correspondence and telephone conversations."
+    },
+    {
+      "query": "Can a child be treated differently because they were born outside marriage?",
+      "path": "childs-rights-act-2003.part2.section10",
+      "note": "s.10(2) no disability by reason of circumstances of birth."
+    },
+    {
+      "query": "Can a child be separated from their parents against the child's wish?",
+      "path": "childs-rights-act-2003.part2.section14",
+      "note": "s.14(1) right to parental care; limited exceptions."
+    },
+    {
+      "query": "Is basic education free and compulsory for children in Nigeria?",
+      "path": "childs-rights-act-2003.part2.section15",
+      "note": "s.15(1) free, compulsory and universal basic education."
+    },
+    {
+      "query": "Can a child sue for injuries suffered before birth?",
+      "path": "childs-rights-act-2003.part2.section17",
+      "note": "s.17(1) action for harm before, during or after birth."
+    },
+    {
+      "query": "What responsibilities does a child have towards family and society?",
+      "path": "childs-rights-act-2003.part2.section19",
+      "note": "s.19 responsibilities of a child."
+    },
+    {
+      "query": "What is the minimum age for marriage under the Child's Rights Act?",
+      "path": "childs-rights-act-2003.part3.section21",
+      "note": "s.21 under 18 cannot contract a valid marriage."
+    },
+    {
+      "query": "Can parents promise their daughter in marriage while she is still a child?",
+      "path": "childs-rights-act-2003.part3.section22",
+      "note": "s.22 child betrothal prohibited and void."
+    },
+    {
+      "query": "What is the punishment for marrying a child?",
+      "path": "childs-rights-act-2003.part3.section23",
+      "note": "s.23 fine of N500,000 or five years' imprisonment or both."
+    },
+    {
+      "query": "Is it an offence to give a child tribal marks or a tattoo?",
+      "path": "childs-rights-act-2003.part3.section24",
+      "note": "s.24 tattoos and skin marks."
+    },
+    {
+      "query": "What happens to someone who uses a child to sell or traffic drugs?",
+      "path": "childs-rights-act-2003.part3.section25",
+      "note": "s.25 narcotic drugs."
+    },
+    {
+      "query": "Is it an offence to take a child away from their parents without consent?",
+      "path": "childs-rights-act-2003.part3.section27",
+      "note": "s.27 removal from lawful custody."
+    },
+    {
+      "query": "Can a child be made to work, and what work is allowed?",
+      "path": "childs-rights-act-2003.part3.section28",
+      "note": "s.28 exploitative labour; light family work allowed."
+    },
+    {
+      "query": "Is it illegal to use children for street hawking or begging?",
+      "path": "childs-rights-act-2003.part3.section30",
+      "note": "s.30 dealing in children, begging, hawking."
+    },
+    {
+      "query": "What is the punishment for having sex with a child?",
+      "path": "childs-rights-act-2003.part3.section31",
+      "note": "s.31 rape, imprisonment for life."
+    },
+    {
+      "query": "Can children be recruited into the Nigerian army?",
+      "path": "childs-rights-act-2003.part3.section34",
+      "note": "s.34 no recruitment into the armed forces."
+    },
+    {
+      "query": "How can a child in danger be removed quickly by court order?",
+      "path": "childs-rights-act-2003.part4.section42",
+      "note": "s.42 emergency protection orders."
+    },
+    {
+      "query": "Can the police take a child into protection in an emergency?",
+      "path": "childs-rights-act-2003.part4.section44",
+      "note": "s.44 police protection."
+    },
+    {
+      "query": "Can a court order a parent to contribute to the upkeep of a child placed in care?",
+      "path": "childs-rights-act-2003.part5.section52",
+      "note": "s.52 contribution to maintenance."
+    },
+    {
+      "query": "Can a court order a DNA test to prove who a child's father is?",
+      "path": "childs-rights-act-2003.part7.section63",
+      "note": "s.63 scientific tests including DNA."
+    },
+    {
+      "query": "Who gets custody of a child when parents separate?",
+      "path": "childs-rights-act-2003.part8.section69",
+      "note": "s.69 custody and access orders."
+    },
+    {
+      "query": "Can a foster parent marry the child they are fostering?",
+      "path": "childs-rights-act-2003.part11.section118",
+      "note": "s.118 prohibited; up to fourteen years."
+    },
+    {
+      "query": "Who is allowed to adopt a child in Nigeria?",
+      "path": "childs-rights-act-2003.part12.section129",
+      "note": "s.129 persons who may adopt."
+    },
+    {
+      "query": "Whose consent is needed before a child can be adopted?",
+      "path": "childs-rights-act-2003.part12.section132",
+      "note": "s.132 required consent."
+    },
+    {
+      "query": "Is it legal to pay money to adopt a child?",
+      "path": "childs-rights-act-2003.part12.section143",
+      "note": "s.143 payments for adoption prohibited without court sanction."
+    },
+    {
+      "query": "Which court hears cases about children?",
+      "path": "childs-rights-act-2003.part13.section149",
+      "note": "s.149 Family Court."
+    },
+    {
+      "query": "Can newspapers publish the name or photo of a child in a court case?",
+      "path": "childs-rights-act-2003.part13.section157",
+      "note": "s.157 identification of child prohibited."
+    },
+    {
+      "query": "Do day care centres and child minders need to be registered?",
+      "path": "childs-rights-act-2003.part14.section163",
+      "note": "s.163 register of child minders and day care."
+    },
+    {
+      "query": "Must a children's home be registered before it can care for children?",
+      "path": "childs-rights-act-2003.part18.section195",
+      "note": "s.195 registration of children's homes."
+    },
+    {
+      "query": "Can a child be kept in detention while waiting for trial?",
+      "path": "childs-rights-act-2003.part20.section212",
+      "note": "s.212 detention as last resort."
+    },
+    {
+      "query": "Can a child offender be sentenced to death or imprisonment?",
+      "path": "childs-rights-act-2003.part20.section221",
+      "note": "s.221 no imprisonment, corporal punishment or death penalty."
+    },
+    {
+      "query": "Who is a child under the Child's Rights Act?",
+      "path": "childs-rights-act-2003.part24.section277",
+      "note": "s.277 child means a person under eighteen."
+    }
+  ]
+}
