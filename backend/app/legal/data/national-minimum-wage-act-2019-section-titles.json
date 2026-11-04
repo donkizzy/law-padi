@@ -1,0 +1,175 @@
+{
+  "source": {
+    "title": "National Minimum Wage Act, 2019",
+    "source_url": "https://natlex.ilo.org/dyn/natlex2/natlex2/files/download/111617/NGA111617%20.pdf",
+    "sha256": "6d624addf4e94c994c2caf3fa37ed82261fb2c13d9858163a4dcdaac3a886f23",
+    "extracted_from": "Own Arrangement of Sections, PDF2; independent visual title transcription, raw OCR separate",
+    "review_status": "needs_review"
+  },
+  "expected_section_count": 18,
+  "chapters": {},
+  "parts": {},
+  "sections": {
+    "1": "Objective of this Act.",
+    "2": "Application.",
+    "3": "Employer to pay minimum wage.",
+    "4": "Exemptions.",
+    "5": "Establishment of Tripartite Committee on National Minimum Wage.",
+    "6": "Composition of the Tripartite Committee.",
+    "7": "Powers of Tripartite Committee.",
+    "8": "Meetings of the Tripartite Committee.",
+    "9": "Employer's obligations in respect of minimum wage.",
+    "10": "Employers to keep records.",
+    "11": "Officers and their powers.",
+    "12": "Monitoring and compliance.",
+    "13": "Enforcement.",
+    "14": "Offences by an agent.",
+    "15": "Other offences and penalties.",
+    "16": "Repeal and savings provisions.",
+    "17": "Interpretation.",
+    "18": "Citation."
+  },
+  "notes": {
+    "method": "Titles copied from the source image, not silently corrected machine output. Raw OCR is retained in Round4 evidence.",
+    "glitches": [
+      {
+        "reference_row": "7",
+        "note": "Both Vision arrangement passes omit the numeral; separate image observation sees7. Raw OCR remains unchanged."
+      },
+      {
+        "reference_row": "3",
+        "note": "Vision3600 joins Employerto; image title has Employer to. Independent visual transcription recorded."
+      }
+    ],
+    "raw_arrangement_observations": [
+      {
+        "reference_row": "1",
+        "pdf_page": 2,
+        "raw_visual_label": "1",
+        "title_as_visually_read": "Objective of this Act.",
+        "method": "Independent image transcription from own arrangement; OCR streams retained separately."
+      },
+      {
+        "reference_row": "2",
+        "pdf_page": 2,
+        "raw_visual_label": "2",
+        "title_as_visually_read": "Application.",
+        "method": "Independent image transcription from own arrangement; OCR streams retained separately."
+      },
+      {
+        "reference_row": "3",
+        "pdf_page": 2,
+        "raw_visual_label": "3",
+        "title_as_visually_read": "Employer to pay minimum wage.",
+        "method": "Independent image transcription from own arrangement; OCR streams retained separately."
+      },
+      {
+        "reference_row": "4",
+        "pdf_page": 2,
+        "raw_visual_label": "4",
+        "title_as_visually_read": "Exemptions.",
+        "method": "Independent image transcription from own arrangement; OCR streams retained separately."
+      },
+      {
+        "reference_row": "5",
+        "pdf_page": 2,
+        "raw_visual_label": "5",
+        "title_as_visually_read": "Establishment of Tripartite Committee on National Minimum Wage.",
+        "method": "Independent image transcription from own arrangement; OCR streams retained separately."
+      },
+      {
+        "reference_row": "6",
+        "pdf_page": 2,
+        "raw_visual_label": "6",
+        "title_as_visually_read": "Composition of the Tripartite Committee.",
+        "method": "Independent image transcription from own arrangement; OCR streams retained separately."
+      },
+      {
+        "reference_row": "7",
+        "pdf_page": 2,
+        "raw_visual_label": "7",
+        "title_as_visually_read": "Powers of Tripartite Committee.",
+        "method": "Independent image transcription from own arrangement; OCR streams retained separately."
+      },
+      {
+        "reference_row": "8",
+        "pdf_page": 2,
+        "raw_visual_label": "8",
+        "title_as_visually_read": "Meetings of the Tripartite Committee.",
+        "method": "Independent image transcription from own arrangement; OCR streams retained separately."
+      },
+      {
+        "reference_row": "9",
+        "pdf_page": 2,
+        "raw_visual_label": "9",
+        "title_as_visually_read": "Employer's obligations in respect of minimum wage.",
+        "method": "Independent image transcription from own arrangement; OCR streams retained separately."
+      },
+      {
+        "reference_row": "10",
+        "pdf_page": 2,
+        "raw_visual_label": "10",
+        "title_as_visually_read": "Employers to keep records.",
+        "method": "Independent image transcription from own arrangement; OCR streams retained separately."
+      },
+      {
+        "reference_row": "11",
+        "pdf_page": 2,
+        "raw_visual_label": "11",
+        "title_as_visually_read": "Officers and their powers.",
+        "method": "Independent image transcription from own arrangement; OCR streams retained separately."
+      },
+      {
+        "reference_row": "12",
+        "pdf_page": 2,
+        "raw_visual_label": "12",
+        "title_as_visually_read": "Monitoring and compliance.",
+        "method": "Independent image transcription from own arrangement; OCR streams retained separately."
+      },
+      {
+        "reference_row": "13",
+        "pdf_page": 2,
+        "raw_visual_label": "13",
+        "title_as_visually_read": "Enforcement.",
+        "method": "Independent image transcription from own arrangement; OCR streams retained separately."
+      },
+      {
+        "reference_row": "14",
+        "pdf_page": 2,
+        "raw_visual_label": "14",
+        "title_as_visually_read": "Offences by an agent.",
+        "method": "Independent image transcription from own arrangement; OCR streams retained separately."
+      },
+      {
+        "reference_row": "15",
+        "pdf_page": 2,
+        "raw_visual_label": "15",
+        "title_as_visually_read": "Other offences and penalties.",
+        "method": "Independent image transcription from own arrangement; OCR streams retained separately."
+      },
+      {
+        "reference_row": "16",
+        "pdf_page": 2,
+        "raw_visual_label": "16",
+        "title_as_visually_read": "Repeal and savings provisions.",
+        "method": "Independent image transcription from own arrangement; OCR streams retained separately."
+      },
+      {
+        "reference_row": "17",
+        "pdf_page": 2,
+        "raw_visual_label": "17",
+        "title_as_visually_read": "Interpretation.",
+        "method": "Independent image transcription from own arrangement; OCR streams retained separately."
+      },
+      {
+        "reference_row": "18",
+        "pdf_page": 2,
+        "raw_visual_label": "18",
+        "title_as_visually_read": "Citation.",
+        "method": "Independent image transcription from own arrangement; OCR streams retained separately."
+      }
+    ],
+    "dates": "Printed crossed-out March and separate handwritten April retained in evidence; no date chosen.",
+    "scope": "As-printed2019 navigation titles only, no2024 consolidation or currency decision."
+  }
+}

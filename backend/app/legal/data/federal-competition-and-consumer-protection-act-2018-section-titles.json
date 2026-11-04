@@ -1,0 +1,1247 @@
+{
+  "source": {
+    "title": "Federal Competition and Consumer Protection Act, 2018",
+    "source_url": "https://fccpc.gov.ng/wp-content/uploads/2022/07/FCCPA-2018.pdf",
+    "sha256": "aa942cdef860387e8f984de52666e5683d12d6e2813cb47b10335e0bf82a07f5",
+    "extracted_from": "Own arrangement PDF2–7, printed A1–A6; all168title positions visually legible",
+    "review_status": "needs_review"
+  },
+  "expected_section_count": 168,
+  "chapters": {},
+  "parts": {
+    "1": "OBJECTIVES AND SCOPE OF APPLICATION",
+    "2": "ESTABLISHMENT OF THE FEDERAL COMPETITION AND CONSUMER PROTECTION COMMISSION",
+    "3": "FUNCTIONS AND POWERS OF THE COMMISSION",
+    "4": "MANAGEMENT AND STAFF OF THE COMMISSION",
+    "5": "FINANCIAL PROVISIONS",
+    "6": "ENFORCEMENT WARRANTS AND REQUESTS FOR INFORMATION",
+    "7": "THE COMPETITION AND CONSUMER PROTECTION TRIBUNAL",
+    "8": "RESTRICTIVE AGREEMENTS",
+    "9": "ABUSE OF A DOMINANT POSITION",
+    "10": "MONOPOLY",
+    "11": "PRICE REGULATION",
+    "12": "MERGERS",
+    "13": "REGULATED INDUSTRIES",
+    "14": "SPECIFIC OFFENCES AGAINST COMPETITION",
+    "15": "CONSUMERS’ RIGHTS",
+    "16": "DUTIES OF MANUFACTURERS, IMPORTERS, DISTRIBUTORS AND SUPPLIERS OF GOODS AND SERVICES",
+    "17": "ENFORCEMENT OF CONSUMERS’ RIGHTS",
+    "18": "MISCELLANEOUS PROVISIONS"
+  },
+  "sections": {
+    "1": "Objectives.",
+    "2": "Scope of application.",
+    "3": "Establishment of the Federal Competition and Consumer Protection Commission.",
+    "4": "Composition of the Commission.",
+    "5": "Tenure of office.",
+    "6": "Resignation from the Commission.",
+    "7": "Removal from office.",
+    "8": "Vacancies.",
+    "9": "Emoluments of Members of the Commission.",
+    "10": "Administration of the Commission.",
+    "11": "Proceedings of the Commission.",
+    "12": "Quorum.",
+    "13": "Validity of proceedings.",
+    "14": "Conflicts of interest.",
+    "15": "Committees.",
+    "16": "The Seal of the Commission.",
+    "17": "Functions of the Commission.",
+    "18": "Powers of the Commission.",
+    "19": "Executive Vice Chairman and Secretary to the Commission.",
+    "20": "Other staff of the Commission.",
+    "21": "Staff regulations.",
+    "22": "Pension and gratuity.",
+    "23": "Fund of the Commission.",
+    "24": "Expenditures of the Commission.",
+    "25": "Annual estimates, reports and expenditure.",
+    "26": "Borrowing powers, gifts etc.",
+    "27": "Enforcement powers of the Commission.",
+    "28": "Issuance of warrant.",
+    "29": "Powers conferred by warrant.",
+    "30": "Duties of a person executing a warrant.",
+    "31": "Duties of occupiers.",
+    "32": "Request for information or documents.",
+    "33": "Summons to attend and give evidence or to produce documents.",
+    "34": "Procedures for handling of evidence by the Commission.",
+    "35": "Prohibition of disclosure of information, documents.",
+    "36": "Destruction of records.",
+    "37": "Discontinuance of inquiry or investigation.",
+    "38": "Appeals.",
+    "39": "Establishment of the Competition and Consumer Protection Tribunal.",
+    "40": "Composition of the Tribunal.",
+    "41": "Tenure of office.",
+    "42": "Disqualification from membership of the Tribunal.",
+    "43": "Resignation and removal.",
+    "44": "Filling of vacancies.",
+    "45": "Registrar of the Tribunal.",
+    "46": "Other staff of the Tribunal",
+    "47": "Jurisdiction of the Tribunal.",
+    "48": "Management of the work of the Tribunal.",
+    "49": "Disclosure of interest by members of a panel.",
+    "50": "Procedural Rules of the Tribunal.",
+    "51": "Powers of the Tribunal to impose penalties.",
+    "52": "Powers of the Tribunal to order sale of assets.",
+    "53": "Access to records of the Tribunal.",
+    "54": "Registration and enforcement of the decisions of the Tribunal.",
+    "55": "Judicial review by the Court of Appeal.",
+    "56": "Right to legal representation.",
+    "57": "Payment of allowances and other conditions of employment of the members of the Tribunal.",
+    "58": "Funding of the Tribunal.",
+    "59": "Prohibition of agreements in restraint of competition.",
+    "60": "Agreements authorised by the Commission.",
+    "61": "Prohibition of agreements containing exclusionary provisions.",
+    "62": "Agreements by suppliers.",
+    "63": "Prohibition of minimum resale price maintenance.",
+    "64": "Patented products.",
+    "65": "Maintenance of minimum resale prices.",
+    "66": "Withholding of products from a dealer by a supplier.",
+    "67": "Complaints to and issuance of notice by the Commission of restrictive agreements.",
+    "68": "Exceptions.",
+    "69": "Offences and penalties under this Part.",
+    "70": "Dominant position and abuse of dominant position in the relevant market.",
+    "71": "Criteria for identifying the relevant market.",
+    "72": "Abuse of a dominant position prohibited.",
+    "73": "Consequences of abuse of a dominant position.",
+    "74": "Penalties for failure to comply with a cease order.",
+    "75": "Suspension of punishment.",
+    "76": "Power of the Commission to investigate a monopoly situation.",
+    "77": "Determination of a monopoly situation by the Commission.",
+    "78": "General powers of the Commission to obtain information.",
+    "79": "Supplementary provisions as to the requirement to furnish information.",
+    "80": "Penalties for refusal to furnish information to the Commission.",
+    "81": "Order for monopoly investigation.",
+    "82": "Request for a monopoly investigation.",
+    "83": "Notification of a request for a monopoly investigation.",
+    "84": "Report on a monopoly investigation.",
+    "85": "Timeframe for a report on a monopoly investigation.",
+    "86": "Powers of the Tribunal in relation to a report on a monopoly investigation.",
+    "87": "General provisions relating to orders made under this Part.",
+    "88": "Declaration of price regulations.",
+    "89": "Commission to report to the President on price regulation",
+    "90": "Regulated goods or services to be supplied in accordance with authorised prices.",
+    "91": "Retention of accounting and costing records by suppliers or distributors.",
+    "92": "Merger defined.",
+    "93": "Commission to approve mergers.",
+    "94": "Consideration by the Commission of effect of a merger on competition.",
+    "95": "Notification requirements for a small merger.",
+    "96": "Notification of a large merger.",
+    "97": "Power of the Commission to extend the period of consideration of a large merger.",
+    "98": "Investigation of a proposed merger.",
+    "99": "Revocation of merger approval.",
+    "100": "Powers of the Minister",
+    "101": "Power to hear persons in merger proceedings.",
+    "102": "Provisions of documentations on proposed merger to the Commission.",
+    "103": "Appeals.",
+    "104": "Supremacy of the Federal Competition and Consumer Protection Act.",
+    "105": "Designation of regulated industries.",
+    "106": "Exemption of regulated industries.",
+    "107": "Price-fixing.",
+    "108": "Conspiracy.",
+    "109": "Bid-rigging.",
+    "110": "Obstruction of investigation or inquiry.",
+    "111": "Offence against records.",
+    "112": "Giving of false or misleading information.",
+    "113": "Failure to attend or give evidence.",
+    "114": "Right to information in plain and understandable language.",
+    "115": "Disclosure of price of goods or services.",
+    "116": "Product labeling and trade descriptions.",
+    "117": "Disclosure of reconditioned or second-hand goods.",
+    "118": "Sales records.",
+    "119": "Consumer's right to select suppliers.",
+    "120": "Consumer's right to cancel advance reservation, booking or order.",
+    "121": "Consumer's right to choose or examine goods.",
+    "122": "Consumer's right to return goods.",
+    "123": "General standards for the marketing of goods and services.",
+    "124": "Right to fair dealings.",
+    "125": "False, misleading or deceptive representations.",
+    "126": "Representation test and publication testimonials.",
+    "127": "Unfair, unreasonable or unjust contract terms.",
+    "128": "Notice required for certain terms and conditions.",
+    "129": "Prohibited transactions, agreements, terms or conditions.",
+    "130": "Rights pertaining to the quality and safety of goods and services.",
+    "131": "Consumers' rights to safe, good quality goods.",
+    "132": "Implied warranty of quality.",
+    "133": "Safety monitoring and recall.",
+    "134": "Duty to label goods properly.",
+    "135": "Duty to withdraw hazardous goods from the market.",
+    "136": "Liability for defective goods.",
+    "137": "Liability arising from sale or supply of goods not to be excluded.",
+    "138": "Liability for breach of implied obligations by law.",
+    "139": "Miscellaneous contracts under which goods pass.",
+    "140": "Liability for misrepresentation.",
+    "141": "Evasion by means of secondary contract.",
+    "142": "Supply of services.",
+    "143": "Implied term about time for execution of contract.",
+    "144": "Exclusion of implied terms.",
+    "145": "Onus of proof.",
+    "146": "Enforcement of rights by a consumer.",
+    "147": "Conclusion by industry sector regulator.",
+    "148": "Enforcement of rights by the Commission.",
+    "149": "Consent order.",
+    "150": "Compliance notice.",
+    "151": "Redress by civil society groups.",
+    "152": "Redress by the court.",
+    "153": "Power to obtain satisfactory written assurance.",
+    "154": "Compensation order.",
+    "155": "Contravention of consumer rights.",
+    "156": "Limitation of suits against the Commission and the Tribunal.",
+    "157": "Issuance of Notices by or on behalf of Commission.",
+    "158": "Service of notices.",
+    "159": "Offences under this Part.",
+    "160": "Decisions of the Commission to be in writing.",
+    "161": "Delegation by the Commission.",
+    "162": "Civil or criminal proceedings in respect of any action of the Commission.",
+    "163": "Power to make regulations.",
+    "164": "Application of other enactments.",
+    "165": "Repeals and savings.",
+    "166": "Transitional provisions.",
+    "167": "Interpretation.",
+    "168": "Citation."
+  },
+  "notes": {
+    "method": "Independent visual transcription of printed arrangement titles, joining line wraps with spaces. Raw OCR retained separately; no grammatical rewriting. Arabic part keys are ordinal navigation identities for printed RomanI–XVIII.",
+    "raw_arrangement_observations": [
+      {
+        "reference_row": "1",
+        "pdf_page": 2,
+        "raw_visual_label": "1",
+        "raw_visual_title": "Objectives."
+      },
+      {
+        "reference_row": "2",
+        "pdf_page": 2,
+        "raw_visual_label": "2",
+        "raw_visual_title": "Scope of application."
+      },
+      {
+        "reference_row": "3",
+        "pdf_page": 2,
+        "raw_visual_label": "3",
+        "raw_visual_title": "Establishment of the Federal Competition and Consumer Protection Commission."
+      },
+      {
+        "reference_row": "4",
+        "pdf_page": 2,
+        "raw_visual_label": "4",
+        "raw_visual_title": "Composition of the Commission."
+      },
+      {
+        "reference_row": "5",
+        "pdf_page": 2,
+        "raw_visual_label": "5",
+        "raw_visual_title": "Tenure of office."
+      },
+      {
+        "reference_row": "6",
+        "pdf_page": 2,
+        "raw_visual_label": "6",
+        "raw_visual_title": "Resignation from the Commission."
+      },
+      {
+        "reference_row": "7",
+        "pdf_page": 2,
+        "raw_visual_label": "7",
+        "raw_visual_title": "Removal from office."
+      },
+      {
+        "reference_row": "8",
+        "pdf_page": 2,
+        "raw_visual_label": "8",
+        "raw_visual_title": "Vacancies."
+      },
+      {
+        "reference_row": "9",
+        "pdf_page": 2,
+        "raw_visual_label": "9",
+        "raw_visual_title": "Emoluments of Members of the Commission."
+      },
+      {
+        "reference_row": "10",
+        "pdf_page": 2,
+        "raw_visual_label": "10",
+        "raw_visual_title": "Administration of the Commission."
+      },
+      {
+        "reference_row": "11",
+        "pdf_page": 2,
+        "raw_visual_label": "11",
+        "raw_visual_title": "Proceedings of the Commission."
+      },
+      {
+        "reference_row": "12",
+        "pdf_page": 2,
+        "raw_visual_label": "12",
+        "raw_visual_title": "Quorum."
+      },
+      {
+        "reference_row": "13",
+        "pdf_page": 2,
+        "raw_visual_label": "13",
+        "raw_visual_title": "Validity of proceedings."
+      },
+      {
+        "reference_row": "14",
+        "pdf_page": 2,
+        "raw_visual_label": "14",
+        "raw_visual_title": "Conflicts of interest."
+      },
+      {
+        "reference_row": "15",
+        "pdf_page": 2,
+        "raw_visual_label": "15",
+        "raw_visual_title": "Committees."
+      },
+      {
+        "reference_row": "16",
+        "pdf_page": 2,
+        "raw_visual_label": "16",
+        "raw_visual_title": "The Seal of the Commission."
+      },
+      {
+        "reference_row": "17",
+        "pdf_page": 2,
+        "raw_visual_label": "17",
+        "raw_visual_title": "Functions of the Commission."
+      },
+      {
+        "reference_row": "18",
+        "pdf_page": 2,
+        "raw_visual_label": "18",
+        "raw_visual_title": "Powers of the Commission."
+      },
+      {
+        "reference_row": "19",
+        "pdf_page": 2,
+        "raw_visual_label": "19",
+        "raw_visual_title": "Executive Vice Chairman and Secretary to the Commission."
+      },
+      {
+        "reference_row": "20",
+        "pdf_page": 2,
+        "raw_visual_label": "20",
+        "raw_visual_title": "Other staff of the Commission."
+      },
+      {
+        "reference_row": "21",
+        "pdf_page": 2,
+        "raw_visual_label": "21",
+        "raw_visual_title": "Staff regulations."
+      },
+      {
+        "reference_row": "22",
+        "pdf_page": 2,
+        "raw_visual_label": "22",
+        "raw_visual_title": "Pension and gratuity."
+      },
+      {
+        "reference_row": "23",
+        "pdf_page": 3,
+        "raw_visual_label": "23",
+        "raw_visual_title": "Fund of the Commission."
+      },
+      {
+        "reference_row": "24",
+        "pdf_page": 3,
+        "raw_visual_label": "24",
+        "raw_visual_title": "Expenditures of the Commission."
+      },
+      {
+        "reference_row": "25",
+        "pdf_page": 3,
+        "raw_visual_label": "25",
+        "raw_visual_title": "Annual estimates, reports and expenditure."
+      },
+      {
+        "reference_row": "26",
+        "pdf_page": 3,
+        "raw_visual_label": "26",
+        "raw_visual_title": "Borrowing powers, gifts etc."
+      },
+      {
+        "reference_row": "27",
+        "pdf_page": 3,
+        "raw_visual_label": "27",
+        "raw_visual_title": "Enforcement powers of the Commission."
+      },
+      {
+        "reference_row": "28",
+        "pdf_page": 3,
+        "raw_visual_label": "28",
+        "raw_visual_title": "Issuance of warrant."
+      },
+      {
+        "reference_row": "29",
+        "pdf_page": 3,
+        "raw_visual_label": "29",
+        "raw_visual_title": "Powers conferred by warrant."
+      },
+      {
+        "reference_row": "30",
+        "pdf_page": 3,
+        "raw_visual_label": "30",
+        "raw_visual_title": "Duties of a person executing a warrant."
+      },
+      {
+        "reference_row": "31",
+        "pdf_page": 3,
+        "raw_visual_label": "31",
+        "raw_visual_title": "Duties of occupiers."
+      },
+      {
+        "reference_row": "32",
+        "pdf_page": 3,
+        "raw_visual_label": "32",
+        "raw_visual_title": "Request for information or documents."
+      },
+      {
+        "reference_row": "33",
+        "pdf_page": 3,
+        "raw_visual_label": "33",
+        "raw_visual_title": "Summons to attend and give evidence or to produce documents."
+      },
+      {
+        "reference_row": "34",
+        "pdf_page": 3,
+        "raw_visual_label": "34",
+        "raw_visual_title": "Procedures for handling of evidence by the Commission."
+      },
+      {
+        "reference_row": "35",
+        "pdf_page": 3,
+        "raw_visual_label": "35",
+        "raw_visual_title": "Prohibition of disclosure of information, documents."
+      },
+      {
+        "reference_row": "36",
+        "pdf_page": 3,
+        "raw_visual_label": "36",
+        "raw_visual_title": "Destruction of records."
+      },
+      {
+        "reference_row": "37",
+        "pdf_page": 3,
+        "raw_visual_label": "37",
+        "raw_visual_title": "Discontinuance of inquiry or investigation."
+      },
+      {
+        "reference_row": "38",
+        "pdf_page": 3,
+        "raw_visual_label": "38",
+        "raw_visual_title": "Appeals."
+      },
+      {
+        "reference_row": "39",
+        "pdf_page": 3,
+        "raw_visual_label": "39",
+        "raw_visual_title": "Establishment of the Competition and Consumer Protection Tribunal."
+      },
+      {
+        "reference_row": "40",
+        "pdf_page": 3,
+        "raw_visual_label": "40",
+        "raw_visual_title": "Composition of the Tribunal."
+      },
+      {
+        "reference_row": "41",
+        "pdf_page": 3,
+        "raw_visual_label": "41",
+        "raw_visual_title": "Tenure of office."
+      },
+      {
+        "reference_row": "42",
+        "pdf_page": 3,
+        "raw_visual_label": "42",
+        "raw_visual_title": "Disqualification from membership of the Tribunal."
+      },
+      {
+        "reference_row": "43",
+        "pdf_page": 3,
+        "raw_visual_label": "43",
+        "raw_visual_title": "Resignation and removal."
+      },
+      {
+        "reference_row": "44",
+        "pdf_page": 3,
+        "raw_visual_label": "44",
+        "raw_visual_title": "Filling of vacancies."
+      },
+      {
+        "reference_row": "45",
+        "pdf_page": 3,
+        "raw_visual_label": "45",
+        "raw_visual_title": "Registrar of the Tribunal."
+      },
+      {
+        "reference_row": "46",
+        "pdf_page": 3,
+        "raw_visual_label": "46",
+        "raw_visual_title": "Other staff of the Tribunal"
+      },
+      {
+        "reference_row": "47",
+        "pdf_page": 3,
+        "raw_visual_label": "47",
+        "raw_visual_title": "Jurisdiction of the Tribunal."
+      },
+      {
+        "reference_row": "48",
+        "pdf_page": 3,
+        "raw_visual_label": "48",
+        "raw_visual_title": "Management of the work of the Tribunal."
+      },
+      {
+        "reference_row": "49",
+        "pdf_page": 3,
+        "raw_visual_label": "49",
+        "raw_visual_title": "Disclosure of interest by members of a panel."
+      },
+      {
+        "reference_row": "50",
+        "pdf_page": 3,
+        "raw_visual_label": "50",
+        "raw_visual_title": "Procedural Rules of the Tribunal."
+      },
+      {
+        "reference_row": "51",
+        "pdf_page": 3,
+        "raw_visual_label": "51",
+        "raw_visual_title": "Powers of the Tribunal to impose penalties."
+      },
+      {
+        "reference_row": "52",
+        "pdf_page": 3,
+        "raw_visual_label": "52",
+        "raw_visual_title": "Powers of the Tribunal to order sale of assets."
+      },
+      {
+        "reference_row": "53",
+        "pdf_page": 3,
+        "raw_visual_label": "53",
+        "raw_visual_title": "Access to records of the Tribunal."
+      },
+      {
+        "reference_row": "54",
+        "pdf_page": 3,
+        "raw_visual_label": "54",
+        "raw_visual_title": "Registration and enforcement of the decisions of the Tribunal."
+      },
+      {
+        "reference_row": "55",
+        "pdf_page": 3,
+        "raw_visual_label": "55",
+        "raw_visual_title": "Judicial review by the Court of Appeal."
+      },
+      {
+        "reference_row": "56",
+        "pdf_page": 3,
+        "raw_visual_label": "56",
+        "raw_visual_title": "Right to legal representation."
+      },
+      {
+        "reference_row": "57",
+        "pdf_page": 4,
+        "raw_visual_label": "57",
+        "raw_visual_title": "Payment of allowances and other conditions of employment of the members of the Tribunal."
+      },
+      {
+        "reference_row": "58",
+        "pdf_page": 4,
+        "raw_visual_label": "58",
+        "raw_visual_title": "Funding of the Tribunal."
+      },
+      {
+        "reference_row": "59",
+        "pdf_page": 4,
+        "raw_visual_label": "58",
+        "raw_visual_title": "Prohibition of agreements in restraint of competition."
+      },
+      {
+        "reference_row": "60",
+        "pdf_page": 4,
+        "raw_visual_label": "60",
+        "raw_visual_title": "Agreements authorised by the Commission."
+      },
+      {
+        "reference_row": "61",
+        "pdf_page": 4,
+        "raw_visual_label": "61",
+        "raw_visual_title": "Prohibition of agreements containing exclusionary provisions."
+      },
+      {
+        "reference_row": "62",
+        "pdf_page": 4,
+        "raw_visual_label": "62",
+        "raw_visual_title": "Agreements by suppliers."
+      },
+      {
+        "reference_row": "63",
+        "pdf_page": 4,
+        "raw_visual_label": "63",
+        "raw_visual_title": "Prohibition of minimum resale price maintenance."
+      },
+      {
+        "reference_row": "64",
+        "pdf_page": 4,
+        "raw_visual_label": "64",
+        "raw_visual_title": "Patented products."
+      },
+      {
+        "reference_row": "65",
+        "pdf_page": 4,
+        "raw_visual_label": "65",
+        "raw_visual_title": "Maintenance of minimum resale prices."
+      },
+      {
+        "reference_row": "66",
+        "pdf_page": 4,
+        "raw_visual_label": "66",
+        "raw_visual_title": "Withholding of products from a dealer by a supplier."
+      },
+      {
+        "reference_row": "67",
+        "pdf_page": 4,
+        "raw_visual_label": "67",
+        "raw_visual_title": "Complaints to and issuance of notice by the Commission of restrictive agreements."
+      },
+      {
+        "reference_row": "68",
+        "pdf_page": 4,
+        "raw_visual_label": "68",
+        "raw_visual_title": "Exceptions."
+      },
+      {
+        "reference_row": "69",
+        "pdf_page": 4,
+        "raw_visual_label": "69",
+        "raw_visual_title": "Offences and penalties under this Part."
+      },
+      {
+        "reference_row": "70",
+        "pdf_page": 4,
+        "raw_visual_label": "70",
+        "raw_visual_title": "Dominant position and abuse of dominant position in the relevant market."
+      },
+      {
+        "reference_row": "71",
+        "pdf_page": 4,
+        "raw_visual_label": "71",
+        "raw_visual_title": "Criteria for identifying the relevant market."
+      },
+      {
+        "reference_row": "72",
+        "pdf_page": 4,
+        "raw_visual_label": "72",
+        "raw_visual_title": "Abuse of a dominant position prohibited."
+      },
+      {
+        "reference_row": "73",
+        "pdf_page": 4,
+        "raw_visual_label": "73",
+        "raw_visual_title": "Consequences of abuse of a dominant position."
+      },
+      {
+        "reference_row": "74",
+        "pdf_page": 4,
+        "raw_visual_label": "74",
+        "raw_visual_title": "Penalties for failure to comply with a cease order."
+      },
+      {
+        "reference_row": "75",
+        "pdf_page": 4,
+        "raw_visual_label": "75",
+        "raw_visual_title": "Suspension of punishment."
+      },
+      {
+        "reference_row": "76",
+        "pdf_page": 4,
+        "raw_visual_label": "76",
+        "raw_visual_title": "Power of the Commission to investigate a monopoly situation."
+      },
+      {
+        "reference_row": "77",
+        "pdf_page": 4,
+        "raw_visual_label": "77",
+        "raw_visual_title": "Determination of a monopoly situation by the Commission."
+      },
+      {
+        "reference_row": "78",
+        "pdf_page": 4,
+        "raw_visual_label": "78",
+        "raw_visual_title": "General powers of the Commission to obtain information."
+      },
+      {
+        "reference_row": "79",
+        "pdf_page": 4,
+        "raw_visual_label": "79",
+        "raw_visual_title": "Supplementary provisions as to the requirement to furnish information."
+      },
+      {
+        "reference_row": "80",
+        "pdf_page": 4,
+        "raw_visual_label": "80",
+        "raw_visual_title": "Penalties for refusal to furnish information to the Commission."
+      },
+      {
+        "reference_row": "81",
+        "pdf_page": 4,
+        "raw_visual_label": "81",
+        "raw_visual_title": "Order for monopoly investigation."
+      },
+      {
+        "reference_row": "82",
+        "pdf_page": 4,
+        "raw_visual_label": "82",
+        "raw_visual_title": "Request for a monopoly investigation."
+      },
+      {
+        "reference_row": "83",
+        "pdf_page": 4,
+        "raw_visual_label": "83",
+        "raw_visual_title": "Notification of a request for a monopoly investigation."
+      },
+      {
+        "reference_row": "84",
+        "pdf_page": 4,
+        "raw_visual_label": "84",
+        "raw_visual_title": "Report on a monopoly investigation."
+      },
+      {
+        "reference_row": "85",
+        "pdf_page": 4,
+        "raw_visual_label": "85",
+        "raw_visual_title": "Timeframe for a report on a monopoly investigation."
+      },
+      {
+        "reference_row": "86",
+        "pdf_page": 4,
+        "raw_visual_label": "86",
+        "raw_visual_title": "Powers of the Tribunal in relation to a report on a monopoly investigation."
+      },
+      {
+        "reference_row": "87",
+        "pdf_page": 4,
+        "raw_visual_label": "87",
+        "raw_visual_title": "General provisions relating to orders made under this Part."
+      },
+      {
+        "reference_row": "88",
+        "pdf_page": 5,
+        "raw_visual_label": "88",
+        "raw_visual_title": "Declaration of price regulations."
+      },
+      {
+        "reference_row": "89",
+        "pdf_page": 5,
+        "raw_visual_label": "89",
+        "raw_visual_title": "Commission to report to the President on price regulation"
+      },
+      {
+        "reference_row": "90",
+        "pdf_page": 5,
+        "raw_visual_label": "90",
+        "raw_visual_title": "Regulated goods or services to be supplied in accordance with authorised prices."
+      },
+      {
+        "reference_row": "91",
+        "pdf_page": 5,
+        "raw_visual_label": "91",
+        "raw_visual_title": "Retention of accounting and costing records by suppliers or distributors."
+      },
+      {
+        "reference_row": "92",
+        "pdf_page": 5,
+        "raw_visual_label": "92",
+        "raw_visual_title": "Merger defined."
+      },
+      {
+        "reference_row": "93",
+        "pdf_page": 5,
+        "raw_visual_label": "93",
+        "raw_visual_title": "Commission to approve mergers."
+      },
+      {
+        "reference_row": "94",
+        "pdf_page": 5,
+        "raw_visual_label": "94",
+        "raw_visual_title": "Consideration by the Commission of effect of a merger on competition."
+      },
+      {
+        "reference_row": "95",
+        "pdf_page": 5,
+        "raw_visual_label": "95",
+        "raw_visual_title": "Notification requirements for a small merger."
+      },
+      {
+        "reference_row": "96",
+        "pdf_page": 5,
+        "raw_visual_label": "96",
+        "raw_visual_title": "Notification of a large merger."
+      },
+      {
+        "reference_row": "97",
+        "pdf_page": 5,
+        "raw_visual_label": "97",
+        "raw_visual_title": "Power of the Commission to extend the period of consideration of a large merger."
+      },
+      {
+        "reference_row": "98",
+        "pdf_page": 5,
+        "raw_visual_label": "98",
+        "raw_visual_title": "Investigation of a proposed merger."
+      },
+      {
+        "reference_row": "99",
+        "pdf_page": 5,
+        "raw_visual_label": "99",
+        "raw_visual_title": "Revocation of merger approval."
+      },
+      {
+        "reference_row": "100",
+        "pdf_page": 5,
+        "raw_visual_label": "100",
+        "raw_visual_title": "Powers of the Minister"
+      },
+      {
+        "reference_row": "101",
+        "pdf_page": 5,
+        "raw_visual_label": "101",
+        "raw_visual_title": "Power to hear persons in merger proceedings."
+      },
+      {
+        "reference_row": "102",
+        "pdf_page": 5,
+        "raw_visual_label": "102",
+        "raw_visual_title": "Provisions of documentations on proposed merger to the Commission."
+      },
+      {
+        "reference_row": "103",
+        "pdf_page": 5,
+        "raw_visual_label": "103",
+        "raw_visual_title": "Appeals."
+      },
+      {
+        "reference_row": "104",
+        "pdf_page": 5,
+        "raw_visual_label": "104",
+        "raw_visual_title": "Supremacy of the Federal Competition and Consumer Protection Act."
+      },
+      {
+        "reference_row": "105",
+        "pdf_page": 5,
+        "raw_visual_label": "105",
+        "raw_visual_title": "Designation of regulated industries."
+      },
+      {
+        "reference_row": "106",
+        "pdf_page": 5,
+        "raw_visual_label": "106",
+        "raw_visual_title": "Exemption of regulated industries."
+      },
+      {
+        "reference_row": "107",
+        "pdf_page": 5,
+        "raw_visual_label": "107",
+        "raw_visual_title": "Price-fixing."
+      },
+      {
+        "reference_row": "108",
+        "pdf_page": 5,
+        "raw_visual_label": "108",
+        "raw_visual_title": "Conspiracy."
+      },
+      {
+        "reference_row": "109",
+        "pdf_page": 5,
+        "raw_visual_label": "109",
+        "raw_visual_title": "Bid-rigging."
+      },
+      {
+        "reference_row": "110",
+        "pdf_page": 5,
+        "raw_visual_label": "110",
+        "raw_visual_title": "Obstruction of investigation or inquiry."
+      },
+      {
+        "reference_row": "111",
+        "pdf_page": 5,
+        "raw_visual_label": "111",
+        "raw_visual_title": "Offence against records."
+      },
+      {
+        "reference_row": "112",
+        "pdf_page": 5,
+        "raw_visual_label": "112",
+        "raw_visual_title": "Giving of false or misleading information."
+      },
+      {
+        "reference_row": "113",
+        "pdf_page": 5,
+        "raw_visual_label": "113",
+        "raw_visual_title": "Failure to attend or give evidence."
+      },
+      {
+        "reference_row": "114",
+        "pdf_page": 5,
+        "raw_visual_label": "114",
+        "raw_visual_title": "Right to information in plain and understandable language."
+      },
+      {
+        "reference_row": "115",
+        "pdf_page": 5,
+        "raw_visual_label": "115",
+        "raw_visual_title": "Disclosure of price of goods or services."
+      },
+      {
+        "reference_row": "116",
+        "pdf_page": 5,
+        "raw_visual_label": "116",
+        "raw_visual_title": "Product labeling and trade descriptions."
+      },
+      {
+        "reference_row": "117",
+        "pdf_page": 5,
+        "raw_visual_label": "117",
+        "raw_visual_title": "Disclosure of reconditioned or second-hand goods."
+      },
+      {
+        "reference_row": "118",
+        "pdf_page": 6,
+        "raw_visual_label": "118",
+        "raw_visual_title": "Sales records."
+      },
+      {
+        "reference_row": "119",
+        "pdf_page": 6,
+        "raw_visual_label": "119",
+        "raw_visual_title": "Consumer's right to select suppliers."
+      },
+      {
+        "reference_row": "120",
+        "pdf_page": 6,
+        "raw_visual_label": "120",
+        "raw_visual_title": "Consumer's right to cancel advance reservation, booking or order."
+      },
+      {
+        "reference_row": "121",
+        "pdf_page": 6,
+        "raw_visual_label": "121",
+        "raw_visual_title": "Consumer's right to choose or examine goods."
+      },
+      {
+        "reference_row": "122",
+        "pdf_page": 6,
+        "raw_visual_label": "122",
+        "raw_visual_title": "Consumer's right to return goods."
+      },
+      {
+        "reference_row": "123",
+        "pdf_page": 6,
+        "raw_visual_label": "123",
+        "raw_visual_title": "General standards for the marketing of goods and services."
+      },
+      {
+        "reference_row": "124",
+        "pdf_page": 6,
+        "raw_visual_label": "124",
+        "raw_visual_title": "Right to fair dealings."
+      },
+      {
+        "reference_row": "125",
+        "pdf_page": 6,
+        "raw_visual_label": "125",
+        "raw_visual_title": "False, misleading or deceptive representations."
+      },
+      {
+        "reference_row": "126",
+        "pdf_page": 6,
+        "raw_visual_label": "126",
+        "raw_visual_title": "Representation test and publication testimonials."
+      },
+      {
+        "reference_row": "127",
+        "pdf_page": 6,
+        "raw_visual_label": "127",
+        "raw_visual_title": "Unfair, unreasonable or unjust contract terms."
+      },
+      {
+        "reference_row": "128",
+        "pdf_page": 6,
+        "raw_visual_label": "128",
+        "raw_visual_title": "Notice required for certain terms and conditions."
+      },
+      {
+        "reference_row": "129",
+        "pdf_page": 6,
+        "raw_visual_label": "129",
+        "raw_visual_title": "Prohibited transactions, agreements, terms or conditions."
+      },
+      {
+        "reference_row": "130",
+        "pdf_page": 6,
+        "raw_visual_label": "130",
+        "raw_visual_title": "Rights pertaining to the quality and safety of goods and services."
+      },
+      {
+        "reference_row": "131",
+        "pdf_page": 6,
+        "raw_visual_label": "131",
+        "raw_visual_title": "Consumers' rights to safe, good quality goods."
+      },
+      {
+        "reference_row": "132",
+        "pdf_page": 6,
+        "raw_visual_label": "132",
+        "raw_visual_title": "Implied warranty of quality."
+      },
+      {
+        "reference_row": "133",
+        "pdf_page": 6,
+        "raw_visual_label": "133",
+        "raw_visual_title": "Safety monitoring and recall."
+      },
+      {
+        "reference_row": "134",
+        "pdf_page": 6,
+        "raw_visual_label": "134",
+        "raw_visual_title": "Duty to label goods properly."
+      },
+      {
+        "reference_row": "135",
+        "pdf_page": 6,
+        "raw_visual_label": "135",
+        "raw_visual_title": "Duty to withdraw hazardous goods from the market."
+      },
+      {
+        "reference_row": "136",
+        "pdf_page": 6,
+        "raw_visual_label": "136",
+        "raw_visual_title": "Liability for defective goods."
+      },
+      {
+        "reference_row": "137",
+        "pdf_page": 6,
+        "raw_visual_label": "137",
+        "raw_visual_title": "Liability arising from sale or supply of goods not to be excluded."
+      },
+      {
+        "reference_row": "138",
+        "pdf_page": 6,
+        "raw_visual_label": "138",
+        "raw_visual_title": "Liability for breach of implied obligations by law."
+      },
+      {
+        "reference_row": "139",
+        "pdf_page": 6,
+        "raw_visual_label": "139",
+        "raw_visual_title": "Miscellaneous contracts under which goods pass."
+      },
+      {
+        "reference_row": "140",
+        "pdf_page": 6,
+        "raw_visual_label": "140",
+        "raw_visual_title": "Liability for misrepresentation."
+      },
+      {
+        "reference_row": "141",
+        "pdf_page": 6,
+        "raw_visual_label": "141",
+        "raw_visual_title": "Evasion by means of secondary contract."
+      },
+      {
+        "reference_row": "142",
+        "pdf_page": 6,
+        "raw_visual_label": "142",
+        "raw_visual_title": "Supply of services."
+      },
+      {
+        "reference_row": "143",
+        "pdf_page": 6,
+        "raw_visual_label": "143",
+        "raw_visual_title": "Implied term about time for execution of contract."
+      },
+      {
+        "reference_row": "144",
+        "pdf_page": 6,
+        "raw_visual_label": "144",
+        "raw_visual_title": "Exclusion of implied terms."
+      },
+      {
+        "reference_row": "145",
+        "pdf_page": 6,
+        "raw_visual_label": "145",
+        "raw_visual_title": "Onus of proof."
+      },
+      {
+        "reference_row": "146",
+        "pdf_page": 6,
+        "raw_visual_label": "146",
+        "raw_visual_title": "Enforcement of rights by a consumer."
+      },
+      {
+        "reference_row": "147",
+        "pdf_page": 6,
+        "raw_visual_label": "147",
+        "raw_visual_title": "Conclusion by industry sector regulator."
+      },
+      {
+        "reference_row": "148",
+        "pdf_page": 6,
+        "raw_visual_label": "148",
+        "raw_visual_title": "Enforcement of rights by the Commission."
+      },
+      {
+        "reference_row": "149",
+        "pdf_page": 6,
+        "raw_visual_label": "149",
+        "raw_visual_title": "Consent order."
+      },
+      {
+        "reference_row": "150",
+        "pdf_page": 6,
+        "raw_visual_label": "150",
+        "raw_visual_title": "Compliance notice."
+      },
+      {
+        "reference_row": "151",
+        "pdf_page": 6,
+        "raw_visual_label": "151",
+        "raw_visual_title": "Redress by civil society groups."
+      },
+      {
+        "reference_row": "152",
+        "pdf_page": 6,
+        "raw_visual_label": "152",
+        "raw_visual_title": "Redress by the court."
+      },
+      {
+        "reference_row": "153",
+        "pdf_page": 6,
+        "raw_visual_label": "153",
+        "raw_visual_title": "Power to obtain satisfactory written assurance."
+      },
+      {
+        "reference_row": "154",
+        "pdf_page": 7,
+        "raw_visual_label": "154",
+        "raw_visual_title": "Compensation order."
+      },
+      {
+        "reference_row": "155",
+        "pdf_page": 7,
+        "raw_visual_label": "155",
+        "raw_visual_title": "Contravention of consumer rights."
+      },
+      {
+        "reference_row": "156",
+        "pdf_page": 7,
+        "raw_visual_label": "156",
+        "raw_visual_title": "Limitation of suits against the Commission and the Tribunal."
+      },
+      {
+        "reference_row": "157",
+        "pdf_page": 7,
+        "raw_visual_label": "157",
+        "raw_visual_title": "Issuance of Notices by or on behalf of Commission."
+      },
+      {
+        "reference_row": "158",
+        "pdf_page": 7,
+        "raw_visual_label": "158",
+        "raw_visual_title": "Service of notices."
+      },
+      {
+        "reference_row": "159",
+        "pdf_page": 7,
+        "raw_visual_label": "159",
+        "raw_visual_title": "Offences under this Part."
+      },
+      {
+        "reference_row": "160",
+        "pdf_page": 7,
+        "raw_visual_label": "160",
+        "raw_visual_title": "Decisions of the Commission to be in writing."
+      },
+      {
+        "reference_row": "161",
+        "pdf_page": 7,
+        "raw_visual_label": "161",
+        "raw_visual_title": "Delegation by the Commission."
+      },
+      {
+        "reference_row": "162",
+        "pdf_page": 7,
+        "raw_visual_label": "162",
+        "raw_visual_title": "Civil or criminal proceedings in respect of any action of the Commission."
+      },
+      {
+        "reference_row": "163",
+        "pdf_page": 7,
+        "raw_visual_label": "163",
+        "raw_visual_title": "Power to make regulations."
+      },
+      {
+        "reference_row": "164",
+        "pdf_page": 7,
+        "raw_visual_label": "164",
+        "raw_visual_title": "Application of other enactments."
+      },
+      {
+        "reference_row": "165",
+        "pdf_page": 7,
+        "raw_visual_label": "165",
+        "raw_visual_title": "Repeals and savings."
+      },
+      {
+        "reference_row": "166",
+        "pdf_page": 7,
+        "raw_visual_label": "166",
+        "raw_visual_title": "Transitional provisions."
+      },
+      {
+        "reference_row": "167",
+        "pdf_page": 7,
+        "raw_visual_label": "167",
+        "raw_visual_title": "Interpretation."
+      },
+      {
+        "reference_row": "168",
+        "pdf_page": 7,
+        "raw_visual_label": "168",
+        "raw_visual_title": "Citation."
+      }
+    ],
+    "glitches": [
+      {
+        "reference_row": "59",
+        "raw_printed_arrangement_label": "58",
+        "note": "Second58 onPDF4 names Prohibition of agreements in restraint of competition. Key59 associates that printed title with body59 atPDF33; raw printed label is not changed or treated as a legible59."
+      },
+      {
+        "reference_row": "46",
+        "note": "No terminal full stop visible; retained."
+      },
+      {
+        "reference_row": "89",
+        "note": "No terminal full stop visible; retained."
+      },
+      {
+        "reference_row": "100",
+        "note": "No terminal full stop visible; retained."
+      },
+      {
+        "reference_row": "126",
+        "note": "Printed Representation test and publication testimonials. retained without substituting a different word."
+      },
+      {
+        "reference_row": "147",
+        "note": "Printed Conclusion by industry sector regulator. retained without substituting a different word."
+      },
+      {
+        "reference_row": "154,155",
+        "note": "Printed numeric labels lack terminal stops; raw image observations separate from navigation keys."
+      }
+    ],
+    "duplicate_page": "Printed A23 occurs onPDF24/25. Both remain evidence; no deduplication decision.",
+    "scope": "Navigation titles only; this catalogue does not resolve source body/arrangement discrepancies, legal currency or ingestion acceptance."
+  }
+}
