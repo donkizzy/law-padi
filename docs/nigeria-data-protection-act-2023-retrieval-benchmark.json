@@ -1,0 +1,158 @@
+{
+  "version": "nigeria-data-protection-act-2023-retrieval-v1",
+  "status": "approved by the user on 3 November 2026",
+  "description": "Retrieval benchmark for the Nigeria Data Protection Act 2023 (as enacted). Each query names the one section that best answers it; Recall@10 is measured against this release's own retrieval documents. Queries mix everyday and legal wording and were checked against the approved text on 3 November 2026.",
+  "instrument_slug": "nigeria-data-protection-act-2023",
+  "queries": [
+    {
+      "query": "What is the purpose of the Nigeria Data Protection Act?",
+      "path": "nigeria-data-protection-act-2023.part1.section1",
+      "note": "s.1 objectives."
+    },
+    {
+      "query": "Does the NDPA apply to a foreign company processing data of people in Nigeria?",
+      "path": "nigeria-data-protection-act-2023.part1.section2",
+      "note": "s.2(2)(c)."
+    },
+    {
+      "query": "Does the Act apply to personal or household use of data?",
+      "path": "nigeria-data-protection-act-2023.part1.section3",
+      "note": "s.3(1)."
+    },
+    {
+      "query": "What is the Nigeria Data Protection Commission?",
+      "path": "nigeria-data-protection-act-2023.part2.section4",
+      "note": "s.4."
+    },
+    {
+      "query": "What are the functions of the Data Protection Commission?",
+      "path": "nigeria-data-protection-act-2023.part2.section5",
+      "note": "s.5."
+    },
+    {
+      "query": "What principles must a data controller follow when processing personal data?",
+      "path": "nigeria-data-protection-act-2023.part5.section24",
+      "note": "s.24."
+    },
+    {
+      "query": "What are the lawful bases for processing personal data?",
+      "path": "nigeria-data-protection-act-2023.part5.section25",
+      "note": "s.25."
+    },
+    {
+      "query": "What makes consent to data processing valid?",
+      "path": "nigeria-data-protection-act-2023.part5.section26",
+      "note": "s.26."
+    },
+    {
+      "query": "What must a company tell me before collecting my personal data?",
+      "path": "nigeria-data-protection-act-2023.part5.section27",
+      "note": "s.27."
+    },
+    {
+      "query": "When is a data privacy impact assessment required?",
+      "path": "nigeria-data-protection-act-2023.part5.section28",
+      "note": "s.28."
+    },
+    {
+      "query": "Can a company process my health or religious data?",
+      "path": "nigeria-data-protection-act-2023.part5.section30",
+      "note": "s.30 sensitive personal data."
+    },
+    {
+      "query": "Do children need parental consent for their data to be processed?",
+      "path": "nigeria-data-protection-act-2023.part5.section31",
+      "note": "s.31."
+    },
+    {
+      "query": "Must a company appoint a data protection officer?",
+      "path": "nigeria-data-protection-act-2023.part5.section32",
+      "note": "s.32."
+    },
+    {
+      "query": "Can I ask a company for a copy of my personal data or to delete it?",
+      "path": "nigeria-data-protection-act-2023.part6.section34",
+      "note": "s.34 rights of a data subject."
+    },
+    {
+      "query": "Can I withdraw my consent to data processing?",
+      "path": "nigeria-data-protection-act-2023.part6.section35",
+      "note": "s.35."
+    },
+    {
+      "query": "Can I stop a company using my data for direct marketing?",
+      "path": "nigeria-data-protection-act-2023.part6.section36",
+      "note": "s.36 right to object."
+    },
+    {
+      "query": "Can a decision about me be made only by a computer or profiling?",
+      "path": "nigeria-data-protection-act-2023.part6.section37",
+      "note": "s.37 automated decision making."
+    },
+    {
+      "query": "Can I move my personal data to another service provider?",
+      "path": "nigeria-data-protection-act-2023.part6.section38",
+      "note": "s.38 data portability."
+    },
+    {
+      "query": "What security measures must a data controller take?",
+      "path": "nigeria-data-protection-act-2023.part7.section39",
+      "note": "s.39."
+    },
+    {
+      "query": "How quickly must a data breach be reported to the Commission?",
+      "path": "nigeria-data-protection-act-2023.part7.section40",
+      "note": "s.40 72 hours."
+    },
+    {
+      "query": "When can personal data be transferred outside Nigeria?",
+      "path": "nigeria-data-protection-act-2023.part8.section41",
+      "note": "s.41."
+    },
+    {
+      "query": "How is adequacy of protection in another country decided?",
+      "path": "nigeria-data-protection-act-2023.part8.section42",
+      "note": "s.42."
+    },
+    {
+      "query": "Who must register as a data controller of major importance?",
+      "path": "nigeria-data-protection-act-2023.part9.section44",
+      "note": "s.44."
+    },
+    {
+      "query": "How do I file a complaint with the Data Protection Commission?",
+      "path": "nigeria-data-protection-act-2023.part10.section46",
+      "note": "s.46."
+    },
+    {
+      "query": "What fines can the Commission impose for breaching the NDPA?",
+      "path": "nigeria-data-protection-act-2023.part10.section48",
+      "note": "s.48 higher and standard maximum amounts."
+    },
+    {
+      "query": "Is it an offence to disobey a compliance order of the Commission?",
+      "path": "nigeria-data-protection-act-2023.part10.section49",
+      "note": "s.49."
+    },
+    {
+      "query": "Can I sue a company for damages after my data is misused?",
+      "path": "nigeria-data-protection-act-2023.part10.section51",
+      "note": "s.51 civil remedies."
+    },
+    {
+      "query": "Are company directors liable for data protection offences?",
+      "path": "nigeria-data-protection-act-2023.part10.section53",
+      "note": "s.53 joint and vicarious liability."
+    },
+    {
+      "query": "What is personal data under the NDPA?",
+      "path": "nigeria-data-protection-act-2023.part12.section65",
+      "note": "s.65 interpretation."
+    },
+    {
+      "query": "Does the NDPA override other laws on data protection?",
+      "path": "nigeria-data-protection-act-2023.part12.section63",
+      "note": "s.63 priority of the Act."
+    }
+  ]
+}

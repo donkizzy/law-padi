@@ -1,0 +1,158 @@
+{
+  "version": "land-use-act-1978-retrieval-v1",
+  "status": "approved by the user on 3 November 2026",
+  "description": "Retrieval benchmark for the Land Use Act, Cap. L5 LFN 2004 (as enacted). Each query names the one section that best answers it; Recall@10 is measured against this release's own retrieval documents. Queries mix everyday and legal wording and were checked against the approved text on 3 November 2026.",
+  "instrument_slug": "land-use-act-1978",
+  "queries": [
+    {
+      "query": "Who owns land in a State in Nigeria?",
+      "path": "land-use-act-1978.part1.section1",
+      "note": "s.1 vested in the Governor in trust."
+    },
+    {
+      "query": "Who controls land in urban areas?",
+      "path": "land-use-act-1978.part1.section2",
+      "note": "s.2(1)(a) Governor."
+    },
+    {
+      "query": "Who decides which areas are urban areas?",
+      "path": "land-use-act-1978.part1.section3",
+      "note": "s.3 Governor by order."
+    },
+    {
+      "query": "What powers does the Governor have over land?",
+      "path": "land-use-act-1978.part2.section5",
+      "note": "s.5(1)."
+    },
+    {
+      "query": "Can a local government grant a customary right of occupancy for farming?",
+      "path": "land-use-act-1978.part2.section6",
+      "note": "s.6(1)."
+    },
+    {
+      "query": "Can a person under 21 be granted a statutory right of occupancy?",
+      "path": "land-use-act-1978.part2.section7",
+      "note": "s.7."
+    },
+    {
+      "query": "What is a certificate of occupancy?",
+      "path": "land-use-act-1978.part2.section9",
+      "note": "s.9."
+    },
+    {
+      "query": "Can I sell or mortgage my land without the Governor's consent?",
+      "path": "land-use-act-1978.part4.section22",
+      "note": "s.22(1)."
+    },
+    {
+      "query": "Can customary land be sold without approval?",
+      "path": "land-use-act-1978.part4.section21",
+      "note": "s.21."
+    },
+    {
+      "query": "Is a land sale done against the Land Use Act void?",
+      "path": "land-use-act-1978.part4.section26",
+      "note": "s.26."
+    },
+    {
+      "query": "When can the Governor revoke a right of occupancy?",
+      "path": "land-use-act-1978.part5.section28",
+      "note": "s.28 overriding public interest."
+    },
+    {
+      "query": "What does overriding public interest mean?",
+      "path": "land-use-act-1978.part5.section28",
+      "note": "s.28(2)-(3)."
+    },
+    {
+      "query": "What compensation do I get when my land is revoked?",
+      "path": "land-use-act-1978.part5.section29",
+      "note": "s.29."
+    },
+    {
+      "query": "Where do I go if I disagree with the compensation offered?",
+      "path": "land-use-act-1978.part5.section30",
+      "note": "s.30 Land Use and Allocation Committee."
+    },
+    {
+      "query": "Can I be resettled instead of being paid compensation?",
+      "path": "land-use-act-1978.part5.section33",
+      "note": "s.33."
+    },
+    {
+      "query": "What is penal rent for not developing land?",
+      "path": "land-use-act-1978.part3.section19",
+      "note": "s.19."
+    },
+    {
+      "query": "Can the Governor grant land free of rent?",
+      "path": "land-use-act-1978.part3.section17",
+      "note": "s.17."
+    },
+    {
+      "query": "What happens to a right of occupancy when the holder dies?",
+      "path": "land-use-act-1978.part4.section24",
+      "note": "s.24 devolution on death."
+    },
+    {
+      "query": "Which court hears disputes over a statutory right of occupancy?",
+      "path": "land-use-act-1978.part7.section39",
+      "note": "s.39 High Court."
+    },
+    {
+      "query": "Which court hears disputes over customary rights of occupancy?",
+      "path": "land-use-act-1978.part7.section41",
+      "note": "s.41."
+    },
+    {
+      "query": "What is the penalty for building on land without a right of occupancy?",
+      "path": "land-use-act-1978.part8.section43",
+      "note": "s.43."
+    },
+    {
+      "query": "How much undeveloped urban land could a person keep when the Act started?",
+      "path": "land-use-act-1978.part6.section34",
+      "note": "s.34(5) half of one hectare."
+    },
+    {
+      "query": "What happened to farmland outside urban areas when the Act started?",
+      "path": "land-use-act-1978.part6.section36",
+      "note": "s.36."
+    },
+    {
+      "query": "Can a court question the adequacy of compensation under the Land Use Act?",
+      "path": "land-use-act-1978.part8.section47",
+      "note": "s.47(2)."
+    },
+    {
+      "query": "What is developed land under the Land Use Act?",
+      "path": "land-use-act-1978.part8.section51",
+      "note": "s.51 definitions."
+    },
+    {
+      "query": "Does the Land Use Act affect Federal Government land?",
+      "path": "land-use-act-1978.part8.section49",
+      "note": "s.49."
+    },
+    {
+      "query": "Must I maintain the boundary beacons on my land?",
+      "path": "land-use-act-1978.part2.section13",
+      "note": "s.13."
+    },
+    {
+      "query": "Do I need a licence to take sand or gravel from land?",
+      "path": "land-use-act-1978.part2.section12",
+      "note": "s.12."
+    },
+    {
+      "query": "Can I surrender my statutory right of occupancy?",
+      "path": "land-use-act-1978.part4.section27",
+      "note": "s.27."
+    },
+    {
+      "query": "How must notices under the Land Use Act be served?",
+      "path": "land-use-act-1978.part8.section44",
+      "note": "s.44."
+    }
+  ]
+}

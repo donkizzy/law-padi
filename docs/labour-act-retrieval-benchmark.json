@@ -1,0 +1,168 @@
+{
+  "version": "labour-act-retrieval-v1",
+  "status": "approved by the user on 3 November 2026",
+  "description": "Retrieval benchmark for the Labour Act, Cap. L1 LFN 2004 (as enacted). Each query names the one section that best answers it; Recall@10 is measured against this release's own retrieval documents. Queries mix everyday and legal wording and were checked against the approved text on 3 November 2026.",
+  "instrument_slug": "labour-act",
+  "queries": [
+    {
+      "query": "Can my employer pay my salary in foodstuff instead of money?",
+      "path": "labour-act.part1.section1",
+      "note": "s.1(1) wages payable in legal tender."
+    },
+    {
+      "query": "Can my wages be paid to me inside a beer parlour or shop?",
+      "path": "labour-act.part1.section3",
+      "note": "s.3 no payment on premises selling liquor or goods."
+    },
+    {
+      "query": "How much salary advance can my employer give me?",
+      "path": "labour-act.part1.section4",
+      "note": "s.4(1) not more than one month's wages."
+    },
+    {
+      "query": "Can my boss deduct fines from my salary?",
+      "path": "labour-act.part1.section5",
+      "note": "s.5(1) deductions for fines prohibited."
+    },
+    {
+      "query": "What is the maximum my employer can deduct from my wages in a month?",
+      "path": "labour-act.part1.section5",
+      "note": "s.5(7) one third of monthly wages."
+    },
+    {
+      "query": "When must my employer give me written terms of my employment?",
+      "path": "labour-act.part1.section7",
+      "note": "s.7(1) within three months."
+    },
+    {
+      "query": "Can a contract stop me from joining a trade union?",
+      "path": "labour-act.part1.section9",
+      "note": "s.9(6)."
+    },
+    {
+      "query": "What is the minimum age to enter a contract of employment?",
+      "path": "labour-act.part1.section9",
+      "note": "s.9(3) sixteen years, except apprenticeship."
+    },
+    {
+      "query": "How much notice must be given to end my employment?",
+      "path": "labour-act.part1.section11",
+      "note": "s.11(2) notice periods."
+    },
+    {
+      "query": "Can my employer pay me instead of giving notice?",
+      "path": "labour-act.part1.section11",
+      "note": "s.11(6) payment in lieu of notice."
+    },
+    {
+      "query": "What are normal working hours and when is it overtime?",
+      "path": "labour-act.part1.section13",
+      "note": "s.13(1)-(2)."
+    },
+    {
+      "query": "Am I entitled to one day of rest every week?",
+      "path": "labour-act.part1.section13",
+      "note": "s.13(7) one day in every seven."
+    },
+    {
+      "query": "Must my employer give me transport if I travel 16 kilometres to another worksite?",
+      "path": "labour-act.part1.section14",
+      "note": "s.14(1)."
+    },
+    {
+      "query": "How often must wages be paid?",
+      "path": "labour-act.part1.section15",
+      "note": "s.15 at the end of each period, not exceeding one month."
+    },
+    {
+      "query": "How many days of paid sick leave do I get?",
+      "path": "labour-act.part1.section16",
+      "note": "s.16 up to twelve working days."
+    },
+    {
+      "query": "If my employer has no work for me, must they still pay me?",
+      "path": "labour-act.part1.section17",
+      "note": "s.17 duty to provide work."
+    },
+    {
+      "query": "How many days of annual leave do I get after one year?",
+      "path": "labour-act.part1.section18",
+      "note": "s.18(1) at least six working days."
+    },
+    {
+      "query": "Can my employer pay me money instead of letting me take my annual holiday?",
+      "path": "labour-act.part1.section18",
+      "note": "s.18(3)."
+    },
+    {
+      "query": "What must an employer do when declaring workers redundant?",
+      "path": "labour-act.part1.section20",
+      "note": "s.20(1) last in, first out."
+    },
+    {
+      "query": "Do I need a permit to recruit Nigerians for jobs abroad?",
+      "path": "labour-act.part2.section23",
+      "note": "s.23(1)."
+    },
+    {
+      "query": "What is the penalty for inducing someone to take a job by fraud?",
+      "path": "labour-act.part2.section45",
+      "note": "s.45."
+    },
+    {
+      "query": "How long can a contract of apprenticeship last?",
+      "path": "labour-act.part3.section49",
+      "note": "s.49 term not exceeding five years."
+    },
+    {
+      "query": "Must an apprenticeship contract be in writing and approved?",
+      "path": "labour-act.part3.section50",
+      "note": "s.50(1) attestation."
+    },
+    {
+      "query": "Is a pregnant worker entitled to maternity leave?",
+      "path": "labour-act.part3.section54",
+      "note": "s.54 maternity protection."
+    },
+    {
+      "query": "Can women be made to work at night?",
+      "path": "labour-act.part3.section55",
+      "note": "s.55 night work."
+    },
+    {
+      "query": "Can a woman be employed underground in a mine?",
+      "path": "labour-act.part3.section56",
+      "note": "s.56."
+    },
+    {
+      "query": "At what age can a child be employed?",
+      "path": "labour-act.part3.section59",
+      "note": "s.59 young persons."
+    },
+    {
+      "query": "Is forced labour illegal in Nigeria?",
+      "path": "labour-act.part3.section73",
+      "note": "s.73."
+    },
+    {
+      "query": "What records must an employer keep about workers?",
+      "path": "labour-act.part4.section75",
+      "note": "s.75."
+    },
+    {
+      "query": "Can a labour officer enter and inspect my workplace?",
+      "path": "labour-act.part4.section78",
+      "note": "s.78 powers of authorised labour officers."
+    },
+    {
+      "query": "How do I bring a labour complaint against my employer in court?",
+      "path": "labour-act.part4.section81",
+      "note": "s.81 labour complaints."
+    },
+    {
+      "query": "Who counts as a worker under the Labour Act?",
+      "path": "labour-act.part4.section91",
+      "note": "s.91 definition of worker."
+    }
+  ]
+}
