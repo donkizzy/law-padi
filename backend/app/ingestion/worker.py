@@ -1213,11 +1213,15 @@ def handle_materializing(
         ],
     }
     session.add(release)
+    manifest_content = json.dumps(manifest, sort_keys=True).encode()
+    # Artifacts are immutable: a manifest rebuilt after a review correction is
+    # stored beside the earlier one, and readers take the newest for the release.
+    manifest_hash = hashlib.sha256(manifest_content).hexdigest()[:16]
     blob = get_blob_store().put_artifact(
         run_id=str(run.id),
         artifact_type=IngestionArtifactType.RELEASE_MANIFEST.value,
-        filename=f"release-{release.version}.json",
-        content=json.dumps(manifest, sort_keys=True).encode(),
+        filename=f"release-{release.version}-{manifest_hash}.json",
+        content=manifest_content,
         content_type="application/json",
         metadata={
             "release_id": str(release.id),

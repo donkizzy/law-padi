@@ -1564,6 +1564,81 @@ def test_materialization_skips_rejected_candidates_and_their_findings(
     assert rejected.materialized_provision_id is None
 
 
+def test_rematerialization_after_review_correction_stores_a_new_manifest(
+    db: Session, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    monkeypatch.setattr(settings, "INGESTION_STORAGE_DIR", str(tmp_path))
+    pdf = _pdf_with_pages([f"65. Interpretation {uuid.uuid4().hex}"])
+    source, run = _stored_source_and_run(db, tmp_path=tmp_path, pdf=pdf, max_attempts=1)
+    _clear_run_tasks(db, run)
+    # As-enacted Act text: the release holds exactly what this run materialized.
+    run.pipeline_config = {**(run.pipeline_config or {}), "instrument_parser": "act"}
+    db.add(run)
+    source.verification_status = VerificationStatus.VERIFIED
+    source.verified_at = datetime.now(UTC)
+    db.add(source)
+    section = _approved_candidate(db, run=run, source=source, text="Section text")
+    fake = _approved_candidate(
+        db,
+        run=run,
+        source=source,
+        text="(a) part of a definition",
+        canonical_path=f"{section.canonical_path}.paragrapha",
+        sort_key="999",
+    )
+    materializing_step = db.exec(
+        select(IngestionStep).where(
+            IngestionStep.run_id == run.id,
+            IngestionStep.stage == IngestionStage.MATERIALIZING,
+        )
+    ).one()
+    db.commit()
+
+    for attempt in ("first", "corrected"):
+        if attempt == "corrected":
+            # A reviewer rejects an item after the first materialization.
+            fake.status = ExtractionCandidateStatus.REJECTED
+            db.add(fake)
+            release = db.exec(
+                select(CorpusRelease).where(
+                    CorpusRelease.version == f"draft-{run.id.hex[:12]}"
+                )
+            ).one()
+            for entry in db.exec(
+                select(CorpusReleaseEntry).where(
+                    CorpusReleaseEntry.release_id == release.id,
+                    CorpusReleaseEntry.provision_version_id
+                    == fake.materialized_version_id,
+                )
+            ).all():
+                db.delete(entry)
+            db.commit()
+        enqueue_task(
+            db,
+            run=run,
+            step=materializing_step,
+            task_type=IngestionStage.MATERIALIZING.value,
+            idempotency_key=f"{run.id}:materialize-{attempt}",
+            payload={"source_document_id": str(source.id)},
+        )
+        result = run_once(db, worker_id="worker-test")
+        assert result is not None
+        assert result.task_status == IngestionTaskStatus.SUCCEEDED
+        _clear_run_tasks(db, run)
+
+    manifests = db.exec(
+        select(IngestionArtifact)
+        .where(
+            IngestionArtifact.run_id == run.id,
+            IngestionArtifact.artifact_type == IngestionArtifactType.RELEASE_MANIFEST,
+        )
+        .order_by(col(IngestionArtifact.created_at))
+    ).all()
+    assert len(manifests) == 2
+    latest = json.loads(LocalBlobStore(tmp_path).read_bytes(manifests[-1].storage_key))
+    assert len(latest["entries"]) == 1
+
+
 def test_materialization_blocks_changed_current_law_without_revision_metadata(
     db: Session, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
