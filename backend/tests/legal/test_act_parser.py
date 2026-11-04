@@ -409,3 +409,69 @@ def test_year_markers_split_schedule_letters_and_outline_items_stay_text() -> No
     assert "SCHEDULES" not in (nodes["test-act.section2"].text or "")
     assert "1.1.1 Diseases caused by lead." in nodes["test-act.schedule1.item1"].text
     assert "test-act.schedule1.item2" in nodes
+
+
+def test_misprinted_enacting_clause_still_starts_the_body() -> None:
+    graph = parse_instrument_pages(
+        instrument_type="act",
+        instrument_slug="test-act",
+        pages=[
+            SourcePage(1, "ARRANGEMENT OF SECTIONS\n1. Objective\n2. Citation\n"),
+            SourcePage(
+                2,
+                "ENECTED by the National Assembly of the Federal Republic of Nigeria\n"
+                "1. The objective of this Act is stated here.\n"
+                "2. This Act may be cited as the Test Act.\n",
+            ),
+        ],
+    )
+    nodes = graph.node_by_path
+    assert "test-act.section1" in nodes
+    assert "test-act.section2" in nodes
+
+
+def test_wrapped_schedule_reference_ending_a_sentence_is_not_a_heading() -> None:
+    graph = parse_instrument_pages(
+        instrument_type="act",
+        instrument_slug="test-act",
+        pages=[
+            SourcePage(1, "ARRANGEMENT OF SECTIONS\n1. Relief\n2. Citation\n"),
+            SourcePage(
+                2,
+                "ENACTED by the National Assembly\n"
+                "1. Relief is given in place of any allowances under Part I of the\n"
+                "First Schedule.\n"
+                "2. This Act may be cited as the Test Act.\n"
+                "SCHEDULES\nFirst Schedule\nRates\n1. Rate one.\n",
+            ),
+        ],
+    )
+    nodes = graph.node_by_path
+    assert "test-act.section2" in nodes
+    assert "First Schedule." in nodes["test-act.section1"].text
+    assert "test-act.schedule1" in nodes
+
+
+def test_chapters_spelled_in_words_and_late_arrangement_heading() -> None:
+    graph = parse_instrument_pages(
+        instrument_type="act",
+        instrument_slug="test-act",
+        pages=[
+            SourcePage(
+                1,
+                "CHAPTER ONE - OBJECTIVE\n1. Objective\nCHAPTER TWO - TAX\n"
+                "Part I - Imposition\n2. Imposition\nARRANGEMENT OF SECTIONS\n",
+            ),
+            SourcePage(
+                2,
+                "ENACTED by the National Assembly\nCHAPTER ONE - OBJECTIVE\n"
+                "1. The objective is stated.\nCHAPTER TWO - TAX\nPart I - Imposition\n"
+                "2. Tax is imposed.\n",
+            ),
+        ],
+    )
+    nodes = graph.node_by_path
+    assert "test-act.chapter2.part1" in nodes
+    sections = {n.number for n in nodes.values() if n.kind == "section"}
+    assert sections == {"1", "2"}
+    assert "Unresolved" not in " ".join(graph.metadata["parser_issues"])

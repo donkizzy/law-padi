@@ -22,7 +22,7 @@ from app.legal.parser import (
 
 ACT_PARSER_VERSION = "act-hierarchy-v3"
 _ARRANGEMENT = re.compile(r"arrangement\s+of\s+(?:sections|provisions)", re.I)
-_ENACTMENT = re.compile(r"^[^\w(]*(?:BE\s+IT\s+)?ENACTED\b", re.I)
+_ENACTMENT = re.compile(r"^[^\w(]*(?:BE\s+IT\s+)?EN[AE]CTED\b", re.I)
 _BACK_MATTER = re.compile(
     r"^(?:I\s+ASSENT|I,?\s+certify\b|EXPLANATORY\s+MEMORANDUM\s*$|SUBSIDIARY\s+LEGISLATION\s*$|Schedule\s+to\s+(?:the\s+)?(?:Administration|Nigeria Police).+Bill|Printed\s+and\s+Published)\b",
     re.I,
@@ -85,6 +85,9 @@ def _schedule_heading(line: str) -> tuple[str | None, str | None] | None:
         if rest and rest[0].islower():
             return None
         if not ordinal and not line.strip().isupper():
+            return None
+        # A wrapped "First Schedule." ending a sentence is a reference.
+        if rest and not any(c.isalnum() for c in rest) and not line.strip().isupper():
             return None
         return ordinal, rest or None
     referenced = _REFERENCED_SCHEDULE.match(line)
@@ -181,7 +184,13 @@ def _arrangement(
     active = False
     current: str | None = None
     previous = 0
+    # The heading can be extracted after its entries on a page (separate text block).
+    heading_page = next(
+        (page for page, line in lines if _ARRANGEMENT.search(line)), None
+    )
     for page, line in lines:
+        if page == heading_page:
+            active = True
         if _ARRANGEMENT.search(line):
             active = True
             current = None

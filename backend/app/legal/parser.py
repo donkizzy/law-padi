@@ -29,7 +29,7 @@ _OATH_HEADINGS = {
 _ARRANGEMENT_RE = re.compile(r"\barrangement\s+of\s+(?:sections|provisions)\b", re.I)
 
 _CHAPTER_RE = re.compile(
-    r"^CHAPTER\s+([IVXLCDM]+|\d+)\b(?:\s*[-:]\s*(.*)|\s+(.*))?$", re.I
+    r"^CHAPTER\s+([IVXLCDM]+|\d+|ONE|TWO|THREE|FOUR|FIVE|SIX|SEVEN|EIGHT|NINE)\b(?:\s*[-:]\s*(.*)|\s+(.*))?$", re.I
 )
 _PART_RE = re.compile(
     r"^PART\s+([IVXLCDM]+|\d+|[A-Z])\b(?:\s*[-:]\s*(.*)|\s+(.*))?$", re.I
@@ -671,6 +671,15 @@ def _normalize_number(value: str) -> str:
         "THIRTEENTH": "13",
         "FOURTEENTH": "14",
         "FIFTEENTH": "15",
+        "ONE": "1",
+        "TWO": "2",
+        "THREE": "3",
+        "FOUR": "4",
+        "FIVE": "5",
+        "SIX": "6",
+        "SEVEN": "7",
+        "EIGHT": "8",
+        "NINE": "9",
     }.get(cleaned)
     if ordinal:
         return ordinal
