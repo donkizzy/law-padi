@@ -186,6 +186,74 @@ def test_all_canonical_loaders_supply_real_act_identity(
     )
 
 
+def test_public_loaders_accept_a_paragraph_under_a_schedule_item(
+    db: Session, mixed_corpus
+) -> None:
+    release, act, segments, _documents = mixed_corpus
+    source_id = db.exec(
+        select(ProvisionVersion.source_document_id).where(
+            ProvisionVersion.provision_id == segments[-1].provision_id
+        )
+    ).one()
+    schedule = Provision(
+        instrument_id=act.id,
+        kind=ProvisionKind.SCHEDULE,
+        number="1",
+        canonical_path=f"{act.slug}.schedule1",
+        sort_key="900",
+    )
+    db.add(schedule)
+    db.flush()
+    item = Provision(
+        instrument_id=act.id,
+        kind=ProvisionKind.SCHEDULE_ITEM,
+        number="16",
+        parent_id=schedule.id,
+        canonical_path=f"{act.slug}.schedule1.item16",
+        sort_key="901",
+    )
+    db.add(item)
+    db.flush()
+    paragraph = Provision(
+        instrument_id=act.id,
+        kind=ProvisionKind.PARAGRAPH,
+        number="a",
+        parent_id=item.id,
+        canonical_path=f"{act.slug}.schedule1.item16.paragrapha",
+        sort_key="902",
+    )
+    db.add(paragraph)
+    db.flush()
+    text = "(a) any vacancy in the membership of the Council."
+    version = ProvisionVersion(
+        provision_id=paragraph.id,
+        text=text,
+        normalized_text=text.lower(),
+        valid_from=date(2015, 1, 1),
+        legal_status=LegalStatus.HISTORICAL,
+        source_document_id=source_id,
+        text_sha256=legal_text_sha256(text),
+    )
+    db.add(version)
+    db.flush()
+    db.add(
+        CorpusReleaseEntry(
+            release_id=release.id,
+            provision_version_id=version.id,
+            source_document_id=source_id,
+        )
+    )
+    db.commit()
+
+    for corpus in (
+        load_public_corpus(db, release),
+        load_ranked_corpus(db, release, [version.id]),
+    ):
+        assert corpus.result(corpus.provisions[paragraph.id]).instrument_slug == (
+            act.slug
+        )
+
+
 def test_topics_do_not_promote_an_acts_same_numbered_section(
     db: Session, mixed_corpus
 ) -> None:
