@@ -116,6 +116,7 @@ from app.legal.instrument_parser import (
     parsed_provisions_from_graph,
 )
 from app.legal.models import (
+    RECORDED_BENCHMARK_VERSIONS_MAX_LENGTH,
     CandidateRevision,
     CorpusRelease,
     CorpusReleaseEntry,
@@ -3078,7 +3079,7 @@ def _benchmark_dataset_for_embedding_profiles(
     pinned_version = next(iter(versions))
     dataset_versions = _benchmark_versions_for_release(session, release, pinned_version)
     recorded = BENCHMARK_VERSION_SEPARATOR.join(dataset_versions)
-    if len(recorded) > 128:
+    if len(recorded) > RECORDED_BENCHMARK_VERSIONS_MAX_LENGTH:
         raise IngestionWorkerError(
             f"Benchmark dataset versions are too long to record: {recorded}"
         )

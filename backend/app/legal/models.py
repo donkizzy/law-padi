@@ -59,6 +59,10 @@ from app.legal.enums import (
     VerificationStatus,
 )
 
+# An embedding run graded by several benchmarks records all their versions, one
+# per release instrument, so this must fit every law in a composite release.
+RECORDED_BENCHMARK_VERSIONS_MAX_LENGTH = 2048
+
 
 def get_datetime_utc() -> datetime:
     return datetime.now(UTC)
@@ -1533,7 +1537,9 @@ class EmbeddingRun(SQLModel, table=True):
         default=EmbeddingRunStatus.PENDING,
         sa_column=Column(String(length=32), nullable=False, index=True),
     )
-    benchmark_dataset_version: str | None = Field(default=None, max_length=128)
+    benchmark_dataset_version: str | None = Field(
+        default=None, max_length=RECORDED_BENCHMARK_VERSIONS_MAX_LENGTH
+    )
     recall_at_10: float | None = Field(
         default=None,
         sa_column=Column(Float, nullable=True),

@@ -1957,6 +1957,67 @@ def test_embedding_benchmark_grades_each_release_instrument_with_its_own_dataset
     }
 
 
+def test_embedding_run_records_every_benchmark_of_a_composite_release(
+    db: Session, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    monkeypatch.setattr(settings, "INGESTION_STORAGE_DIR", str(tmp_path))
+    source, _run, release, profile = _release_with_retrieval_documents(
+        db, tmp_path=tmp_path, create_benchmark_dataset=False
+    )
+    constitution = db.get(LegalInstrument, source.legal_instrument_id)
+    assert constitution
+    suffix = uuid.uuid4().hex[:8]
+    versions = [
+        f"{name}-{suffix}"
+        for name in (
+            "acja-2015-retrieval-v1",
+            "constitution-source-edition-retrieval-2026-10-05-v1",
+            "copyright-act-2022-retrieval-v1",
+            "employees-compensation-act-2010-retrieval-v1",
+            "nigeria-tax-act-2025-retrieval-v1",
+            "police-act-2020-retrieval-v1",
+        )
+    ]
+    for version in versions:
+        _create_retrieval_benchmark_dataset(
+            db, version=version, canonical_path=f"{constitution.slug}.section37"
+        )
+    pinned_version = str(profile.configuration["benchmark_dataset_version"])
+    _create_retrieval_benchmark_dataset(
+        db,
+        version=pinned_version,
+        canonical_path=f"{constitution.slug}.section37",
+        instrument_slug=constitution.slug,
+    )
+    monkeypatch.setattr(
+        "app.ingestion.worker._benchmark_versions_for_release",
+        lambda *_args: versions,
+    )
+
+    recorded, queries = _benchmark_dataset_for_embedding_profiles(
+        db, [profile], release
+    )
+
+    assert recorded == "+".join(versions)
+    assert len(recorded) > 128
+    assert len(queries) == len(versions)
+    embedding_run = EmbeddingRun(
+        release_id=release.id,
+        profile_id=profile.id,
+        benchmark_dataset_version=recorded,
+    )
+    db.add(embedding_run)
+    db.commit()
+    db.refresh(embedding_run)
+    assert embedding_run.benchmark_dataset_version == recorded
+
+    monkeypatch.setattr(
+        "app.ingestion.worker.RECORDED_BENCHMARK_VERSIONS_MAX_LENGTH", len(recorded) - 1
+    )
+    with pytest.raises(IngestionWorkerError, match="too long to record"):
+        _benchmark_dataset_for_embedding_profiles(db, [profile], release)
+
+
 def test_worker_embeds_indexes_and_validates_ready_vector_index(
     db: Session, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
