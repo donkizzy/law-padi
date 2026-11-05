@@ -20,12 +20,12 @@ import {
   instrumentSlug,
   provisionTitle,
   provisionUrl,
-  readableText,
   shortCitation,
   statusLabel,
 } from "@/lib/legal-provisions"
 import { EditionNotice } from "./EditionNotice"
 import { ProvisionNotices } from "./ProvisionNotices"
+import { StatuteText } from "./StatuteText"
 
 export function ProvisionLink({
   provision,
@@ -196,9 +196,7 @@ export function ProvisionView({
       <OfficialTextBlock
         title={t("source.whatLawSays", { law: provision.citation })}
       >
-        <p className="whitespace-pre-wrap">
-          {readableText(provision.authoritative_text)}
-        </p>
+        <StatuteText text={provision.authoritative_text} />
       </OfficialTextBlock>
       <EditionNotice
         label={provision.edition_label}
@@ -231,12 +229,10 @@ export function ProvisionView({
             <summary className="cursor-pointer text-sm font-semibold">
               {t("provision.readAll", { citation: ancestor.citation })}
             </summary>
-            <p
-              lang="en"
-              className="mt-4 whitespace-pre-wrap font-legal text-sm leading-7"
-            >
-              {readableText(ancestor.authoritative_text ?? "")}
-            </p>
+            <StatuteText
+              className="mt-4 font-legal text-sm leading-7"
+              text={ancestor.authoritative_text ?? ""}
+            />
           </details>
         ))}
       {provision.children.length > 0 && (

@@ -12,16 +12,12 @@ import {
   SheetDescription,
   SheetTitle,
 } from "@/components/ui/sheet"
-import {
-  lawName,
-  pageLabel,
-  readableText,
-  statusLabel,
-} from "@/lib/legal-provisions"
+import { lawName, pageLabel, statusLabel } from "@/lib/legal-provisions"
 import { referencePath } from "@/lib/seo"
 import { EditionNotice } from "./EditionNotice"
 import { ProvisionNotices } from "./ProvisionNotices"
 import { SourceActions } from "./SourceActions"
+import { StatuteText } from "./StatuteText"
 
 type Props = {
   evidence: EvidenceItem | null
@@ -79,9 +75,10 @@ function SourceContent({
         <h3 className="mb-3 text-overline uppercase text-muted-foreground">
           {t("source.whatLawSays", { law: lawName(evidence) })}
         </h3>
-        <p lang="en" className="whitespace-pre-wrap font-legal text-statute-sm">
-          {readableText(evidence.authoritative_text)}
-        </p>
+        <StatuteText
+          className="font-legal text-statute-sm"
+          text={evidence.authoritative_text}
+        />
       </section>
       <p className="text-label font-normal text-muted-foreground">
         {evidence.source_title} · {evidence.source_authority}

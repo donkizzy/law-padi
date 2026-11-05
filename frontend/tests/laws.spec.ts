@@ -172,6 +172,41 @@ async function mockLaws(page: Page) {
   return searches
 }
 
+test("A stored schedule table reads as a table, not a run-on paragraph", async ({
+  page,
+}) => {
+  await mockLaws(page)
+  await page.route("**/api/v1/legal/provisions/**", (route) =>
+    route.fulfill({
+      json: {
+        data: [
+          {
+            ...provision(acja, release),
+            authoritative_text:
+              "Sections 165(2) and 183\nS/N | Sub-Sector | Threshold\n1 |  | ₦500m\n2 | Aquaculture |",
+          },
+        ],
+        count: 1,
+        outcome: "exact",
+        retrieval_mode: "exact",
+        release_version: release,
+        edition_label: "Synthetic published source editions",
+      },
+    }),
+  )
+
+  await page.goto(`/laws/${acja}/${paths[acja]}?release=${release}`)
+
+  await expect(page.getByText("Sections 165(2) and 183")).toBeVisible()
+  const table = page.getByRole("table")
+  await expect(
+    table.getByRole("columnheader", { name: "Threshold" }),
+  ).toBeVisible()
+  await expect(table.getByRole("row")).toHaveCount(3)
+  await expect(table.getByRole("cell", { name: "₦500m" })).toBeVisible()
+  await expect(page.getByText("S/N | Sub-Sector")).toHaveCount(0)
+})
+
 for (const mobile of [false, true]) {
   test(`${mobile ? "Mobile" : "Desktop"}: switch laws, read an Act, inspect its source and save it`, async ({
     page,

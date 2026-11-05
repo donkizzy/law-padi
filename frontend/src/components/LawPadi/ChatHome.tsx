@@ -33,7 +33,6 @@ import { useWorkspacePreferences } from "@/hooks/useWorkspacePreferences"
 import i18n from "@/lib/i18n"
 import {
   editionNote,
-  readableText,
   releaseEditionName,
   shortCitation,
 } from "@/lib/legal-provisions"
@@ -47,6 +46,7 @@ import { cn } from "@/lib/utils"
 import { AnswerFeedback } from "./AnswerFeedback"
 import { EditionNotice } from "./EditionNotice"
 import { ProvisionNotices, uniqueNotices } from "./ProvisionNotices"
+import { StatuteText } from "./StatuteText"
 
 type ExplanationAnswer = {
   outcome: string
@@ -576,12 +576,10 @@ function AnswerView({
                 {bestSource.title}
               </h3>
             )}
-            <p
-              lang="en"
-              className="mt-3 whitespace-pre-wrap font-legal text-statute-sm"
-            >
-              {readableText(bestSource.authoritative_text)}
-            </p>
+            <StatuteText
+              className="mt-3 font-legal text-statute-sm"
+              text={bestSource.authoritative_text}
+            />
             <InlineAction
               className="mt-4"
               onClick={() => onSelect(bestSource)}

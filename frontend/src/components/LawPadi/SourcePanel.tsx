@@ -15,13 +15,13 @@ import {
 import {
   lawName,
   provisionTitle,
-  readableText,
   sourceUrl,
   statusLabel,
 } from "@/lib/legal-provisions"
 import { EditionNotice } from "./EditionNotice"
 import { ProvisionNotices } from "./ProvisionNotices"
 import { SourceActions } from "./SourceActions"
+import { StatuteText } from "./StatuteText"
 
 export function SourcePanel({
   open,
@@ -122,12 +122,10 @@ export function SourcePanelContent({
         <h3 className="mb-3 text-xs font-bold uppercase text-muted-foreground">
           {t("source.whatLawSays", { law: lawName(provision) })}
         </h3>
-        <p
-          lang="en"
-          className="whitespace-pre-wrap font-legal text-sm leading-7"
-        >
-          {readableText(provision.authoritative_text)}
-        </p>
+        <StatuteText
+          className="font-legal text-sm leading-7"
+          text={provision.authoritative_text}
+        />
       </section>
       <dl className="grid gap-3 text-sm">
         <div>
