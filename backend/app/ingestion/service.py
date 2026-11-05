@@ -804,6 +804,66 @@ def verify_source_document(
     return source
 
 
+def correct_source_document_title(
+    session: Session,
+    source_document_id: uuid.UUID,
+    *,
+    title: str,
+    expected_version: int,
+    idempotency_key: str,
+    reason: str,
+    current_user: User,
+) -> SourceDocument:
+    """Correct the display title; stored files, hashes and manifests are unchanged."""
+    scope = _idempotency_scope("source_document.correct_title", source_document_id)
+    request_hash = _idempotency_payload_hash(
+        {
+            "expected_version": expected_version,
+            "reason": reason,
+            "source_document_id": str(source_document_id),
+            "title": title,
+        }
+    )
+    record = _idempotency_record_for_request(
+        session,
+        scope=scope,
+        idempotency_key=idempotency_key,
+        request_hash=request_hash,
+    )
+    if record:
+        return _get_source_document(session, source_document_id)
+
+    source = _get_source_document(session, source_document_id)
+    _check_expected_version(source.lock_version, expected_version)
+    previous_title = source.title
+    source.title = title
+    source.lock_version += 1
+    session.add(source)
+    session.add(
+        AuditEvent(
+            actor_user_id=current_user.id,
+            action="source_document.title_corrected",
+            entity_type="source_document",
+            entity_id=source.id,
+            severity=AuditSeverity.INFO,
+            reason=reason,
+            payload={"previous_title": previous_title, "title": title},
+        )
+    )
+    _add_idempotency_record(
+        session,
+        scope=scope,
+        idempotency_key=idempotency_key,
+        request_hash=request_hash,
+        result_type="source_document",
+        result_id=source.id,
+        created_by=current_user.id,
+    )
+    session.commit()
+    session.refresh(source)
+    return source
+
+
 def update_page_selection(
     session: Session,
     run_id: uuid.UUID,

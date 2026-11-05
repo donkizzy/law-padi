@@ -30,6 +30,7 @@ from app.ingestion.retrieval import build_retrieval_documents
 from app.ingestion.service import (
     _release_id_for_run,
     compose_corpus_release,
+    correct_source_document_title,
     get_blob_store,
     publish_corpus_release,
     read_corpus_release_manifest,
@@ -45,6 +46,7 @@ from app.legal.enums import (
 )
 from app.legal.models import (
     ActiveRetrievalTarget,
+    AuditEvent,
     Conversation,
     CorpusRelease,
     CorpusReleaseEntry,
@@ -371,6 +373,57 @@ def test_changed_member_is_blocked_before_build_and_publication(
             superuser_override_reason=None,
         )
     assert "composite_member_manifest_changed" in error.value.detail["gates"]
+
+
+def test_correcting_a_source_title_is_audited_and_keeps_composition_gates_clear(
+    db: Session, members
+) -> None:
+    release = compose_corpus_release(db, _body(members), _actor(db))
+    source = db.get(
+        SourceDocument, release_entries(db, members[1][0].id)[0].source_document_id
+    )
+    previous_title = source.title
+    version = source.lock_version
+    key = f"correct-title-{uuid.uuid4()}"
+
+    def correct() -> SourceDocument:
+        return correct_source_document_title(
+            db,
+            source.id,
+            title="Corrected source title",
+            expected_version=version,
+            idempotency_key=key,
+            reason="Source is verified.",
+            current_user=_actor(db),
+        )
+
+    corrected = correct()
+    assert corrected.title == "Corrected source title"
+    assert corrected.lock_version == version + 1
+    assert correct().lock_version == version + 1
+    assert not composition_gates(db, release, release_entries(db, release.id))
+    audit = db.exec(
+        select(AuditEvent).where(
+            AuditEvent.action == "source_document.title_corrected",
+            AuditEvent.entity_id == source.id,
+        )
+    ).one()
+    assert audit.reason == "Source is verified."
+    assert audit.payload == {
+        "previous_title": previous_title,
+        "title": "Corrected source title",
+    }
+    with pytest.raises(HTTPException) as error:
+        correct_source_document_title(
+            db,
+            source.id,
+            title="Stale change",
+            expected_version=version,
+            idempotency_key=f"correct-title-{uuid.uuid4()}",
+            reason="Source is verified.",
+            current_user=_actor(db),
+        )
+    assert error.value.status_code == 409
 
 
 def test_composite_build_reuses_vectors_promotes_and_preserves_conversation_pins(
