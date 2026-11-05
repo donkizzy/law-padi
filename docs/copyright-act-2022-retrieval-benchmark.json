@@ -1,0 +1,168 @@
+{
+  "version": "copyright-act-2022-retrieval-v1",
+  "status": "approved by the user on 4 November 2026",
+  "description": "Retrieval benchmark for the Copyright Act 2022 (as enacted). Each query names the one section that best answers it; Recall@10 is measured against this release's own retrieval documents. Queries mix everyday and legal wording and were checked against the approved text on 4 November 2026.",
+  "instrument_slug": "copyright-act-2022",
+  "queries": [
+    {
+      "query": "What kinds of works can be protected by copyright in Nigeria?",
+      "path": "copyright-act-2022.part1.section2",
+      "note": "s.2(1) literary, musical, artistic, audiovisual works, sound recordings and broadcasts."
+    },
+    {
+      "query": "Can I copyright an idea or a business concept?",
+      "path": "copyright-act-2022.part1.section3",
+      "note": "s.3(a) ideas, procedures and concepts are not eligible."
+    },
+    {
+      "query": "Do I need to register my song before it is protected by copyright?",
+      "path": "copyright-act-2022.part1.section4",
+      "note": "s.4 no formality required."
+    },
+    {
+      "query": "What rights does an author of a book have under the Copyright Act?",
+      "path": "copyright-act-2022.part1.section9",
+      "note": "s.9 exclusive rights in literary and musical works."
+    },
+    {
+      "query": "Can I stop someone from distorting my artwork or removing my name from it?",
+      "path": "copyright-act-2022.part1.section14",
+      "note": "s.14 author's moral rights."
+    },
+    {
+      "query": "Do radio stations have to pay musicians for playing their recorded songs?",
+      "path": "copyright-act-2022.part1.section15",
+      "note": "s.15 right to remuneration for broadcasting sound recordings."
+    },
+    {
+      "query": "Does an artist get a share when their painting is resold at auction?",
+      "path": "copyright-act-2022.part1.section17",
+      "note": "s.17 resale right."
+    },
+    {
+      "query": "How long does copyright last after the author dies?",
+      "path": "copyright-act-2022.part1.section19",
+      "note": "s.19(1)(a) 70 years after the year of death."
+    },
+    {
+      "query": "Is it fair use to quote part of a book in my review or for private study?",
+      "path": "copyright-act-2022.part2.section20",
+      "note": "s.20(1) fair dealing exceptions."
+    },
+    {
+      "query": "Can a teacher photocopy pages of a textbook for students?",
+      "path": "copyright-act-2022.part2.section23",
+      "note": "s.23 reprographic copying by educational institutions (limit of five per cent)."
+    },
+    {
+      "query": "Can books be converted to braille for blind people without the author's permission?",
+      "path": "copyright-act-2022.part2.section26",
+      "note": "s.26 exceptions for print-disabled persons."
+    },
+    {
+      "query": "If I write software for my employer, who owns the copyright?",
+      "path": "copyright-act-2022.part3.section28",
+      "note": "s.28 first ownership, works made in employment."
+    },
+    {
+      "query": "Must a copyright assignment be in writing?",
+      "path": "copyright-act-2022.part3.section30",
+      "note": "s.30 assignment and licence."
+    },
+    {
+      "query": "What counts as copyright infringement under Nigerian law?",
+      "path": "copyright-act-2022.part4.section36",
+      "note": "s.36 infringement of copyright."
+    },
+    {
+      "query": "Who can sue for copyright infringement and what can the court award?",
+      "path": "copyright-act-2022.part4.section37",
+      "note": "s.37 action for infringement, damages, injunction, accounts."
+    },
+    {
+      "query": "Can I get a court order to seize pirated copies before the trial?",
+      "path": "copyright-act-2022.part4.section38",
+      "note": "s.38 order for inspection and seizure."
+    },
+    {
+      "query": "What is the punishment for selling pirated CDs or books in Nigeria?",
+      "path": "copyright-act-2022.part5.section44",
+      "note": "s.44 criminal liability for infringement."
+    },
+    {
+      "query": "Can the copyright owner file a criminal case and a civil case at the same time?",
+      "path": "copyright-act-2022.part5.section47",
+      "note": "s.47 simultaneous actions."
+    },
+    {
+      "query": "What anti-piracy labels or marks can the Copyright Commission require?",
+      "path": "copyright-act-2022.part6.section49",
+      "note": "s.49 anti-piracy measures."
+    },
+    {
+      "query": "Is it illegal to break the digital lock on a movie or software?",
+      "path": "copyright-act-2022.part6.section50",
+      "note": "s.50 circumvention of technological protection measures."
+    },
+    {
+      "query": "How do I get a website to remove my stolen content?",
+      "path": "copyright-act-2022.part7.section54",
+      "note": "s.54 notice to take down."
+    },
+    {
+      "query": "What must an internet service provider do after receiving a takedown notice?",
+      "path": "copyright-act-2022.part7.section55",
+      "note": "s.55 take down of infringing content."
+    },
+    {
+      "query": "Can a social media account be suspended for repeated copyright infringement?",
+      "path": "copyright-act-2022.part7.section56",
+      "note": "s.56 suspension of accounts of repeat infringers."
+    },
+    {
+      "query": "Can the Copyright Commission block a piracy website?",
+      "path": "copyright-act-2022.part7.section61",
+      "note": "s.61 blocking access to online content."
+    },
+    {
+      "query": "What rights do musicians and actors have over recordings of their performances?",
+      "path": "copyright-act-2022.part8.section63",
+      "note": "s.63 rights of performers."
+    },
+    {
+      "query": "How long are a performer's rights protected?",
+      "path": "copyright-act-2022.part8.section70",
+      "note": "s.70 50 years from the end of the year of fixation."
+    },
+    {
+      "query": "Is Nigerian folklore protected by copyright law?",
+      "path": "copyright-act-2022.part9.section74",
+      "note": "s.74 protection of expressions of folklore."
+    },
+    {
+      "query": "What does the Nigerian Copyright Commission do?",
+      "path": "copyright-act-2022.part10.section78",
+      "note": "s.78 functions and powers of the Commission."
+    },
+    {
+      "query": "Can copyright inspectors enter a shop without a warrant?",
+      "path": "copyright-act-2022.part10.section86",
+      "note": "s.86(2) Copyright Officers' powers without warrant."
+    },
+    {
+      "query": "How do I register my work with the Nigerian Copyright Commission?",
+      "path": "copyright-act-2022.part10.section87",
+      "note": "s.87 Register of Works."
+    },
+    {
+      "query": "What is a collective management organisation like COSON or MCSN?",
+      "path": "copyright-act-2022.part10.section88",
+      "note": "s.88 collective management organisations."
+    },
+    {
+      "query": "Who settles disputes about royalties under the Copyright Act?",
+      "path": "copyright-act-2022.part10.section90",
+      "note": "s.90 Dispute Resolution Panel."
+    }
+  ]
+}

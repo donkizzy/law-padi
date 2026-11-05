@@ -1,0 +1,178 @@
+{
+  "version": "nigeria-tax-act-2025-retrieval-v1",
+  "status": "approved by the user on 4 November 2026",
+  "description": "Retrieval benchmark for the Nigeria Tax Act 2025 (as enacted; commencement 1 January 2026). Each query names the one section or schedule that best answers it; Recall@10 is measured against this release's own retrieval documents. Queries mix everyday and legal wording and were checked against the approved text on 4 November 2026.",
+  "instrument_slug": "nigeria-tax-act-2025",
+  "queries": [
+    {
+      "query": "What is the purpose of the Nigeria Tax Act 2025?",
+      "path": "nigeria-tax-act-2025.chapter1.section1",
+      "note": "s.1 unified fiscal legislation."
+    },
+    {
+      "query": "Is income from crypto or digital assets taxable in Nigeria?",
+      "path": "nigeria-tax-act-2025.chapter2.part1.section4",
+      "note": "s.4(1)(j) profits or gains from transactions in digital assets."
+    },
+    {
+      "query": "I live in Nigeria but earn money from abroad, do I pay tax on it here?",
+      "path": "nigeria-tax-act-2025.chapter2.part2.section12",
+      "note": "s.12 resident individual taxed on worldwide income."
+    },
+    {
+      "query": "Is my salary and bonus taxable as employment income?",
+      "path": "nigeria-tax-act-2025.chapter2.part2.section13",
+      "note": "s.13 employment income."
+    },
+    {
+      "query": "Are company car and housing provided by my employer taxable?",
+      "path": "nigeria-tax-act-2025.chapter2.part2.section14",
+      "note": "s.14 benefits-in-kind."
+    },
+    {
+      "query": "Does a foreign company pay tax on profits from Nigerian customers?",
+      "path": "nigeria-tax-act-2025.chapter2.part3.section17",
+      "note": "s.17 non-resident person."
+    },
+    {
+      "query": "What business expenses can a company deduct before paying tax?",
+      "path": "nigeria-tax-act-2025.chapter2.part4.section20",
+      "note": "s.20 deductions allowed."
+    },
+    {
+      "query": "Which expenses are not deductible for income tax?",
+      "path": "nigeria-tax-act-2025.chapter2.part4.section21",
+      "note": "s.21 deductions not allowed."
+    },
+    {
+      "query": "Can I claim rent relief on my personal income tax?",
+      "path": "nigeria-tax-act-2025.chapter2.part7.section30",
+      "note": "s.30(2)(a)(vi) rent relief of 20%, up to ₦500,000."
+    },
+    {
+      "query": "How are small traders without proper records taxed?",
+      "path": "nigeria-tax-act-2025.chapter2.part7.section29",
+      "note": "s.29 presumptive taxation."
+    },
+    {
+      "query": "Do I pay capital gains tax when I sell my house?",
+      "path": "nigeria-tax-act-2025.chapter2.part8.section51",
+      "note": "s.51 principal private residence exemption, once in a lifetime."
+    },
+    {
+      "query": "Is selling my private car subject to capital gains tax?",
+      "path": "nigeria-tax-act-2025.chapter2.part8.section53",
+      "note": "s.53 private motor vehicles, up to two a year."
+    },
+    {
+      "query": "Do I pay tax on land my father gave me as a gift?",
+      "path": "nigeria-tax-act-2025.chapter2.part8.section54",
+      "note": "s.54 gifts."
+    },
+    {
+      "query": "How is chargeable gain on selling shares or property calculated?",
+      "path": "nigeria-tax-act-2025.chapter2.part8.section39",
+      "note": "s.39 computation of chargeable gains."
+    },
+    {
+      "query": "What is the company income tax rate under the new tax law?",
+      "path": "nigeria-tax-act-2025.chapter2.part9.section56",
+      "note": "s.56 small company 0%, others 30%."
+    },
+    {
+      "query": "What is the minimum effective tax rate for large companies?",
+      "path": "nigeria-tax-act-2025.chapter2.part9.section57",
+      "note": "s.57 effective tax rate of 15%."
+    },
+    {
+      "query": "How much personal income tax do I pay on my salary?",
+      "path": "nigeria-tax-act-2025.chapter2.part9.section58",
+      "note": "s.58 rates for individuals in the Fourth Schedule."
+    },
+    {
+      "query": "What is the 4% development levy on companies?",
+      "path": "nigeria-tax-act-2025.chapter2.part10.section59",
+      "note": "s.59 development levy and its distribution."
+    },
+    {
+      "query": "How are insurance companies taxed?",
+      "path": "nigeria-tax-act-2025.chapter2.part11.section61",
+      "note": "s.61 insurance trade or business."
+    },
+    {
+      "query": "Do I get relief if my foreign income was already taxed in another country?",
+      "path": "nigeria-tax-act-2025.chapter4.section119",
+      "note": "s.119 unilateral relief, foreign tax credit."
+    },
+    {
+      "query": "How soon must a document be stamped after signing?",
+      "path": "nigeria-tax-act-2025.chapter5.part1.section125",
+      "note": "s.125(1) within 30 days of execution."
+    },
+    {
+      "query": "Do I pay stamp duty on my house rent agreement?",
+      "path": "nigeria-tax-act-2025.chapter5.part2.section134",
+      "note": "s.134 leases; exemption below ₦10,000,000 annual value."
+    },
+    {
+      "query": "What is the stamp duty rate on buying land or a house?",
+      "path": "nigeria-tax-act-2025.schedule9",
+      "note": "Ninth Schedule table, conveyance on sale 1.5%."
+    },
+    {
+      "query": "What is the current VAT rate in Nigeria?",
+      "path": "nigeria-tax-act-2025.chapter6.part1.section147",
+      "note": "s.147 VAT at 7.5%."
+    },
+    {
+      "query": "Who must collect and remit VAT on goods sold?",
+      "path": "nigeria-tax-act-2025.chapter6.part2.section153",
+      "note": "s.153 collection of VAT by taxable person."
+    },
+    {
+      "query": "What must a VAT invoice contain?",
+      "path": "nigeria-tax-act-2025.chapter6.part2.section152",
+      "note": "s.152 VAT invoice."
+    },
+    {
+      "query": "Is there a surcharge on petrol and diesel?",
+      "path": "nigeria-tax-act-2025.chapter7.section158",
+      "note": "s.158 surcharge of 5% on fossil fuel products."
+    },
+    {
+      "query": "Are basic food items and medicines charged VAT?",
+      "path": "nigeria-tax-act-2025.chapter8.part4.section186",
+      "note": "s.186 zero-rated supplies (basic food, medical products, educational books)."
+    },
+    {
+      "query": "Which goods and services are exempt from VAT?",
+      "path": "nigeria-tax-act-2025.chapter8.part4.section185",
+      "note": "s.185 exempt supplies."
+    },
+    {
+      "query": "Are donations to charity deductible from my taxable income?",
+      "path": "nigeria-tax-act-2025.chapter8.part1.section163",
+      "note": "s.163 deductible donations."
+    },
+    {
+      "query": "Which businesses can get the economic development tax incentive?",
+      "path": "nigeria-tax-act-2025.chapter8.part2.section165",
+      "note": "s.165 priority sectors in the Tenth Schedule."
+    },
+    {
+      "query": "What tax credit does a priority company get under the economic development incentive?",
+      "path": "nigeria-tax-act-2025.chapter8.part2.section176",
+      "note": "s.176 5% per annum for 5 years."
+    },
+    {
+      "query": "Must transactions between related companies be at arm's length?",
+      "path": "nigeria-tax-act-2025.chapter9.section191",
+      "note": "s.191 related-party transactions at arm's length."
+    },
+    {
+      "query": "Which old tax laws did the Nigeria Tax Act repeal?",
+      "path": "nigeria-tax-act-2025.chapter9.section195",
+      "note": "s.195 repeals (CITA, PITA, VAT Act, Stamp Duties Act and others)."
+    }
+  ]
+}

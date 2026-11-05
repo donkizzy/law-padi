@@ -1,0 +1,173 @@
+{
+  "version": "employees-compensation-act-2010-retrieval-v1",
+  "status": "approved by the user on 4 November 2026",
+  "description": "Retrieval benchmark for the Employees' Compensation Act 2010 (as enacted). Each query names the one section that best answers it; Recall@10 is measured against this release's own retrieval documents. Queries mix everyday and legal wording and were checked against the approved text on 4 November 2026.",
+  "instrument_slug": "employees-compensation-act-2010",
+  "queries": [
+    {
+      "query": "What is the Employees' Compensation Act for?",
+      "path": "employees-compensation-act-2010.part1.section1",
+      "note": "s.1 objectives."
+    },
+    {
+      "query": "Does the Employees' Compensation Act cover people working in private companies?",
+      "path": "employees-compensation-act-2010.part1.section2",
+      "note": "s.2(1) all employers and employees in public and private sectors."
+    },
+    {
+      "query": "Are soldiers covered by employees' compensation?",
+      "path": "employees-compensation-act-2010.part1.section3",
+      "note": "s.3 armed forces excluded except civilian staff."
+    },
+    {
+      "query": "I got injured at work, how many days do I have to tell my employer?",
+      "path": "employees-compensation-act-2010.part2.section4",
+      "note": "s.4(1) within 14 days."
+    },
+    {
+      "query": "How soon must my employer report my work accident to NSITF?",
+      "path": "employees-compensation-act-2010.part2.section5",
+      "note": "s.5(1) within 7 days."
+    },
+    {
+      "query": "What is the deadline to apply for workmen's compensation after an accident?",
+      "path": "employees-compensation-act-2010.part2.section6",
+      "note": "s.6(2)-(3) one year, up to 3 years in special circumstances."
+    },
+    {
+      "query": "I had an accident on my way to work, can I get compensation?",
+      "path": "employees-compensation-act-2010.part3.section7",
+      "note": "s.7(2) accidents between work and residence."
+    },
+    {
+      "query": "Can I claim compensation for stress caused by my job?",
+      "path": "employees-compensation-act-2010.part3.section8",
+      "note": "s.8 mental stress."
+    },
+    {
+      "query": "I got sick from chemicals at my workplace, can I be compensated?",
+      "path": "employees-compensation-act-2010.part3.section9",
+      "note": "s.9 occupational disease."
+    },
+    {
+      "query": "My hearing got damaged by noise at the factory, what can I claim?",
+      "path": "employees-compensation-act-2010.part3.section10",
+      "note": "s.10 hearing impairment."
+    },
+    {
+      "query": "I was injured while working outside the office on official duty",
+      "path": "employees-compensation-act-2010.part3.section11",
+      "note": "s.11 injuries outside the normal workplace."
+    },
+    {
+      "query": "Can I sue my employer in court after a workplace injury instead of claiming compensation?",
+      "path": "employees-compensation-act-2010.part3.section12",
+      "note": "s.12(1) Act in lieu of right of action."
+    },
+    {
+      "query": "My employer made me sign a paper giving up my right to compensation, is it valid?",
+      "path": "employees-compensation-act-2010.part3.section13",
+      "note": "s.13 compensation cannot be waived."
+    },
+    {
+      "query": "Can my employer deduct money from my salary for the compensation fund?",
+      "path": "employees-compensation-act-2010.part3.section14",
+      "note": "s.14 contribution by employees prohibited."
+    },
+    {
+      "query": "Can a creditor seize my injury compensation payment?",
+      "path": "employees-compensation-act-2010.part3.section15",
+      "note": "s.15 not assignable or attachable."
+    },
+    {
+      "query": "Will NSITF help an injured worker get retrained to go back to work?",
+      "path": "employees-compensation-act-2010.part3.section16",
+      "note": "s.16 vocational rehabilitation."
+    },
+    {
+      "query": "How much will my family get if I die from a work accident?",
+      "path": "employees-compensation-act-2010.part4.section17",
+      "note": "s.17(1) monthly payments to dependants (90%/85%/60%)."
+    },
+    {
+      "query": "What happens if a worker dies in a terrorist attack or riot while on duty?",
+      "path": "employees-compensation-act-2010.part4.section18",
+      "note": "s.18 enemy warlike action; s.73 defines it."
+    },
+    {
+      "query": "How much is paid for permanent total disability from a work injury?",
+      "path": "employees-compensation-act-2010.part4.section21",
+      "note": "s.21(1) 90 per cent of remuneration."
+    },
+    {
+      "query": "How is compensation calculated if I lose a finger at work?",
+      "path": "employees-compensation-act-2010.part4.section22",
+      "note": "s.22 permanent partial disability with Second Schedule."
+    },
+    {
+      "query": "Until what age are disability payments made?",
+      "path": "employees-compensation-act-2010.part4.section23",
+      "note": "s.23 until 55, or two years after the injury if older."
+    },
+    {
+      "query": "Will the Board pay my hospital bills after a workplace injury?",
+      "path": "employees-compensation-act-2010.part4.section26",
+      "note": "s.26 health care and disability support."
+    },
+    {
+      "query": "What must a doctor do when treating an injured worker?",
+      "path": "employees-compensation-act-2010.part4.section27",
+      "note": "s.27 duty of accredited medical practitioner."
+    },
+    {
+      "query": "Does compensation affect my pension under the Pension Reform Act?",
+      "path": "employees-compensation-act-2010.part4.section28",
+      "note": "s.28 retirement benefits."
+    },
+    {
+      "query": "How much must an employer pay into the Employees' Compensation Fund every month?",
+      "path": "employees-compensation-act-2010.part6.section33",
+      "note": "s.33(1) 1.0 per cent of monthly payroll."
+    },
+    {
+      "query": "What is the penalty for an employer who does not pay the NSITF assessment?",
+      "path": "employees-compensation-act-2010.part6.section46",
+      "note": "s.46 penalty of 10 per cent."
+    },
+    {
+      "query": "Can NSITF officers enter a workplace without a warrant?",
+      "path": "employees-compensation-act-2010.part6.section54",
+      "note": "s.54(a) enter with or without warrant."
+    },
+    {
+      "query": "How do I appeal if I disagree with the Board's decision on my claim?",
+      "path": "employees-compensation-act-2010.part6.section55",
+      "note": "s.55 review within 180 days, then National Industrial Court."
+    },
+    {
+      "query": "Who manages the Employees' Compensation Fund?",
+      "path": "employees-compensation-act-2010.part7.section57",
+      "note": "s.57 NSITF Management Board."
+    },
+    {
+      "query": "What is the punishment for giving false information to NSITF?",
+      "path": "employees-compensation-act-2010.part9.section65",
+      "note": "s.65 offence, imprisonment or fine."
+    },
+    {
+      "query": "I cannot read or write, how do I give notice of my injury?",
+      "path": "employees-compensation-act-2010.part9.section69",
+      "note": "s.69 Board may waive written notice."
+    },
+    {
+      "query": "Did the Employees' Compensation Act replace the Workmen's Compensation Act?",
+      "path": "employees-compensation-act-2010.part9.section72",
+      "note": "s.72(1) Workmen's Compensation Act repealed."
+    },
+    {
+      "query": "Who counts as a dependant for employees' compensation?",
+      "path": "employees-compensation-act-2010.part9.section73",
+      "note": "s.73 definition of dependant."
+    }
+  ]
+}
