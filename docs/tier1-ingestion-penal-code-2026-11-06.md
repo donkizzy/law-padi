@@ -1,12 +1,12 @@
 # Penal Code Act (FCT, Abuja): review report (6 November 2026)
 
-Approved by the user on 6 November 2026. Source verified, corrected text materialised and embedded (Recall@10 1.0 on benchmark v2), and included in `composite-2026-11-06-twenty-laws`, composed onto the published nineteen-law release.
+Approved by the user on 6 November 2026 and published in `composite-2026-11-06-twenty-laws`. Source verified, corrected text materialised and embedded (Recall@10 1.0 on benchmark v2).
 
 | Item | Value |
 |---|---|
 | Instrument | `penal-code-act-abuja`, Penal Code Act, Chapter 532, Laws of the Federal Capital Territory, Abuja (the copy's cover says Chapter 53, its body Chapter 532) |
 | Source | Retyped copy in the ILGA database, circulated by the jewngr blog, `trusted_secondary`, status `needs_review` |
-| Run | `b3f0bc13-6403-4e1f-9d03-9cfd74cff395`, ready to publish, parser `act-hierarchy-v3` |
+| Run | `b3f0bc13-6403-4e1f-9d03-9cfd74cff395`, published, parser `act-hierarchy-v3` |
 | Pages | 24-149 included; arrangement (1-23) and web navigation (150) excluded |
 | Check source | S. S. Richardson, *Notes on the Penal Code Law, 1959*, 2nd edition, 1963, used as a wording check only. None of its text was copied into the Act. |
 
@@ -55,5 +55,6 @@ Historical text cannot be replaced in place, so the corrected text sits under `p
 - First embedding: Recall@10 0.914 against the uncorrected text. Three fair questions missed, on ss.51, 59 and 384, so "In plain words" phrasing was added. No benchmark question was edited.
 - `penal-code-abuja-retrieval-v1` pointed at the old provisions. It was retired with the new `--supersede` option of `scripts/load_retrieval_benchmark.py`, on the user's instruction. Its rows are kept.
 - Corrected text with phrasing: Recall@10 1.0.
+- Combined with the published nineteen laws, recall fell to 0.947, because Penal Code sections compete with parallel Criminal Code and VAPP sections. Phrasing was added for six more fair misses (Penal Code ss.115, 282 and 363; FREP Order III Rule 1, Order V Rule 1 and Order IX Rule 1). No benchmark question was edited. Combined recall is now 0.957.
 
 Benchmark: `docs/penal-code-abuja-retrieval-benchmark.json` (35 questions, version v2).
