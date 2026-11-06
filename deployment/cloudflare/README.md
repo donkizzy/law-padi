@@ -32,6 +32,24 @@ then run `bash deployment/cloudflare/build.sh`. An operator can supply the secre
 privately for the initial upload through Wrangler's `--secrets-file` option.
 Subsequent deploys retain existing Worker secrets.
 
+## Public read cache
+
+The Worker caches successful public `GET`s under `/api/v1/legal/`: instruments,
+the current release, the tree, provisions, citations and history. Reads pinned
+with `release_version` stay for one hour and current reads for five minutes;
+browsers keep either for one minute. Search, source redirects, errors, unknown
+query parameters and every account or conversation route bypass the cache.
+Cookies and `Authorization` are removed from these reads, so a stored response
+cannot depend on a visitor.
+
+The Cache API needs a custom domain or route. On `workers.dev` it stores nothing:
+responses report `x-edge-cache: miss` and only the browser cache applies. After
+attaching a domain, request one provision twice and expect `hit` on the second.
+
+Each Cloudflare location holds its own copy and a deploy does not clear it. To
+drop stale reads everywhere at once, raise `EDGE_CACHE_VERSION` in `worker.ts`
+and deploy. A published change otherwise appears within the times above.
+
 ## Launch and verification
 
 After the matching 200-case evaluation and human review pass, verify Render's

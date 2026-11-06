@@ -216,3 +216,194 @@ describe("same-origin API proxy", () => {
 		expect(response.status).toBe(502);
 	});
 });
+
+describe("public read cache", () => {
+	const BASE = "https://constitution.example/api/v1/legal";
+	const JSON_HEADERS = { "content-type": "application/json" };
+
+	function edgeCache() {
+		const stored = new Map<string, Response>();
+		return {
+			stored,
+			match: async (key: Request) => stored.get(key.url)?.clone(),
+			put: async (key: Request, response: Response) => {
+				stored.set(key.url, response);
+			},
+		};
+	}
+
+	function background() {
+		const work: Promise<unknown>[] = [];
+		return {
+			waitUntil: (item: Promise<unknown>) => work.push(item),
+			settled: () => Promise.all(work),
+		};
+	}
+
+	async function read(
+		path: string,
+		cache: ReturnType<typeof edgeCache>,
+		origin: (request: Request) => Response,
+		init: RequestInit = {},
+	) {
+		const queue = background();
+		const response = await handleRequest(
+			new Request(`${BASE}/${path}`, init),
+			env(),
+			async (request) => origin(request),
+			queue,
+			cache,
+		);
+		const body = await response.text();
+		await queue.settled();
+		return { response, body };
+	}
+
+	test("serves a repeated read from the cache without calling the API", async () => {
+		const cache = edgeCache();
+		let calls = 0;
+		const origin = () => {
+			calls += 1;
+			return new Response('{"ok":true}', { headers: JSON_HEADERS });
+		};
+		const first = await read("instruments", cache, origin);
+		const second = await read("instruments", cache, origin);
+		expect(calls).toBe(1);
+		expect(first.response.headers.get("x-edge-cache")).toBe("miss");
+		expect(second.response.headers.get("x-edge-cache")).toBe("hit");
+		expect(second.body).toBe('{"ok":true}');
+		expect(second.response.headers.get("cache-control")).toBe(
+			"public, max-age=60",
+		);
+		expect(second.response.headers.get("x-robots-tag")).toBe("noindex");
+	});
+
+	test("keeps pinned reads longer than current reads", async () => {
+		const cache = edgeCache();
+		const origin = () => new Response("{}");
+		await read("provisions/tree", cache, origin);
+		await read("provisions/tree?release_version=v1", cache, origin);
+		const ages = [...cache.stored.values()].map((item) =>
+			item.headers.get("cache-control"),
+		);
+		expect(ages).toEqual(["public, max-age=300", "public, max-age=3600"]);
+	});
+
+	test("shares a read between visitors without sending their credentials", async () => {
+		const cache = edgeCache();
+		let incoming: Request | undefined;
+		const origin = (request: Request) => {
+			incoming = request;
+			return new Response("{}", {
+				headers: { vary: "Origin", "access-control-allow-origin": "x" },
+			});
+		};
+		await read("instruments", cache, origin, {
+			headers: { cookie: "access_token=a", authorization: "Bearer a" },
+		});
+		expect(incoming?.headers.get("cookie")).toBeNull();
+		expect(incoming?.headers.get("authorization")).toBeNull();
+		expect(incoming?.headers.get("x-origin-proxy-secret")).toBe(
+			"secret-in-worker",
+		);
+		const [stored] = cache.stored.values();
+		expect(stored?.headers.get("vary")).toBeNull();
+		expect(stored?.headers.get("access-control-allow-origin")).toBeNull();
+	});
+
+	test("treats reordered parameters as one read", async () => {
+		const cache = edgeCache();
+		const origin = () => new Response("{}");
+		await read(
+			"provisions/tree?instrument=a&release_version=v1",
+			cache,
+			origin,
+		);
+		await read(
+			"provisions/tree?release_version=v1&instrument=a",
+			cache,
+			origin,
+		);
+		expect(cache.stored.size).toBe(1);
+	});
+
+	test.each([
+		["unknown parameter", "instruments?cache_buster=1", 200],
+		["failed read", "instruments", 503],
+		["missing provision", "provisions/absent", 404],
+		["source redirect", "sources/abc/content", 307],
+		["route outside the list", "provisions-export", 200],
+	])("does not store a %s", async (_label, path, status) => {
+		const cache = edgeCache();
+		const { response } = await read(
+			path,
+			cache,
+			() => new Response(null, { status }),
+		);
+		expect(cache.stored.size).toBe(0);
+		expect(response.headers.get("cache-control")).toBe("private, no-store");
+		expect(response.headers.get("x-edge-cache")).toBeNull();
+	});
+
+	test("does not store a response that sets a cookie", async () => {
+		const cache = edgeCache();
+		const { response } = await read(
+			"instruments",
+			cache,
+			() => new Response("{}", { headers: { "set-cookie": "a=b" } }),
+		);
+		expect(cache.stored.size).toBe(0);
+		expect(response.headers.get("cache-control")).toBe("private, no-store");
+	});
+
+	test("leaves other methods and private routes alone", async () => {
+		const cache = edgeCache();
+		const origin = () => new Response("{}");
+		await read("search", cache, origin, { method: "POST", body: "{}" });
+		await read("instruments", cache, origin, { method: "HEAD" });
+		const queue = background();
+		await handleRequest(
+			new Request("https://constitution.example/api/v1/conversations/abc", {
+				headers: { cookie: "constitution_guest_session=a" },
+			}),
+			env(),
+			async () => new Response("{}"),
+			queue,
+			cache,
+		);
+		await queue.settled();
+		expect(cache.stored.size).toBe(0);
+	});
+
+	test("falls back to the API when the cache is unavailable", async () => {
+		const queue = background();
+		const response = await handleRequest(
+			new Request(`${BASE}/instruments`),
+			env(),
+			async () => new Response('{"ok":true}'),
+			queue,
+			{
+				match: async () => {
+					throw new Error("cache unavailable");
+				},
+				put: async () => {
+					throw new Error("cache unavailable");
+				},
+			},
+		);
+		expect(await response.text()).toBe('{"ok":true}');
+		await queue.settled();
+	});
+
+	test("works where no cache exists, such as workers.dev", async () => {
+		const response = await handleRequest(
+			new Request(`${BASE}/instruments`),
+			env(),
+			async () => new Response("{}"),
+			undefined,
+			undefined,
+		);
+		expect(response.status).toBe(200);
+		expect(response.headers.get("cache-control")).toBe("public, max-age=60");
+	});
+});
