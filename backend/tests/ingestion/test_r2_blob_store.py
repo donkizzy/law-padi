@@ -267,3 +267,27 @@ def _metadata_from_request(request: httpx.Request) -> dict[str, str]:
         for header, value in request.headers.items()
         if header.lower().startswith("x-amz-meta-")
     }
+
+
+def test_r2_large_upload_gets_a_write_timeout_for_its_size() -> None:
+    seen: list[dict[str, float | None]] = []
+
+    def handle(request: httpx.Request) -> httpx.Response:
+        seen.append(request.extensions["timeout"])
+        return httpx.Response(200)
+
+    store = R2BlobStore(
+        endpoint_url="https://account.r2.cloudflarestorage.com",
+        bucket_name="legal-sources",
+        access_key_id="test-access-key",
+        secret_access_key="test-secret-key",
+        client=httpx.Client(timeout=30, transport=httpx.MockTransport(handle)),
+    )
+
+    store._request("PUT", "small", content=b"x")
+    store._request("PUT", "large", content=b"x" * (64 * 1024 * 1024))
+
+    assert seen[0]["write"] == 30
+    assert seen[1]["write"] == 256
+    assert seen[1]["connect"] == 30
+    assert seen[1]["read"] == 30

@@ -29,6 +29,9 @@ _UNSIGNED_PAYLOAD = "UNSIGNED-PAYLOAD"
 _SAFE_METADATA_PATTERN = re.compile(r"[^A-Za-z0-9_.-]+")
 
 
+_MIN_UPLOAD_BYTES_PER_SECOND = 256 * 1024
+
+
 class R2BlobStore:
     """Cloudflare R2 BlobStore using the S3-compatible API."""
 
@@ -353,6 +356,7 @@ class R2BlobStore:
             url,
             headers=signed_headers,
             content=content,
+            timeout=self._timeout_for(content),
         )
         expected = expected_statuses or {200}
         if response.status_code == 404:
@@ -362,6 +366,19 @@ class R2BlobStore:
                 f"R2 {method} failed for {key}: HTTP {response.status_code}"
             )
         return response
+
+    def _timeout_for(self, content: bytes | Iterator[bytes]) -> httpx.Timeout:
+        """Allow one write long enough to send the whole body at a slow uplink."""
+        timeout = self._client.timeout
+        if not isinstance(content, bytes):
+            return timeout
+        write = max(timeout.write or 0, len(content) / _MIN_UPLOAD_BYTES_PER_SECOND)
+        return httpx.Timeout(
+            connect=timeout.connect,
+            read=timeout.read,
+            write=write,
+            pool=timeout.pool,
+        )
 
     def _signed_headers(
         self,
