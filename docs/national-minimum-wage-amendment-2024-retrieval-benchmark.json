@@ -1,0 +1,38 @@
+{
+  "version": "national-minimum-wage-amendment-2024-retrieval-v1",
+  "status": "approved by the user on 5 November 2026",
+  "description": "Retrieval benchmark for the National Minimum Wage (Amendment) Act 2024 (as enacted).",
+  "instrument_slug": "national-minimum-wage-amendment-act-2024",
+  "queries": [
+    {
+      "query": "What is the new minimum wage after the 2024 amendment?",
+      "path": "national-minimum-wage-amendment-act-2024.section2",
+      "note": "2024 s.2(a)"
+    },
+    {
+      "query": "Was the review period changed from five years to three years?",
+      "path": "national-minimum-wage-amendment-act-2024.section2",
+      "note": "2024 s.2(b)"
+    },
+    {
+      "query": "Which section gives the short title of the 2024 amendment?",
+      "path": "national-minimum-wage-amendment-act-2024.section3",
+      "note": "2024 s.3"
+    },
+    {
+      "query": "How much is the minimum wage in Nigeria now?",
+      "path": "national-minimum-wage-amendment-act-2024.section2",
+      "note": "2024 s.2(a)"
+    },
+    {
+      "query": "Did the minimum wage go up from 30,000 naira?",
+      "path": "national-minimum-wage-amendment-act-2024.section2",
+      "note": "2024 s.2(a)"
+    },
+    {
+      "query": "Which Act does the 2024 minimum wage law change?",
+      "path": "national-minimum-wage-amendment-act-2024.section1",
+      "note": "2024 s.1"
+    }
+  ]
+}

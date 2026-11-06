@@ -1,0 +1,208 @@
+{
+  "version": "cybercrimes-2015-retrieval-v1",
+  "status": "approved by the user on 5 November 2026",
+  "description": "Retrieval benchmark for the Cybercrimes (Prohibition, Prevention, etc.) Act 2015 (as enacted). Each query names the one section that best answers it.",
+  "instrument_slug": "cybercrimes-prohibition-prevention-etc-act-2015",
+  "queries": [
+    {
+      "query": "What is the punishment for hacking into a computer without permission?",
+      "path": "cybercrimes-prohibition-prevention-etc-act-2015.part3.section6",
+      "note": "s.6"
+    },
+    {
+      "query": "Is it an offence to use a password I was not authorised to share or sell?",
+      "path": "cybercrimes-prohibition-prevention-etc-act-2015.part3.section6",
+      "note": "s.6"
+    },
+    {
+      "query": "Do cybercafe operators have to register?",
+      "path": "cybercrimes-prohibition-prevention-etc-act-2015.part3.section7",
+      "note": "s.7"
+    },
+    {
+      "query": "What happens if someone commits fraud at a cybercafe?",
+      "path": "cybercrimes-prohibition-prevention-etc-act-2015.part3.section7",
+      "note": "s.7"
+    },
+    {
+      "query": "What is the offence of system interference?",
+      "path": "cybercrimes-prohibition-prevention-etc-act-2015.part3.section8",
+      "note": "s.8"
+    },
+    {
+      "query": "What is the punishment for unlawfully intercepting computer data?",
+      "path": "cybercrimes-prohibition-prevention-etc-act-2015.part3.section12",
+      "note": "s.12"
+    },
+    {
+      "query": "Is forging data on a computer a crime?",
+      "path": "cybercrimes-prohibition-prevention-etc-act-2015.part3.section13",
+      "note": "s.13"
+    },
+    {
+      "query": "What is the penalty for computer related fraud?",
+      "path": "cybercrimes-prohibition-prevention-etc-act-2015.part3.section14",
+      "note": "s.14"
+    },
+    {
+      "query": "What is the punishment for stealing an ATM?",
+      "path": "cybercrimes-prohibition-prevention-etc-act-2015.part3.section15",
+      "note": "s.15"
+    },
+    {
+      "query": "Are electronic signatures binding in Nigeria?",
+      "path": "cybercrimes-prohibition-prevention-etc-act-2015.part3.section17",
+      "note": "s.17"
+    },
+    {
+      "query": "Can a will be signed with an electronic signature?",
+      "path": "cybercrimes-prohibition-prevention-etc-act-2015.part3.section17",
+      "note": "s.17"
+    },
+    {
+      "query": "What is the punishment for cyber terrorism?",
+      "path": "cybercrimes-prohibition-prevention-etc-act-2015.part3.section18",
+      "note": "s.18"
+    },
+    {
+      "query": "Who bears the proof of negligence when a bank's security is breached?",
+      "path": "cybercrimes-prohibition-prevention-etc-act-2015.part3.section19",
+      "note": "s.19"
+    },
+    {
+      "query": "How soon must a cyber attack be reported to the national CERT?",
+      "path": "cybercrimes-prohibition-prevention-etc-act-2015.part3.section21",
+      "note": "s.21"
+    },
+    {
+      "query": "What is the penalty for identity theft or impersonating someone online?",
+      "path": "cybercrimes-prohibition-prevention-etc-act-2015.part3.section22",
+      "note": "s.22"
+    },
+    {
+      "query": "What is the punishment for child pornography online?",
+      "path": "cybercrimes-prohibition-prevention-etc-act-2015.part3.section23",
+      "note": "s.23"
+    },
+    {
+      "query": "Is it a crime to groom a child over the internet?",
+      "path": "cybercrimes-prohibition-prevention-etc-act-2015.part3.section23",
+      "note": "s.23"
+    },
+    {
+      "query": "Can I be arrested for sending an insulting message online?",
+      "path": "cybercrimes-prohibition-prevention-etc-act-2015.part3.section24",
+      "note": "s.24"
+    },
+    {
+      "query": "What is the punishment for cyberstalking?",
+      "path": "cybercrimes-prohibition-prevention-etc-act-2015.part3.section24",
+      "note": "s.24"
+    },
+    {
+      "query": "What is cybersquatting and what is the penalty?",
+      "path": "cybercrimes-prohibition-prevention-etc-act-2015.part3.section25",
+      "note": "s.25"
+    },
+    {
+      "query": "Is racist or xenophobic material online an offence?",
+      "path": "cybercrimes-prohibition-prevention-etc-act-2015.part3.section26",
+      "note": "s.26"
+    },
+    {
+      "query": "Is trying to commit a cybercrime punishable?",
+      "path": "cybercrimes-prohibition-prevention-etc-act-2015.part3.section27",
+      "note": "s.27"
+    },
+    {
+      "query": "Who can be charged for selling hacking tools?",
+      "path": "cybercrimes-prohibition-prevention-etc-act-2015.part3.section28",
+      "note": "s.28"
+    },
+    {
+      "query": "What happens to a company convicted under the Cybercrimes Act?",
+      "path": "cybercrimes-prohibition-prevention-etc-act-2015.part3.section29",
+      "note": "s.29"
+    },
+    {
+      "query": "What is the penalty for tampering with a POS terminal?",
+      "path": "cybercrimes-prohibition-prevention-etc-act-2015.part3.section30",
+      "note": "s.30"
+    },
+    {
+      "query": "Must an employee give back access codes after leaving a job?",
+      "path": "cybercrimes-prohibition-prevention-etc-act-2015.part3.section31",
+      "note": "s.31"
+    },
+    {
+      "query": "What is the punishment for phishing and spreading a computer virus?",
+      "path": "cybercrimes-prohibition-prevention-etc-act-2015.part3.section32",
+      "note": "s.32"
+    },
+    {
+      "query": "What is the penalty for using someone else's ATM card to steal money?",
+      "path": "cybercrimes-prohibition-prevention-etc-act-2015.part3.section33",
+      "note": "s.33"
+    },
+    {
+      "query": "How quickly must a bank reverse an unauthorised debit?",
+      "path": "cybercrimes-prohibition-prevention-etc-act-2015.part4.section37",
+      "note": "s.37"
+    },
+    {
+      "query": "How long must service providers keep traffic data?",
+      "path": "cybercrimes-prohibition-prevention-etc-act-2015.part4.section38",
+      "note": "s.38"
+    },
+    {
+      "query": "Can a judge order interception of electronic communications?",
+      "path": "cybercrimes-prohibition-prevention-etc-act-2015.part4.section39",
+      "note": "s.39"
+    },
+    {
+      "query": "What is the role of the National Security Adviser under the Cybercrimes Act?",
+      "path": "cybercrimes-prohibition-prevention-etc-act-2015.part5.section41",
+      "note": "s.41"
+    },
+    {
+      "query": "Who sits on the Cybercrime Advisory Council?",
+      "path": "cybercrimes-prohibition-prevention-etc-act-2015.schedule1",
+      "note": "First Schedule"
+    },
+    {
+      "query": "What is the cybersecurity levy on electronic transactions?",
+      "path": "cybercrimes-prohibition-prevention-etc-act-2015.part5.section44",
+      "note": "s.44"
+    },
+    {
+      "query": "Which businesses pay the National Cyber Security Fund levy?",
+      "path": "cybercrimes-prohibition-prevention-etc-act-2015.schedule2",
+      "note": "Second Schedule"
+    },
+    {
+      "query": "Can police search a place for electronic evidence with a warrant?",
+      "path": "cybercrimes-prohibition-prevention-etc-act-2015.part6.section45",
+      "note": "s.45"
+    },
+    {
+      "query": "Which court tries cybercrime offences?",
+      "path": "cybercrimes-prohibition-prevention-etc-act-2015.part7.section50",
+      "note": "s.50"
+    },
+    {
+      "query": "Can a foreigner have their passport withheld after a cybercrime conviction?",
+      "path": "cybercrimes-prohibition-prevention-etc-act-2015.part6.section48",
+      "note": "s.48"
+    },
+    {
+      "query": "Must a court order restitution to a fraud victim?",
+      "path": "cybercrimes-prohibition-prevention-etc-act-2015.part6.section49",
+      "note": "s.49"
+    },
+    {
+      "query": "What does phishing mean under the Act?",
+      "path": "cybercrimes-prohibition-prevention-etc-act-2015.part8.section58",
+      "note": "s.58"
+    }
+  ]
+}

@@ -1,0 +1,178 @@
+{
+  "version": "criminal-code-act-retrieval-v1",
+  "status": "approved by the user on 5 November 2026",
+  "description": "Draft retrieval benchmark for the Criminal Code Act, Cap. C38 LFN 2004 (as enacted). Each query names the one section that best answers it.",
+  "instrument_slug": "criminal-code-act",
+  "queries": [
+    {
+      "query": "If someone dies because a person meant to kill them, what is that offence called?",
+      "path": "criminal-code-act.part5.chapter27.section316",
+      "note": "s.316 definition of murder."
+    },
+    {
+      "query": "What is the punishment for murder in Nigeria?",
+      "path": "criminal-code-act.part5.chapter27.section319",
+      "note": "s.319(1) death sentence for murder."
+    },
+    {
+      "query": "Can a pregnant woman convicted of murder be sentenced to death?",
+      "path": "criminal-code-act.part5.chapter27.section319",
+      "note": "s.319(3)."
+    },
+    {
+      "query": "Someone died in a fight but nobody planned it, is that manslaughter?",
+      "path": "criminal-code-act.part5.chapter27.section317",
+      "note": "s.317 killing that is not murder is manslaughter."
+    },
+    {
+      "query": "How long can someone go to prison for manslaughter?",
+      "path": "criminal-code-act.part5.chapter27.section325",
+      "note": "s.325 punishment of manslaughter."
+    },
+    {
+      "query": "What is the punishment for attempting to kill somebody?",
+      "path": "criminal-code-act.part5.chapter27.section320",
+      "note": "s.320 attempt to murder."
+    },
+    {
+      "query": "Is trying to commit suicide a crime?",
+      "path": "criminal-code-act.part5.chapter27.section327",
+      "note": "s.327 attempting suicide."
+    },
+    {
+      "query": "What counts as rape under the Criminal Code?",
+      "path": "criminal-code-act.part5.chapter30.section357",
+      "note": "s.357 definition of rape."
+    },
+    {
+      "query": "What is the punishment for rape?",
+      "path": "criminal-code-act.part5.chapter30.section358",
+      "note": "s.358."
+    },
+    {
+      "query": "What does the law say about sexual assault on a woman, like touching her indecently?",
+      "path": "criminal-code-act.part5.chapter30.section360",
+      "note": "s.360 indecent assault on females."
+    },
+    {
+      "query": "Is sex with a girl under thirteen an offence?",
+      "path": "criminal-code-act.part4.chapter21.section218",
+      "note": "s.218 defilement of girls under thirteen."
+    },
+    {
+      "query": "Is sex between two men a crime in the Criminal Code?",
+      "path": "criminal-code-act.part4.chapter21.section214",
+      "note": "s.214 unnatural offences."
+    },
+    {
+      "query": "My neighbour took my phone without asking, when is it stealing?",
+      "path": "criminal-code-act.part6.chapter34.section383",
+      "note": "s.383 definition of stealing."
+    },
+    {
+      "query": "What is the punishment for stealing?",
+      "path": "criminal-code-act.part6.chapter34.section390",
+      "note": "s.390."
+    },
+    {
+      "query": "What is armed robbery and how is robbery punished?",
+      "path": "criminal-code-act.part6.chapter36.section402",
+      "note": "s.402 punishment of robbery."
+    },
+    {
+      "query": "What is the definition of robbery?",
+      "path": "criminal-code-act.part6.chapter36.section401",
+      "note": "s.401."
+    },
+    {
+      "query": "Is it a crime to break into a house at night?",
+      "path": "criminal-code-act.part6.chapter37.section411",
+      "note": "s.411 housebreaking and burglary."
+    },
+    {
+      "query": "Someone lied to me to collect my money, what offence is obtaining by false pretence?",
+      "path": "criminal-code-act.part6.chapter38.section419",
+      "note": "s.419."
+    },
+    {
+      "query": "Can someone be punished for buying something they know was stolen?",
+      "path": "criminal-code-act.part6.chapter39.section427",
+      "note": "s.427 receiving stolen property."
+    },
+    {
+      "query": "What is forgery?",
+      "path": "criminal-code-act.part6.chapter43.section465",
+      "note": "s.465 definition of forgery."
+    },
+    {
+      "query": "Can I go to jail for setting someone's house on fire?",
+      "path": "criminal-code-act.part6.chapter42.section443",
+      "note": "s.443 arson."
+    },
+    {
+      "query": "What does the Code say about defamation, publishing false statements about someone?",
+      "path": "criminal-code-act.part5.chapter33.section375",
+      "note": "s.375 punishment of defamatory matter."
+    },
+    {
+      "query": "What is the offence of treason?",
+      "path": "criminal-code-act.part2.chapter6.section37",
+      "note": "s.37."
+    },
+    {
+      "query": "Can a child under seven be punished for a crime?",
+      "path": "criminal-code-act.part1.chapter5.section30",
+      "note": "s.30 immature age."
+    },
+    {
+      "query": "Is self defence allowed if someone attacks me?",
+      "path": "criminal-code-act.part5.chapter25.section286",
+      "note": "s.286 self-defence against unprovoked assault."
+    },
+    {
+      "query": "Can a husband be charged for stealing from his wife?",
+      "path": "criminal-code-act.part1.chapter5.section36",
+      "note": "s.36."
+    },
+    {
+      "query": "Is being drunk a defence to a crime?",
+      "path": "criminal-code-act.part1.chapter5.section29",
+      "note": "s.29 intoxication."
+    },
+    {
+      "query": "What is the punishment for abortion or procuring a miscarriage?",
+      "path": "criminal-code-act.part4.chapter21.section228",
+      "note": "s.228 attempts to procure abortion."
+    },
+    {
+      "query": "What is a conspiracy to commit a felony?",
+      "path": "criminal-code-act.part8.chapter54.section516",
+      "note": "s.516."
+    },
+    {
+      "query": "Is giving a bribe to a public officer an offence?",
+      "path": "criminal-code-act.part3.chapter12.section98a",
+      "note": "s.98A."
+    },
+    {
+      "query": "Can a public official be charged for asking for a bribe?",
+      "path": "criminal-code-act.part3.chapter12.section98",
+      "note": "s.98."
+    },
+    {
+      "query": "What is an attempt to commit an offence?",
+      "path": "criminal-code-act.part1.chapter1.section4",
+      "note": "s.4."
+    },
+    {
+      "query": "Is witchcraft or claiming to be a witch a crime?",
+      "path": "criminal-code-act.part4.chapter20.section210",
+      "note": "s.210 witchcraft and juju."
+    },
+    {
+      "query": "What does the Code say about kidnapping?",
+      "path": "criminal-code-act.part5.chapter31.section364",
+      "note": "s.364."
+    }
+  ]
+}

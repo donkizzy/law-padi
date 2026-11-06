@@ -1,0 +1,198 @@
+{
+  "version": "frep-rules-2009-retrieval-v1",
+  "status": "approved by the user on 5 November 2026",
+  "description": "Retrieval benchmark for the Fundamental Rights (Enforcement Procedure) Rules 2009 (as made). Each query names the one rule that best answers it.",
+  "instrument_slug": "fundamental-rights-enforcement-procedure-rules-2009",
+  "queries": [
+    {
+      "query": "What are the overriding objectives of the Fundamental Rights Enforcement Procedure Rules?",
+      "path": "fundamental-rights-enforcement-procedure-rules-2009.preamble.rule3",
+      "note": "Preamble.3"
+    },
+    {
+      "query": "Can a human rights case be struck out because the applicant has no locus standi?",
+      "path": "fundamental-rights-enforcement-procedure-rules-2009.preamble.rule3",
+      "note": "Preamble.3"
+    },
+    {
+      "query": "Can an NGO file a fundamental rights application for someone else?",
+      "path": "fundamental-rights-enforcement-procedure-rules-2009.preamble.rule3",
+      "note": "Preamble.3"
+    },
+    {
+      "query": "Are human rights suits treated as urgent?",
+      "path": "fundamental-rights-enforcement-procedure-rules-2009.preamble.rule3",
+      "note": "Preamble.3"
+    },
+    {
+      "query": "What does Court mean under the FREP Rules?",
+      "path": "fundamental-rights-enforcement-procedure-rules-2009.orderi.rule2",
+      "note": "I.2"
+    },
+    {
+      "query": "Who can apply to enforce a fundamental right?",
+      "path": "fundamental-rights-enforcement-procedure-rules-2009.orderii.rule1",
+      "note": "II.1"
+    },
+    {
+      "query": "Which court do I go to if my State has no Federal High Court division?",
+      "path": "fundamental-rights-enforcement-procedure-rules-2009.orderii.rule1",
+      "note": "II.1"
+    },
+    {
+      "query": "Do I need leave of court to start a fundamental rights application?",
+      "path": "fundamental-rights-enforcement-procedure-rules-2009.orderii.rule2",
+      "note": "II.2"
+    },
+    {
+      "query": "What documents must support a fundamental rights application?",
+      "path": "fundamental-rights-enforcement-procedure-rules-2009.orderii.rule3",
+      "note": "II.3"
+    },
+    {
+      "query": "Who swears the affidavit if the applicant is in custody?",
+      "path": "fundamental-rights-enforcement-procedure-rules-2009.orderii.rule4",
+      "note": "II.4"
+    },
+    {
+      "query": "Must a written address accompany the application?",
+      "path": "fundamental-rights-enforcement-procedure-rules-2009.orderii.rule5",
+      "note": "II.5"
+    },
+    {
+      "query": "How long does a respondent have to file a written address?",
+      "path": "fundamental-rights-enforcement-procedure-rules-2009.orderii.rule6",
+      "note": "II.6"
+    },
+    {
+      "query": "Is there a time limit for filing a fundamental rights action?",
+      "path": "fundamental-rights-enforcement-procedure-rules-2009.orderiii.rule1",
+      "note": "III.1"
+    },
+    {
+      "query": "How soon must a fundamental rights application be fixed for hearing?",
+      "path": "fundamental-rights-enforcement-procedure-rules-2009.orderiv.rule1",
+      "note": "IV.1"
+    },
+    {
+      "query": "Can the court hear a fundamental rights application ex parte?",
+      "path": "fundamental-rights-enforcement-procedure-rules-2009.orderiv.rule3",
+      "note": "IV.3"
+    },
+    {
+      "query": "What interim orders can a court make ex parte for a detained person?",
+      "path": "fundamental-rights-enforcement-procedure-rules-2009.orderiv.rule4",
+      "note": "IV.4"
+    },
+    {
+      "query": "Can a court grant bail on an ex parte fundamental rights application?",
+      "path": "fundamental-rights-enforcement-procedure-rules-2009.orderiv.rule4",
+      "note": "IV.4"
+    },
+    {
+      "query": "How do I set aside an ex parte order in a human rights case?",
+      "path": "fundamental-rights-enforcement-procedure-rules-2009.orderiv.rule6",
+      "note": "IV.6"
+    },
+    {
+      "query": "Who serves a fundamental rights application?",
+      "path": "fundamental-rights-enforcement-procedure-rules-2009.orderv.rule1",
+      "note": "V.1"
+    },
+    {
+      "query": "How is a production order served on a prison superintendent?",
+      "path": "fundamental-rights-enforcement-procedure-rules-2009.orderv.rule5",
+      "note": "V.5"
+    },
+    {
+      "query": "When can a court order substituted service?",
+      "path": "fundamental-rights-enforcement-procedure-rules-2009.orderv.rule7",
+      "note": "V.7"
+    },
+    {
+      "query": "What hours can court processes be served?",
+      "path": "fundamental-rights-enforcement-procedure-rules-2009.orderv.rule10",
+      "note": "V.10"
+    },
+    {
+      "query": "Can service be done on a Sunday?",
+      "path": "fundamental-rights-enforcement-procedure-rules-2009.orderv.rule11",
+      "note": "V.11"
+    },
+    {
+      "query": "Can a statement in a fundamental rights application be amended?",
+      "path": "fundamental-rights-enforcement-procedure-rules-2009.ordervi.rule2",
+      "note": "VI.2"
+    },
+    {
+      "query": "Can several applications on the same infringement be consolidated?",
+      "path": "fundamental-rights-enforcement-procedure-rules-2009.ordervii.rule1",
+      "note": "VII.1"
+    },
+    {
+      "query": "How does a respondent challenge the court's jurisdiction?",
+      "path": "fundamental-rights-enforcement-procedure-rules-2009.orderviii.rule1",
+      "note": "VIII.1"
+    },
+    {
+      "query": "Is a preliminary objection heard separately from the main application?",
+      "path": "fundamental-rights-enforcement-procedure-rules-2009.orderviii.rule4",
+      "note": "VIII.4"
+    },
+    {
+      "query": "What happens if a party fails to comply with the Rules?",
+      "path": "fundamental-rights-enforcement-procedure-rules-2009.orderix.rule1",
+      "note": "IX.1"
+    },
+    {
+      "query": "What orders can a court make at the hearing of a fundamental rights application?",
+      "path": "fundamental-rights-enforcement-procedure-rules-2009.orderxi.rule0",
+      "note": "XI"
+    },
+    {
+      "query": "How long is oral argument at the hearing?",
+      "path": "fundamental-rights-enforcement-procedure-rules-2009.orderxii.rule2",
+      "note": "XII.2"
+    },
+    {
+      "query": "What must a written address contain?",
+      "path": "fundamental-rights-enforcement-procedure-rules-2009.orderxii.rule4",
+      "note": "XII.4"
+    },
+    {
+      "query": "Can an amicus curiae be heard in a human rights case?",
+      "path": "fundamental-rights-enforcement-procedure-rules-2009.orderxiii.rule2",
+      "note": "XIII.2"
+    },
+    {
+      "query": "Can a court punish for contempt under these Rules?",
+      "path": "fundamental-rights-enforcement-procedure-rules-2009.orderxiv.rule0",
+      "note": "XIV"
+    },
+    {
+      "query": "What happens to applications filed under the 1979 Rules?",
+      "path": "fundamental-rights-enforcement-procedure-rules-2009.orderxv.rule2",
+      "note": "XV.2"
+    },
+    {
+      "query": "What rules apply if the FREP Rules do not cover a situation?",
+      "path": "fundamental-rights-enforcement-procedure-rules-2009.orderxv.rule4",
+      "note": "XV.4"
+    },
+    {
+      "query": "What is the filing fee for a fundamental rights application?",
+      "path": "fundamental-rights-enforcement-procedure-rules-2009.schedulea",
+      "note": "A"
+    },
+    {
+      "query": "What does a notice of application for enforcing a fundamental right look like?",
+      "path": "fundamental-rights-enforcement-procedure-rules-2009.scheduleb.item1",
+      "note": "F1"
+    },
+    {
+      "query": "What is the form of an order for producing a detained person?",
+      "path": "fundamental-rights-enforcement-procedure-rules-2009.scheduleb.item2",
+      "note": "F2"
+    }
+  ]
+}

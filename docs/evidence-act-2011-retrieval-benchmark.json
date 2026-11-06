@@ -1,0 +1,173 @@
+{
+  "version": "evidence-act-2011-retrieval-v1",
+  "status": "approved by the user on 5 November 2026",
+  "description": "Draft retrieval benchmark for the Evidence Act 2011, Act No. 18 (gazette text, as enacted). Each query names the one section that best answers it.",
+  "instrument_slug": "evidence-act-2011",
+  "queries": [
+    {
+      "query": "What is the standard of proof in a criminal case?",
+      "path": "evidence-act-2011.part9.section135",
+      "note": "s.135 beyond reasonable doubt."
+    },
+    {
+      "query": "Who has the burden of proof in court?",
+      "path": "evidence-act-2011.part9.section131",
+      "note": "s.131."
+    },
+    {
+      "query": "Who loses if no evidence is given by either side?",
+      "path": "evidence-act-2011.part9.section132",
+      "note": "s.132."
+    },
+    {
+      "query": "What is the standard of proof in a civil case?",
+      "path": "evidence-act-2011.part9.section134",
+      "note": "s.134 balance of probabilities."
+    },
+    {
+      "query": "Does the prosecution have to prove the crime or must the accused prove innocence?",
+      "path": "evidence-act-2011.part9.section135",
+      "note": "s.135."
+    },
+    {
+      "query": "Can the accused person be made to prove a defence like insanity?",
+      "path": "evidence-act-2011.part9.section139",
+      "note": "s.139."
+    },
+    {
+      "query": "What is hearsay?",
+      "path": "evidence-act-2011.part4.section37",
+      "note": "s.37."
+    },
+    {
+      "query": "Is hearsay evidence admissible?",
+      "path": "evidence-act-2011.part4.section38",
+      "note": "s.38."
+    },
+    {
+      "query": "Can a dying person's statement be used as evidence?",
+      "path": "evidence-act-2011.part4.section40",
+      "note": "s.40."
+    },
+    {
+      "query": "What is a confession?",
+      "path": "evidence-act-2011.part3.section28",
+      "note": "s.28."
+    },
+    {
+      "query": "When is a confession not admissible, for example if the police forced it?",
+      "path": "evidence-act-2011.part3.section29",
+      "note": "s.29."
+    },
+    {
+      "query": "Can evidence obtained illegally be used in court?",
+      "path": "evidence-act-2011.part3.section14",
+      "note": "s.14."
+    },
+    {
+      "query": "Can the court refuse evidence because it was improperly obtained, what must it consider?",
+      "path": "evidence-act-2011.part3.section15",
+      "note": "s.15."
+    },
+    {
+      "query": "Are computer printouts or emails admissible as evidence?",
+      "path": "evidence-act-2011.part5.section84",
+      "note": "s.84."
+    },
+    {
+      "query": "What must I show before a statement from a computer is admitted?",
+      "path": "evidence-act-2011.part5.section84",
+      "note": "s.84(2)."
+    },
+    {
+      "query": "What is the difference between primary and secondary evidence?",
+      "path": "evidence-act-2011.part5.section86",
+      "note": "s.86 primary evidence."
+    },
+    {
+      "query": "When can a photocopy be used instead of the original document?",
+      "path": "evidence-act-2011.part5.section89",
+      "note": "s.89."
+    },
+    {
+      "query": "What are certified true copies of public documents?",
+      "path": "evidence-act-2011.part5.section104",
+      "note": "s.104."
+    },
+    {
+      "query": "What is a public document?",
+      "path": "evidence-act-2011.part5.section102",
+      "note": "s.102."
+    },
+    {
+      "query": "Can a child give evidence in court?",
+      "path": "evidence-act-2011.part12.section209",
+      "note": "s.209."
+    },
+    {
+      "query": "Who is competent to give evidence as a witness?",
+      "path": "evidence-act-2011.part11.section175",
+      "note": "s.175."
+    },
+    {
+      "query": "Can a wife be forced to testify against her husband?",
+      "path": "evidence-act-2011.part11.section182",
+      "note": "s.182."
+    },
+    {
+      "query": "Can a witness refuse to answer a question that would incriminate them?",
+      "path": "evidence-act-2011.part11.section183",
+      "note": "s.183."
+    },
+    {
+      "query": "Is what I tell my lawyer privileged?",
+      "path": "evidence-act-2011.part11.section192",
+      "note": "s.192."
+    },
+    {
+      "query": "Is a statement marked without prejudice admissible?",
+      "path": "evidence-act-2011.part11.section196",
+      "note": "s.196."
+    },
+    {
+      "query": "How many witnesses are needed to prove a case?",
+      "path": "evidence-act-2011.part11.section200",
+      "note": "s.200."
+    },
+    {
+      "query": "Must evidence of an accomplice be corroborated?",
+      "path": "evidence-act-2011.part11.section198",
+      "note": "s.198."
+    },
+    {
+      "query": "Does evidence have to be given on oath?",
+      "path": "evidence-act-2011.part12.section205",
+      "note": "s.205."
+    },
+    {
+      "query": "What is cross-examination?",
+      "path": "evidence-act-2011.part12.section214",
+      "note": "s.214."
+    },
+    {
+      "query": "Can a person be shown to have a bad character at trial?",
+      "path": "evidence-act-2011.part4.section82",
+      "note": "s.82."
+    },
+    {
+      "query": "What matters does the court take judicial notice of?",
+      "path": "evidence-act-2011.part6.section122",
+      "note": "s.122."
+    },
+    {
+      "query": "What does the court presume about a person missing for seven years?",
+      "path": "evidence-act-2011.part10.section164",
+      "note": "s.164."
+    },
+    {
+      "query": "Can a tenant deny the landlord's title?",
+      "path": "evidence-act-2011.part10.section170",
+      "note": "s.170."
+    }
+  ]
+}

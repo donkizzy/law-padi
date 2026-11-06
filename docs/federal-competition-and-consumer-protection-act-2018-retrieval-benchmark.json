@@ -1,0 +1,158 @@
+{
+  "version": "fccpa-2018-retrieval-v1",
+  "status": "approved by the user on 5 November 2026",
+  "description": "Retrieval benchmark for the Federal Competition and Consumer Protection Act 2018 (as enacted). Each query names the one section that best answers it.",
+  "instrument_slug": "federal-competition-and-consumer-protection-act-2018",
+  "queries": [
+    {
+      "query": "Which body protects consumers in Nigeria?",
+      "path": "federal-competition-and-consumer-protection-act-2018.part2.section3",
+      "note": "s.3"
+    },
+    {
+      "query": "What are the functions of the FCCPC?",
+      "path": "federal-competition-and-consumer-protection-act-2018.part3.section17",
+      "note": "s.17"
+    },
+    {
+      "query": "What powers does the Commission have to investigate a business?",
+      "path": "federal-competition-and-consumer-protection-act-2018.part3.section18",
+      "note": "s.18"
+    },
+    {
+      "query": "Can the Commission search premises with a warrant?",
+      "path": "federal-competition-and-consumer-protection-act-2018.part6.section28",
+      "note": "s.28"
+    },
+    {
+      "query": "What is the Competition and Consumer Protection Tribunal?",
+      "path": "federal-competition-and-consumer-protection-act-2018.part7.section39",
+      "note": "s.39"
+    },
+    {
+      "query": "What cases can the Tribunal hear?",
+      "path": "federal-competition-and-consumer-protection-act-2018.part7.section47",
+      "note": "s.47"
+    },
+    {
+      "query": "What agreements are banned between competitors?",
+      "path": "federal-competition-and-consumer-protection-act-2018.part8.section59",
+      "note": "s.59"
+    },
+    {
+      "query": "Can a supplier stop dealers from setting their own resale prices?",
+      "path": "federal-competition-and-consumer-protection-act-2018.part8.section62",
+      "note": "s.62"
+    },
+    {
+      "query": "What counts as a dominant position in the market?",
+      "path": "federal-competition-and-consumer-protection-act-2018.part9.section70",
+      "note": "s.70"
+    },
+    {
+      "query": "When is a company abusing its dominant position?",
+      "path": "federal-competition-and-consumer-protection-act-2018.part9.section72",
+      "note": "s.72"
+    },
+    {
+      "query": "What happens to a company that abuses its dominant position?",
+      "path": "federal-competition-and-consumer-protection-act-2018.part9.section73",
+      "note": "s.73"
+    },
+    {
+      "query": "What is a merger under this Act?",
+      "path": "federal-competition-and-consumer-protection-act-2018.part12.section92",
+      "note": "s.92"
+    },
+    {
+      "query": "Do I need approval before a large merger?",
+      "path": "federal-competition-and-consumer-protection-act-2018.part12.section96",
+      "note": "s.96"
+    },
+    {
+      "query": "Can the Commission take longer to consider a merger?",
+      "path": "federal-competition-and-consumer-protection-act-2018.part12.section97",
+      "note": "s.97"
+    },
+    {
+      "query": "Can the Commission cancel a merger approval?",
+      "path": "federal-competition-and-consumer-protection-act-2018.part12.section99",
+      "note": "s.99"
+    },
+    {
+      "query": "Must a shop display the price of goods?",
+      "path": "federal-competition-and-consumer-protection-act-2018.part15.section115",
+      "note": "s.115"
+    },
+    {
+      "query": "Is a seller allowed to sell defective goods?",
+      "path": "federal-competition-and-consumer-protection-act-2018.part15.section131",
+      "note": "s.131"
+    },
+    {
+      "query": "Can I return goods I bought?",
+      "path": "federal-competition-and-consumer-protection-act-2018.part15.section122",
+      "note": "s.122"
+    },
+    {
+      "query": "Can I cancel a reservation or booking?",
+      "path": "federal-competition-and-consumer-protection-act-2018.part15.section120",
+      "note": "s.120"
+    },
+    {
+      "query": "Is misleading advertising illegal?",
+      "path": "federal-competition-and-consumer-protection-act-2018.part15.section123",
+      "note": "s.123"
+    },
+    {
+      "query": "What is my right to safe goods?",
+      "path": "federal-competition-and-consumer-protection-act-2018.part15.section131",
+      "note": "s.131"
+    },
+    {
+      "query": "How do I enforce my rights as a consumer?",
+      "path": "federal-competition-and-consumer-protection-act-2018.part17.section146",
+      "note": "s.146"
+    },
+    {
+      "query": "Can a civil society group bring a consumer complaint?",
+      "path": "federal-competition-and-consumer-protection-act-2018.part17.section151",
+      "note": "s.151"
+    },
+    {
+      "query": "What is the penalty for breaching consumer rights?",
+      "path": "federal-competition-and-consumer-protection-act-2018.part17.section155",
+      "note": "s.155"
+    },
+    {
+      "query": "How is this Act cited?",
+      "path": "federal-competition-and-consumer-protection-act-2018.part18.section168",
+      "note": "s.168"
+    },
+    {
+      "query": "Which older law did this Act repeal?",
+      "path": "federal-competition-and-consumer-protection-act-2018.part18.section165",
+      "note": "s.165"
+    },
+    {
+      "query": "Who is a consumer under the Act?",
+      "path": "federal-competition-and-consumer-protection-act-2018.part18.section167",
+      "note": "s.167"
+    },
+    {
+      "query": "What are the transitional provisions for Consumer Protection Council staff?",
+      "path": "federal-competition-and-consumer-protection-act-2018.part18.section166",
+      "note": "s.166"
+    },
+    {
+      "query": "Does this Act apply to government agencies?",
+      "path": "federal-competition-and-consumer-protection-act-2018.part1.section2",
+      "note": "s.2"
+    },
+    {
+      "query": "What are the objectives of the Act?",
+      "path": "federal-competition-and-consumer-protection-act-2018.part1.section1",
+      "note": "s.1"
+    }
+  ]
+}

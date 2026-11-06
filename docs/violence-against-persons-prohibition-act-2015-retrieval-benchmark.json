@@ -1,0 +1,173 @@
+{
+  "version": "vapp-2015-retrieval-v1",
+  "status": "approved by the user on 5 November 2026",
+  "description": "Draft retrieval benchmark for the Violence Against Persons (Prohibition) Act 2015 (as enacted). Each query names the one section that best answers it.",
+  "instrument_slug": "violence-against-persons-prohibition-act-2015",
+  "queries": [
+    {
+      "query": "What is the punishment for rape under the VAPP Act?",
+      "path": "violence-against-persons-prohibition-act-2015.part1.section1",
+      "note": "s.1"
+    },
+    {
+      "query": "Can a husband be charged with rape of his wife under this Act?",
+      "path": "violence-against-persons-prohibition-act-2015.part1.section1",
+      "note": "s.1"
+    },
+    {
+      "query": "Is hitting someone a crime under the VAPP Act?",
+      "path": "violence-against-persons-prohibition-act-2015.part1.section2",
+      "note": "s.2 inflicting physical injury"
+    },
+    {
+      "query": "Can someone be punished for forcing me to do something?",
+      "path": "violence-against-persons-prohibition-act-2015.part1.section3",
+      "note": "s.3 coercion"
+    },
+    {
+      "query": "Is threatening to beat me an offence?",
+      "path": "violence-against-persons-prohibition-act-2015.part1.section4",
+      "note": "s.4"
+    },
+    {
+      "query": "What is offensive conduct?",
+      "path": "violence-against-persons-prohibition-act-2015.part1.section5",
+      "note": "s.5"
+    },
+    {
+      "query": "Is female genital mutilation illegal?",
+      "path": "violence-against-persons-prohibition-act-2015.part1.section6",
+      "note": "s.6"
+    },
+    {
+      "query": "Is stopping a police investigation of violence an offence?",
+      "path": "violence-against-persons-prohibition-act-2015.part1.section7",
+      "note": "s.7"
+    },
+    {
+      "query": "Is it an offence to make a false report of violence?",
+      "path": "violence-against-persons-prohibition-act-2015.part1.section8",
+      "note": "s.8"
+    },
+    {
+      "query": "Can my husband throw me out of our home?",
+      "path": "violence-against-persons-prohibition-act-2015.part1.section9",
+      "note": "s.9"
+    },
+    {
+      "query": "Is locking someone up in a house a crime?",
+      "path": "violence-against-persons-prohibition-act-2015.part1.section10",
+      "note": "s.10"
+    },
+    {
+      "query": "Is destroying my property to hurt me an offence?",
+      "path": "violence-against-persons-prohibition-act-2015.part1.section11",
+      "note": "s.11"
+    },
+    {
+      "query": "Is it economic abuse to control all my money?",
+      "path": "violence-against-persons-prohibition-act-2015.part1.section12",
+      "note": "s.12"
+    },
+    {
+      "query": "My partner stops me seeing my family, is that illegal?",
+      "path": "violence-against-persons-prohibition-act-2015.part1.section13",
+      "note": "s.13"
+    },
+    {
+      "query": "Is verbal or emotional abuse an offence?",
+      "path": "violence-against-persons-prohibition-act-2015.part1.section14",
+      "note": "s.14"
+    },
+    {
+      "query": "Are harmful widowhood practices illegal?",
+      "path": "violence-against-persons-prohibition-act-2015.part1.section15",
+      "note": "s.15"
+    },
+    {
+      "query": "Is abandoning my wife and children without support a crime?",
+      "path": "violence-against-persons-prohibition-act-2015.part1.section16",
+      "note": "s.16"
+    },
+    {
+      "query": "Is stalking an offence?",
+      "path": "violence-against-persons-prohibition-act-2015.part1.section17",
+      "note": "s.17"
+    },
+    {
+      "query": "What is the punishment for beating a spouse?",
+      "path": "violence-against-persons-prohibition-act-2015.part1.section19",
+      "note": "s.19"
+    },
+    {
+      "query": "Is throwing acid on someone covered by the Act?",
+      "path": "violence-against-persons-prohibition-act-2015.part1.section21",
+      "note": "s.21"
+    },
+    {
+      "query": "Is political thuggery violence an offence?",
+      "path": "violence-against-persons-prohibition-act-2015.part1.section23",
+      "note": "s.23"
+    },
+    {
+      "query": "What does the Act say about incest?",
+      "path": "violence-against-persons-prohibition-act-2015.part1.section25",
+      "note": "s.25"
+    },
+    {
+      "query": "Which court hears cases under the VAPP Act?",
+      "path": "violence-against-persons-prohibition-act-2015.part2.section27",
+      "note": "s.27"
+    },
+    {
+      "query": "How do I apply for a protection order?",
+      "path": "violence-against-persons-prohibition-act-2015.part2.section28",
+      "note": "s.28"
+    },
+    {
+      "query": "Can a police officer apply for a protection order for me?",
+      "path": "violence-against-persons-prohibition-act-2015.part2.section28",
+      "note": "s.28(4)"
+    },
+    {
+      "query": "What can a protection order stop someone from doing?",
+      "path": "violence-against-persons-prohibition-act-2015.part2.section31",
+      "note": "s.31"
+    },
+    {
+      "query": "Can the police arrest without a warrant under this Act?",
+      "path": "violence-against-persons-prohibition-act-2015.part2.section32",
+      "note": "s.32"
+    },
+    {
+      "query": "What rights do victims have?",
+      "path": "violence-against-persons-prohibition-act-2015.part2.section38",
+      "note": "s.38"
+    },
+    {
+      "query": "Can the press publish the name of a victim?",
+      "path": "violence-against-persons-prohibition-act-2015.part3.section39",
+      "note": "s.39"
+    },
+    {
+      "query": "Does the VAPP Act apply in all states?",
+      "path": "violence-against-persons-prohibition-act-2015.part6.section47",
+      "note": "s.47 FCT only"
+    },
+    {
+      "query": "Who registers the sex offenders list?",
+      "path": "violence-against-persons-prohibition-act-2015.part3.section43",
+      "note": "s.43 dangerous sexual offenders"
+    },
+    {
+      "query": "Which agency enforces the Act?",
+      "path": "violence-against-persons-prohibition-act-2015.part4.section44",
+      "note": "s.44 regulatory body"
+    },
+    {
+      "query": "What is the definition of intimidation in the Act?",
+      "path": "violence-against-persons-prohibition-act-2015.part6.section46",
+      "note": "s.46"
+    }
+  ]
+}

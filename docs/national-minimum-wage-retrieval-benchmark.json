@@ -1,0 +1,143 @@
+{
+  "version": "national-minimum-wage-act-2019-retrieval-v1",
+  "status": "approved by the user on 5 November 2026",
+  "description": "Retrieval benchmark for the National Minimum Wage Act 2019 (as enacted).",
+  "instrument_slug": "national-minimum-wage-act-2019",
+  "queries": [
+    {
+      "query": "What is the national minimum wage under the 2019 Act?",
+      "path": "national-minimum-wage-act-2019.section3",
+      "note": "s.3(1)"
+    },
+    {
+      "query": "Who must pay the national minimum wage?",
+      "path": "national-minimum-wage-act-2019.section3",
+      "note": "s.3(1)"
+    },
+    {
+      "query": "Can I agree with my boss to earn below the minimum wage?",
+      "path": "national-minimum-wage-act-2019.section3",
+      "note": "s.3(3)"
+    },
+    {
+      "query": "How often is the minimum wage reviewed?",
+      "path": "national-minimum-wage-act-2019.section3",
+      "note": "s.3(4)"
+    },
+    {
+      "query": "Does the minimum wage apply if my company has fewer than 25 staff?",
+      "path": "national-minimum-wage-act-2019.section4",
+      "note": "s.4(1)(b)"
+    },
+    {
+      "query": "Are part-time workers covered by the minimum wage?",
+      "path": "national-minimum-wage-act-2019.section4",
+      "note": "s.4(1)(a)"
+    },
+    {
+      "query": "Do seasonal farm workers get the minimum wage?",
+      "path": "national-minimum-wage-act-2019.section4",
+      "note": "s.4(1)(c)"
+    },
+    {
+      "query": "Can the Minister exempt an employer from the minimum wage?",
+      "path": "national-minimum-wage-act-2019.section4",
+      "note": "s.4(2)"
+    },
+    {
+      "query": "What is the Tripartite Committee on National Minimum Wage?",
+      "path": "national-minimum-wage-act-2019.section5",
+      "note": "s.5"
+    },
+    {
+      "query": "Who are the members of the Tripartite Committee?",
+      "path": "national-minimum-wage-act-2019.section6",
+      "note": "s.6"
+    },
+    {
+      "query": "What powers does the Tripartite Committee have?",
+      "path": "national-minimum-wage-act-2019.section7",
+      "note": "s.7"
+    },
+    {
+      "query": "When must the Tripartite Committee meet?",
+      "path": "national-minimum-wage-act-2019.section8",
+      "note": "s.8"
+    },
+    {
+      "query": "What is the penalty for an employer who pays less than the minimum wage?",
+      "path": "national-minimum-wage-act-2019.section9",
+      "note": "s.9(2)"
+    },
+    {
+      "query": "How long must an employer keep wage records?",
+      "path": "national-minimum-wage-act-2019.section10",
+      "note": "s.10(1)"
+    },
+    {
+      "query": "What happens if an employer does not keep wage records?",
+      "path": "national-minimum-wage-act-2019.section10",
+      "note": "s.10(2)"
+    },
+    {
+      "query": "Can a labour officer inspect my company's payroll?",
+      "path": "national-minimum-wage-act-2019.section11",
+      "note": "s.11(3)"
+    },
+    {
+      "query": "Can an officer sue my employer for unpaid wages on my behalf?",
+      "path": "national-minimum-wage-act-2019.section11",
+      "note": "s.11(4)"
+    },
+    {
+      "query": "Who monitors compliance with the minimum wage?",
+      "path": "national-minimum-wage-act-2019.section12",
+      "note": "s.12"
+    },
+    {
+      "query": "How can a worker enforce the minimum wage?",
+      "path": "national-minimum-wage-act-2019.section13",
+      "note": "s.13"
+    },
+    {
+      "query": "Can I take my employer to the National Industrial Court over minimum wage?",
+      "path": "national-minimum-wage-act-2019.section13",
+      "note": "s.13(b)"
+    },
+    {
+      "query": "Can my trade union file a minimum wage claim for me?",
+      "path": "national-minimum-wage-act-2019.section13",
+      "note": "s.13(c)"
+    },
+    {
+      "query": "What is a notice of enforcement?",
+      "path": "national-minimum-wage-act-2019.section13",
+      "note": "s.13(d)"
+    },
+    {
+      "query": "Is my employer liable if their agent caused the offence?",
+      "path": "national-minimum-wage-act-2019.section14",
+      "note": "s.14"
+    },
+    {
+      "query": "What is the punishment for obstructing an authorised officer?",
+      "path": "national-minimum-wage-act-2019.section15",
+      "note": "s.15"
+    },
+    {
+      "query": "Is giving false wage records an offence?",
+      "path": "national-minimum-wage-act-2019.section15",
+      "note": "s.15(d)"
+    },
+    {
+      "query": "What happened to the old National Minimum Wage Act?",
+      "path": "national-minimum-wage-act-2019.section16",
+      "note": "s.16"
+    },
+    {
+      "query": "What does wage mean in the Act?",
+      "path": "national-minimum-wage-act-2019.section17",
+      "note": "s.17"
+    }
+  ]
+}

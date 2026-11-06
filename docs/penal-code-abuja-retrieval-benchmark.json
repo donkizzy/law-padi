@@ -1,0 +1,183 @@
+{
+  "version": "penal-code-abuja-retrieval-v2",
+  "status": "approved by the user on 6 November 2026",
+  "description": "Retrieval benchmark for the Penal Code Act (Federal Capital Territory, Abuja), as held in the available copy. Each query names the one section that best answers it.",
+  "instrument_slug": "penal-code-act-abuja",
+  "queries": [
+    {
+      "query": "What is the punishment for culpable homicide punishable with death under the Penal Code?",
+      "path": "penal-code-act-abuja.code.chapterxviii.section221",
+      "note": "s.221"
+    },
+    {
+      "query": "What is culpable homicide?",
+      "path": "penal-code-act-abuja.code.chapterxviii.section220",
+      "note": "s.220"
+    },
+    {
+      "query": "Is provocation a defence to culpable homicide?",
+      "path": "penal-code-act-abuja.code.chapterxviii.section222",
+      "note": "s.222"
+    },
+    {
+      "query": "What is the punishment for rape under the Penal Code?",
+      "path": "penal-code-act-abuja.code.chapterxviii.section283",
+      "note": "s.283"
+    },
+    {
+      "query": "What does rape mean under the Penal Code?",
+      "path": "penal-code-act-abuja.code.chapterxviii.section282",
+      "note": "s.282"
+    },
+    {
+      "query": "What is the offence of theft under the Penal Code?",
+      "path": "penal-code-act-abuja.code.chapterxix.section286",
+      "note": "s.286"
+    },
+    {
+      "query": "What is the punishment for theft?",
+      "path": "penal-code-act-abuja.code.chapterxix.section287",
+      "note": "s.287"
+    },
+    {
+      "query": "What is the offence of criminal breach of trust?",
+      "path": "penal-code-act-abuja.code.chapterxix.section311",
+      "note": "s.311"
+    },
+    {
+      "query": "What is cheating under the Penal Code?",
+      "path": "penal-code-act-abuja.code.chapterxix.section320",
+      "note": "s.320"
+    },
+    {
+      "query": "What is the punishment for cheating?",
+      "path": "penal-code-act-abuja.code.chapterxix.section322",
+      "note": "s.322"
+    },
+    {
+      "query": "What is criminal conspiracy?",
+      "path": "penal-code-act-abuja.code.chaptervii.section96",
+      "note": "s.96"
+    },
+    {
+      "query": "What is the punishment for criminal conspiracy?",
+      "path": "penal-code-act-abuja.code.chaptervii.section97",
+      "note": "s.97"
+    },
+    {
+      "query": "What is abetment under the Penal Code?",
+      "path": "penal-code-act-abuja.code.chapterv.section83",
+      "note": "s.83"
+    },
+    {
+      "query": "What is the right of private defence?",
+      "path": "penal-code-act-abuja.code.chapterii.section59",
+      "note": "s.59"
+    },
+    {
+      "query": "Is a child under seven criminally responsible?",
+      "path": "penal-code-act-abuja.code.chapterii.section50",
+      "note": "s.50"
+    },
+    {
+      "query": "Is insanity a defence under the Penal Code?",
+      "path": "penal-code-act-abuja.code.chapterii.section51",
+      "note": "s.51"
+    },
+    {
+      "query": "What punishments can a court impose under the Penal Code?",
+      "path": "penal-code-act-abuja.code.chapteriii.section68",
+      "note": "s.68"
+    },
+    {
+      "query": "What is an unlawful assembly?",
+      "path": "penal-code-act-abuja.code.chapterix.section100",
+      "note": "s.100"
+    },
+    {
+      "query": "What is the punishment for rioting?",
+      "path": "penal-code-act-abuja.code.chapterix.section106",
+      "note": "s.106"
+    },
+    {
+      "query": "What is the punishment for bribery of a public officer?",
+      "path": "penal-code-act-abuja.code.chapterx.section115",
+      "note": "s.115"
+    },
+    {
+      "query": "What is the offence of giving false evidence?",
+      "path": "penal-code-act-abuja.code.chapterxii.section156",
+      "note": "s.156"
+    },
+    {
+      "query": "What is forgery under the Penal Code?",
+      "path": "penal-code-act-abuja.code.chapterxx.section363",
+      "note": "s.363"
+    },
+    {
+      "query": "What does the Penal Code say about adultery by a man?",
+      "path": "penal-code-act-abuja.code.chapterxxii.section387",
+      "note": "s.387"
+    },
+    {
+      "query": "What is the penalty for bigamy under the Penal Code?",
+      "path": "penal-code-act-abuja.code.chapterxxii.section384",
+      "note": "s.384"
+    },
+    {
+      "query": "What is incest under the Penal Code?",
+      "path": "penal-code-act-abuja.code.chapterxxii.section390",
+      "note": "s.390"
+    },
+    {
+      "query": "What is criminal defamation under the Penal Code?",
+      "path": "penal-code-act-abuja.code.chapterxxiii.section391",
+      "note": "s.391"
+    },
+    {
+      "query": "What is the punishment for defamation?",
+      "path": "penal-code-act-abuja.code.chapterxxiii.section392",
+      "note": "s.392"
+    },
+    {
+      "query": "What is the offence of causing miscarriage?",
+      "path": "penal-code-act-abuja.code.chapterxviii.section232",
+      "note": "s.232"
+    },
+    {
+      "query": "What is the punishment for robbery?",
+      "path": "penal-code-act-abuja.code.chapterxix.section298",
+      "note": "s.298"
+    },
+    {
+      "query": "What is brigandage?",
+      "path": "penal-code-act-abuja.code.chapterxix.section297",
+      "note": "s.297"
+    },
+    {
+      "query": "What is the punishment for extortion?",
+      "path": "penal-code-act-abuja.code.chapterxix.section292",
+      "note": "s.292"
+    },
+    {
+      "query": "Who is a vagabond under the Penal Code?",
+      "path": "penal-code-act-abuja.code.chapterxxv.section405",
+      "note": "s.405"
+    },
+    {
+      "query": "Is it an offence to drink alcohol in the Penal Code?",
+      "path": "penal-code-act-abuja.code.chapterxxiv.section403",
+      "note": "s.403"
+    },
+    {
+      "query": "What is trial by ordeal under the Penal Code?",
+      "path": "penal-code-act-abuja.code.chapterxvii.section214",
+      "note": "s.214"
+    },
+    {
+      "query": "What is the offence of criminal trespass?",
+      "path": "penal-code-act-abuja.code.chapterxix.section342",
+      "note": "s.342"
+    }
+  ]
+}

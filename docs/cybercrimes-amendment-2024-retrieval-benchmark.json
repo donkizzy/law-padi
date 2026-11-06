@@ -1,0 +1,58 @@
+{
+  "version": "cybercrimes-amendment-2024-retrieval-v1",
+  "status": "approved by the user on 5 November 2026",
+  "description": "Retrieval benchmark for the Cybercrimes (Prohibition, Prevention, etc.) (Amendment) Act 2024 (as enacted).",
+  "instrument_slug": "cybercrimes-prohibition-prevention-etc-amendment-act-2024",
+  "queries": [
+    {
+      "query": "How did the 2024 amendment change the reporting deadline for cyber incidents?",
+      "path": "cybercrimes-prohibition-prevention-etc-amendment-act-2024.section3",
+      "note": "2024 s.3"
+    },
+    {
+      "query": "What did the 2024 amendment change about cyberstalking?",
+      "path": "cybercrimes-prohibition-prevention-etc-amendment-act-2024.section5",
+      "note": "2024 s.5"
+    },
+    {
+      "query": "Does the 2024 amendment extend the employee fraud offence beyond financial institutions?",
+      "path": "cybercrimes-prohibition-prevention-etc-amendment-act-2024.section6",
+      "note": "2024 s.6"
+    },
+    {
+      "query": "Can a bank ask for my National Identification Number under the amended Act?",
+      "path": "cybercrimes-prohibition-prevention-etc-amendment-act-2024.section8",
+      "note": "2024 s.8"
+    },
+    {
+      "query": "What does the amended Act say about keeping subscriber data and the Data Protection Act?",
+      "path": "cybercrimes-prohibition-prevention-etc-amendment-act-2024.section9",
+      "note": "2024 s.9"
+    },
+    {
+      "query": "What are sectoral CERTs and SOCs under the 2024 amendment?",
+      "path": "cybercrimes-prohibition-prevention-etc-amendment-act-2024.section10",
+      "note": "2024 s.10"
+    },
+    {
+      "query": "What is the levy rate after the 2024 Cybercrimes amendment?",
+      "path": "cybercrimes-prohibition-prevention-etc-amendment-act-2024.section11",
+      "note": "2024 s.11"
+    },
+    {
+      "query": "What is the penalty for failing to remit the cybersecurity levy?",
+      "path": "cybercrimes-prohibition-prevention-etc-amendment-act-2024.section11",
+      "note": "2024 s.11"
+    },
+    {
+      "query": "Was the passport cancellation rule removed in 2024?",
+      "path": "cybercrimes-prohibition-prevention-etc-amendment-act-2024.section12",
+      "note": "2024 s.12"
+    },
+    {
+      "query": "What is the citation of the 2024 Cybercrimes amendment?",
+      "path": "cybercrimes-prohibition-prevention-etc-amendment-act-2024.section13",
+      "note": "2024 s.13"
+    }
+  ]
+}
