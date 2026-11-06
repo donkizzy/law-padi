@@ -1,4 +1,5 @@
 import hashlib
+from dataclasses import replace
 from datetime import UTC, date, datetime
 from pathlib import Path
 from uuid import uuid4
@@ -17,6 +18,7 @@ from app.ingestion.pgvector_repository import (
     write_segments,
 )
 from app.ingestion.retrieval import build_retrieval_documents
+from app.legal import public_corpus
 from app.legal.enums import (
     CorpusReleaseStatus,
     EmbeddingProviderKind,
@@ -39,7 +41,7 @@ from app.legal.models import (
     SourceDocument,
 )
 from app.legal.parser import legal_text_sha256
-from app.legal.public_corpus import load_ranked_corpus
+from app.legal.public_corpus import load_public_corpus, load_ranked_corpus
 from tests.conftest import _cleanup_db
 
 
@@ -413,13 +415,126 @@ def test_tree_history_and_source_are_published_and_release_scoped(
     assert pinned.status_code == 200
 
 
+def test_public_routes_share_one_corpus_load(
+    client: TestClient, corpus, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    assert corpus
+    loads: list[str] = []
+
+    def counted(session, release, *, index_kind="enacted"):
+        loads.append(release.version)
+        return load_public_corpus(session, release, index_kind=index_kind)
+
+    monkeypatch.setattr(public_corpus, "load_public_corpus", counted)
+    for _ in range(2):
+        assert client.get("/api/v1/legal/releases/current").status_code == 200
+        assert client.get("/api/v1/legal/instruments").status_code == 200
+        assert client.get("/api/v1/legal/provisions/tree").status_code == 200
+    assert len(loads) == 1
+
+
+def test_expired_corpus_shows_corrected_source_title(
+    client: TestClient, corpus, db: Session
+) -> None:
+    _, source, nodes, _ = corpus
+    path = f"/api/v1/legal/provisions/{nodes['chapter4.section37'].canonical_path}"
+    assert client.get(path).json()["data"][0]["source_title"] == source.title
+    source.title = "Corrected title"
+    db.add(source)
+    db.commit()
+    assert client.get(path).json()["data"][0]["source_title"] != "Corrected title"
+    for key, entry in public_corpus._corpus_cache.items():
+        public_corpus._corpus_cache[key] = replace(entry, expires_at=0)
+    assert client.get(path).json()["data"][0]["source_title"] == "Corrected title"
+
+
+def test_cached_corpus_does_not_outlive_publication(
+    client: TestClient, corpus, db: Session
+) -> None:
+    release, _, nodes, _ = corpus
+    path = f"/api/v1/legal/provisions/{nodes['chapter4.section37'].canonical_path}"
+    assert client.get(path).status_code == 200
+    release.status = CorpusReleaseStatus.RETIRED
+    db.add(release)
+    db.commit()
+    assert client.get("/api/v1/legal/releases/current").status_code == 503
+    assert client.get(path).status_code == 503
+
+
+def test_cache_keeps_only_the_newest_releases(
+    db: Session, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    release_ids = [uuid4(), uuid4(), uuid4()]
+    monkeypatch.setattr(
+        public_corpus,
+        "load_public_corpus",
+        lambda _session, item, **_kwargs: public_corpus.PublicCorpus(item, {}, {}, {}),
+    )
+    for release_id in release_ids:
+        public_corpus.cached_public_corpus(
+            db, CorpusRelease(id=release_id, version="x")
+        )
+    assert [key[0] for key in public_corpus._corpus_cache] == release_ids[1:]
+
+
+def test_history_lists_each_version_without_loading_whole_releases(
+    client: TestClient, corpus, db: Session, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    release, source, nodes, _ = corpus
+    provision = nodes["chapter4.section37"]
+    current = db.exec(
+        select(ProvisionVersion).where(ProvisionVersion.provision_id == provision.id)
+    ).one()
+    text = "Earlier wording of section 37."
+    earlier = ProvisionVersion(
+        provision_id=provision.id,
+        source_document_id=source.id,
+        text=text,
+        normalized_text=text,
+        text_sha256=legal_text_sha256(text),
+        legal_status=current.legal_status,
+        valid_from=date(1979, 1, 1),
+        valid_until=current.valid_from,
+        revision_number=current.revision_number + 1,
+    )
+    retired = CorpusRelease(version="earlier", status=CorpusReleaseStatus.RETIRED)
+    db.add_all([earlier, retired])
+    db.flush()
+    db.add(
+        CorpusReleaseEntry(
+            release_id=retired.id,
+            provision_version_id=earlier.id,
+            source_document_id=source.id,
+        )
+    )
+    db.commit()
+    public = public_corpus.cached_public_corpus
+    calls: list[str] = []
+
+    def counted(session, item, *, index_kind="enacted"):
+        calls.append(item.version)
+        return public(session, item, index_kind=index_kind)
+
+    monkeypatch.setattr(search, "cached_public_corpus", counted)
+    history = client.get(
+        "/api/v1/legal/provision-history",
+        params={"canonical_path": provision.canonical_path},
+    ).json()
+    assert calls == [release.version]
+    assert history["count"] == 2
+    assert {row["release_version"] for row in history["data"]} == {
+        release.version,
+        "earlier",
+    }
+
+
 def test_semantic_and_fallback_results_are_unique_and_canonical(
     client: TestClient, corpus, monkeypatch: pytest.MonkeyPatch
 ) -> None:
     assert corpus
     monkeypatch.setattr(
         search,
-        "load_public_corpus",
+        "cached_public_corpus",
         lambda *_args, **_kwargs: pytest.fail(
             "Semantic lookup must use targeted canonical reads"
         ),

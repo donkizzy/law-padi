@@ -56,6 +56,7 @@ from app.legal.models import (
     TransactionalOutbox,
     VectorIndex,
 )
+from app.legal.public_corpus import clear_public_corpus_cache
 from app.main import app
 from app.models import RateLimitCounter, User
 from tests.utils.user import authentication_token_from_email
@@ -143,6 +144,14 @@ def disable_rate_limits() -> Generator[None]:
     """Tests sign in far more often than people do; rate-limit tests opt back in."""
     with patch.object(settings, "RATE_LIMIT_ENABLED", False):
         yield
+
+
+@pytest.fixture(autouse=True)
+def fresh_public_corpus() -> Generator[None]:
+    """Fixtures rebuild releases in place, so no corpus outlives a test."""
+    clear_public_corpus_cache()
+    yield
+    clear_public_corpus_cache()
 
 
 @pytest.fixture(autouse=True)

@@ -18,18 +18,31 @@ from app.ingestion.pgvector_repository import (
 )
 from app.ingestion.r2_blob_store import R2BlobStore
 from app.ingestion.service import get_blob_store
-from app.legal.enums import InstrumentType, ProvisionKind, VectorIndexStatus
+from app.legal.enums import (
+    InstrumentType,
+    LegalStatus,
+    ProvisionKind,
+    VectorIndexStatus,
+)
 from app.legal.evidence import (
     default_embedding_provider,
     exact_lookup,
     message_code,
     semantic_lookup,
 )
-from app.legal.models import CorpusRelease, EmbeddingProfile, RetrievalIndexBuild
+from app.legal.models import (
+    CorpusRelease,
+    CorpusReleaseEntry,
+    EmbeddingProfile,
+    Provision,
+    ProvisionVersion,
+    RetrievalIndexBuild,
+)
 from app.legal.public_corpus import (
     PUBLIC_RELEASE_STATUSES,
     PublicCorpus,
-    load_public_corpus,
+    cached_public_corpus,
+    load_ranked_corpus,
     load_reference_corpus,
     published_release,
 )
@@ -74,7 +87,7 @@ LegalSessionDep = Annotated[Session, Depends(legal_session)]
 def _corpus(
     session: Session, index_kind: str, release_version: str | None = None
 ) -> PublicCorpus:
-    return load_public_corpus(
+    return cached_public_corpus(
         session,
         published_release(
             session, index_kind=index_kind, release_version=release_version
@@ -354,21 +367,42 @@ def read_provision_history(
         for p in corpus.provisions.values()
     ):
         raise HTTPException(status_code=404, detail="Provision was not found")
-    releases = session.exec(
-        select(CorpusRelease)
-        .where(col(CorpusRelease.status).in_(PUBLIC_RELEASE_STATUSES))
+    status = col(ProvisionVersion.legal_status)
+    published = session.exec(
+        select(CorpusRelease, col(ProvisionVersion.id))
+        .join(
+            CorpusReleaseEntry,
+            col(CorpusReleaseEntry.release_id) == col(CorpusRelease.id),
+        )
+        .join(
+            ProvisionVersion,
+            col(ProvisionVersion.id) == col(CorpusReleaseEntry.provision_version_id),
+        )
+        .join(Provision, col(Provision.id) == col(ProvisionVersion.provision_id))
+        .where(
+            col(CorpusRelease.status).in_(PUBLIC_RELEASE_STATUSES),
+            Provision.canonical_path == canonical_path,
+            status == LegalStatus.PROPOSED
+            if index_kind == "proposals"
+            else status != LegalStatus.PROPOSED,
+        )
         .order_by(col(CorpusRelease.created_at).desc())
     ).all()
     data: list[LegalSearchResult] = []
     seen: set[uuid.UUID] = set()
-    for release in releases:
-        historical = load_public_corpus(session, release, index_kind=index_kind)
-        for p in historical.provisions.values():
-            if p.canonical_path == canonical_path and p.id in historical.versions:
-                result = historical.result(p)
-                if result.provision_version_id not in seen:
-                    data.append(result)
-                    seen.add(result.provision_version_id)
+    for release, version_id in published:
+        if version_id in seen:
+            continue
+        seen.add(version_id)
+        historical = load_ranked_corpus(
+            session, release, [version_id], index_kind=index_kind
+        )
+        data.extend(
+            historical.result(p)
+            for p in historical.provisions.values()
+            if p.canonical_path == canonical_path
+            and historical.versions[p.id].id == version_id
+        )
     return _response(
         corpus,
         data,

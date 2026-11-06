@@ -1,8 +1,10 @@
 """Published legal text and hierarchy, independent of derived retrieval segments."""
 
+import threading
+import time
 import uuid
 from collections.abc import Sequence
-from dataclasses import dataclass, field
+from dataclasses import dataclass, field, replace
 from urllib.parse import urlencode
 
 from fastapi import HTTPException
@@ -28,6 +30,11 @@ from app.legal.schemas import InstrumentIdentity, LegalSearchResult, ProvisionRe
 from app.legal.topics import section_title
 
 PUBLIC_RELEASE_STATUSES = (CorpusReleaseStatus.PRODUCTION, CorpusReleaseStatus.RETIRED)
+# A loaded corpus holds every provision of a release, around 100 MB for the ten
+# laws. Released text cannot change, but source titles can be corrected and
+# provisions are shared between releases, so entries still expire.
+PUBLIC_CORPUS_CACHE_SIZE = 2
+PUBLIC_CORPUS_CACHE_TTL_SECONDS = 15 * 60
 
 
 def published_release(
@@ -288,6 +295,63 @@ def load_public_corpus(
             provisions[parent.id] = parent
             child = parent
     return _assemble_corpus(session, release, provisions, versions, sources, index_kind)
+
+
+@dataclass(frozen=True)
+class _CachedCorpus:
+    corpus: PublicCorpus
+    expires_at: float
+
+
+_corpus_cache: dict[tuple[uuid.UUID, str], _CachedCorpus] = {}
+_corpus_load = threading.Lock()
+
+
+def clear_public_corpus_cache() -> None:
+    _corpus_cache.clear()
+
+
+def cached_public_corpus(
+    session: Session, release: CorpusRelease, *, index_kind: str = "enacted"
+) -> PublicCorpus:
+    """Share one read-only corpus between requests, loading it once per release.
+
+    Callers resolve the release themselves, so publication status is never
+    cached, and each receives its own copy to narrow. Only one thread loads at
+    a time; the others keep serving an expired corpus until the new one is
+    ready rather than each holding a full copy.
+    """
+    key = (release.id, index_kind)
+    entry = _corpus_cache.get(key)
+    if entry and entry.expires_at > time.monotonic():
+        return replace(entry.corpus, release=release)
+    if entry and not _corpus_load.acquire(blocking=False):
+        return replace(entry.corpus, release=release)
+    if not entry:
+        _corpus_load.acquire()
+    try:
+        entry = _corpus_cache.get(key)
+        if entry and entry.expires_at > time.monotonic():
+            return replace(entry.corpus, release=release)
+        corpus = load_public_corpus(session, release, index_kind=index_kind)
+        # The entities outlive this session and are read by other threads.
+        for rows in (
+            corpus.provisions,
+            corpus.versions,
+            corpus.sources,
+            corpus.instruments,
+        ):
+            for row in rows.values():
+                session.expunge(row)
+        _corpus_cache.pop(key, None)
+        while len(_corpus_cache) >= PUBLIC_CORPUS_CACHE_SIZE:
+            del _corpus_cache[next(iter(_corpus_cache))]
+        _corpus_cache[key] = _CachedCorpus(
+            corpus, time.monotonic() + PUBLIC_CORPUS_CACHE_TTL_SECONDS
+        )
+        return replace(corpus, release=release)
+    finally:
+        _corpus_load.release()
 
 
 def _assemble_corpus(
