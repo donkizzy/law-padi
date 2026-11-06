@@ -3,7 +3,9 @@
 Defaults to a dry run. Each query names its expected provision by `path` or by
 `section` number, resolved against the materialized provisions of one legal
 instrument. An existing dataset version is never changed: loading it again is
-accepted only when its stored content hash matches.
+accepted only when its stored content hash matches. With --supersede, the named
+older dataset of the same instrument is marked inactive once this one is loaded;
+its rows are kept.
 """
 
 import argparse
@@ -60,6 +62,21 @@ def query_rows(
     return rows
 
 
+def retire_superseded(
+    session: Session, *, version: str, instrument_slug: str, loaded_version: str
+) -> None:
+    if version == loaded_version:
+        raise ValueError("A dataset cannot supersede itself")
+    older = session.exec(
+        select(EvaluationDataset).where(EvaluationDataset.version == version)
+    ).one()
+    if older.instrument_slug != instrument_slug:
+        raise ValueError(f"Dataset {version} belongs to another instrument")
+    older.is_active = False
+    session.add(older)
+    session.commit()
+
+
 def load(session: Session, args: argparse.Namespace) -> dict[str, Any]:
     benchmark = json.loads(args.benchmark.read_text())
     slug = args.instrument or benchmark.get("instrument_slug")
@@ -88,6 +105,14 @@ def load(session: Session, args: argparse.Namespace) -> dict[str, Any]:
                 f"Dataset {existing.version} already exists with different content"
             )
         report["already_loaded"] = True
+        if args.apply and args.supersede:
+            retire_superseded(
+                session,
+                version=args.supersede,
+                instrument_slug=instrument.slug,
+                loaded_version=existing.version,
+            )
+            report["superseded"] = args.supersede
         return report
     if not args.apply:
         return report
@@ -121,6 +146,14 @@ def load(session: Session, args: argparse.Namespace) -> dict[str, Any]:
         )
     session.commit()
     report["applied"] = True
+    if args.supersede:
+        retire_superseded(
+            session,
+            version=args.supersede,
+            instrument_slug=instrument.slug,
+            loaded_version=dataset.version,
+        )
+        report["superseded"] = args.supersede
     return report
 
 
@@ -130,6 +163,7 @@ def main() -> None:
     parser.add_argument("--instrument", help="Defaults to the file's instrument_slug")
     parser.add_argument("--name", help="Dataset name; defaults to the file or title")
     parser.add_argument("--apply", action="store_true")
+    parser.add_argument("--supersede", help="Older dataset version to mark inactive")
     args = parser.parse_args()
     with Session(engine) as session:
         print(json.dumps(load(session, args), indent=2, sort_keys=True))  # noqa: T201
