@@ -25,6 +25,120 @@
       "code": "missing_page_secondary_source",
       "params": {},
       "text": "Part of this form is missing from the official scan used here. The missing wording comes from two independent retyped editions of the Act that agree with each other and with the surviving scan."
+    },
+    {
+      "canonical_path": "national-minimum-wage-act-2019.section3",
+      "code": "minimum_wage_amended_2024",
+      "params": {},
+      "text": "The National Minimum Wage (Amendment) Act 2024 changed this section. The minimum wage in subsection (1) is now ₦70,000, not ₦30,000, and the review period in subsection (4) is now three years, not five. The wording shown here is the 2019 text."
+    },
+    {
+      "canonical_path": "cybercrimes-prohibition-prevention-etc-act-2015.part3.section17",
+      "code": "cybercrimes_s17_amended_2024",
+      "params": {},
+      "text": "The Cybercrimes (Prohibition, Prevention, etc.) (Amendment) Act 2024 changed this section. Subsection (2) now reads \"genuineness\". In subsection (4), the exclusion now applies \"except where they are legally verified in Certified True Copies\". The wording shown here is the 2015 text."
+    },
+    {
+      "canonical_path": "cybercrimes-prohibition-prevention-etc-act-2015.part3.section21",
+      "code": "cybercrimes_s21_amended_2024",
+      "params": {},
+      "text": "The Cybercrimes (Prohibition, Prevention, etc.) (Amendment) Act 2024 changed this section. Incidents must now be reported within 72 hours of detection, not 7 days of occurrence, and reports go through sectoral CERTs or sectoral Security Operations Centres. The wording shown here is the 2015 text."
+    },
+    {
+      "canonical_path": "cybercrimes-prohibition-prevention-etc-act-2015.part3.section22",
+      "code": "cybercrimes_s22_amended_2024",
+      "params": {},
+      "text": "The Cybercrimes (Prohibition, Prevention, etc.) (Amendment) Act 2024 changed this section. Subsection (1) now also covers people engaged by a public or private organisation, not only a Financial Institution. The wording shown here is the 2015 text."
+    },
+    {
+      "canonical_path": "cybercrimes-prohibition-prevention-etc-act-2015.part3.section24",
+      "code": "cybercrimes_s24_amended_2024",
+      "params": {},
+      "text": "The Cybercrimes (Prohibition, Prevention, etc.) (Amendment) Act 2024 changed this section. Subsection (1) now covers a message that is pornographic, or that the sender knows to be false, for the purpose of causing a breakdown of law and order or posing a threat to life. The earlier grounds such as annoyance and insult are gone. The wording shown here is the 2015 text."
+    },
+    {
+      "canonical_path": "cybercrimes-prohibition-prevention-etc-act-2015.part3.section27",
+      "code": "cybercrimes_s27_amended_2024",
+      "params": {},
+      "text": "The Cybercrimes (Prohibition, Prevention, etc.) (Amendment) Act 2024 changed this section. Subsection (2) now applies to an employee of any public or private organisation, not only a financial institution. The wording shown here is the 2015 text."
+    },
+    {
+      "canonical_path": "cybercrimes-prohibition-prevention-etc-act-2015.part3.section30",
+      "code": "cybercrimes_s30_amended_2024",
+      "params": {},
+      "text": "The Cybercrimes (Prohibition, Prevention, etc.) (Amendment) Act 2024 changed this section. It now also covers any other payment technology means, not only ATMs and Point of Sales terminals. The wording shown here is the 2015 text."
+    },
+    {
+      "canonical_path": "cybercrimes-prohibition-prevention-etc-act-2015.part4.section37",
+      "code": "cybercrimes_s37_amended_2024",
+      "params": {},
+      "text": "The Cybercrimes (Prohibition, Prevention, etc.) (Amendment) Act 2024 changed this section. Under subsection (1)(a), customers must now also present a National Identification Number issued by the National Identity Management Commission. The wording shown here is the 2015 text."
+    },
+    {
+      "canonical_path": "cybercrimes-prohibition-prevention-etc-act-2015.part4.section38",
+      "code": "cybercrimes_s38_amended_2024",
+      "params": {},
+      "text": "The Cybercrimes (Prohibition, Prevention, etc.) (Amendment) Act 2024 changed this section. Subsection (1) is replaced. Service providers must keep and protect specific traffic data and subscriber information in accordance with the Nigeria Data Protection Act, for two years. The wording shown here is the 2015 text."
+    },
+    {
+      "canonical_path": "cybercrimes-prohibition-prevention-etc-act-2015.part5.section41",
+      "code": "cybercrimes_s41_amended_2024",
+      "params": {},
+      "text": "The Cybercrimes (Prohibition, Prevention, etc.) (Amendment) Act 2024 changed this section. Paragraphs (d) to (h) of subsection (1) are replaced by new paragraphs (d) to (j), which add sectoral CERTs and Security Operation Centres. The wording shown here is the 2015 text."
+    },
+    {
+      "canonical_path": "cybercrimes-prohibition-prevention-etc-act-2015.part5.section44",
+      "code": "cybercrimes_s44_amended",
+      "params": {},
+      "text": "The Cybercrimes (Prohibition, Prevention, etc.) (Amendment) Act 2024 changed this section. It restated the levy, replaced subsection (6) with new subsections (6) to (8), and added a fine for failing to remit. From 1 January 2026, section 196(14) of the Nigeria Tax Act 2025 deletes subsections (2)(a) and (4) and the Second Schedule, which are the levy provisions. The wording shown here is the 2015 text."
+    },
+    {
+      "canonical_path": "cybercrimes-prohibition-prevention-etc-act-2015.part6.section48",
+      "code": "cybercrimes_s48_amended_2024",
+      "params": {},
+      "text": "The Cybercrimes (Prohibition, Prevention, etc.) (Amendment) Act 2024 changed this section. It deleted subsection (4), so the rule on cancelling or withholding a convicted person's passport no longer applies. The wording shown here is the 2015 text."
+    },
+    {
+      "canonical_path": "cybercrimes-prohibition-prevention-etc-act-2015.schedule2",
+      "code": "cybercrimes_second_schedule_deleted",
+      "params": {},
+      "text": "Section 196(14) of the Nigeria Tax Act 2025 deletes this Schedule from 1 January 2026. The wording shown here is the 2015 text."
+    },
+    {
+      "canonical_path": "penal-code-act-abuja.code.chapterxiii.section196",
+      "code": "penal_code_gap_197_212",
+      "params": {},
+      "text": "Sections 197 to 212 are missing from the only copy of this Act available to us, so they do not appear here. They cover the rest of Public Nuisance, Lotteries and Gaming Houses, Cruelty to Animals and most of Offences relating to Religion."
+    },
+    {
+      "canonical_path": "penal-code-act-abuja.code.chapterxvi.section213",
+      "code": "penal_code_gap_197_212",
+      "params": {},
+      "text": "Sections 197 to 212 are missing from the only copy of this Act available to us, so they do not appear here. They cover the rest of Public Nuisance, Lotteries and Gaming Houses, Cruelty to Animals and most of Offences relating to Religion."
+    },
+    {
+      "canonical_path": "penal-code-act-abuja.code.chapterxx.section363",
+      "code": "penal_code_gap_364_365",
+      "params": {},
+      "text": "Sections 364 and 365 are missing from the only copy of this Act available to us, so they do not appear here. They cover the punishment for forgery and forgery of public seals."
+    },
+    {
+      "canonical_path": "penal-code-act-abuja.code.chapterxx.section366",
+      "code": "penal_code_gap_364_365",
+      "params": {},
+      "text": "Sections 364 and 365 are missing from the only copy of this Act available to us, so they do not appear here. They cover the punishment for forgery and forgery of public seals."
+    },
+    {
+      "canonical_path": "penal-code-act-abuja.code.chapterxxv.section409",
+      "code": "penal_code_gap_410_477",
+      "params": {},
+      "text": "Sections 410 to 477 are not in this text. It says they are published in the Penal Code (Northern States) Federal Provisions Act, which we do not have."
+    },
+    {
+      "canonical_path": "penal-code-act-abuja.code.chapterxxii.section384",
+      "code": "penal_code_s384_penalty_lost",
+      "params": {},
+      "text": "The only copy of this Act available to us loses the end of subsection (1), so the penalty for this offence does not appear here."
     }
   ]
 }

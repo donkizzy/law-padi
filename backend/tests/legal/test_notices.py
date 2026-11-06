@@ -22,6 +22,42 @@ def test_notice_applies_beneath_its_provision_only() -> None:
     assert provision_notices("constitution-1999.chapter4.section37") == []
 
 
+def test_minimum_wage_section_3_warns_of_the_2024_amendment() -> None:
+    path = "national-minimum-wage-act-2019.section3"
+    for target in (path, f"{path}.subsection1"):
+        notices = provision_notices(target)
+        assert [n.code for n in notices] == ["minimum_wage_amended_2024"]
+        assert "₦70,000" in notices[0].text
+    assert provision_notices("national-minimum-wage-act-2019.section4") == []
+
+
+def test_cybercrimes_sections_warn_of_later_amendments() -> None:
+    root = "cybercrimes-prohibition-prevention-etc-act-2015"
+    levy = provision_notices(f"{root}.part5.section44.subsection2")
+    assert [n.code for n in levy] == ["cybercrimes_s44_amended"]
+    assert "Nigeria Tax Act 2025" in levy[0].text
+    stalking = provision_notices(f"{root}.part3.section24")
+    assert [n.code for n in stalking] == ["cybercrimes_s24_amended_2024"]
+    assert [n.code for n in provision_notices(f"{root}.schedule2")] == [
+        "cybercrimes_second_schedule_deleted"
+    ]
+    assert provision_notices(f"{root}.part3.section25") == []
+
+
+def test_penal_code_marks_the_sections_missing_from_its_only_copy() -> None:
+    root = "penal-code-act-abuja.code"
+    for path, code in (
+        (f"{root}.chapterxiii.section196", "penal_code_gap_197_212"),
+        (f"{root}.chapterxvi.section213", "penal_code_gap_197_212"),
+        (f"{root}.chapterxx.section363", "penal_code_gap_364_365"),
+        (f"{root}.chapterxx.section366", "penal_code_gap_364_365"),
+        (f"{root}.chapterxxv.section409", "penal_code_gap_410_477"),
+        (f"{root}.chapterxxii.section384", "penal_code_s384_penalty_lost"),
+    ):
+        assert [n.code for n in provision_notices(path)] == [code]
+    assert provision_notices(f"{root}.chapterxx.section367") == []
+
+
 def test_every_notice_names_a_translatable_code() -> None:
     for path in (
         "acja-2015.part15.section120",

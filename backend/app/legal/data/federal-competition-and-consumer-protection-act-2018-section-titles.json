@@ -1243,5 +1243,6 @@
     ],
     "duplicate_page": "Printed A23 occurs onPDF24/25. Both remain evidence; no deduplication decision.",
     "scope": "Navigation titles only; this catalogue does not resolve source body/arrangement discrepancies, legal currency or ingestion acceptance."
-  }
+  },
+  "arrangement_authority": true
 }
