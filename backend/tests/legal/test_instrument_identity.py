@@ -148,7 +148,7 @@ def test_exact_search_and_evidence_remain_constitution_scoped(
     result = body["data"][0]
     assert result["citation"] == "Section 9"
     assert result["instrument_type"] == "constitution"
-    assert body["evidence"][0]["instrument_slug"] == "constitution-1999"
+    assert result["instrument_slug"] == "constitution-1999"
     assert (
         client.get(
             "/api/v1/legal/provisions/by-citation", params={"citation": "Section 9"}

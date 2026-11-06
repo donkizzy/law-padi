@@ -149,7 +149,7 @@ def test_public_exact_lookup_preserves_law_identity(
     body = response.json()
     assert body["outcome"] == "exact"
     assert body["data"][0]["canonical_path"] == path
-    assert body["evidence"][0]["instrument_slug"] == path.partition(".")[0]
+    assert body["data"][0]["instrument_slug"] == path.partition(".")[0]
 
 
 def test_recognised_act_absent_from_release_is_not_a_constitution_lookup(

@@ -145,6 +145,12 @@ def search_legal(
         reader_query.language.value if reader_query.language else None
     )
     response.searched_query = reader_query.text if reader_query.translated else None
+    return _without_evidence(response)
+
+
+def _without_evidence(response: LegalSearchResponse) -> LegalSearchResponse:
+    """Evidence repeats each result's text for answer generation, not for readers."""
+    response.evidence = []
     return response
 
 
@@ -255,15 +261,14 @@ def read_legal_instruments(
 ) -> LegalInstrumentsPublic:
     corpus = _corpus(session, index_kind, release_version)
     data: list[LegalInstrumentPublic] = []
+    by_instrument: dict[uuid.UUID, list[Provision]] = {}
+    for item in corpus.provisions.values():
+        by_instrument.setdefault(item.instrument_id, []).append(item)
     for instrument in sorted(
         corpus.instruments.values(),
         key=lambda item: (item.slug != CONSTITUTION_SLUG, item.slug),
     ):
-        provisions = [
-            item
-            for item in corpus.provisions.values()
-            if item.instrument_id == instrument.id
-        ]
+        provisions = by_instrument.get(instrument.id, [])
         representative = next(
             (item for item in provisions if item.id in corpus.versions), None
         )
@@ -320,25 +325,26 @@ def read_provision_tree(
             status_code=404,
             detail="This law isn't included in the selected published edition",
         )
-    corpus.provisions = {
-        key: item
-        for key, item in corpus.provisions.items()
-        if item.instrument_id == selected_instrument.id
-    }
-    parent = (
-        next(
-            (p for p in corpus.provisions.values() if p.canonical_path == parent_path),
-            None,
-        )
-        if parent_path
-        else None
-    )
-    if parent_path and not parent:
+    parent = corpus.provision_at(parent_path) if parent_path else None
+    if parent_path and (
+        parent is None or parent.instrument_id != selected_instrument.id
+    ):
         raise HTTPException(status_code=404, detail="Provision was not found")
     nodes = (
-        sorted(corpus.provisions.values(), key=lambda p: (p.sort_key, p.canonical_path))
+        sorted(
+            (
+                p
+                for p in corpus.provisions.values()
+                if p.instrument_id == selected_instrument.id
+            ),
+            key=lambda p: (p.sort_key, p.canonical_path),
+        )
         if all_nodes
-        else corpus.children(parent.id if parent else None)
+        else [
+            p
+            for p in corpus.children(parent.id if parent else None)
+            if p.instrument_id == selected_instrument.id
+        ]
     )
     data = [corpus.reference(p) for p in nodes]
     return ProvisionTreePublic(
@@ -362,10 +368,8 @@ def read_provision_history(
     index_kind: IndexKind = "enacted",
 ) -> LegalSearchResponse:
     corpus = _corpus(session, index_kind, release_version)
-    if not any(
-        p.canonical_path == canonical_path and p.id in corpus.versions
-        for p in corpus.provisions.values()
-    ):
+    current = corpus.provision_at(canonical_path)
+    if current is None or current.id not in corpus.versions:
         raise HTTPException(status_code=404, detail="Provision was not found")
     status = col(ProvisionVersion.legal_status)
     published = session.exec(
@@ -432,7 +436,7 @@ def read_provisions_by_citation(
         release_version,
         list(parsed.references),
     )
-    return exact_lookup(corpus, parsed, citation).response
+    return _without_evidence(exact_lookup(corpus, parsed, citation).response)
 
 
 @router.get("/sources/{source_document_id}/content", response_model=None)
@@ -487,15 +491,8 @@ def read_current_provision(
     release_version: ReleaseVersion = None,
 ) -> LegalSearchResponse:
     corpus = _corpus(session, index_kind, release_version)
-    provision = next(
-        (
-            p
-            for p in corpus.provisions.values()
-            if p.canonical_path == canonical_path and p.id in corpus.versions
-        ),
-        None,
-    )
-    if provision is None:
+    provision = corpus.provision_at(canonical_path)
+    if provision is None or provision.id not in corpus.versions:
         raise HTTPException(status_code=404, detail="Provision was not found")
     return _response(corpus, [corpus.result(provision, context=True)])
 

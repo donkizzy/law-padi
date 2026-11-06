@@ -64,6 +64,25 @@ class PublicCorpus:
     sources: dict[uuid.UUID, SourceDocument]
     index_kind: str = "enacted"
     instruments: dict[uuid.UUID, LegalInstrument] = field(default_factory=dict)
+    _by_path: dict[str, Provision] | None = field(default=None, repr=False)
+    _by_parent: dict[uuid.UUID | None, list[Provision]] | None = field(
+        default=None, repr=False
+    )
+
+    def index(self) -> None:
+        """Build the path and parent lookups, carried over by dataclasses.replace."""
+        by_parent: dict[uuid.UUID | None, list[Provision]] = {}
+        for provision in sorted(
+            self.provisions.values(), key=lambda p: (p.sort_key, p.canonical_path)
+        ):
+            by_parent.setdefault(provision.parent_id, []).append(provision)
+        self._by_parent = by_parent
+        self._by_path = {p.canonical_path: p for p in self.provisions.values()}
+
+    def provision_at(self, canonical_path: str) -> Provision | None:
+        if self._by_path is None:
+            self.index()
+        return (self._by_path or {}).get(canonical_path)
 
     def instrument_identity(self, provision: Provision) -> InstrumentIdentity:
         instrument = self.instruments[provision.instrument_id]
@@ -181,10 +200,9 @@ class PublicCorpus:
         )
 
     def children(self, parent_id: uuid.UUID | None) -> list[Provision]:
-        return sorted(
-            (p for p in self.provisions.values() if p.parent_id == parent_id),
-            key=lambda p: (p.sort_key, p.canonical_path),
-        )
+        if self._by_parent is None:
+            self.index()
+        return (self._by_parent or {}).get(parent_id, [])
 
     def result(
         self,
@@ -343,6 +361,7 @@ def cached_public_corpus(
         ):
             for row in rows.values():
                 session.expunge(row)
+        corpus.index()
         _corpus_cache.pop(key, None)
         while len(_corpus_cache) >= PUBLIC_CORPUS_CACHE_SIZE:
             del _corpus_cache[next(iter(_corpus_cache))]

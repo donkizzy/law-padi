@@ -326,14 +326,8 @@ def test_citation_lookup_preserves_outcomes_and_deduplicates_evidence(
         == body["citation_outcomes"][4]["evidence_ids"]
     )
     assert body["count"] == 4
-    assert len(body["evidence"]) == 4
-    assert all(row["release_version"] == release.version for row in body["evidence"])
-    assert (
-        body["evidence"][0]["text_sha256"]
-        == hashlib.sha256(
-            body["evidence"][0]["authoritative_text"].encode()
-        ).hexdigest()
-    )
+    assert all(row["release_version"] == release.version for row in body["data"])
+    assert body["evidence"] == []
     assert (
         client.get(
             "/api/v1/legal/provisions/by-citation",
@@ -431,6 +425,35 @@ def test_public_routes_share_one_corpus_load(
         assert client.get("/api/v1/legal/instruments").status_code == 200
         assert client.get("/api/v1/legal/provisions/tree").status_code == 200
     assert len(loads) == 1
+
+
+def test_shared_corpus_keeps_lookups_and_stays_unfiltered(corpus, db: Session) -> None:
+    release, _, nodes, _ = corpus
+    first = public_corpus.cached_public_corpus(db, release)
+    second = public_corpus.cached_public_corpus(db, release)
+    assert first is not second
+    assert first._by_parent is second._by_parent
+    assert first.provision_at("absent") is None
+    section = nodes["chapter4.section33"]
+    found = first.provision_at(section.canonical_path)
+    assert found is not None and found.id == section.id
+    assert [p.id for p in first.children(section.id)] == [
+        p.id
+        for p in sorted(
+            first.provisions.values(), key=lambda p: (p.sort_key, p.canonical_path)
+        )
+        if p.parent_id == section.id
+    ]
+
+
+def test_search_omits_evidence_but_keeps_children(client: TestClient, corpus) -> None:
+    _, _, nodes, _ = corpus
+    body = client.post("/api/v1/legal/search", json={"query": "Section 33"}).json()
+    assert body["evidence"] == []
+    assert (
+        body["data"][0]["canonical_path"] == nodes["chapter4.section33"].canonical_path
+    )
+    assert body["data"][0]["children"]
 
 
 def test_expired_corpus_shows_corrected_source_title(
