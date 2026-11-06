@@ -3,7 +3,13 @@
 import pytest
 
 from app.ingestion.structure_validators import validate_document_graph
-from app.legal.act_parser import ACT_PARSER_VERSION
+from app.legal.act_parser import (
+    ACT_PARSER_VERSION,
+    parse_act_pages,
+    parse_order_rules_pages,
+    parse_scheduled_code_pages,
+)
+from app.legal.citations import rules_citation
 from app.legal.instrument_parser import parse_instrument_pages
 from app.legal.parser import SourcePage
 from app.legal.topics import section_title
@@ -475,3 +481,145 @@ def test_chapters_spelled_in_words_and_late_arrangement_heading() -> None:
     sections = {n.number for n in nodes.values() if n.kind == "section"}
     assert sections == {"1", "2"}
     assert "Unresolved" not in " ".join(graph.metadata["parser_issues"])
+
+
+CODE_CATALOGUE = {
+    "enabling_heading": "Test Code Act (enabling provisions)",
+    "enabling_titles": {"1": "Short title.", "2": "The Code."},
+    "part_first_chapter": {"1": "1"},
+    "stop_line": "Federal sections",
+    "sections": {
+        "1": "Interpretation.",
+        "10A": "Added section.",
+        "11": "Second section.",
+    },
+    "chapters": {"1": "Opening"},
+    "parts": {"1": "Introductory"},
+}
+
+
+def test_scheduled_code_keeps_code_sections_apart_from_the_enabling_act() -> None:
+    result = parse_scheduled_code_pages(
+        [
+            SourcePage(
+                1,
+                "1. Short title\nThis Act may be cited as the Test Code Act.\n2. The Code\nThe Code is set out in the Schedule.\nSCHEDULE\nThe Code\nPART 1\nIntroductory\nCHAPTER 1\nOpening\n1. Interpretation\nSynthetic wording ending here. l0A. Added section\n",
+            ),
+            SourcePage(
+                2,
+                "Synthetic added wording.\n7. A numbered line inside a section\n11. Second section\nLast wording.\nFederal sections\n3 4 5",
+            ),
+        ],
+        "test-code",
+        CODE_CATALOGUE,
+    )
+    paths = {node.canonical_path: node for node in result.nodes}
+    assert "test-code.scheduleact.item1" in paths
+    assert paths["test-code.scheduleact.item2"].kind == "schedule_item"
+    assert paths["test-code.part1.chapter1.section1"].kind == "section"
+    assert paths["test-code.part1.chapter1.section10a"].number == "10A"
+    assert "numbered line" in (paths["test-code.part1.chapter1.section10a"].text or "")
+    assert paths["test-code.part1.chapter1.section11"].text == "Last wording."
+    assert not result.issues
+
+
+def test_reviewed_titles_replace_an_unreadable_arrangement_and_gate_markers() -> None:
+    result = parse_act_pages(
+        [
+            SourcePage(1, "ARRANGEMENT OF SECTIONS\n] Garbled.\nI2 Also garbled."),
+            SourcePage(
+                2,
+                "ENACTED by the National Assembly\n1. First wording.\n5. A number that is not the next section.\n2. Second wording cited as the Test Act,\n2024.",
+            ),
+        ],
+        "test-act",
+        reviewed_titles={"1": "First.", "2": "Second."},
+    )
+    assert [node.number for node in result.nodes if node.kind == "section"] == [
+        "1",
+        "2",
+    ]
+    assert result.arrangement == {"1": "First.", "2": "Second."}
+    assert not result.issues
+    assert "not the next section" in (result.nodes[0].text or "")
+
+
+def test_reviewed_titles_keep_restarted_form_numbering_as_wording() -> None:
+    result = parse_act_pages(
+        [
+            SourcePage(
+                1,
+                "ENACTED by the National Assembly\n1. First wording.\nSCHEDULE\nFORM 1\n1. First form line.\nFORM 2\n1. Second form line.",
+            )
+        ],
+        "test-act",
+        reviewed_titles={"1": "First."},
+    )
+    assert not result.issues
+    assert "Second form line" in (result.nodes[-1].text or "")
+
+
+def test_orders_and_rules_keep_rule_numbers_unique_across_orders() -> None:
+    catalogue = {
+        "sections": {
+            "Preamble.1": "Preamble",
+            "I.1": "Citation",
+            "I.2": "",
+            "II": "Orders",
+            "III.1": "Citation",
+        },
+        "parts": {"I": "Start", "II": "Orders", "III": "End"},
+        "forms": {"1": "Notice"},
+    }
+    text = """Preamble
+ORDER I—START
+1. Citation
+Preamble
+1. The Court shall act.
+ORDER I—START
+1. These Rules apply.
+3. This number is wording, not a rule.
+2.—(a) First limb;
+(b) Second limb.
+(i) A roman clause stays inside (b).
+ORDER II—ORDERS
+The Court may make orders.
+ORDER III—END
+1. Last rule.
+APPENDIX
+A. SCHEDULE OF FEES
+The fee is one hundred naira.
+B. FORMS
+FORM NO. 1
+In the matter of an application.
+MADE at Abuja"""
+    result = parse_order_rules_pages(
+        [SourcePage(page_number=1, text=text)], "test-rules", catalogue
+    )
+    assert result.issues == []
+    nodes = {node.canonical_path: node for node in result.nodes}
+    rule = nodes["test-rules.orderi.rule2"]
+    assert rule.number == "I.2" and rule.heading is None
+    assert "This number is wording" in str(nodes["test-rules.orderi.rule1"].text)
+    assert "(i) A roman clause" in str(nodes["test-rules.orderi.rule2.paragraphb"].text)
+    assert nodes["test-rules.orderii.rule0"].text == "The Court may make orders."
+    assert nodes["test-rules.schedulea"].text == "The fee is one hundred naira."
+    assert nodes["test-rules.scheduleb.item1"].heading == "Notice"
+    assert "Abuja" not in str(nodes["test-rules.scheduleb.item1"].text)
+
+
+@pytest.mark.parametrize(
+    ("path", "citation"),
+    [
+        ("r.preamble.rule3.paragraphe", "Preamble, paragraph 3(e)"),
+        ("r.orderii", "Order II"),
+        ("r.orderiv.rule4.paragraphc", "Order IV Rule 4(c)"),
+        ("r.orderxi.rule0", "Order XI"),
+        ("r.schedulea", "Appendix A"),
+        ("r.scheduleb.item2", "Appendix B, Form 2"),
+        ("r.part1.section4", None),
+        ("r.schedule1.item2", None),
+    ],
+)
+def test_rules_are_cited_by_order_and_rule(path: str, citation: str | None) -> None:
+    assert rules_citation(path) == citation

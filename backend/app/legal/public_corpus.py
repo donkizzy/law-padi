@@ -13,7 +13,7 @@ from sqlmodel import Session, col, select
 
 from app.core.config import settings
 from app.ingestion.pgvector_repository import PgVectorRetrievalError, active_target
-from app.legal.citations import qualify_citation, short_citation
+from app.legal.citations import qualify_citation, rules_citation, short_citation
 from app.legal.enums import CorpusReleaseStatus, InstrumentType, ProvisionKind
 from app.legal.models import (
     CorpusRelease,
@@ -150,6 +150,8 @@ class PublicCorpus:
         )
 
     def _citation(self, provision: Provision) -> str:
+        if rule := rules_citation(provision.canonical_path):
+            return rule
         nodes = [*self.lineage(provision), provision]
         section = next(
             (node for node in nodes if node.kind == ProvisionKind.SECTION), None

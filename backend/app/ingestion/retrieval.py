@@ -4,7 +4,7 @@ import re
 import uuid
 from dataclasses import dataclass
 
-from app.legal.citations import qualify_citation
+from app.legal.citations import qualify_citation, rules_citation
 from app.legal.enums import InstrumentType
 from app.legal.models import (
     CorpusReleaseEntry,
@@ -176,6 +176,7 @@ def citation_for_provision(
             )
             if schedule:
                 citation = f"Schedule {schedule.group(1)}, Item {schedule.group(2)}"
+            citation = rules_citation(provision.canonical_path) or citation
         return qualify_citation(citation, instrument)
     if not provision.canonical_path.startswith(("constitution-1999.", "constitution.")):
         raise ValueError(

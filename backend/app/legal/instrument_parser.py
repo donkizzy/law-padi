@@ -8,7 +8,12 @@ single parser implementation.
 from dataclasses import dataclass, field
 from typing import Any, Protocol
 
-from app.legal.act_parser import ACT_PARSER_VERSION, parse_act_pages
+from app.legal.act_parser import (
+    ACT_PARSER_VERSION,
+    parse_act_pages,
+    parse_order_rules_pages,
+    parse_scheduled_code_pages,
+)
 from app.legal.parser import (
     PARSER_VERSION,
     ParsedProvision,
@@ -94,8 +99,30 @@ class ActParser:
     def parse(
         self, pages: list[ParserSourcePage], instrument_slug: str
     ) -> DocumentGraph:
-        result = parse_act_pages(pages, instrument_slug)
         catalogue = title_catalog(instrument_slug)
+        scheduled_code = catalogue.get("scheduled_code")
+        result = (
+            parse_order_rules_pages(pages, instrument_slug, catalogue)
+            if catalogue.get("order_rules")
+            else parse_scheduled_code_pages(
+                pages,
+                instrument_slug,
+                {
+                    **scheduled_code,
+                    **{k: catalogue[k] for k in ("sections", "chapters", "parts")},
+                },
+            )
+            if scheduled_code
+            else parse_act_pages(
+                pages,
+                instrument_slug,
+                reviewed_titles=(
+                    catalogue_titles(instrument_slug, "sections")
+                    if catalogue.get("arrangement_authority")
+                    else None
+                ),
+            )
+        )
         headings = catalogue_titles(instrument_slug, "sections")
         for node in result.nodes:
             if node.kind == "section" and not node.heading and node.number in headings:
