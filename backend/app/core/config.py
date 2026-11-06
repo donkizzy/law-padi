@@ -40,6 +40,7 @@ class Settings(BaseSettings):
     ORIGIN_PROXY_SECRET: str | None = None
     APP_RUNTIME_ROLE: Literal["api", "tasks"] | None = None
     SENTRY_DSN: HttpUrl | None = None
+    SENTRY_TRACES_SAMPLE_RATE: float = Field(default=0.05, ge=0, le=1)
     DATABASE_URL: PostgresDsn
     DATABASE_LISTENER_URL: PostgresDsn | None = None
     DATABASE_CONNECT_TIMEOUT_SECONDS: int = Field(default=15, ge=1, le=60)
