@@ -87,6 +87,7 @@ class Settings(BaseSettings):
     CHAT_GUEST_BURST_LIMIT: int = Field(default=3, ge=0)
     CHAT_ACCOUNT_BURST_LIMIT: int = Field(default=10, ge=0)
     DATABASE_POOL_SIZE: int = Field(default=40, ge=1, le=100)
+    DATABASE_GATE_WAIT_SECONDS: float = Field(default=10, gt=0)
     CHAT_DAILY_BUDGET_USD: float = Field(default=100.0, ge=0)
     CHAT_MONTHLY_BUDGET_USD: float = Field(default=4.0, ge=0)
     AI_MONTHLY_BUDGET_USD: float = Field(default=5.0, ge=0)

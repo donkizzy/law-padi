@@ -9,6 +9,7 @@ from starlette.types import ASGIApp, Receive, Scope, Send
 
 from app.api.main import api_router
 from app.core.config import settings
+from app.core.request_gate import RequestGateMiddleware
 
 FRONTEND_DIR = Path(__file__).parent / "frontend"
 
@@ -58,6 +59,11 @@ app = FastAPI(
     generate_unique_id_function=custom_generate_unique_id,
 )
 
+app.add_middleware(
+    RequestGateMiddleware,
+    limit=settings.DATABASE_POOL_SIZE,
+    wait_seconds=settings.DATABASE_GATE_WAIT_SECONDS,
+)
 app.add_middleware(
     CORSMiddleware,
     allow_origins=[settings.FRONTEND_HOST],
