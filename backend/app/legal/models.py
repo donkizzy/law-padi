@@ -1227,6 +1227,24 @@ class GenerationRun(SQLModel, table=True):
     )
 
 
+class GenerationAdmission(SQLModel, table=True):
+    """Short-lived quota history that survives deletion of chat content."""
+
+    __tablename__ = "generation_admission"
+    __table_args__ = (
+        Index("ix_generation_admission_user_time", "user_id", "created_at"),
+        Index("ix_generation_admission_guest_time", "guest_digest", "created_at"),
+    )
+
+    run_id: uuid.UUID = Field(primary_key=True)
+    user_id: uuid.UUID | None = Field(default=None)
+    guest_digest: str | None = Field(default=None, max_length=64)
+    created_at: datetime = Field(
+        sa_type=DateTime(timezone=True),  # type: ignore
+        index=True,
+    )
+
+
 class GenerationEvent(SQLModel, table=True):
     __tablename__ = "generation_event"
 

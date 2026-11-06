@@ -8,17 +8,16 @@ import {
   type UserRegister,
   UsersService,
 } from "@/client"
-import { stopAccountSync } from "@/lib/account-sync"
 import { safeRedirect } from "@/lib/redirect"
 import {
   endSession,
   isSignedIn,
   startSession,
   useSessionStatus,
+  withSessionLock,
 } from "@/lib/session"
 import { handleError } from "@/utils"
 import useCustomToast from "./useCustomToast"
-import { clearDrafts } from "./useWorkspacePreferences"
 
 const isLoggedIn = isSignedIn
 
@@ -54,13 +53,13 @@ const useAuth = ({ redirect }: UseAuthOptions = {}) => {
     },
   })
 
-  const login = async (data: AccessToken) => {
-    const response = await LoginService.loginAccessToken({
-      body: data,
+  const login = (data: AccessToken) =>
+    withSessionLock(async () => {
+      const response = await LoginService.loginAccessToken({
+        body: data,
+      })
+      startSession(response.data.access_token)
     })
-    queryClient.removeQueries()
-    startSession(response.data.access_token)
-  }
 
   const loginMutation = useMutation({
     mutationFn: login,
@@ -73,19 +72,12 @@ const useAuth = ({ redirect }: UseAuthOptions = {}) => {
   })
 
   const logout = async () => {
+    endSession()
     try {
-      await LoginService.logout()
+      await withSessionLock(() => LoginService.logout())
     } catch {
       /* Sign out locally even if the server can't be reached. */
     }
-    endSession()
-    stopAccountSync({ clearLocal: true })
-    try {
-      clearDrafts()
-    } catch {
-      /* Signing out must work when browser storage is blocked. */
-    }
-    queryClient.clear()
     navigate({ to: "/login" })
   }
 

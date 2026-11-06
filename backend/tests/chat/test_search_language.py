@@ -55,6 +55,12 @@ class SearchProvider:
 @pytest.fixture
 def provider(monkeypatch: pytest.MonkeyPatch) -> SearchProvider:
     fake = SearchProvider()
+    monkeypatch.setattr(settings, "CHAT_ENABLED", True)
+    monkeypatch.setattr(settings, "CHAT_GENERATION_ENABLED", True)
+    monkeypatch.setattr(settings, "CHAT_GENERATION_KILL_SWITCH", False)
+    monkeypatch.setattr(
+        settings, "CHAT_LANGUAGES_ENABLED", [Language.ENGLISH, Language.YORUBA]
+    )
     monkeypatch.setattr(settings, "DEEPSEEK_API_KEY", "test-key")
     monkeypatch.setattr(search_language, "DeepSeekClient", lambda: fake)
     return fake
@@ -127,6 +133,40 @@ def test_search_route_reports_the_language_and_english_query(
     assert body["data"][0]["citation"] == "Section 37"
     assert body["query_language"] == "yo"
     assert body["searched_query"] == "What does Section 37 say about privacy?"
+
+
+@pytest.mark.parametrize(
+    ("setting", "value"),
+    [
+        ("CHAT_ENABLED", False),
+        ("CHAT_GENERATION_ENABLED", False),
+        ("CHAT_GENERATION_KILL_SWITCH", True),
+    ],
+)
+def test_search_route_keeps_query_local_when_explanations_are_disabled(
+    client: TestClient,
+    corpus,
+    db: Session,
+    provider: SearchProvider,
+    monkeypatch: pytest.MonkeyPatch,
+    setting: str,
+    value: bool,
+) -> None:
+    assert corpus
+    monkeypatch.setattr(settings, setting, value)
+    monkeypatch.setattr(
+        search,
+        "_query_embedding_provider",
+        lambda _: pytest.fail("Exact lookup must not embed"),
+    )
+    response = client.post("/api/v1/legal/search", json={"query": _YORUBA})
+    assert response.status_code == 200
+    body = response.json()
+    assert body["data"][0]["citation"] == "Section 37"
+    assert body["query_language"] == "yo"
+    assert body["searched_query"] is None
+    assert provider.calls == 0
+    assert db.exec(select(GenerationReservation)).first() is None
 
 
 def test_search_messages_carry_stable_codes(client: TestClient, corpus) -> None:

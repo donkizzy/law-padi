@@ -1,13 +1,15 @@
 import hashlib
 import json
+import os
 import re
-from collections.abc import Mapping
-from contextlib import AbstractContextManager
+import tempfile
+from collections.abc import Generator, Mapping
+from contextlib import AbstractContextManager, closing
 from datetime import UTC, datetime
 from pathlib import Path, PurePosixPath
 from typing import BinaryIO
 
-from app.ingestion.contracts import BlobHead, BlobObject
+from app.ingestion.contracts import BlobHead, BlobObject, BlobStore
 
 _SAFE_FILENAME_PATTERN = re.compile(r"[^A-Za-z0-9._-]+")
 _METADATA_SUFFIX = ".metadata.json"
@@ -15,6 +17,21 @@ _METADATA_SUFFIX = ".metadata.json"
 
 class BlobStoreError(ValueError):
     """Raised when a blob-store operation violates the storage contract."""
+
+
+def verify_blob_contents(
+    store: BlobStore, key: str, *, expected_sha256: str, size_bytes: int
+) -> None:
+    digest = hashlib.sha256()
+    size = 0
+    with closing(store.iter_read(key)) as chunks:
+        for chunk in chunks:
+            size += len(chunk)
+            if size > size_bytes:
+                break
+            digest.update(chunk)
+    if size != size_bytes or digest.hexdigest() != expected_sha256:
+        raise BlobStoreError("Content-addressed original does not match verified bytes")
 
 
 class LocalBlobStore:
@@ -69,18 +86,19 @@ class LocalBlobStore:
         path.parent.mkdir(parents=True, exist_ok=True)
         digest = hashlib.sha256()
         size = 0
+        with tempfile.NamedTemporaryFile(dir=path.parent, delete=False) as destination:
+            temporary_path = Path(destination.name)
         try:
-            with path.open("wb") as destination:
+            with temporary_path.open("wb") as destination:
                 while chunk := stream.read(1024 * 1024):
                     digest.update(chunk)
                     size += len(chunk)
                     destination.write(chunk)
-        except Exception:
-            path.unlink(missing_ok=True)
-            raise
-        if size == 0:
-            path.unlink(missing_ok=True)
-            raise BlobStoreError("Quarantine objects cannot be empty")
+            if size == 0:
+                raise BlobStoreError("Quarantine objects cannot be empty")
+            temporary_path.replace(path)
+        finally:
+            temporary_path.unlink(missing_ok=True)
         blob = BlobObject(
             key=key,
             size_bytes=size,
@@ -147,6 +165,49 @@ class LocalBlobStore:
         self._write_metadata(blob)
         return blob
 
+    def put_verified_original(
+        self,
+        *,
+        stream: BinaryIO,
+        expected_sha256: str,
+        size_bytes: int,
+        content_type: str,
+        extension: str,
+        metadata: Mapping[str, str] | None = None,
+    ) -> BlobObject:
+        key = self.original_key(sha256=expected_sha256, extension=extension)
+        path = self._path_for_key(key)
+        path.parent.mkdir(parents=True, exist_ok=True)
+        digest = hashlib.sha256()
+        size = 0
+        with tempfile.NamedTemporaryFile(dir=path.parent) as staged:
+            while chunk := stream.read(1024 * 1024):
+                size += len(chunk)
+                if size > size_bytes:
+                    break
+                digest.update(chunk)
+                staged.write(chunk)
+            if size != size_bytes or digest.hexdigest() != expected_sha256:
+                raise BlobStoreError(
+                    "Verified snapshot checksum or size does not match"
+                )
+            staged.flush()
+            try:
+                os.link(staged.name, path)
+            except FileExistsError:
+                verify_blob_contents(
+                    self, key, expected_sha256=expected_sha256, size_bytes=size_bytes
+                )
+        blob = BlobObject(
+            key=key,
+            size_bytes=size_bytes,
+            sha256=expected_sha256,
+            content_type=content_type,
+            metadata=dict(metadata or {}),
+        )
+        self._write_metadata(blob)
+        return blob
+
     def head(self, key: str) -> BlobHead:
         path = self._path_for_key(key)
         if not path.exists():
@@ -171,6 +232,11 @@ class LocalBlobStore:
 
     def read_bytes(self, key: str) -> bytes:
         return self._path_for_key(key).read_bytes()
+
+    def iter_read(self, key: str) -> Generator[bytes]:
+        with self.open_read(key) as stream:
+            while chunk := stream.read(1024 * 1024):
+                yield chunk
 
     def put_artifact(
         self,

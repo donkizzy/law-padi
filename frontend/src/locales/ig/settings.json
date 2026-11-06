@@ -94,6 +94,7 @@
     "clearFailed": "Enweghị ike ihichapụ ụfọdụ nchọcha dị na ngwaọrụ a. Biko lelee nchekwa ihe nchọgharị gị."
   },
   "password": {
+    "required": "Tinye okwuntughe gị ugbu a.",
     "title": "Gbanwee paswọọdụ",
     "current": "Paswọọdụ ugbu a",
     "new": "Paswọọdụ ọhụrụ",
@@ -102,6 +103,7 @@
     "updated": "Agbanweela paswọọdụ"
   },
   "profile": {
+    "confirmNewEmail": "Lelee adreesị ozi-e ọhụrụ ahụ iji kwado mgbanwe ahụ.",
     "title": "Nkọwa gbasara gị",
     "fullName": "Aha zuru ezu",
     "email": "Email",

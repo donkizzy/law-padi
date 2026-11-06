@@ -94,6 +94,7 @@
     "clearFailed": "A kò lè pa àwọn ìwádìí kan rẹ́ lórí ẹ̀rọ yìí. Jọ̀wọ́ ṣàyẹ̀wò ibi ìpamọ́ aṣàwákiri rẹ."
   },
   "password": {
+    "required": "Tẹ ọ̀rọ̀ aṣínà rẹ lọ́wọ́lọ́wọ́ sílẹ̀.",
     "title": "Yí ọ̀rọ̀ aṣínà padà",
     "current": "Ọ̀rọ̀ aṣínà lọ́wọ́lọ́wọ́",
     "new": "Ọ̀rọ̀ aṣínà tuntun",
@@ -102,6 +103,7 @@
     "updated": "A ti yí ọ̀rọ̀ aṣínà padà"
   },
   "profile": {
+    "confirmNewEmail": "Ṣàyẹ̀wò àdírẹ́sì ímeèlì tuntun láti jẹ́rìí àyípadà náà.",
     "title": "Ìwífún nípa rẹ",
     "fullName": "Orúkọ ní kíkún",
     "email": "Ímeèlì",

@@ -1036,6 +1036,20 @@ export type CorpusReleasesPublic = {
 };
 
 /**
+ * EmailChangeRequest
+ */
+export type EmailChangeRequest = {
+    /**
+     * Email
+     */
+    email: string;
+    /**
+     * Current Password
+     */
+    current_password: string;
+};
+
+/**
  * EmailVerification
  */
 export type EmailVerification = {
@@ -3735,10 +3749,6 @@ export type UserUpdateMe = {
      * Full Name
      */
     full_name?: string | null;
-    /**
-     * Email
-     */
-    email?: string | null;
 };
 
 /**
@@ -4088,6 +4098,31 @@ export type usersUpdateUserMeResponses = {
 };
 
 export type usersUpdateUserMeResponse = usersUpdateUserMeResponses[keyof usersUpdateUserMeResponses];
+
+export type usersRequestEmailChangeData = {
+    body: EmailChangeRequest;
+    path?: never;
+    query?: never;
+    url: '/api/v1/users/me/email-change';
+};
+
+export type usersRequestEmailChangeErrors = {
+    /**
+     * Validation Error
+     */
+    422: HTTPValidationError;
+};
+
+export type usersRequestEmailChangeError = usersRequestEmailChangeErrors[keyof usersRequestEmailChangeErrors];
+
+export type usersRequestEmailChangeResponses = {
+    /**
+     * Successful Response
+     */
+    200: Message;
+};
+
+export type usersRequestEmailChangeResponse = usersRequestEmailChangeResponses[keyof usersRequestEmailChangeResponses];
 
 export type usersUpdatePasswordMeData = {
     body: UpdatePassword;

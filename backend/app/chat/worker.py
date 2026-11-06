@@ -10,7 +10,7 @@ from dataclasses import dataclass, field
 from datetime import timedelta
 from typing import Any
 
-from sqlmodel import Session, col, select
+from sqlmodel import Session, col, delete, select
 
 from app.chat import EXPLANATION_PROMPT_VERSION
 from app.chat.budget import BudgetExhausted, reserve, settle
@@ -50,6 +50,7 @@ from app.legal.models import (
     CorpusRelease,
     CorpusReleaseEntry,
     EmbeddingProfile,
+    GenerationAdmission,
     GenerationCapacity,
     GenerationReservation,
     GenerationRun,
@@ -1693,11 +1694,19 @@ def expire_guest_conversations() -> int:
     """Remove inactive guest history and its cascaded evidence and event traces."""
     removed = 0
     with Session(engine) as session:
+        now = get_datetime_utc()
+        session.exec(
+            delete(GenerationAdmission).where(
+                col(GenerationAdmission.created_at) < now - timedelta(days=1)
+            )
+        )
+        # Release quota row locks before acquiring conversation or capacity locks.
+        session.commit()
         expired = session.exec(
             select(Conversation)
             .where(
                 col(Conversation.user_id).is_(None),
-                col(Conversation.updated_at) < get_datetime_utc() - timedelta(days=30),
+                col(Conversation.updated_at) < now - timedelta(days=30),
             )
             .with_for_update(skip_locked=True)
             .limit(100)

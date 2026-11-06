@@ -26,6 +26,7 @@ from app.legal.models import (
     EvaluationDataset,
     EvaluationItem,
     ExtractionCandidate,
+    GenerationAdmission,
     GenerationBudgetDay,
     GenerationBudgetMonth,
     GenerationCapacity,
@@ -89,6 +90,7 @@ def _cleanup_db(session: Session) -> None:
     for model in (
         AuditEvent,
         AdminRoleAssignment,
+        GenerationAdmission,
         GenerationEvent,
         GenerationReservation,
         GenerationRun,

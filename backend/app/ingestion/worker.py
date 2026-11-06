@@ -1,11 +1,11 @@
 import hashlib
 import json
 import re
-import shutil
 import tempfile
 import threading
 import uuid
-from collections.abc import Callable
+from collections.abc import Callable, Iterator
+from contextlib import closing, contextmanager
 from dataclasses import dataclass, replace
 from datetime import date, datetime
 from typing import Any, BinaryIO, cast
@@ -13,6 +13,7 @@ from typing import Any, BinaryIO, cast
 from sqlmodel import Session, col, select
 
 from app.core.config import settings
+from app.ingestion.contracts import BlobStore
 from app.ingestion.embedding import (
     DEFAULT_EMBEDDING_BATCH_SIZE,
     DenseEmbeddingProvider,
@@ -73,6 +74,7 @@ from app.ingestion.rendering import render_page_thumbnail
 from app.ingestion.retrieval import RetrievalDocument, build_retrieval_documents
 from app.ingestion.service import (
     MAX_SOURCE_PAGES,
+    MAX_UPLOAD_BYTES,
     _release_source_and_review_gates,
     finalize_verified_upload,
     get_blob_store,
@@ -341,12 +343,9 @@ def handle_verifying_upload(
     upload = _get_upload_for_run(session, run, task)
     store = get_blob_store()
     try:
-        with tempfile.NamedTemporaryFile(mode="w+b") as temporary:
-            with store.open_read(upload.quarantine_key) as source_stream:
-                shutil.copyfileobj(source_stream, temporary, length=1024 * 1024)
-            temporary.flush()
+        with _quarantine_snapshot(store, upload) as (temporary, _):
             inspection = inspect_pdf_file(
-                cast(BinaryIO, temporary),
+                temporary,
                 expected_sha256=upload.expected_sha256,
                 expected_size=upload.expected_size,
                 max_pages=MAX_SOURCE_PAGES,
@@ -401,8 +400,9 @@ def handle_malware_scan(
 ) -> StageOutcome:
     if run.source_document_id or task.payload.get("source_document_id"):
         source = _get_source_for_run(session, run, task)
+        store = get_blob_store()
         try:
-            with get_blob_store().open_read(_require_storage_key(source)) as stream:
+            with store.open_read(_require_storage_key(source)) as stream:
                 scan_report = malware_scanner_from_settings(settings).scan_stream(
                     stream
                 )
@@ -410,6 +410,9 @@ def handle_malware_scan(
             raise IngestionWorkerError(
                 "Stored source document file was not found"
             ) from exc
+        if task.payload.get("source_upload_id"):
+            upload = _get_upload_for_run(session, run, task)
+            store.delete_quarantine(upload.quarantine_key)
         return StageOutcome(
             metrics=scan_report.to_metrics(),
             next_stage=IngestionStage.PROFILING,
@@ -417,26 +420,61 @@ def handle_malware_scan(
         )
 
     upload = _get_upload_for_run(session, run, task)
+    page_count = run.expected_page_count
+    sha256 = str(run.pipeline_config.get("source_sha256") or upload.actual_sha256 or "")
+    if page_count is None or not sha256:
+        raise IngestionWorkerError(
+            "Upload verification did not record a digest and page count"
+        )
+    store = get_blob_store()
     try:
-        with get_blob_store().open_read(upload.quarantine_key) as stream:
+        with _quarantine_snapshot(store, upload) as (stream, snapshot_sha256):
+            if snapshot_sha256 != sha256:
+                raise IngestionWorkerError(
+                    "Quarantined upload changed after verification"
+                )
             scan_report = malware_scanner_from_settings(settings).scan_stream(stream)
+            stream.seek(0)
+            source = finalize_verified_upload(
+                session,
+                run=run,
+                upload=upload,
+                store=store,
+                verified_stream=stream,
+                sha256=sha256,
+                page_count=page_count,
+            )
     except FileNotFoundError as exc:
         raise IngestionWorkerError("Quarantined upload file was not found") from exc
-    if run.expected_page_count is None:
-        raise IngestionWorkerError("Upload verification did not record a page count")
-    source = finalize_verified_upload(
-        session,
-        run=run,
-        upload=upload,
-        sha256=upload.actual_sha256
-        or str(run.pipeline_config.get("source_sha256") or ""),
-        page_count=run.expected_page_count,
-    )
     return StageOutcome(
         metrics=scan_report.to_metrics(),
         next_stage=IngestionStage.PROFILING,
         next_task_payload={"source_document_id": str(source.id)},
     )
+
+
+@contextmanager
+def _quarantine_snapshot(
+    store: BlobStore, upload: SourceUpload
+) -> Iterator[tuple[BinaryIO, str]]:
+    if not 0 < upload.expected_size <= MAX_UPLOAD_BYTES:
+        raise IngestionWorkerError("Invalid quarantined upload size")
+    digest = hashlib.sha256()
+    size = 0
+    with tempfile.TemporaryFile(mode="w+b") as stream:
+        with closing(store.iter_read(upload.quarantine_key)) as chunks:
+            for chunk in chunks:
+                size += len(chunk)
+                if size > upload.expected_size:
+                    raise IngestionWorkerError(
+                        "Quarantined upload exceeds its expected size"
+                    )
+                digest.update(chunk)
+                stream.write(chunk)
+        if size != upload.expected_size:
+            raise IngestionWorkerError("Quarantined upload size does not match")
+        stream.seek(0)
+        yield stream, digest.hexdigest()
 
 
 def handle_profiling(
@@ -3240,10 +3278,7 @@ def _embedding_provider_for_profile(
         )
     if provider == EmbeddingProviderKind.HUGGINGFACE_TEI.value:
         return HuggingFaceTeiEmbeddingProvider(
-            endpoint_url=(
-                _profile_string(profile, "endpoint_url")
-                or settings.HUGGINGFACE_TEI_ENDPOINT_URL
-            ),
+            endpoint_url=settings.HUGGINGFACE_TEI_ENDPOINT_URL,
             api_token=settings.HUGGINGFACE_API_TOKEN,
             model_name=profile.model_name,
             model_revision=profile.model_revision,

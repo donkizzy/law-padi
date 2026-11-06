@@ -3,7 +3,8 @@ import { z } from "zod"
 
 export const workspaceStorageEvent = "law-padi-workspace-storage"
 export const preferencesKey = "law-padi.preferences.v1"
-export const draftPrefix = "law-padi.draft.v1."
+export const draftPrefix = "law-padi.draft.v2."
+const legacyDraftPrefix = "law-padi.draft.v1."
 const schema = z.object({
   enterToSend: z.boolean().default(true),
   followLatest: z.boolean().default(true),
@@ -90,8 +91,14 @@ export function clearPreferences() {
 
 export function clearDrafts() {
   for (const key of Object.keys(sessionStorage))
-    if (key.startsWith(draftPrefix)) sessionStorage.removeItem(key)
+    if (key.startsWith(draftPrefix) || key.startsWith(legacyDraftPrefix))
+      sessionStorage.removeItem(key)
   window.dispatchEvent(new Event(workspaceStorageEvent))
+}
+
+export function discardLegacyDrafts() {
+  for (const key of Object.keys(sessionStorage))
+    if (key.startsWith(legacyDraftPrefix)) sessionStorage.removeItem(key)
 }
 
 export function useWorkspacePreferences() {

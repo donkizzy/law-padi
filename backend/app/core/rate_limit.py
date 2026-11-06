@@ -36,6 +36,9 @@ RECOVERY_PER_EMAIL = Limit("recovery-email", 3, 60 * 60)
 RESET_PER_IP = Limit("reset-ip", 10, 60 * 60)
 VERIFY_PER_IP = Limit("verify-ip", 20, 60 * 60)
 VERIFICATION_EMAIL_PER_USER = Limit("verification-email-user", 3, 60 * 60)
+EMAIL_CHANGE_PER_IP = Limit("email-change-ip", 10, 60 * 60)
+EMAIL_CHANGE_PER_USER = Limit("email-change-user", 3, 60 * 60)
+EMAIL_CHANGE_PER_ADDRESS = Limit("email-change-address", 3, 60 * 60)
 
 
 def client_ip(request: Request) -> str:

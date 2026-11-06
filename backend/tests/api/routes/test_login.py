@@ -92,7 +92,10 @@ def test_reset_password(client: TestClient, db: Session) -> None:
         is_superuser=False,
     )
     user = create_user(session=db, user_create=user_create)
-    token = generate_password_reset_token(email=email)
+    token = generate_password_reset_token(user)
+    with patch.object(settings, "EMAIL_RESET_TOKEN_EXPIRE_HOURS", 1):
+        second_token = generate_password_reset_token(user)
+    assert second_token != token
     headers = user_authentication_headers(client=client, email=email, password=password)
     data = {"new_password": new_password, "token": token}
 
@@ -105,6 +108,13 @@ def test_reset_password(client: TestClient, db: Session) -> None:
     assert r.status_code == 200
     assert r.json() == {"message": "Password updated successfully"}
 
+    for stale_token in (token, second_token):
+        replay = client.post(
+            f"{settings.API_V1_STR}/reset-password/",
+            json={"new_password": random_lower_string(), "token": stale_token},
+        )
+        assert replay.status_code == 400
+        assert replay.json() == {"detail": "Invalid token"}
     db.refresh(user)
     verified, _ = verify_password(new_password, user.hashed_password)
     assert verified

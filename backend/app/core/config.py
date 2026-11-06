@@ -147,6 +147,14 @@ class Settings(BaseSettings):
     AZURE_DOCUMENT_INTELLIGENCE_MODEL_ID: str = "prebuilt-layout"
     AZURE_DOCUMENT_INTELLIGENCE_API_VERSION: str = "2024-11-30"
 
+    @property
+    def explanations_enabled(self) -> bool:
+        return (
+            self.CHAT_ENABLED
+            and self.CHAT_GENERATION_ENABLED
+            and not self.CHAT_GENERATION_KILL_SWITCH
+        )
+
     @field_validator("CHAT_LANGUAGES_ENABLED")
     @classmethod
     def _english_always_enabled(cls, value: list[Language]) -> list[Language]:

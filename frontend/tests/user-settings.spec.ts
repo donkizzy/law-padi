@@ -22,6 +22,7 @@ test.use({ storageState: { cookies: [], origins: [] } })
 async function mockSettings(page: Page, signedIn = false) {
   let account = { ...user }
   const profileWrites: unknown[] = []
+  const emailRequests: unknown[] = []
   const passwordWrites: unknown[] = []
   if (signedIn) await mockSignedIn(page, "mock-account")
   await page.route("**/api/v1/conversations**", (route) =>
@@ -45,6 +46,12 @@ async function mockSettings(page: Page, signedIn = false) {
     route.fulfill({ json: { data: [], count: 0 } }),
   )
   await page.route("**/api/v1/users/me**", (route) => {
+    if (route.request().url().endsWith("/email-change")) {
+      emailRequests.push(route.request().postDataJSON())
+      return route.fulfill({
+        json: { message: "Check the new email address." },
+      })
+    }
     if (route.request().url().includes("password")) {
       passwordWrites.push(route.request().postDataJSON())
       return route.fulfill({
@@ -58,7 +65,7 @@ async function mockSettings(page: Page, signedIn = false) {
     }
     return route.fulfill({ json: account })
   })
-  return { profileWrites, passwordWrites }
+  return { profileWrites, passwordWrites, emailRequests }
 }
 
 test("Settings lists every published law with its own source caveat", async ({
@@ -212,6 +219,32 @@ test("Cancel restores the account profile without writing", async ({
   expect(mock.profileWrites).toHaveLength(0)
 })
 
+test("An email change requires the password and keeps the current address until confirmed", async ({
+  page,
+}) => {
+  const mock = await mockSettings(page, true)
+  await page.goto("/settings")
+  await page.getByRole("button", { name: "Edit", exact: true }).click()
+  await page.getByLabel("Email", { exact: true }).fill("new@example.test")
+  await page.getByRole("button", { name: "Save", exact: true }).click()
+  await expect(page.getByText("Enter your current password.")).toBeVisible()
+  expect(mock.emailRequests).toHaveLength(0)
+  await page
+    .getByLabel("Current Password", { exact: true })
+    .fill("test-password")
+  await page.getByRole("button", { name: "Save", exact: true }).click()
+  await expect(
+    page.getByText("Check the new email address to confirm the change."),
+  ).toBeVisible()
+  await expect(page.getByRole("tabpanel", { name: "Profile" })).toContainText(
+    user.email,
+  )
+  expect(mock.profileWrites).toHaveLength(0)
+  expect(mock.emailRequests).toEqual([
+    { email: "new@example.test", current_password: "test-password" },
+  ])
+})
+
 test("Password control submits to the existing account API", async ({
   page,
 }) => {
@@ -229,13 +262,32 @@ test("Password control submits to the existing account API", async ({
   })
 })
 
+test("Opening an email confirmation link waits for the reader to confirm", async ({
+  page,
+}) => {
+  let requests = 0
+  await page.route("**/api/v1/users/verify-email", (route) => {
+    requests += 1
+    return route.fulfill({ json: { message: "Email confirmed" } })
+  })
+  await page.goto("/verify-email?token=dummy-email-change-token")
+  const confirm = page.getByRole("button", { name: "Confirm email address" })
+  await expect(confirm).toBeVisible()
+  expect(requests).toBe(0)
+  await confirm.click()
+  await expect(
+    page.getByRole("heading", { name: "Email confirmed" }),
+  ).toBeVisible()
+  expect(requests).toBe(1)
+})
+
 test("Research export downloads real local bookmarks and source editions", async ({
   page,
 }) => {
   await mockSettings(page)
   await page.addInitScript(() =>
     localStorage.setItem(
-      "law-padi.saved-provisions.v1",
+      "law-padi.saved-provisions.v2",
       JSON.stringify([
         {
           canonical_path: "constitution-1999.chapter4.section37",
@@ -264,22 +316,29 @@ test("Clearing local research requires confirmation and preserves login", async 
 }) => {
   await mockSettings(page, true)
   await page.addInitScript(() => {
-    localStorage.setItem("law-padi.saved-provisions.v1", "[]")
-    sessionStorage.setItem("law-padi.draft.v1.new", "Unfinished question")
+    localStorage.setItem("law-padi.saved-provisions.v2", "[]")
+    sessionStorage.setItem(
+      "law-padi.draft.v2.signed-in.new",
+      "Unfinished question",
+    )
   })
   await page.goto("/settings")
   await page.getByRole("tab", { name: "Security" }).click()
   await page.getByRole("button", { name: "Clear bookmarks and drafts" }).click()
   await page.getByRole("button", { name: "Keep my research" }).click()
   expect(
-    await page.evaluate(() => sessionStorage.getItem("law-padi.draft.v1.new")),
+    await page.evaluate(() =>
+      sessionStorage.getItem("law-padi.draft.v2.signed-in.new"),
+    ),
   ).toBe("Unfinished question")
   await page.getByRole("button", { name: "Clear bookmarks and drafts" }).click()
   await page
     .getByRole("button", { name: "Clear local research", exact: true })
     .click()
   expect(
-    await page.evaluate(() => sessionStorage.getItem("law-padi.draft.v1.new")),
+    await page.evaluate(() =>
+      sessionStorage.getItem("law-padi.draft.v2.signed-in.new"),
+    ),
   ).toBeNull()
   expect(
     await page.evaluate((key) => localStorage.getItem(key), SESSION_HINT_KEY),
@@ -325,10 +384,9 @@ test("A confirmed account takes in this browser's research and guest chats", asy
     return route.fulfill({ json: null })
   })
 
-  await page.goto("/login")
-  await page.evaluate(() =>
+  await page.addInitScript(() =>
     localStorage.setItem(
-      "law-padi.saved-provisions.v1",
+      "law-padi.saved-provisions.v2",
       JSON.stringify([
         {
           canonical_path: "chapter-iv/section-35",
@@ -352,7 +410,8 @@ test("A confirmed account takes in this browser's research and guest chats", asy
     .poll(() =>
       page.evaluate(() =>
         JSON.parse(
-          localStorage.getItem("law-padi.saved-provisions.v1") ?? "[]",
+          localStorage.getItem("law-padi.saved-provisions.v2.signed-in") ??
+            "[]",
         ).map((item: { canonical_path: string }) => item.canonical_path),
       ),
     )
@@ -369,6 +428,39 @@ test("A confirmed account takes in this browser's research and guest chats", asy
       },
     ])
   await expect(page.getByText("Confirm your email address")).toHaveCount(0)
+})
+
+test("A different account does not import the legacy account bookmark mirror", async ({
+  page,
+}) => {
+  await mockSettings(page, true)
+  await page.addInitScript(() => {
+    localStorage.setItem("law-padi.synced-account", "previous-owner")
+    localStorage.setItem(
+      "law-padi.saved-provisions.v1",
+      JSON.stringify([
+        {
+          canonical_path: "private-bookmark",
+          release_version: "published-test",
+          saved_at: "2026-10-01T00:00:00Z",
+        },
+      ]),
+    )
+  })
+  await page.route("**/api/v1/users/me", (route) =>
+    route.fulfill({
+      json: { ...user, email_verified_at: "2026-10-01T00:00:00Z" },
+    }),
+  )
+  await page.route("**/api/v1/account/preferences", (route) =>
+    route.fulfill({ json: { enter_to_send: true, language: "english" } }),
+  )
+  await page.route("**/api/v1/account/saved-provisions/merge", (route) =>
+    route.fulfill({ json: [] }),
+  )
+  const merge = page.waitForRequest("**/api/v1/account/saved-provisions/merge")
+  await page.goto("/settings")
+  expect((await merge).postDataJSON()).toEqual({ items: [] })
 })
 
 test("A confirmed account brings its saved language to a new browser", async ({

@@ -10,6 +10,7 @@ import { conversationHeaders } from "@/hooks/useConversations"
 import {
   clearSavedProvisions,
   onBookmarkChange,
+  readGuestBookmarks,
   readSavedProvisions,
   replaceSavedProvisions,
 } from "@/hooks/useSavedProvisions"
@@ -21,6 +22,11 @@ import {
   type WorkspacePreferences,
 } from "@/hooks/useWorkspacePreferences"
 import i18n from "@/lib/i18n"
+import {
+  getSessionOwner,
+  getSessionScope,
+  getSessionSignal,
+} from "@/lib/session"
 
 /**
  * Keeps a confirmed account's research on every device it signs in on.
@@ -36,7 +42,7 @@ import i18n from "@/lib/i18n"
 const SYNCED_ACCOUNT_KEY = "law-padi.synced-account"
 
 let activeUserId: string | null = null
-let starting: Promise<SyncResult> | null = null
+let starting: { scope: number; promise: Promise<SyncResult> } | null = null
 
 export type SyncResult = { claimedConversations: number }
 
@@ -99,52 +105,78 @@ async function claimGuestConversations(): Promise<number> {
 }
 
 async function sync(user: UserPublic): Promise<SyncResult> {
-  const firstTime = storage((s) => s.getItem(SYNCED_ACCOUNT_KEY)) !== user.id
+  const scope = getSessionScope()
+  const signal = getSessionSignal()
+  const ownerKey = `${SYNCED_ACCOUNT_KEY}.${user.id}`
+  const firstTime = storage((s) => s.getItem(ownerKey)) !== "1"
+  const guestBookmarks = firstTime ? readGuestBookmarks() : []
+  const localBookmarks = firstTime ? readSavedProvisions() : []
 
   const claimedConversations = await claimGuestConversations()
+  signal.throwIfAborted()
 
   const bookmarks = firstTime
     ? await AccountService.mergeSavedProvisions({
-        body: { items: readSavedProvisions() },
+        body: { items: [...guestBookmarks, ...localBookmarks] },
+        signal,
       })
-    : await AccountService.readSavedProvisions()
+    : await AccountService.readSavedProvisions({ signal })
+  signal.throwIfAborted()
+  if (
+    guestBookmarks.length &&
+    JSON.stringify(guestBookmarks) === JSON.stringify(readGuestBookmarks())
+  )
+    clearSavedProvisions(null)
   replaceSavedProvisions(bookmarks.data)
 
   // The generated client turns a null body into {}, so check for a real value.
-  const preferences = (await AccountService.readPreferences()).data
+  const preferences = (await AccountService.readPreferences({ signal })).data
+  signal.throwIfAborted()
   if (typeof preferences?.enter_to_send === "boolean") {
     replacePreferences(fromServer(preferences))
     // Older saves have no language: store this browser's choice.
     if (!preferences.language)
       await AccountService.savePreferences({
         body: toServer(readPreferences()),
+        signal,
       })
   } else
-    await AccountService.savePreferences({ body: toServer(readPreferences()) })
+    await AccountService.savePreferences({
+      body: toServer(readPreferences()),
+      signal,
+    })
 
-  storage((s) => s.setItem(SYNCED_ACCOUNT_KEY, user.id))
+  if (scope !== getSessionScope()) return { claimedConversations: 0 }
+  storage((s) => s.setItem(ownerKey, "1"))
   activeUserId = user.id
   return { claimedConversations }
 }
 
 /** Start syncing for a confirmed account. Safe to call repeatedly. */
 export function startAccountSync(user: UserPublic): Promise<SyncResult> {
-  if (!user.email_verified_at || activeUserId === user.id)
+  const owner = getSessionOwner()
+  if (
+    !owner ||
+    (owner !== "signed-in" && owner !== user.id) ||
+    !user.email_verified_at ||
+    activeUserId === user.id
+  )
     return Promise.resolve({ claimedConversations: 0 })
-  starting ??= sync(user).finally(() => {
-    starting = null
+  const scope = getSessionScope()
+  if (starting?.scope === scope) return starting.promise
+  const promise = sync(user).finally(() => {
+    if (starting?.promise === promise) starting = null
   })
-  return starting
+  starting = { scope, promise }
+  return promise
 }
 
 /** Stop syncing. On sign-out, drop the account's copy from this browser. */
-export function stopAccountSync({ clearLocal }: { clearLocal: boolean }) {
+export function stopAccountSync(previousOwner: string | null) {
   activeUserId = null
-  if (!clearLocal) return
-  if (storage((s) => s.getItem(SYNCED_ACCOUNT_KEY)) == null) return
-  storage((s) => s.removeItem(SYNCED_ACCOUNT_KEY))
+  if (!previousOwner) return
   try {
-    clearSavedProvisions()
+    clearSavedProvisions(previousOwner)
     clearPreferences()
   } catch {
     /* Signing out must work when browser storage is blocked. */

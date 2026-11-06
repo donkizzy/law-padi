@@ -35,8 +35,11 @@ def rate_limits() -> Generator[None]:
         yield
 
 
-def _signed_in_user(client: TestClient, db: Session) -> tuple[User, dict[str, str]]:
-    email, password = random_email(), random_lower_string()
+def _signed_in_user(
+    client: TestClient, db: Session, *, password: str | None = None
+) -> tuple[User, dict[str, str]]:
+    email = random_email()
+    password = password or random_lower_string()
     r = client.post(f"{API}/users/signup", json={"email": email, "password": password})
     assert r.status_code == 200
     user = db.exec(select(User).where(User.email == email)).one()
@@ -97,14 +100,78 @@ def test_verification_rejects_garbage_and_unknown_users(client: TestClient) -> N
 def test_changing_email_requires_confirming_the_new_one(
     client: TestClient, db: Session, mail: MagicMock
 ) -> None:
-    user, headers = _signed_in_user(client, db)
+    password = random_lower_string()
+    user, headers = _signed_in_user(client, db, password=password)
     client.post(f"{API}/users/verify-email", json={"token": _link_token(mail)})
+    old_email = user.email
     new_email = random_email()
 
-    r = client.patch(f"{API}/users/me", headers=headers, json={"email": new_email})
+    r = client.post(
+        f"{API}/users/me/email-change",
+        headers=headers,
+        json={"email": new_email, "current_password": password},
+    )
     assert r.status_code == 200
-    assert r.json()["email_verified_at"] is None
+    db.refresh(user)
+    assert user.email == old_email
+    assert user.email_verified_at is not None
     assert mail.call_args.kwargs["email_to"] == new_email
+    token = _link_token(mail)
+
+    assert (
+        client.post(f"{API}/users/verify-email", json={"token": token}).status_code
+        == 200
+    )
+    db.refresh(user)
+    assert user.email == new_email
+    assert user.email_verified_at is not None
+    assert client.get(f"{API}/users/me", headers=headers).status_code == 401
+    assert (
+        client.post(f"{API}/users/verify-email", json={"token": token}).status_code
+        == 400
+    )
+
+
+def test_email_change_request_does_not_reveal_address_ownership(
+    client: TestClient, db: Session, mail: MagicMock
+) -> None:
+    password = random_lower_string()
+    user, headers = _signed_in_user(client, db, password=password)
+    original_email = user.email
+    occupied = create_random_user(db)
+
+    existing_response = client.post(
+        f"{API}/users/me/email-change",
+        headers=headers,
+        json={"email": occupied.email, "current_password": password},
+    )
+    existing_token = _link_token(mail)
+    available_response = client.post(
+        f"{API}/users/me/email-change",
+        headers=headers,
+        json={"email": random_email(), "current_password": password},
+    )
+    assert existing_response.status_code == available_response.status_code == 200
+    assert existing_response.json() == available_response.json()
+
+    r = client.post(f"{API}/users/verify-email", json={"token": existing_token})
+    assert r.status_code == 400
+    db.refresh(user)
+    assert user.email == original_email
+
+
+def test_email_change_rejects_incorrect_password(
+    client: TestClient, db: Session, mail: MagicMock
+) -> None:
+    _, headers = _signed_in_user(client, db)
+    mail.reset_mock()
+    response = client.post(
+        f"{API}/users/me/email-change",
+        headers=headers,
+        json={"email": random_email(), "current_password": "wrong-password"},
+    )
+    assert response.status_code == 400
+    mail.assert_not_called()
 
 
 def test_resend_verification_email(
@@ -130,7 +197,7 @@ def test_password_reset_confirms_email(client: TestClient, db: Session) -> None:
     r = client.post(
         f"{API}/reset-password/",
         json={
-            "token": generate_password_reset_token(email=user.email),
+            "token": generate_password_reset_token(user),
             "new_password": "a-brand-new-password",
         },
     )
@@ -143,7 +210,7 @@ def test_link_tokens_cannot_be_used_to_sign_in(client: TestClient, db: Session) 
     user = create_random_user(db)
     for token in (
         generate_email_verification_token(user_id=user.id, email=user.email),
-        generate_password_reset_token(email=user.email),
+        generate_password_reset_token(user),
     ):
         r = client.get(f"{API}/users/me", headers={"Authorization": f"Bearer {token}"})
         assert r.status_code == 401

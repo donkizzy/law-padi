@@ -4,9 +4,11 @@ import {
   type EvidenceItem,
 } from "@/client"
 import { conversationHeaders } from "@/hooks/useConversations"
+import { readSavedProvisions } from "@/hooks/useSavedProvisions"
 import { preferencesKey } from "@/hooks/useWorkspacePreferences"
 import { editionName, editionNote, pageLabel } from "./legal-provisions"
 import { referencePath } from "./seo"
+import { getSessionSignal } from "./session"
 
 export function evidenceUrl(
   item: Pick<EvidenceItem, "canonical_path" | "release_version">,
@@ -79,6 +81,7 @@ export async function readCompleteConversation(
 }
 
 export async function exportResearch(conversationsEnabled: boolean) {
+  const signal = getSessionSignal()
   const conversations: ConversationDetail[] = []
   if (conversationsEnabled) {
     let offset = 0
@@ -88,6 +91,7 @@ export async function exportResearch(conversationsEnabled: boolean) {
         query: { offset, limit: 100 },
         headers: conversationHeaders(),
         withCredentials: true,
+        signal,
       })
       count = page.data.count
       if (!page.data.data.length && offset < count)
@@ -95,10 +99,11 @@ export async function exportResearch(conversationsEnabled: boolean) {
           "Conversation history changed during export. Try again.",
         )
       for (const row of page.data.data)
-        conversations.push(await readCompleteConversation(row.id))
+        conversations.push(await readCompleteConversation(row.id, signal))
       offset += page.data.data.length
     }
   }
+  signal.throwIfAborted()
   downloadResearch("constitution-ng-research.json", {
     format_version: 1,
     exported_at: new Date().toISOString(),
@@ -109,9 +114,7 @@ export async function exportResearch(conversationsEnabled: boolean) {
     },
     notice:
       "Source editions and linked provisions are retained. Explanations are not legal advice.",
-    bookmarks: JSON.parse(
-      localStorage.getItem("law-padi.saved-provisions.v1") ?? "[]",
-    ),
+    bookmarks: readSavedProvisions(),
     preferences: JSON.parse(localStorage.getItem(preferencesKey) ?? "{}"),
     conversations,
   })

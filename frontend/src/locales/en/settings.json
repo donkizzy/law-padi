@@ -96,6 +96,7 @@
   "password": {
     "title": "Change Password",
     "current": "Current Password",
+    "required": "Enter your current password.",
     "new": "New Password",
     "confirm": "Confirm Password",
     "submit": "Update Password",
@@ -106,7 +107,8 @@
     "fullName": "Full name",
     "email": "Email",
     "notSet": "N/A",
-    "updated": "User updated successfully"
+    "updated": "User updated successfully",
+    "confirmNewEmail": "Check the new email address to confirm the change."
   },
   "verify": {
     "title": "Confirm your email address",

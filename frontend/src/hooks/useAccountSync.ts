@@ -14,14 +14,18 @@ export function useAccountSync() {
 
   useEffect(() => {
     if (!user || !verified) return
+    let active = true
     startAccountSync(user)
       .then(({ claimedConversations: count }) => {
-        if (count === 0) return
+        if (!active || count === 0) return
         toast.success(i18n.t("sync.chatsClaimed", { count }))
         void queryClient.invalidateQueries({ queryKey: ["conversations"] })
       })
       .catch(() => {
-        toast.error(i18n.t("sync.savedFailed"))
+        if (active) toast.error(i18n.t("sync.savedFailed"))
       })
+    return () => {
+      active = false
+    }
   }, [user, verified, queryClient])
 }

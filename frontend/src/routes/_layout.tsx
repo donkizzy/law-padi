@@ -18,12 +18,18 @@ import {
   SidebarTrigger,
 } from "@/components/ui/sidebar"
 import { useAccountSync } from "@/hooks/useAccountSync"
+import { useSessionScope } from "@/lib/session"
 
 export const Route = createFileRoute("/_layout")({
   component: Layout,
 })
 
 function Layout() {
+  const scope = useSessionScope()
+  return <Workspace key={scope} />
+}
+
+function Workspace() {
   const { t } = useTranslation()
   useAccountSync()
   return (

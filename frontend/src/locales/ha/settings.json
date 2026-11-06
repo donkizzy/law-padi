@@ -94,6 +94,7 @@
     "clearFailed": "Ba a iya share wani ɓangare na binciken wannan na'ura ba. Da fatan za ka duba ma'ajiyar burauzarka."
   },
   "password": {
+    "required": "Shigar da kalmar sirrinka ta yanzu.",
     "title": "Canja kalmar sirri",
     "current": "Kalmar sirri ta yanzu",
     "new": "Sabuwar kalmar sirri",
@@ -102,6 +103,7 @@
     "updated": "An canja kalmar sirri"
   },
   "profile": {
+    "confirmNewEmail": "Duba sabon adireshin imel don tabbatar da canjin.",
     "title": "Bayananka",
     "fullName": "Cikakken suna",
     "email": "Imel",

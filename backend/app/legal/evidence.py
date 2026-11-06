@@ -86,11 +86,8 @@ def default_embedding_provider(profile: EmbeddingProfile) -> DenseEmbeddingProvi
             model_name=profile.model_name,
             model_revision=profile.model_revision,
         )
-    endpoint_url = profile.configuration.get("endpoint_url")
     return HuggingFaceTeiEmbeddingProvider(
-        endpoint_url=endpoint_url
-        if isinstance(endpoint_url, str)
-        else settings.HUGGINGFACE_TEI_ENDPOINT_URL,
+        endpoint_url=settings.HUGGINGFACE_TEI_ENDPOINT_URL,
         api_token=settings.HUGGINGFACE_API_TOKEN,
         model_name=profile.model_name,
         model_revision=profile.model_revision,

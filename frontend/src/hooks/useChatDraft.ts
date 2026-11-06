@@ -1,8 +1,10 @@
 import { useCallback, useEffect, useState } from "react"
+import { getSessionOwner } from "@/lib/session"
 import { draftPrefix, workspaceStorageEvent } from "./useWorkspacePreferences"
 
 export function useChatDraft(key: string) {
-  const storageKey = `${draftPrefix}${key}`
+  const owner = getSessionOwner()
+  const storageKey = `${draftPrefix}${owner ? `${owner}.` : ""}${key}`
   const [draft, updateDraft] = useState(() => {
     try {
       return sessionStorage.getItem(storageKey) ?? ""

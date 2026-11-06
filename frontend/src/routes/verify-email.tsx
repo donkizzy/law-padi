@@ -34,7 +34,7 @@ function VerifyEmail() {
       await queryClient.invalidateQueries({ queryKey: ["currentUser"] })
       return response.data
     },
-    enabled: Boolean(token),
+    enabled: false,
     retry: false,
     staleTime: Number.POSITIVE_INFINITY,
     refetchOnWindowFocus: false,
@@ -74,10 +74,14 @@ function VerifyEmail() {
               )}
             </SquircleButton>
           </>
-        ) : (
+        ) : verify.isFetching ? (
           <p className="text-body" role="status">
             {t("verify.confirming")}
           </p>
+        ) : (
+          <SquircleButton type="button" onClick={() => void verify.refetch()}>
+            {t("verify.confirm")}
+          </SquircleButton>
         )}
       </div>
     </AuthLayout>

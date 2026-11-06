@@ -1,18 +1,20 @@
-from datetime import timedelta
+from datetime import UTC, datetime, timedelta
 from uuid import UUID, uuid4
 
 import pytest
 from fastapi.testclient import TestClient
 from sqlmodel import Session
 
+from app.api.routes import conversations
 from app.chat.budget import reserve, settle
-from app.chat.worker import expire_guest_conversations
-from app.core import security
+from app.chat.worker import _claim_run, expire_guest_conversations
+from app.core import security, sessions
 from app.core.config import settings
 from app.legal.enums import MessageRole
 from app.legal.models import (
     Conversation,
     ConversationMessage,
+    GenerationAdmission,
     GenerationBudgetDay,
     GenerationCapacity,
     GenerationReservation,
@@ -167,6 +169,217 @@ def test_guest_burst_limit_counts_cancelled_runs_and_preserves_idempotency(
         )
         assert blocked.status_code == 429
         assert blocked.json()["detail"] == "Too many explanations in one minute"
+
+
+@pytest.mark.parametrize(
+    ("limit_name", "expected"),
+    [
+        ("CHAT_GUEST_DAILY_LIMIT", "Daily explanation allowance reached"),
+        ("CHAT_GUEST_BURST_LIMIT", "Too many explanations in one minute"),
+        ("CHAT_ACCOUNT_DAILY_LIMIT", "Daily explanation allowance reached"),
+        ("CHAT_ACCOUNT_BURST_LIMIT", "Too many explanations in one minute"),
+    ],
+)
+def test_conversation_deletion_does_not_reset_allowance(
+    corpus,
+    db: Session,
+    monkeypatch: pytest.MonkeyPatch,
+    limit_name: str,
+    expected: str,
+) -> None:
+    assert corpus
+    monkeypatch.setattr(settings, "CHAT_ENABLED", True)
+    monkeypatch.setattr(settings, "CHAT_GENERATION_ENABLED", True)
+    monkeypatch.setattr(settings, "CHAT_DISPATCH_MODE", "poll")
+    monkeypatch.setattr(settings, limit_name, 1)
+    now = get_datetime_utc()
+    monkeypatch.setattr(conversations, "get_datetime_utc", lambda: now)
+    user = User(email="quota@example.test", hashed_password="unused")
+    db.add(user)
+    db.commit()
+    headers = (
+        {
+            "Authorization": f"Bearer {security.create_access_token(user.id, timedelta(hours=1))}"
+        }
+        if "ACCOUNT" in limit_name
+        else {}
+    )
+    with TestClient(app, base_url="https://testserver", headers=headers) as reader:
+        chat = reader.post("/api/v1/conversations", json={}).json()["id"]
+        accepted = reader.post(
+            f"/api/v1/conversations/{chat}/messages",
+            json={"question": "Section 37", "idempotency_key": "quota-first"},
+        )
+        assert accepted.status_code == 202
+        assert reader.delete(f"/api/v1/conversations/{chat}").status_code == 204
+        assert db.get(GenerationRun, UUID(accepted.json()["run_id"])) is None
+
+        replacement = reader.post("/api/v1/conversations", json={}).json()["id"]
+        rejected = reader.post(
+            f"/api/v1/conversations/{replacement}/messages",
+            json={"question": "Section 33", "idempotency_key": "quota-second"},
+        )
+        assert rejected.status_code == 429
+        assert rejected.json()["detail"] == expected
+
+
+def test_claim_counts_admissions_for_account_and_original_guest(
+    corpus, db: Session, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    assert corpus
+    monkeypatch.setattr(settings, "CHAT_ENABLED", True)
+    monkeypatch.setattr(settings, "CHAT_GENERATION_ENABLED", True)
+    monkeypatch.setattr(settings, "CHAT_DISPATCH_MODE", "poll")
+    monkeypatch.setattr(settings, "CHAT_GUEST_DAILY_LIMIT", 1)
+    monkeypatch.setattr(settings, "CHAT_ACCOUNT_DAILY_LIMIT", 1)
+    now = get_datetime_utc()
+    monkeypatch.setattr(conversations, "get_datetime_utc", lambda: now)
+    user = User(
+        email="claim-quota@example.test",
+        hashed_password="unused",
+        email_verified_at=now,
+    )
+    db.add(user)
+    db.commit()
+    headers = {
+        "Authorization": f"Bearer {security.create_access_token(user.id, timedelta(hours=1))}"
+    }
+    with TestClient(app, base_url="https://testserver") as reader:
+        chat = reader.post("/api/v1/conversations", json={}).json()["id"]
+        guest_token = reader.cookies.get("law_padi_guest")
+        accepted = reader.post(
+            f"/api/v1/conversations/{chat}/messages",
+            json={"question": "Section 37", "idempotency_key": "guest-quota"},
+        )
+        assert accepted.status_code == 202
+        assert reader.post("/api/v1/conversations/claim", headers=headers).json() == {
+            "claimed_count": 1
+        }
+        assert (
+            reader.delete(f"/api/v1/conversations/{chat}", headers=headers).status_code
+            == 204
+        )
+        for identity in (headers, {"Cookie": f"law_padi_guest={guest_token}"}):
+            replacement = reader.post(
+                "/api/v1/conversations", headers=identity, json={}
+            ).json()["id"]
+            rejected = reader.post(
+                f"/api/v1/conversations/{replacement}/messages",
+                headers=identity,
+                json={"question": "Section 33", "idempotency_key": "claim-quota"},
+            )
+            assert rejected.status_code == 429
+            assert rejected.json()["detail"] == "Daily explanation allowance reached"
+
+
+def test_lagos_day_and_rolling_minute_have_independent_boundaries(db: Session) -> None:
+    midnight = datetime(2026, 10, 10, 23, tzinfo=UTC)
+    owner = conversations.Owner(user_id=uuid4())
+    db.add(
+        GenerationAdmission(
+            run_id=uuid4(),
+            user_id=owner.user_id,
+            created_at=midnight - timedelta(seconds=30),
+        )
+    )
+    try:
+        assert conversations._admission_counts(db, owner, midnight) == (0, 1)
+        assert conversations._admission_counts(
+            db, owner, midnight + timedelta(seconds=31)
+        ) == (0, 0)
+    finally:
+        db.rollback()
+
+
+def test_open_event_stream_stops_reading_after_credentials_change(
+    corpus, db: Session, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    assert corpus
+    monkeypatch.setattr(settings, "CHAT_ENABLED", True)
+    monkeypatch.setattr(settings, "CHAT_GENERATION_ENABLED", True)
+    user = User(email=f"{uuid4()}@example.test", hashed_password="unused")
+    db.add(user)
+    db.commit()
+    owner = conversations.Owner(user_id=user.id, auth_version=user.auth_version)
+    token = security.create_access_token(user.id, timedelta(hours=1))
+    headers = {"Authorization": f"Bearer {token}"}
+    with TestClient(app) as client:
+        created = client.post("/api/v1/conversations", headers=headers, json={})
+        assert created.status_code == 201
+        conversation_id = UUID(created.json()["id"])
+        accepted = client.post(
+            f"/api/v1/conversations/{conversation_id}/messages",
+            headers=headers,
+            json={"question": "Section 37", "idempotency_key": "revocation"},
+        )
+        assert accepted.status_code == 202
+        run_id = UUID(accepted.json()["run_id"])
+        assert conversations._read_events(conversation_id, owner, 0, run_id)[0]
+
+        user = db.get(User, user.id, with_for_update=True)
+        assert user is not None
+        sessions.invalidate_credentials(db, user)
+        db.commit()
+
+        assert conversations._read_events(conversation_id, owner, 0, run_id) == (
+            [],
+            False,
+        )
+        db.delete(user)
+        db.commit()
+
+
+@pytest.mark.parametrize("admin_delete", [False, True])
+def test_account_deletion_does_not_strand_shared_generation_capacity(
+    corpus,
+    db: Session,
+    monkeypatch: pytest.MonkeyPatch,
+    admin_delete: bool,
+) -> None:
+    assert corpus
+    monkeypatch.setattr(settings, "CHAT_ENABLED", True)
+    monkeypatch.setattr(settings, "CHAT_GENERATION_ENABLED", True)
+    monkeypatch.setattr(settings, "CHAT_DISPATCH_MODE", "poll")
+    monkeypatch.setattr(settings, "CHAT_MAX_ACTIVE_GENERATIONS", 1)
+    user = User(email="delete-capacity@example.test", hashed_password="unused")
+    admin = User(
+        email="capacity-admin@example.test", hashed_password="unused", is_superuser=True
+    )
+    db.add_all([user, admin])
+    db.commit()
+    user_id = user.id
+    user_headers = {
+        "Authorization": f"Bearer {security.create_access_token(user_id, timedelta(hours=1))}"
+    }
+    with TestClient(app, base_url="https://testserver") as client:
+        chat = client.post(
+            "/api/v1/conversations", headers=user_headers, json={}
+        ).json()["id"]
+        accepted = client.post(
+            f"/api/v1/conversations/{chat}/messages",
+            headers=user_headers,
+            json={"question": "Section 37", "idempotency_key": "capacity-held"},
+        )
+        assert accepted.status_code == 202
+        run_id = UUID(accepted.json()["run_id"])
+        if admin_delete:
+            assert _claim_run("test-worker", run_id=run_id) == run_id
+            admin_headers = {
+                "Authorization": f"Bearer {security.create_access_token(admin.id, timedelta(hours=1))}"
+            }
+            deleted = client.delete(f"/api/v1/users/{user_id}", headers=admin_headers)
+        else:
+            deleted = client.delete("/api/v1/users/me", headers=user_headers)
+        assert deleted.status_code == 200
+        db.expire_all()
+        assert db.get(GenerationRun, run_id) is None
+
+        next_chat = client.post("/api/v1/conversations", json={}).json()["id"]
+        replacement = client.post(
+            f"/api/v1/conversations/{next_chat}/messages",
+            json={"question": "Section 33", "idempotency_key": "capacity-reused"},
+        )
+        assert replacement.status_code == 202
 
 
 def test_expired_guest_history_removes_runs_and_capacity(

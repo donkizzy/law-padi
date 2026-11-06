@@ -23,11 +23,19 @@ ALGORITHM = "HS256"
 ACCESS_TOKEN_TYPE = "access"
 PASSWORD_RESET_TOKEN_TYPE = "password-reset"
 EMAIL_VERIFICATION_TOKEN_TYPE = "email-verification"
+EMAIL_CHANGE_TOKEN_TYPE = "email-change"
 
 
-def create_access_token(subject: str | Any, expires_delta: timedelta) -> str:
+def create_access_token(
+    subject: str | Any, expires_delta: timedelta, *, auth_version: int = 0
+) -> str:
     expire = datetime.now(UTC) + expires_delta
-    to_encode = {"exp": expire, "sub": str(subject), "type": ACCESS_TOKEN_TYPE}
+    to_encode = {
+        "exp": expire,
+        "sub": str(subject),
+        "type": ACCESS_TOKEN_TYPE,
+        "auth_version": auth_version,
+    }
     encoded_jwt = jwt.encode(to_encode, settings.SECRET_KEY, algorithm=ALGORITHM)
     return encoded_jwt
 
@@ -35,7 +43,7 @@ def create_access_token(subject: str | Any, expires_delta: timedelta) -> str:
 def decode_token(token: str, *, token_type: str) -> dict[str, Any]:
     """Decode a signed token, raising ``InvalidTokenError`` for the wrong purpose."""
     payload: dict[str, Any] = jwt.decode(
-        token, settings.SECRET_KEY, algorithms=[ALGORITHM]
+        token, settings.SECRET_KEY, algorithms=[ALGORITHM], options={"require": ["exp"]}
     )
     if payload.get("type") != token_type:
         raise jwt.InvalidTokenError("Token has the wrong purpose")

@@ -565,7 +565,7 @@ test("Saved search has an empty state and unreadable bookmarks are retained", as
     .fill("defence")
   await expect(page.getByRole("link", { name: "Open section" })).toBeVisible()
   await page.evaluate(() =>
-    localStorage.setItem("law-padi.saved-provisions.v1", "invalid-json"),
+    localStorage.setItem("law-padi.saved-provisions.v2", "invalid-json"),
   )
   await page.reload()
   await expect(page.getByRole("alert")).toContainText(
@@ -576,7 +576,7 @@ test("Saved search has an empty state and unreadable bookmarks are retained", as
   await expect(page.getByText("Couldn't save on this device.")).toBeVisible()
   expect(
     await page.evaluate(() =>
-      localStorage.getItem("law-padi.saved-provisions.v1"),
+      localStorage.getItem("law-padi.saved-provisions.v2"),
     ),
   ).toBe("invalid-json")
 })

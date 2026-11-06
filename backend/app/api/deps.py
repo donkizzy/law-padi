@@ -26,7 +26,7 @@ SessionDep = Annotated[Session, Depends(get_db)]
 TokenDep = Annotated[str, Depends(reusable_oauth2)]
 
 
-def get_current_user(session: SessionDep, token: TokenDep) -> User:
+def authenticated_user(session: Session, token: str, *, lock: bool = False) -> User:
     try:
         token_data = TokenPayload(**security.decode_access_token(token))
     except InvalidTokenError, ValidationError:
@@ -35,12 +35,27 @@ def get_current_user(session: SessionDep, token: TokenDep) -> User:
             detail="Could not validate credentials",
             headers={"WWW-Authenticate": "Bearer"},
         )
-    user = session.get(User, token_data.sub)
+    user = session.get(
+        User,
+        token_data.sub,
+        populate_existing=True,
+        with_for_update=True if lock else None,
+    )
     if not user:
         raise HTTPException(status_code=404, detail="User not found")
+    if token_data.auth_version != user.auth_version:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Could not validate credentials",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
     if not user.is_active:
         raise HTTPException(status_code=400, detail="Inactive user")
     return user
+
+
+def get_current_user(session: SessionDep, token: TokenDep) -> User:
+    return authenticated_user(session, token)
 
 
 CurrentUser = Annotated[User, Depends(get_current_user)]

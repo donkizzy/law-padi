@@ -392,10 +392,12 @@ test("An answer leads with plain English, lists items, and offers follow-ups", a
   expect(mock.submissions[1].question).toBe(followUp)
 })
 
-test("Logout removes account conversation data from the next guest view", async ({
+test("Logout clears private conversation data and drafts in another tab", async ({
   page,
 }) => {
-  await page.route("**/api/v1/users/me", (route) =>
+  const context = page.context()
+  const otherTab = await context.newPage()
+  await context.route("**/api/v1/users/me", (route) =>
     route.fulfill({
       json: {
         id: "99999999-9999-4999-8999-999999999999",
@@ -406,8 +408,9 @@ test("Logout removes account conversation data from the next guest view", async 
       },
     }),
   )
-  await page.route("**/api/v1/conversations**", (route) => {
-    if (new URL(route.request().url()).pathname.endsWith("/capabilities"))
+  await context.route("**/api/v1/conversations**", (route) => {
+    const path = new URL(route.request().url()).pathname
+    if (path.endsWith("/capabilities"))
       return route.fulfill({
         json: {
           conversations_enabled: true,
@@ -420,6 +423,22 @@ test("Logout removes account conversation data from the next guest view", async 
       })
     const authenticated =
       route.request().headers().authorization === "Bearer account-token"
+    if (path.endsWith(`/${conversationId}`))
+      return authenticated
+        ? route.fulfill({
+            json: {
+              ...conversation,
+              messages: [
+                {
+                  id: "77777777-7777-4777-8777-777777777777",
+                  role: "user",
+                  content: "Private account question",
+                  created_at: conversation.created_at,
+                },
+              ],
+            },
+          })
+        : route.fulfill({ status: 404, json: { detail: "Not found" } })
     return route.fulfill({
       json: {
         data: authenticated
@@ -430,7 +449,13 @@ test("Logout removes account conversation data from the next guest view", async 
     })
   })
   await mockSignedIn(page)
+  await mockSignedIn(otherTab)
   await page.goto("/?intent=ask")
+  await otherTab.goto(`/?intent=ask&c=${conversationId}`)
+  await expect(otherTab.getByText("Private account question")).toBeVisible()
+  await otherTab
+    .getByRole("textbox", { name: "Your question" })
+    .fill("Private draft")
   await expect(page.getByText("Private account conversation")).toBeVisible()
   await page.getByTestId("user-menu").click()
   await page.getByRole("menuitem", { name: "Log Out" }).click()
@@ -438,6 +463,16 @@ test("Logout removes account conversation data from the next guest view", async 
   await page.goto("/?intent=ask")
   await expect(page.getByText("Private account conversation")).toHaveCount(0)
   await expect(page.getByText("Your chats will appear here.")).toBeVisible()
+  await expect(otherTab.getByText("Private account question")).toHaveCount(0)
+  await expect(otherTab.getByText("Private account conversation")).toHaveCount(
+    0,
+  )
+  await expect(
+    otherTab.getByRole("textbox", { name: "Your question" }),
+  ).toHaveValue("")
+  expect(
+    await otherTab.evaluate(() => Object.values(sessionStorage)),
+  ).not.toContain("Private draft")
 })
 
 async function sendQuestion(page: Page) {

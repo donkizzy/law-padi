@@ -1,7 +1,7 @@
 import uuid
 from datetime import UTC, datetime
 
-from pydantic import EmailStr, field_validator
+from pydantic import BaseModel, ConfigDict, EmailStr, field_validator
 from sqlalchemy import DateTime, UniqueConstraint
 from sqlmodel import Field, SQLModel
 
@@ -38,9 +38,15 @@ class UserUpdate(SQLModel):
     password: str | None = Field(default=None, min_length=8, max_length=128)
 
 
-class UserUpdateMe(SQLModel):
+class UserUpdateMe(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
     full_name: str | None = Field(default=None, max_length=255)
-    email: EmailStr | None = Field(default=None, max_length=255)
+
+
+class EmailChangeRequest(SQLModel):
+    email: EmailStr = Field(max_length=255)
+    current_password: str = Field(min_length=8, max_length=128)
 
 
 class UpdatePassword(SQLModel):
@@ -52,6 +58,7 @@ class UpdatePassword(SQLModel):
 class User(UserBase, table=True):
     id: uuid.UUID = Field(default_factory=uuid.uuid4, primary_key=True)
     hashed_password: str
+    auth_version: int = Field(default=0)
     created_at: datetime | None = Field(
         default_factory=get_datetime_utc,
         sa_type=DateTime(timezone=True),  # type: ignore
@@ -89,7 +96,8 @@ class Token(SQLModel):
 
 # Contents of JWT token
 class TokenPayload(SQLModel):
-    sub: str | None = None
+    sub: uuid.UUID
+    auth_version: int = Field(ge=0)
 
 
 class RefreshToken(SQLModel, table=True):
@@ -105,6 +113,7 @@ class RefreshToken(SQLModel, table=True):
     user_id: uuid.UUID = Field(foreign_key="user.id", index=True, ondelete="CASCADE")
     family_id: uuid.UUID = Field(index=True)
     token_hash: str = Field(unique=True, max_length=64)
+    auth_version: int = Field(default=0)
     created_at: datetime = Field(
         default_factory=get_datetime_utc,
         sa_type=DateTime(timezone=True),  # type: ignore

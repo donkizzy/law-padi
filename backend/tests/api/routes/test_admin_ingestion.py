@@ -5,6 +5,7 @@ import uuid
 from concurrent.futures import ThreadPoolExecutor
 from datetime import UTC, date, datetime, timedelta
 from io import BytesIO
+from pathlib import Path
 
 import pytest
 from fastapi import HTTPException
@@ -280,6 +281,167 @@ def test_scoped_admin_role_can_review_but_cannot_upload(
 
     assert review_response.status_code == 200
     assert upload_response.status_code == 403
+
+
+@pytest.mark.parametrize("backend", ["local", "r2"])
+def test_source_upload_mutations_and_replays_require_the_owner(
+    client: TestClient,
+    db: Session,
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+    backend: str,
+) -> None:
+    def uploader_headers() -> dict[str, str]:
+        email = random_email()
+        headers = authentication_token_from_email(client=client, email=email, db=db)
+        user = crud.get_user_by_email(session=db, email=email)
+        assert user is not None
+        db.add(
+            AdminRoleAssignment(
+                user_id=user.id, role=AdminRole.INGESTION_UPLOADER, reason="route test"
+            )
+        )
+        db.commit()
+        return headers
+
+    owner = uploader_headers()
+    other = uploader_headers()
+    monkeypatch.setattr(settings, "INGESTION_STORAGE_BACKEND", backend)
+    monkeypatch.setattr(settings, "INGESTION_STORAGE_DIR", str(tmp_path))
+    store = _ManagedLocalBlobStore(tmp_path)
+    if backend == "r2":
+        monkeypatch.setattr("app.ingestion.service.get_blob_store", lambda: store)
+    base = f"{settings.API_V1_STR}/admin"
+    pdf = _unique_pdf_bytes()
+    body = _source_upload_payload(pdf)
+    response = client.post(f"{base}/source-uploads", headers=owner, json=body)
+    assert response.status_code == 200
+    upload = response.json()
+    upload_url = f"{base}/source-uploads/{upload['id']}"
+    assert (
+        client.post(f"{base}/source-uploads", headers=other, json=body).status_code
+        == 404
+    )
+    if backend == "local":
+        assert (
+            client.put(
+                f"{upload_url}/object",
+                headers={**owner, "content-type": "application/pdf"},
+                content=pdf,
+            ).status_code
+            == 204
+        )
+    else:
+        store.put_quarantine(
+            upload_id=upload["id"],
+            filename="constitution.pdf",
+            content=pdf,
+            content_type="application/pdf",
+        )
+        parts_body = {
+            "idempotency_key": f"parts-{uuid.uuid4().hex}",
+            "expected_version": upload["lock_version"],
+            "part_count": 1,
+        }
+        assert (
+            client.post(
+                f"{upload_url}/multipart-parts",
+                headers=other,
+                json=parts_body,
+            ).status_code
+            == 404
+        )
+        assert not store.multipart_calls
+        assert len(store.presigned_put_calls) == 1
+    complete_body = {
+        "idempotency_key": f"complete-{uuid.uuid4().hex}",
+        "expected_version": upload["lock_version"] + (backend == "local"),
+        "actual_sha256": _sha256(pdf),
+    }
+    assert (
+        client.post(
+            f"{upload_url}/complete",
+            headers=other,
+            json=complete_body,
+        ).status_code
+        == 404
+    )
+    complete = client.post(f"{upload_url}/complete", headers=owner, json=complete_body)
+    assert complete.status_code == 200
+    assert complete.json()["upload"]["upload_url"] == ""
+    assert (
+        client.post(
+            f"{upload_url}/complete",
+            headers=other,
+            json=complete_body,
+        ).status_code
+        == 404
+    )
+    assert (
+        client.post(
+            f"{upload_url}/complete",
+            headers=owner,
+            json=complete_body,
+        ).json()["run"]["id"]
+        == complete.json()["run"]["id"]
+    )
+    listed = client.get(f"{base}/ingestion-runs", headers=other).json()["data"]
+    victim = next(row for row in listed if row["source_upload_id"] == upload["id"])
+    size = victim["pipeline_config"]["expected_size"]
+    for headers, expected in ((other, 404), (owner, 409)):
+        assert (
+            client.put(
+                f"{base}/source-uploads/{victim['source_upload_id']}/object",
+                headers={**headers, "content-type": "application/pdf"},
+                content=b"b" * size,
+            ).status_code
+            == expected
+        )
+    assert store.read_bytes(upload["quarantine_key"]) == pdf
+    record = db.get(SourceUpload, uuid.UUID(upload["id"]))
+    assert record is not None
+    db.refresh(record)
+    assert record.status == SourceUploadStatus.UPLOADED_PENDING_VERIFICATION
+    assert record.lock_version == complete.json()["upload"]["lock_version"]
+    task = db.exec(
+        select(IngestionTask).where(
+            IngestionTask.run_id == uuid.UUID(complete.json()["run"]["id"])
+        )
+    ).one()
+    task.status = IngestionTaskStatus.CANCELLED
+    db.add(task)
+    db.commit()
+
+
+def test_embedding_profile_routes_reject_publisher_endpoint_overrides(
+    client: TestClient,
+    superuser_token_headers: dict[str, str],
+) -> None:
+    url = f"{settings.API_V1_STR}/admin/embedding-profiles"
+    profile = {
+        "name": f"override-{uuid.uuid4().hex}",
+        "provider": "huggingface_tei",
+        "model_name": "dummy-model",
+        "model_revision": "pinned",
+        "is_active": False,
+    }
+    override = {"configuration": {"endpoint_url": "https://audit.invalid/embed"}}
+    assert (
+        client.post(
+            url, headers=superuser_token_headers, json=profile | override
+        ).status_code
+        == 422
+    )
+    created = client.post(url, headers=superuser_token_headers, json=profile)
+    assert created.status_code == 201
+    assert (
+        client.patch(
+            f"{url}/{created.json()['id']}",
+            headers=superuser_token_headers,
+            json=override,
+        ).status_code
+        == 422
+    )
 
 
 def test_pdf_upload_session_completion_keeps_source_in_quarantine_until_worker_verification(

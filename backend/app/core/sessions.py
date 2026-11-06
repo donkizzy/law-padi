@@ -28,7 +28,7 @@ def _digest(token: str) -> str:
 def issue_refresh_token(
     *, session: Session, user: User, family_id: uuid.UUID | None = None
 ) -> str:
-    """Store a new refresh token for ``user`` and return its raw value."""
+    """Stage a refresh token while the caller holds the user row lock."""
     now = get_datetime_utc()
     # Opportunistically drop this user's dead tokens so the table stays small.
     session.exec(
@@ -43,10 +43,10 @@ def issue_refresh_token(
             user_id=user.id,
             family_id=family_id or uuid.uuid4(),
             token_hash=_digest(raw),
+            auth_version=user.auth_version,
             expires_at=now + timedelta(days=settings.REFRESH_TOKEN_EXPIRE_DAYS),
         )
     )
-    session.commit()
     return raw
 
 
@@ -57,26 +57,19 @@ def rotate_refresh_token(*, session: Session, token: str) -> tuple[User, str] | 
     grace window (two tabs refreshing at once, a lost response) that revokes
     every token from the same sign-in.
     """
-    record = session.exec(
-        select(RefreshToken)
-        .where(RefreshToken.token_hash == _digest(token))
-        .with_for_update()
-    ).first()
-    if record is None:
+    locked = _lock_refresh_token(session, token)
+    if locked is None:
         return None
+    user, record = locked
     now = get_datetime_utc()
+    if record.auth_version != user.auth_version or not user.is_active:
+        return None
     if record.revoked_at is not None:
         grace = timedelta(seconds=settings.REFRESH_TOKEN_REUSE_GRACE_SECONDS)
         if now - record.revoked_at > grace:
             _revoke(session, col(RefreshToken.family_id) == record.family_id)
-        session.commit()
         return None
     if record.expires_at <= now:
-        return None
-    user = session.get(User, record.user_id)
-    if user is None or not user.is_active:
-        _revoke(session, col(RefreshToken.family_id) == record.family_id)
-        session.commit()
         return None
     record.revoked_at = now
     session.add(record)
@@ -87,18 +80,38 @@ def rotate_refresh_token(*, session: Session, token: str) -> tuple[User, str] | 
 
 def revoke_refresh_token(*, session: Session, token: str) -> None:
     """Sign out the session that owns ``token``, on every tab that shares it."""
-    record = session.exec(
-        select(RefreshToken).where(RefreshToken.token_hash == _digest(token))
+    locked = _lock_refresh_token(session, token)
+    if locked is not None:
+        _revoke(session, col(RefreshToken.family_id) == locked[1].family_id)
+
+
+def invalidate_credentials(session: Session, user: User) -> None:
+    """Invalidate the locked user's access, refresh, and outstanding reset tokens."""
+    user.auth_version += 1
+    session.add(user)
+    _revoke(session, col(RefreshToken.user_id) == user.id)
+
+
+def _lock_refresh_token(
+    session: Session, token: str
+) -> tuple[User, RefreshToken] | None:
+    digest = _digest(token)
+    user_id = session.exec(
+        select(RefreshToken.user_id).where(RefreshToken.token_hash == digest)
     ).first()
-    if record is not None:
-        _revoke(session, col(RefreshToken.family_id) == record.family_id)
-        session.commit()
-
-
-def revoke_user_sessions(*, session: Session, user_id: uuid.UUID) -> None:
-    """Sign a user out everywhere, for example after a password change."""
-    _revoke(session, col(RefreshToken.user_id) == user_id)
-    session.commit()
+    if user_id is None:
+        return None
+    # Use the same lock order as password recovery and user-wide revocation.
+    user = session.get(User, user_id, populate_existing=True, with_for_update=True)
+    if user is None:
+        return None
+    record = session.exec(
+        select(RefreshToken)
+        .where(RefreshToken.token_hash == digest)
+        .with_for_update()
+        .execution_options(populate_existing=True)
+    ).first()
+    return (user, record) if record is not None else None
 
 
 def _revoke(session: Session, condition: ColumnElement[bool]) -> None:

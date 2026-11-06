@@ -1,5 +1,6 @@
 import hashlib
 from datetime import UTC, datetime
+from io import BytesIO
 from urllib.parse import parse_qs, urlsplit
 
 import httpx
@@ -29,9 +30,17 @@ def test_r2_blob_store_satisfies_blob_store_contract() -> None:
         "https://example.test/constitution.pdf"
     )
 
-    original = store.promote_quarantine_to_original(
-        quarantine_key=quarantine.key,
+    verified = BytesIO(store.read_bytes(quarantine.key))
+    store.put_quarantine(
+        upload_id="upload-1",
+        filename="constitution.pdf",
+        content=b"%PDF-1.7\nreplacement source",
+        content_type="application/pdf",
+    )
+    original = store.put_verified_original(
+        stream=verified,
         expected_sha256=quarantine.sha256,
+        size_bytes=len(content),
         content_type="application/pdf",
         extension=".pdf",
         metadata={"source-upload-id": "upload-1"},
@@ -40,8 +49,44 @@ def test_r2_blob_store_satisfies_blob_store_contract() -> None:
     assert original.key == f"sources/sha256/{quarantine.sha256}/original.pdf"
     assert store.read_bytes(original.key) == content
     assert store.head(original.key).metadata["source-upload-id"] == "upload-1"
+    canonical_put = next(
+        request
+        for request in transport.requests
+        if request.url.path.endswith(original.key)
+    )
+    assert canonical_put.headers["if-none-match"] == "*"
+    assert canonical_put.headers["x-amz-content-sha256"] == quarantine.sha256
+    assert canonical_put.headers["content-length"] == str(len(content))
+    assert "x-amz-copy-source" not in canonical_put.headers
+    store.delete_quarantine(quarantine.key)
     with pytest.raises(FileNotFoundError):
         store.head(quarantine.key)
+
+
+def test_r2_original_retry_reuses_only_matching_bytes() -> None:
+    transport = _R2MemoryTransport()
+    store = _store(transport)
+    content = b"original"
+    sha256 = hashlib.sha256(content).hexdigest()
+    params = {
+        "expected_sha256": sha256,
+        "content_type": "application/pdf",
+        "extension": ".pdf",
+    }
+    original = store.put_verified_original(
+        stream=BytesIO(content), size_bytes=len(content), **params
+    )
+    repeated = store.put_verified_original(
+        stream=BytesIO(content), size_bytes=len(content), **params
+    )
+    assert repeated.key == original.key
+    headers = transport.objects[original.key][1]
+    transport.objects[original.key] = (b"replaced", headers)
+    with pytest.raises(BlobStoreError, match="does not match verified bytes"):
+        store.put_verified_original(
+            stream=BytesIO(content), size_bytes=len(content), **params
+        )
+    assert store.read_bytes(original.key) == b"replaced"
 
 
 def test_r2_presigned_put_url_binds_content_type_and_sha256_metadata() -> None:
@@ -223,6 +268,8 @@ class _R2MemoryTransport:
         return httpx.Response(200)
 
     def _put_object(self, request: httpx.Request, key: str) -> httpx.Response:
+        if request.headers.get("if-none-match") == "*" and key in self.objects:
+            return httpx.Response(412)
         copy_source = request.headers.get("x-amz-copy-source")
         headers = {
             "content-type": request.headers.get(

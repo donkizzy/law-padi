@@ -22,6 +22,9 @@ const REFRESH_EARLY_MS = 60_000
 
 let accessToken: string | null = null
 let status: SessionStatus = "unknown"
+let owner: string | null = null
+let scope = 0
+let requests = new AbortController()
 let refreshTimer: ReturnType<typeof setTimeout> | undefined
 let inFlight: Promise<string | null> | null = null
 const listeners = new Set<() => void>()
@@ -32,8 +35,15 @@ const channel =
     : new BroadcastChannel(CHANNEL_NAME)
 
 channel?.addEventListener("message", (event) => {
-  // Another tab signed out: drop our copy of the token too.
   if (event.data === "signed-out") setSession(null, { broadcast: false })
+  if (
+    event.data?.type === "signed-in" &&
+    typeof event.data.owner === "string" &&
+    event.data.owner !== owner
+  ) {
+    setSession(null, { broadcast: false, keepHint: true })
+    void refreshSession()
+  }
 })
 
 function storage(action: (store: Storage) => void) {
@@ -44,33 +54,51 @@ function storage(action: (store: Storage) => void) {
   }
 }
 
-function tokenExpiry(token: string): number | null {
+function tokenClaims(token: string): { sub?: string; exp?: number } {
   try {
-    const payload = JSON.parse(
-      atob(token.split(".")[1].replace(/-/g, "+").replace(/_/g, "/")),
-    ) as { exp?: number }
-    return typeof payload.exp === "number" ? payload.exp * 1000 : null
+    return (
+      JSON.parse(
+        atob(token.split(".")[1].replace(/-/g, "+").replace(/_/g, "/")),
+      ) ?? {}
+    )
   } catch {
-    return null
+    return {}
   }
 }
 
 function scheduleRefresh(token: string | null) {
   clearTimeout(refreshTimer)
-  const expiry = token ? tokenExpiry(token) : null
-  if (expiry === null) return
-  const delay = Math.max(expiry - Date.now() - REFRESH_EARLY_MS, 5_000)
+  const expiry = token ? tokenClaims(token).exp : undefined
+  if (typeof expiry !== "number") return
+  const delay = Math.max(expiry * 1000 - Date.now() - REFRESH_EARLY_MS, 5_000)
   refreshTimer = setTimeout(() => void refreshSession(), delay)
 }
 
-function setSession(token: string | null, { broadcast = true } = {}) {
+function setSession(
+  token: string | null,
+  { broadcast = true, keepHint = false } = {},
+) {
   const wasSignedIn = status === "signed-in"
+  const subject = token ? tokenClaims(token).sub : undefined
+  const nextOwner = token
+    ? typeof subject === "string" && subject
+      ? subject
+      : "signed-in"
+    : null
+  if (nextOwner !== owner || !token) {
+    scope += 1
+    requests.abort()
+    requests = new AbortController()
+    inFlight = null
+  }
+  owner = nextOwner
   accessToken = token
   status = token ? "signed-in" : "guest"
   scheduleRefresh(token)
-  storage((store) =>
-    token ? store.setItem(HINT_KEY, "1") : store.removeItem(HINT_KEY),
-  )
+  if (!keepHint)
+    storage((store) =>
+      token ? store.setItem(HINT_KEY, "1") : store.removeItem(HINT_KEY),
+    )
   if (broadcast && wasSignedIn && !token) channel?.postMessage("signed-out")
   for (const listener of listeners) listener()
 }
@@ -78,6 +106,16 @@ function setSession(token: string | null, { broadcast = true } = {}) {
 export const getAccessToken = () => accessToken
 export const getSessionStatus = () => status
 export const isSignedIn = () => status === "signed-in"
+export const getSessionOwner = () => owner
+export const getSessionScope = () => scope
+export const getSessionSignal = () => requests.signal
+export const hasSessionHint = () => Boolean(localStorage.getItem(HINT_KEY))
+
+export function belongsToCurrentSession(token: string): boolean {
+  if (!accessToken) return false
+  const subject = tokenClaims(token).sub
+  return token === accessToken || (Boolean(subject) && subject === owner)
+}
 
 export function subscribeSession(listener: () => void) {
   listeners.add(listener)
@@ -90,13 +128,20 @@ export function useSessionStatus(): SessionStatus {
   return useSyncExternalStore(subscribeSession, getSessionStatus)
 }
 
+export function useSessionScope(): number {
+  return useSyncExternalStore(subscribeSession, getSessionScope)
+}
+
 /** Call after a successful sign-in with the access token it returned. */
-export const startSession = (token: string) => setSession(token)
+export function startSession(token: string) {
+  setSession(token)
+  channel?.postMessage({ type: "signed-in", owner })
+}
 
 /** Forget the in-memory token. The caller revokes the cookie server-side. */
 export const endSession = () => setSession(null)
 
-async function withRefreshLock<T>(task: () => Promise<T>): Promise<T> {
+export async function withSessionLock<T>(task: () => Promise<T>): Promise<T> {
   // Serialise refreshes across tabs so they don't present the same cookie
   // twice; the second tab then sends the cookie the first one received.
   if (typeof navigator !== "undefined" && navigator.locks) {
@@ -110,29 +155,29 @@ async function withRefreshLock<T>(task: () => Promise<T>): Promise<T> {
  * one request. Resolves to the new token, or null when there is no session.
  */
 export function refreshSession(): Promise<string | null> {
-  inFlight ??= withRefreshLock(async () => {
+  if (inFlight) return inFlight
+  const started = scope
+  const refresh = withSessionLock(async () => {
+    if (scope !== started) return null
     try {
       const response = await LoginService.refreshAccessToken({
         throwOnError: true,
       })
+      if (scope !== started) return null
       setSession(response.data.access_token)
       return response.data.access_token
     } catch (error) {
       const unauthorized =
         (error as { response?: { status?: number } }).response?.status === 401
-      if (unauthorized || status !== "signed-in") {
-        // A network failure leaves the hint in place so the next load retries.
-        accessToken = null
-        status = "guest"
-        clearTimeout(refreshTimer)
-        if (unauthorized) storage((store) => store.removeItem(HINT_KEY))
-        for (const listener of listeners) listener()
+      if (scope === started && (unauthorized || status !== "signed-in")) {
+        setSession(null, { keepHint: !unauthorized })
       }
       return null
     }
   }).finally(() => {
-    inFlight = null
+    if (inFlight === refresh) inFlight = null
   })
+  inFlight = refresh
   return inFlight
 }
 
@@ -146,8 +191,8 @@ export async function initSession(): Promise<void> {
   // those visitors sign in once more.
   storage((store) => store.removeItem(LEGACY_TOKEN_KEY))
   let hinted = false
-  storage((store) => {
-    hinted = store.getItem(HINT_KEY) !== null
+  storage(() => {
+    hinted = hasSessionHint()
   })
   if (!hinted) {
     setSession(null, { broadcast: false })

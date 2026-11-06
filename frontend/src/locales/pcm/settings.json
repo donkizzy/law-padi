@@ -94,6 +94,7 @@
     "clearFailed": "We no fit clear some research for dis device. Abeg check your browser storage."
   },
   "password": {
+    "required": "Enter your current password.",
     "title": "Change password",
     "current": "Current password",
     "new": "New password",
@@ -102,6 +103,7 @@
     "updated": "Password don change"
   },
   "profile": {
+    "confirmNewEmail": "Check di new email address to confirm di change.",
     "title": "Your information",
     "fullName": "Full name",
     "email": "Email",

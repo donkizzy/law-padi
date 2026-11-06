@@ -120,7 +120,7 @@ def search_query(query: str, provider: DeepSeekClient | None = None) -> SearchQu
         detection.confident
         or len(query) > settings.SEARCH_TRANSLATION_MAX_CHARS
         or not settings.DEEPSEEK_API_KEY
-        or settings.CHAT_GENERATION_KILL_SWITCH
+        or not settings.explanations_enabled
     ):
         return SearchQuery(query, detection.language)
     understood = _cached(query)

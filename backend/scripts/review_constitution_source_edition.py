@@ -197,13 +197,10 @@ def review(session: Session, args: argparse.Namespace) -> dict[str, Any]:
             }
         )
     endpoint = settings.HUGGINGFACE_TEI_ENDPOINT_URL
-    if not endpoint or "/pipeline/" not in endpoint:
+    if not endpoint or "/pipeline/feature-extraction" not in endpoint:
         raise ValueError(
-            "Review requires the configured Hugging Face pipeline endpoint"
+            "Review requires the configured Hugging Face feature-extraction endpoint"
         )
-    endpoint = endpoint.replace(
-        "/pipeline/sentence-similarity", "/pipeline/feature-extraction"
-    )
     evidence = {
         "source_sha256": SOURCE_SHA256,
         "source_replay": "Original PDF hash, candidate structure/text and original coordinate spans reproduced",
@@ -291,7 +288,6 @@ def review(session: Session, args: argparse.Namespace) -> dict[str, Any]:
                 model_revision=MODEL_REVISION,
                 vector_dimensions=1024,
                 configuration={
-                    "endpoint_url": endpoint,
                     "batch_size": 16,
                     "benchmark_dataset_version": dataset.version,
                     "provider_revision_pinned": False,

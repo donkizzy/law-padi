@@ -1,4 +1,4 @@
-from collections.abc import Mapping
+from collections.abc import Generator, Mapping
 from contextlib import AbstractContextManager
 from dataclasses import dataclass, field
 from datetime import UTC, datetime
@@ -63,16 +63,17 @@ class BlobStore(Protocol):
     ) -> BlobObject:
         """Persist an untrusted upload under a private quarantine key."""
 
-    def promote_quarantine_to_original(
+    def put_verified_original(
         self,
         *,
-        quarantine_key: str,
+        stream: BinaryIO,
         expected_sha256: str,
+        size_bytes: int,
         content_type: str,
         extension: str,
         metadata: Mapping[str, str] | None = None,
     ) -> BlobObject:
-        """Move a verified quarantine object into immutable content-addressed storage."""
+        """Create an immutable original from the exact stream that passed scanning."""
 
     def head(self, key: str) -> BlobHead:
         """Return object metadata without reading the object body."""
@@ -82,6 +83,9 @@ class BlobStore(Protocol):
 
     def read_bytes(self, key: str) -> bytes:
         """Read a small object body into memory for tests and control-plane checks."""
+
+    def iter_read(self, key: str) -> Generator[bytes]:
+        """Read object bytes in bounded chunks."""
 
     def put_artifact(
         self,

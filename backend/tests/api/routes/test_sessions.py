@@ -1,15 +1,21 @@
 from collections.abc import Generator
+from concurrent.futures import ThreadPoolExecutor
 from datetime import timedelta
+from threading import Event
 
 import pytest
 from fastapi.testclient import TestClient
+from sqlalchemy import event
 from sqlmodel import Session, select
 
+from app.core import sessions
 from app.core.config import settings
+from app.core.db import engine
 from app.core.security import get_password_hash
 from app.core.sessions import REFRESH_COOKIE
 from app.main import app
 from app.models import RefreshToken, User, get_datetime_utc
+from app.utils import generate_password_reset_token
 from tests.utils.user import create_random_user
 from tests.utils.utils import random_lower_string
 
@@ -59,6 +65,41 @@ def test_login_sets_httponly_refresh_cookie(browser: TestClient, db: Session) ->
     )
     assert header.path == f"{settings.API_V1_STR}/login"
     assert header.has_nonstandard_attr("HttpOnly")
+
+
+@pytest.mark.parametrize(
+    "headers",
+    [
+        {"Origin": "https://other.example", "Sec-Fetch-Site": "cross-site"},
+        {"Origin": "null"},
+        {"Sec-Fetch-Site": "cross-site"},
+    ],
+)
+def test_untrusted_browser_requests_cannot_change_login_cookies(
+    browser: TestClient, db: Session, headers: dict[str, str]
+) -> None:
+    _, password, user = _sign_in(browser, db)
+    cookie = _cookie(browser)
+    for route in (LOGIN, REFRESH, LOGOUT):
+        response = browser.post(
+            route, data={"username": user.email, "password": password}, headers=headers
+        )
+        assert response.status_code == 403
+        assert "set-cookie" not in response.headers
+    assert _cookie(browser) == cookie
+
+
+def test_configured_split_frontend_can_sign_in_and_refresh(
+    browser: TestClient, db: Session, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    _, password, user = _sign_in(browser, db)
+    monkeypatch.setattr(settings, "FRONTEND_HOST", "https://frontend.example")
+    headers = {"Origin": settings.FRONTEND_HOST, "Sec-Fetch-Site": "cross-site"}
+    response = browser.post(
+        LOGIN, data={"username": user.email, "password": password}, headers=headers
+    )
+    assert response.status_code == 200
+    assert browser.post(REFRESH, headers=headers).status_code == 200
 
 
 def test_access_tokens_are_short_lived(browser: TestClient, db: Session) -> None:
@@ -179,6 +220,78 @@ def test_password_change_signs_out_other_devices_only(db: Session) -> None:
 
         assert laptop.post(REFRESH).status_code == 200
         assert phone.post(REFRESH).status_code == 401
+
+
+def test_password_recovery_invalidates_pre_reset_bearer_and_refresh(
+    browser: TestClient, db: Session, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    access_token, _, user = _sign_in(browser, db)
+    headers = {"Authorization": f"Bearer {access_token}"}
+    monkeypatch.setattr(settings, "CHAT_ENABLED", True)
+    response = browser.post(
+        f"{settings.API_V1_STR}/reset-password/",
+        json={
+            "token": generate_password_reset_token(user),
+            "new_password": "a-new-password-2",
+        },
+    )
+    assert response.status_code == 200
+    assert browser.get(ME, headers=headers).status_code == 401
+    assert (
+        browser.get(f"{settings.API_V1_STR}/conversations", headers=headers).status_code
+        == 401
+    )
+    assert browser.post(REFRESH).status_code == 401
+    assert (
+        browser.post(
+            LOGIN, data={"username": user.email, "password": "a-new-password-2"}
+        ).status_code
+        == 200
+    )
+
+
+def test_password_recovery_revokes_successor_from_overlapping_rotation(
+    browser: TestClient, db: Session
+) -> None:
+    _, _, user = _sign_in(browser, db)
+    reset_body = {
+        "token": generate_password_reset_token(user),
+        "new_password": "a-new-password-3",
+    }
+    reset_lock = Event()
+
+    def observe_user_lock(*args: object) -> None:
+        statement = args[2]
+        if (
+            isinstance(statement, str)
+            and 'FROM "user"' in statement
+            and "FOR UPDATE" in statement
+        ):
+            reset_lock.set()
+
+    with Session(engine) as rotation, ThreadPoolExecutor(max_workers=1) as pool:
+        rotated = sessions.rotate_refresh_token(
+            session=rotation, token=_cookie(browser)
+        )
+        assert rotated is not None
+        _, successor = rotated
+        rotation.flush()
+
+        event.listen(engine, "before_cursor_execute", observe_user_lock)
+        try:
+            response = pool.submit(
+                browser.post, f"{settings.API_V1_STR}/reset-password/", json=reset_body
+            )
+            requested_lock = reset_lock.wait(timeout=5)
+            rotation.commit()
+            assert response.result(timeout=5).status_code == 200
+            assert requested_lock
+        finally:
+            event.remove(engine, "before_cursor_execute", observe_user_lock)
+
+    browser.cookies.clear()
+    browser.cookies.set(REFRESH_COOKIE, successor, path=f"{settings.API_V1_STR}/login")
+    assert browser.post(REFRESH).status_code == 401
 
 
 def test_invalid_access_token_is_unauthorized(client: TestClient) -> None:

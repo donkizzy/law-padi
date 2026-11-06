@@ -11,13 +11,12 @@ from datetime import UTC, datetime, timedelta
 from typing import Annotated
 from zoneinfo import ZoneInfo
 
-import jwt
 from fastapi import APIRouter, Depends, Header, HTTPException, Query, Request, Response
 from fastapi.sse import EventSourceResponse, ServerSentEvent
 from sqlalchemy import and_, or_
-from sqlmodel import Session, col, func, select
+from sqlmodel import Session, col, func, select, update
 
-from app.api.deps import SessionDep, get_current_active_superuser
+from app.api.deps import SessionDep, authenticated_user, get_current_active_superuser
 from app.chat import EXPLANATION_PROMPT_VERSION
 from app.chat.events import emit_event, subscribe, unsubscribe
 from app.chat.schemas import (
@@ -35,7 +34,6 @@ from app.chat.schemas import (
     MessageCreate,
     MessagePublic,
 )
-from app.core import security
 from app.core.config import settings
 from app.core.db import engine
 from app.deployment.chat_dispatch import dispatch_run, stage_dispatch
@@ -47,6 +45,7 @@ from app.legal.models import (
     ConversationMessage,
     CorpusRelease,
     CorpusReleaseEntry,
+    GenerationAdmission,
     GenerationCapacity,
     GenerationEvent,
     GenerationRun,
@@ -58,7 +57,7 @@ from app.legal.models import (
 )
 from app.legal.public_corpus import published_release
 from app.legal.references import matches_reference, parse_section_reference
-from app.models import TokenPayload, User
+from app.models import User
 from app.retention import maybe_purge_idle_guest_conversations
 
 router = APIRouter(prefix="/conversations", tags=["conversations"])
@@ -71,6 +70,7 @@ _LAGOS = ZoneInfo("Africa/Lagos")
 class Owner:
     user_id: uuid.UUID | None = None
     guest_digest: str | None = None
+    auth_version: int | None = None
 
 
 def _account(request: Request, session: Session) -> User | None:
@@ -85,23 +85,19 @@ def _account(request: Request, session: Session) -> User | None:
             headers={"WWW-Authenticate": "Bearer"},
         )
     try:
-        token_data = TokenPayload(**security.decode_access_token(token))
-        user = session.get(User, token_data.sub)
-    except jwt.InvalidTokenError, ValueError, TypeError:
+        return authenticated_user(session, token)
+    except HTTPException as exc:
+        if exc.status_code == 401:
+            raise
         raise HTTPException(
-            status_code=401,
-            detail="Could not validate credentials",
-            headers={"WWW-Authenticate": "Bearer"},
-        )
-    if user is None or not user.is_active:
-        raise HTTPException(status_code=403, detail="Could not validate credentials")
-    return user
+            status_code=403, detail="Could not validate credentials"
+        ) from exc
 
 
 def _owner(request: Request, response: Response, session: Session) -> Owner:
     user = _account(request, session)
     if user:
-        return Owner(user_id=user.id)
+        return Owner(user_id=user.id, auth_version=user.auth_version)
     token = request.cookies.get(_COOKIE)
     if token is None or not _COOKIE_RE.fullmatch(token):
         token = secrets.token_urlsafe(32)
@@ -176,11 +172,7 @@ def read_chat_capabilities() -> ChatCapabilities:
     """Report product availability independently of conversation history."""
     return ChatCapabilities(
         conversations_enabled=settings.CHAT_ENABLED,
-        explanations_enabled=(
-            settings.CHAT_ENABLED
-            and settings.CHAT_GENERATION_ENABLED
-            and not settings.CHAT_GENERATION_KILL_SWITCH
-        ),
+        explanations_enabled=settings.explanations_enabled,
         supported_languages=[
             DISPLAY_NAMES[language] for language in settings.CHAT_LANGUAGES_ENABLED
         ],
@@ -531,44 +523,55 @@ def claim_guest_conversations(
         conversation.user_id = user.id
         conversation.anonymous_session_id = None
         session.add(conversation)
+    if rows:
+        session.flush()
+        _lock_generation_capacity(session)
+        # Keep original guest attribution so replay of that cookie still uses
+        # its allowance. The claimed runs also count against the account.
+        session.exec(
+            update(GenerationAdmission)
+            .where(
+                col(GenerationAdmission.guest_digest) == digest,
+                col(GenerationAdmission.user_id).is_(None),
+                col(GenerationAdmission.run_id).in_(
+                    select(GenerationRun.id)
+                    .join(Conversation)
+                    .where(Conversation.user_id == user.id)
+                ),
+            )
+            .values(user_id=user.id)
+        )
     session.commit()
     response.delete_cookie(_COOKIE, path=f"{settings.API_V1_STR}/conversations")
     return ClaimResult(claimed_count=len(rows))
 
 
-def _daily_count(session: Session, owner: Owner) -> int:
-    today = datetime.now(_LAGOS).date()
-    start = datetime.combine(today, datetime.min.time(), _LAGOS).astimezone(UTC)
-    end = start + timedelta(days=1)
-    statement = (
-        select(func.count())
-        .select_from(GenerationRun)
-        .join(Conversation, col(Conversation.id) == col(GenerationRun.conversation_id))
-        .where(GenerationRun.created_at >= start, GenerationRun.created_at < end)
-    )
-    if owner.user_id:
-        statement = statement.where(Conversation.user_id == owner.user_id)
-    else:
-        statement = statement.where(
-            Conversation.anonymous_session_id == owner.guest_digest
-        )
-    return session.exec(statement).one()
+def _lock_generation_capacity(session: Session) -> GenerationCapacity:
+    return session.exec(
+        select(GenerationCapacity).where(GenerationCapacity.id == 1).with_for_update()
+    ).one()
 
 
-def _recent_count(session: Session, owner: Owner) -> int:
-    statement = (
-        select(func.count())
-        .select_from(GenerationRun)
-        .join(Conversation, col(Conversation.id) == col(GenerationRun.conversation_id))
-        .where(GenerationRun.created_at >= get_datetime_utc() - timedelta(minutes=1))
+def _admission_counts(session: Session, owner: Owner, now: datetime) -> tuple[int, int]:
+    today = now.astimezone(_LAGOS).date()
+    day_start = datetime.combine(today, datetime.min.time(), _LAGOS).astimezone(UTC)
+    day_end = day_start + timedelta(days=1)
+    minute_start = now - timedelta(minutes=1)
+    owner_filter = (
+        GenerationAdmission.user_id == owner.user_id
+        if owner.user_id
+        else GenerationAdmission.guest_digest == owner.guest_digest
     )
-    if owner.user_id:
-        statement = statement.where(Conversation.user_id == owner.user_id)
-    else:
-        statement = statement.where(
-            Conversation.anonymous_session_id == owner.guest_digest
+    created_at = col(GenerationAdmission.created_at)
+    daily, recent = session.exec(
+        select(
+            func.count().filter(created_at >= day_start, created_at < day_end),
+            func.count().filter(created_at >= minute_start),
         )
-    return session.exec(statement).one()
+        .select_from(GenerationAdmission)
+        .where(owner_filter, created_at >= min(day_start, minute_start))
+    ).one()
+    return daily, recent
 
 
 def _validate_selected_version(
@@ -621,7 +624,7 @@ def submit_message(
     session: SessionDep,
 ) -> MessageAccepted:
     _ensure_chat_enabled()
-    if not settings.CHAT_GENERATION_ENABLED or settings.CHAT_GENERATION_KILL_SWITCH:
+    if not settings.explanations_enabled:
         raise HTTPException(
             status_code=503, detail="Explanations are temporarily unavailable"
         )
@@ -670,17 +673,17 @@ def submit_message(
             status_code=409,
             detail="An explanation is already active in this conversation",
         )
-    capacity = session.exec(
-        select(GenerationCapacity).where(GenerationCapacity.id == 1).with_for_update()
-    ).one()
     # The shared row lock also serializes daily allowance checks across this
     # owner's different conversations before a new run is committed.
+    capacity = _lock_generation_capacity(session)
+    now = get_datetime_utc()
+    daily_count, recent_count = _admission_counts(session, owner, now)
     limit = (
         settings.CHAT_ACCOUNT_DAILY_LIMIT
         if owner.user_id
         else settings.CHAT_GUEST_DAILY_LIMIT
     )
-    if _daily_count(session, owner) >= limit:
+    if daily_count >= limit:
         raise HTTPException(
             status_code=429, detail="Daily explanation allowance reached"
         )
@@ -689,13 +692,20 @@ def submit_message(
         if owner.user_id
         else settings.CHAT_GUEST_BURST_LIMIT
     )
-    if _recent_count(session, owner) >= burst_limit:
+    if recent_count >= burst_limit:
         raise HTTPException(
             status_code=429, detail="Too many explanations in one minute"
         )
-    if capacity.active_count >= settings.CHAT_MAX_ACTIVE_GENERATIONS:
+    # Use live rows because account deletion can cascade runs without touching
+    # the cached counter. The lock prevents two admissions from overbooking.
+    active_count = session.exec(
+        select(func.count())
+        .select_from(GenerationRun)
+        .where(col(GenerationRun.status).in_(["pending", "running"]))
+    ).one()
+    if active_count >= settings.CHAT_MAX_ACTIVE_GENERATIONS:
         raise HTTPException(status_code=429, detail="Generation capacity is full")
-    capacity.active_count += 1
+    capacity.active_count = active_count + 1
     message = ConversationMessage(
         conversation_id=conversation.id, role=MessageRole.USER, content=question
     )
@@ -707,8 +717,17 @@ def submit_message(
         idempotency_key=body.idempotency_key,
         selected_provision_version_id=body.selected_provision_version_id,
         answer_language=body.answer_language,
+        created_at=now,
     )
     session.add(run)
+    session.add(
+        GenerationAdmission(
+            run_id=run.id,
+            user_id=owner.user_id,
+            guest_digest=owner.guest_digest,
+            created_at=now,
+        )
+    )
     session.flush()
     stage_dispatch(session, run)
     emit_event(
@@ -717,7 +736,7 @@ def submit_message(
         "message.started",
         {"run_id": str(run.id), "message_id": str(message.id)},
     )
-    conversation.updated_at = get_datetime_utc()
+    conversation.updated_at = now
     if conversation.title is None:
         conversation.title = question[:120]
     session.add(conversation)
@@ -779,6 +798,14 @@ def _read_events(
     run_id: uuid.UUID | None = None,
 ) -> tuple[list[GenerationEvent], bool]:
     with Session(engine) as session:
+        if owner.user_id is not None:
+            user = session.get(User, owner.user_id)
+            if (
+                user is None
+                or not user.is_active
+                or user.auth_version != owner.auth_version
+            ):
+                return [], False
         try:
             _owned_conversation(session, conversation_id, owner)
         except HTTPException:

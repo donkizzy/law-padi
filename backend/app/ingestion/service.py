@@ -11,7 +11,11 @@ from fastapi import HTTPException, status
 from sqlmodel import Session, col, func, select
 
 from app.core.config import settings
-from app.ingestion.blob_store import BlobStoreError, LocalBlobStore
+from app.ingestion.blob_store import (
+    BlobStoreError,
+    LocalBlobStore,
+    verify_blob_contents,
+)
 from app.ingestion.composition import (
     act_review_gates,
     composition_gates,
@@ -331,6 +335,8 @@ def get_blob_store() -> BlobStore:
 
 
 def upload_url_for_upload(upload: SourceUpload) -> str:
+    if upload.status not in (SourceUploadStatus.CREATED, SourceUploadStatus.UPLOADING):
+        return ""
     if upload.upload_backend == "local":
         return local_upload_url(upload)
     if upload.upload_backend == "r2":
@@ -395,7 +401,11 @@ def create_source_upload_multipart_parts(
     part_count: int,
     expected_version: int,
     idempotency_key: str,
+    current_user: User,
 ) -> MultipartUpload:
+    upload = get_source_upload_for_user(
+        session, upload_id, current_user, for_update=True
+    )
     scope = _idempotency_scope("source_upload.multipart_parts", upload_id)
     request_hash = _idempotency_payload_hash(
         {
@@ -412,7 +422,7 @@ def create_source_upload_multipart_parts(
     )
     if record:
         return _multipart_upload_from_idempotency_record(record)
-    upload = _get_upload(session, upload_id)
+    _require_upload_open(upload)
     _check_expected_version(upload.lock_version, expected_version)
     if upload.upload_backend != "r2":
         raise HTTPException(
@@ -471,13 +481,12 @@ def create_source_upload_session(
         request_hash=request_hash,
     )
     if record:
-        upload = session.get(SourceUpload, record.result_id)
-        if not upload:
+        if record.result_id is None:
             raise HTTPException(
                 status_code=status.HTTP_409_CONFLICT,
                 detail="Idempotent source upload result is no longer available",
             )
-        return upload
+        return get_source_upload_for_user(session, record.result_id, current_user)
     if body.expected_size > MAX_UPLOAD_BYTES:
         raise HTTPException(
             status_code=status.HTTP_413_REQUEST_ENTITY_TOO_LARGE,
@@ -540,9 +549,16 @@ def create_source_upload_session(
 
 
 def put_local_upload_object(
-    session: Session, upload_id: uuid.UUID, content: BinaryIO, content_type: str
+    session: Session,
+    upload_id: uuid.UUID,
+    content: BinaryIO,
+    content_type: str,
+    current_user: User,
 ) -> SourceUpload:
-    upload = _get_upload(session, upload_id)
+    upload = get_source_upload_for_user(
+        session, upload_id, current_user, for_update=True
+    )
+    _require_upload_open(upload)
     if upload.upload_backend != "local":
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
@@ -584,6 +600,9 @@ def complete_source_upload(
     body: SourceUploadComplete,
     current_user: User,
 ) -> tuple[SourceUpload, SourceDocument | None, IngestionRun | None, bool]:
+    upload = get_source_upload_for_user(
+        session, upload_id, current_user, for_update=True
+    )
     scope = _idempotency_scope("source_upload.complete", upload_id)
     request_hash = _idempotency_request_hash(body)
     record = _idempotency_record_for_request(
@@ -594,7 +613,7 @@ def complete_source_upload(
     )
     if record:
         return _completed_upload_from_idempotency_record(session, record)
-    upload = _get_upload(session, upload_id)
+    _require_upload_open(upload)
     _check_expected_version(upload.lock_version, body.expected_version)
 
     try:
@@ -649,8 +668,6 @@ def complete_source_upload(
     upload.lock_version += 1
     upload.updated_at = upload.completed_at
     session.add(upload)
-    session.commit()
-    session.refresh(upload)
 
     run = IngestionRun(
         source_upload_id=upload.id,
@@ -687,9 +704,8 @@ def complete_source_upload(
         expected_page_count=None,
     )
     session.add(run)
-    session.commit()
-    session.refresh(run)
-    steps = create_run_steps(session, run)
+    session.flush()
+    steps = create_run_steps(session, run, commit=False)
     uploading_step = next(
         step for step in steps if step.stage == IngestionStage.UPLOADING
     )
@@ -702,7 +718,6 @@ def complete_source_upload(
     uploading_step.completed_at = get_datetime_utc()
     uploading_step.updated_at = uploading_step.completed_at
     session.add(uploading_step)
-    session.commit()
     first_step = next(
         step for step in steps if step.stage == IngestionStage.VERIFYING_UPLOAD
     )
@@ -714,6 +729,7 @@ def complete_source_upload(
         idempotency_key=f"{run.id}:verify-upload",
         payload={"source_upload_id": str(upload.id)},
         priority=10,
+        commit=False,
     )
     append_run_event(
         session,
@@ -722,6 +738,7 @@ def complete_source_upload(
         message="Upload completion recorded; verification queued",
         stage=IngestionStage.VERIFYING_UPLOAD,
         payload={"source_upload_id": str(upload.id)},
+        commit=False,
     )
     _add_idempotency_record(
         session,
@@ -2836,11 +2853,23 @@ def _pages_for_idempotency_record(
     return list(pages)
 
 
-def _get_upload(session: Session, upload_id: uuid.UUID) -> SourceUpload:
-    upload = session.get(SourceUpload, upload_id)
-    if not upload:
+def get_source_upload_for_user(
+    session: Session, upload_id: uuid.UUID, user: User, *, for_update: bool = False
+) -> SourceUpload:
+    upload = session.get(
+        SourceUpload,
+        upload_id,
+        with_for_update=for_update,
+        populate_existing=for_update,
+    )
+    if upload is None or (upload.created_by != user.id and not user.is_superuser):
         raise HTTPException(status_code=404, detail="Source upload not found")
     return upload
+
+
+def _require_upload_open(upload: SourceUpload) -> None:
+    if upload.status not in (SourceUploadStatus.CREATED, SourceUploadStatus.UPLOADING):
+        raise HTTPException(status_code=409, detail="Source upload is no longer open")
 
 
 def _get_run(session: Session, run_id: uuid.UUID) -> IngestionRun:
@@ -3002,6 +3031,8 @@ def finalize_verified_upload(
     *,
     run: IngestionRun,
     upload: SourceUpload,
+    store: BlobStore,
+    verified_stream: BinaryIO,
     sha256: str,
     page_count: int,
 ) -> SourceDocument:
@@ -3024,15 +3055,22 @@ def finalize_verified_upload(
                 detail="Source hash already belongs to a different legal instrument",
             )
         _ensure_allowed_instrument_type(upload.instrument_type)
-        get_blob_store().delete_quarantine(upload.quarantine_key)
+        if not existing_source.storage_key:
+            raise BlobStoreError("Existing source has no stored original")
+        verify_blob_contents(
+            store,
+            existing_source.storage_key,
+            expected_sha256=sha256,
+            size_bytes=upload.expected_size,
+        )
         source = existing_source
         upload.status = SourceUploadStatus.DUPLICATE
         upload.canonical_key = source.storage_key
     else:
-        store = get_blob_store()
-        original = store.promote_quarantine_to_original(
-            quarantine_key=upload.quarantine_key,
+        original = store.put_verified_original(
+            stream=verified_stream,
             expected_sha256=sha256,
+            size_bytes=upload.expected_size,
             content_type=upload.mime_type,
             extension=Path(upload.original_filename).suffix or ".pdf",
             metadata={
@@ -3101,6 +3139,7 @@ def finalize_verified_upload(
         session.add(verification_artifact)
     session.add_all([upload, run])
     session.commit()
+    store.delete_quarantine(upload.quarantine_key)
     session.refresh(source)
     return source
 

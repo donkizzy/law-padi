@@ -1,7 +1,7 @@
 import hashlib
 import hmac
 import re
-from collections.abc import Callable, Iterator, Mapping
+from collections.abc import Callable, Generator, Iterator, Mapping
 from contextlib import contextmanager
 from datetime import UTC, datetime
 from email.utils import parsedate_to_datetime
@@ -12,7 +12,12 @@ from xml.etree import ElementTree
 
 import httpx
 
-from app.ingestion.blob_store import BlobStoreError, original_key, quarantine_key
+from app.ingestion.blob_store import (
+    BlobStoreError,
+    original_key,
+    quarantine_key,
+    verify_blob_contents,
+)
 from app.ingestion.contracts import (
     BlobHead,
     BlobObject,
@@ -85,53 +90,41 @@ class R2BlobStore:
             metadata=metadata,
         )
 
-    def promote_quarantine_to_original(
+    def put_verified_original(
         self,
         *,
-        quarantine_key: str,
+        stream: BinaryIO,
         expected_sha256: str,
+        size_bytes: int,
         content_type: str,
         extension: str,
         metadata: Mapping[str, str] | None = None,
     ) -> BlobObject:
         canonical_key = self.original_key(sha256=expected_sha256, extension=extension)
-        merged_metadata = {"sha256": expected_sha256, **dict(metadata or {})}
-
-        try:
-            source_head = self.head(quarantine_key)
-        except FileNotFoundError:
-            existing_head = self.head(canonical_key)
-            if existing_head.sha256 != expected_sha256:
-                raise BlobStoreError("Existing original SHA-256 does not match")
-            return BlobObject(
-                key=canonical_key,
-                size_bytes=existing_head.size_bytes,
-                sha256=existing_head.sha256,
-                content_type=existing_head.content_type,
-                metadata=existing_head.metadata,
-            )
-
-        try:
-            existing_head = self.head(canonical_key)
-        except FileNotFoundError:
-            copy_source = f"/{self.bucket_name}/{_quote_key(quarantine_key)}"
-            headers = {
+        merged_metadata = {**dict(metadata or {}), "sha256": expected_sha256}
+        response = self._request(
+            "PUT",
+            canonical_key,
+            headers={
+                "content-length": str(size_bytes),
                 "content-type": content_type,
-                "x-amz-copy-source": copy_source,
-                "x-amz-metadata-directive": "REPLACE",
+                "if-none-match": "*",
                 **_metadata_headers(merged_metadata),
-            }
-            self._request("PUT", canonical_key, headers=headers)
-        else:
-            if existing_head.sha256 and existing_head.sha256 != expected_sha256:
-                raise BlobStoreError(
-                    "Content-addressed original exists with different SHA-256"
-                )
-
-        self.delete_quarantine(quarantine_key)
+            },
+            content=iter(lambda: stream.read(1024 * 1024), b""),
+            payload_sha256=expected_sha256,
+            expected_statuses={200, 412},
+        )
+        if response.status_code == 412:
+            verify_blob_contents(
+                self,
+                canonical_key,
+                expected_sha256=expected_sha256,
+                size_bytes=size_bytes,
+            )
         return BlobObject(
             key=canonical_key,
-            size_bytes=source_head.size_bytes,
+            size_bytes=size_bytes,
             sha256=expected_sha256,
             content_type=content_type,
             metadata=merged_metadata,
@@ -164,6 +157,26 @@ class R2BlobStore:
     def read_bytes(self, key: str) -> bytes:
         response = self._request("GET", key)
         return response.content
+
+    def iter_read(self, key: str) -> Generator[bytes]:
+        """Read an object incrementally for checksum verification."""
+        headers = self._signed_headers(
+            "GET",
+            key,
+            query={},
+            headers={},
+            payload_hash=hashlib.sha256(b"").hexdigest(),
+        )
+        with self._client.stream(
+            "GET", self._object_url(key), headers=headers
+        ) as response:
+            if response.status_code == 404:
+                raise FileNotFoundError(key)
+            if response.status_code != 200:
+                raise BlobStoreError(
+                    f"R2 GET failed for {key}: HTTP {response.status_code}"
+                )
+            yield from response.iter_bytes(chunk_size=1024 * 1024)
 
     def put_artifact(
         self,
@@ -212,7 +225,7 @@ class R2BlobStore:
     def delete_quarantine(self, key: str) -> None:
         if not key.startswith("quarantine/"):
             raise BlobStoreError("Only quarantine objects can be deleted")
-        self._request("DELETE", key, expected_statuses={200, 204})
+        self._request("DELETE", key, expected_statuses={200, 204, 404})
 
     def create_presigned_put_url(
         self,
@@ -340,16 +353,21 @@ class R2BlobStore:
         *,
         query: Mapping[str, str] | None = None,
         headers: Mapping[str, str] | None = None,
-        content: bytes = b"",
+        content: bytes | Iterator[bytes] = b"",
+        payload_sha256: str | None = None,
         expected_statuses: set[int] | None = None,
     ) -> httpx.Response:
         url = self._object_url(key, query=query)
+        if payload_sha256 is None:
+            if not isinstance(content, bytes):
+                raise BlobStoreError("Streaming R2 requests require a payload checksum")
+            payload_sha256 = hashlib.sha256(content).hexdigest()
         signed_headers = self._signed_headers(
             method,
             key,
             query=query or {},
             headers=headers or {},
-            content=content,
+            payload_hash=payload_sha256,
         )
         response = self._client.request(
             method,
@@ -359,7 +377,7 @@ class R2BlobStore:
             timeout=self._timeout_for(content),
         )
         expected = expected_statuses or {200}
-        if response.status_code == 404:
+        if response.status_code == 404 and 404 not in expected:
             raise FileNotFoundError(key)
         if response.status_code not in expected:
             raise BlobStoreError(
@@ -372,12 +390,13 @@ class R2BlobStore:
         timeout = self._client.timeout
         if not isinstance(content, bytes):
             return timeout
-        write = max(timeout.write or 0, len(content) / _MIN_UPLOAD_BYTES_PER_SECOND)
+        limits = timeout.as_dict()
+        write = max(limits["write"] or 0, len(content) / _MIN_UPLOAD_BYTES_PER_SECOND)
         return httpx.Timeout(
-            connect=timeout.connect,
-            read=timeout.read,
+            connect=limits["connect"],
+            read=limits["read"],
             write=write,
-            pool=timeout.pool,
+            pool=limits["pool"],
         )
 
     def _signed_headers(
@@ -387,11 +406,10 @@ class R2BlobStore:
         *,
         query: Mapping[str, str],
         headers: Mapping[str, str],
-        content: bytes,
+        payload_hash: str,
     ) -> dict[str, str]:
         now = self._clock()
         amz_date = now.strftime("%Y%m%dT%H%M%SZ")
-        payload_hash = hashlib.sha256(content).hexdigest()
         request_headers = {
             _normalize_header_name(name): value.strip()
             for name, value in headers.items()

@@ -16,6 +16,7 @@ import {
 import { LoadingButton } from "@/components/ui/loading-button"
 import { PasswordInput } from "@/components/ui/password-input"
 import useCustomToast from "@/hooks/useCustomToast"
+import { refreshSession } from "@/lib/session"
 import { handleError } from "@/utils"
 
 const formSchema = z
@@ -56,7 +57,8 @@ const ChangePassword = () => {
   const mutation = useMutation({
     mutationFn: (data: UpdatePassword) =>
       UsersService.updatePasswordMe({ body: data }),
-    onSuccess: () => {
+    onSuccess: async () => {
+      await refreshSession()
       showSuccessToast(t("password.updated"))
       form.reset()
     },

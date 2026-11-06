@@ -1,11 +1,11 @@
 import { zodResolver } from "@hookform/resolvers/zod"
 import { useMutation, useQueryClient } from "@tanstack/react-query"
 import { useEffect, useState } from "react"
-import { useForm } from "react-hook-form"
+import { useForm, useWatch } from "react-hook-form"
 import { useTranslation } from "react-i18next"
 import { z } from "zod"
 
-import { UsersService, type UserUpdateMe } from "@/client"
+import { UsersService } from "@/client"
 import { Button } from "@/components/ui/button"
 import {
   Form,
@@ -17,6 +17,7 @@ import {
 } from "@/components/ui/form"
 import { Input } from "@/components/ui/input"
 import { LoadingButton } from "@/components/ui/loading-button"
+import { PasswordInput } from "@/components/ui/password-input"
 import useAuth from "@/hooks/useAuth"
 import useCustomToast from "@/hooks/useCustomToast"
 import { cn } from "@/lib/utils"
@@ -25,6 +26,7 @@ import { handleError } from "@/utils"
 const formSchema = z.object({
   full_name: z.string().max(255).optional(),
   email: z.email({ message: "validation.emailInvalid" }),
+  current_password: z.string(),
 })
 
 type FormData = z.infer<typeof formSchema>
@@ -43,6 +45,7 @@ const UserInformation = () => {
     defaultValues: {
       full_name: currentUser?.full_name ?? undefined,
       email: currentUser?.email,
+      current_password: "",
     },
   })
 
@@ -54,15 +57,27 @@ const UserInformation = () => {
       form.reset({
         full_name: currentUser.full_name ?? "",
         email: currentUser.email,
+        current_password: "",
       })
   }, [currentUser, editMode, form])
 
+  const email = useWatch({ control: form.control, name: "email" })
+  const changingEmail = Boolean(currentUser && email !== currentUser.email)
   const mutation = useMutation({
-    mutationFn: (data: UserUpdateMe) =>
-      UsersService.updateUserMe({ body: data }),
-    onSuccess: () => {
-      showSuccessToast(t("profile.updated"))
-      toggleEditMode()
+    mutationFn: async (data: FormData) => {
+      if (changingEmail)
+        await UsersService.requestEmailChange({
+          body: { email: data.email, current_password: data.current_password },
+        })
+      if (data.full_name !== (currentUser?.full_name ?? ""))
+        await UsersService.updateUserMe({ body: { full_name: data.full_name } })
+      return changingEmail
+    },
+    onSuccess: (emailRequested) => {
+      showSuccessToast(
+        t(emailRequested ? "profile.confirmNewEmail" : "profile.updated"),
+      )
+      setEditMode(false)
     },
     onError: handleError.bind(showErrorToast),
     onSettled: () => {
@@ -71,17 +86,13 @@ const UserInformation = () => {
   })
 
   const onSubmit = (data: FormData) => {
-    const updateData: UserUpdateMe = {}
-
-    // only include fields that have changed
-    if (data.full_name !== currentUser?.full_name) {
-      updateData.full_name = data.full_name
+    if (changingEmail && !data.current_password) {
+      form.setError("current_password", {
+        message: "settings:password.required",
+      })
+      return
     }
-    if (data.email !== currentUser?.email) {
-      updateData.email = data.email
-    }
-
-    mutation.mutate(updateData)
+    mutation.mutate(data)
   }
 
   const onCancel = () => {
@@ -145,6 +156,22 @@ const UserInformation = () => {
               )
             }
           />
+
+          {editMode && changingEmail && (
+            <FormField
+              control={form.control}
+              name="current_password"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>{t("password.current")}</FormLabel>
+                  <FormControl>
+                    <PasswordInput autoComplete="current-password" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+          )}
 
           <div className="flex gap-3">
             {editMode ? (

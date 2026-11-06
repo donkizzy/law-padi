@@ -9,9 +9,11 @@ import emails
 import jwt
 from jinja2 import Template
 from jwt.exceptions import InvalidTokenError
+from pydantic import EmailStr, ValidationError
 
 from app.core import security
 from app.core.config import settings
+from app.models import TokenPayload, User
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -133,32 +135,61 @@ def generate_account_exists_email(*, email_to: str) -> EmailData:
     return EmailData(html_content=html_content, subject=subject)
 
 
-def generate_password_reset_token(email: str) -> str:
-    delta = timedelta(hours=settings.EMAIL_RESET_TOKEN_EXPIRE_HOURS)
+class AccountLink(TokenPayload):
+    email: EmailStr
+
+
+def _generate_account_link(
+    *, user: User, email: str, token_type: str, lifetime_hours: int
+) -> str:
     now = datetime.now(UTC)
-    expires = now + delta
-    exp = expires.timestamp()
-    encoded_jwt = jwt.encode(
+    return jwt.encode(
         {
-            "exp": exp,
+            "exp": now + timedelta(hours=lifetime_hours),
             "nbf": now,
-            "sub": email,
-            "type": security.PASSWORD_RESET_TOKEN_TYPE,
+            "sub": str(user.id),
+            "email": email,
+            "auth_version": user.auth_version,
+            "type": token_type,
         },
         settings.SECRET_KEY,
         algorithm=security.ALGORITHM,
     )
-    return encoded_jwt
 
 
-def verify_password_reset_token(token: str) -> str | None:
+def _verify_account_link(token: str, *, token_type: str) -> AccountLink | None:
     try:
-        decoded_token = security.decode_token(
-            token, token_type=security.PASSWORD_RESET_TOKEN_TYPE
+        return AccountLink.model_validate(
+            security.decode_token(token, token_type=token_type)
         )
-        return str(decoded_token["sub"])
-    except InvalidTokenError:
+    except InvalidTokenError, ValidationError:
         return None
+
+
+def generate_password_reset_token(user: User) -> str:
+    return _generate_account_link(
+        user=user,
+        email=user.email,
+        token_type=security.PASSWORD_RESET_TOKEN_TYPE,
+        lifetime_hours=settings.EMAIL_RESET_TOKEN_EXPIRE_HOURS,
+    )
+
+
+def verify_password_reset_token(token: str) -> AccountLink | None:
+    return _verify_account_link(token, token_type=security.PASSWORD_RESET_TOKEN_TYPE)
+
+
+def generate_email_change_token(*, user: User, email: str) -> str:
+    return _generate_account_link(
+        user=user,
+        email=email,
+        token_type=security.EMAIL_CHANGE_TOKEN_TYPE,
+        lifetime_hours=settings.EMAIL_VERIFICATION_TOKEN_EXPIRE_HOURS,
+    )
+
+
+def verify_email_change_token(token: str) -> AccountLink | None:
+    return _verify_account_link(token, token_type=security.EMAIL_CHANGE_TOKEN_TYPE)
 
 
 def generate_email_verification_token(*, user_id: uuid.UUID, email: str) -> str:

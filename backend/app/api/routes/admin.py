@@ -23,6 +23,7 @@ from app.ingestion.service import (
     decide_review_candidate,
     derive_review_candidate,
     get_blob_store,
+    get_source_upload_for_user,
     latest_revision_text,
     publish_corpus_release,
     put_local_upload_object,
@@ -310,9 +311,7 @@ async def put_source_upload_object(
 ) -> Response:
     require_admin_role(session, current_user, AdminRole.INGESTION_UPLOADER)
     content_type = request.headers.get("content-type", "application/octet-stream")
-    upload = session.get(SourceUpload, upload_id)
-    if upload is None:
-        raise HTTPException(status_code=404, detail="Source upload not found")
+    upload = get_source_upload_for_user(session, upload_id, current_user)
     with tempfile.TemporaryFile(mode="w+b") as content:
         received = 0
         async for chunk in request.stream():
@@ -329,7 +328,7 @@ async def put_source_upload_object(
                 detail="Uploaded object size does not match the upload session",
             )
         content.seek(0)
-        put_local_upload_object(session, upload_id, content, content_type)
+        put_local_upload_object(session, upload_id, content, content_type, current_user)
     return Response(status_code=204)
 
 
@@ -341,15 +340,13 @@ def create_multipart_upload_parts(
     current_user: CurrentUser,
 ) -> MultipartPartsPublic:
     require_admin_role(session, current_user, AdminRole.INGESTION_UPLOADER)
-    upload = session.get(SourceUpload, upload_id)
-    if not upload:
-        raise HTTPException(status_code=404, detail="Source upload not found")
     multipart = create_source_upload_multipart_parts(
         session,
         upload_id,
         part_count=body.part_count,
         expected_version=body.expected_version,
         idempotency_key=body.idempotency_key,
+        current_user=current_user,
     )
     parts = [
         MultipartPartPublic(
@@ -359,7 +356,7 @@ def create_multipart_upload_parts(
         for part in multipart.parts
     ]
     return MultipartPartsPublic(
-        upload_id=upload.id,
+        upload_id=upload_id,
         multipart_upload_id=multipart.upload_id,
         parts=parts,
     )
@@ -851,6 +848,10 @@ def create_embedding_profile(
     current_user: CurrentUser,
 ) -> EmbeddingProfilePublic:
     require_admin_role(session, current_user, AdminRole.CORPUS_PUBLISHER)
+    if "endpoint_url" in body.configuration:
+        raise HTTPException(
+            status_code=422, detail="Embedding endpoints are configured by deployment"
+        )
     if body.vector_dimensions != settings.RETRIEVAL_VECTOR_DIMENSIONS:
         raise HTTPException(
             status_code=409, detail="V1 profiles require 1,024 dimensions"
@@ -882,6 +883,10 @@ def update_embedding_profile(
     if profile is None:
         raise HTTPException(status_code=404, detail="Embedding profile not found")
     values = body.model_dump(exclude_unset=True)
+    if body.configuration is not None and "endpoint_url" in body.configuration:
+        raise HTTPException(
+            status_code=422, detail="Embedding endpoints are configured by deployment"
+        )
     if values.get("is_active") is True and not values.get(
         "model_revision", profile.model_revision
     ):
