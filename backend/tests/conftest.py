@@ -146,6 +146,20 @@ def disable_rate_limits() -> Generator[None]:
         yield
 
 
+@pytest.fixture(scope="session", autouse=True)
+def local_storage_only() -> Generator[None]:
+    """A developer's .env may point at a real bucket; R2 tests supply their own."""
+    with patch.multiple(
+        settings,
+        INGESTION_STORAGE_BACKEND="local",
+        R2_ENDPOINT_URL=None,
+        R2_BUCKET_NAME=None,
+        R2_ACCESS_KEY_ID=None,
+        R2_SECRET_ACCESS_KEY=None,
+    ):
+        yield
+
+
 @pytest.fixture(autouse=True)
 def fresh_public_corpus() -> Generator[None]:
     """Fixtures rebuild releases in place, so no corpus outlives a test."""
