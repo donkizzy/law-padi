@@ -1,6 +1,8 @@
 # Deployment plan: twenty laws to production (7 November 2026)
 
-Status: Option A chosen on 7 November 2026 and rehearsed locally. Nothing here has been run against Neon, Render or Cloudflare; Neon has only been read.
+Status: deployed on 7 November 2026. Commit `d5d7f58` is live on Render and Cloudflare, and `composite-2026-11-06-twenty-laws` is the production release on Neon (316 MB). Pre-release Neon dump: `backend/storage/statute-review/tier1-2026-11-05/neon-before-twenty-laws.dump`. Rollback release: `draft-c8d50d87fae9`.
+
+Production search runs in lexical mode, because `EMBEDDING_QUERY_ENABLED` is off. The Recall@10 figures in this plan measure vector search, so they do not describe what readers get today.
 
 ## Where things stand
 

@@ -55,7 +55,11 @@ def main():
         CHAT_DAILY_BUDGET_USD="5",
         CHAT_MONTHLY_BUDGET_USD="155",
         AI_MONTHLY_BUDGET_USD="155",
-        EMBEDDING_QUERY_ENABLED="false",
+        EMBEDDING_QUERY_ENABLED="true",
+        HUGGINGFACE_TEI_ENDPOINT_URL=(
+            "https://router.huggingface.co/hf-inference/models/BAAI/bge-m3"
+            "/pipeline/feature-extraction"
+        ),
         CHAT_GUEST_DAILY_LIMIT="3",
         CHAT_ACCOUNT_DAILY_LIMIT="10",
         CHAT_GUEST_BURST_LIMIT="1",

@@ -75,6 +75,11 @@ class ExactLookup:
         return any(row.status == "resolved" for row in self.response.citation_outcomes)
 
 
+# A reader is waiting, so a slow provider falls back to lexical search quickly.
+QUERY_EMBEDDING_TIMEOUT_SECONDS = 8
+QUERY_EMBEDDING_ATTEMPTS = 2
+
+
 def default_embedding_provider(profile: EmbeddingProfile) -> DenseEmbeddingProvider:
     if profile.vector_dimensions != settings.RETRIEVAL_VECTOR_DIMENSIONS:
         raise PgVectorRetrievalError(
@@ -91,6 +96,8 @@ def default_embedding_provider(profile: EmbeddingProfile) -> DenseEmbeddingProvi
         api_token=settings.HUGGINGFACE_API_TOKEN,
         model_name=profile.model_name,
         model_revision=profile.model_revision,
+        timeout_seconds=QUERY_EMBEDDING_TIMEOUT_SECONDS,
+        max_attempts=QUERY_EMBEDDING_ATTEMPTS,
     )
 
 
