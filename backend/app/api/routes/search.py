@@ -2,6 +2,7 @@ import uuid
 from collections.abc import Iterator
 from typing import Annotated
 
+import httpx
 from fastapi import APIRouter, Depends, HTTPException, Query, Response
 from fastapi.responses import RedirectResponse, StreamingResponse
 from sqlalchemy.exc import SQLAlchemyError
@@ -462,7 +463,7 @@ def read_source_content(
                 ),
                 status_code=307,
             )
-    except (BlobStoreError, FileNotFoundError, OSError) as exc:
+    except (BlobStoreError, FileNotFoundError, OSError, httpx.HTTPError) as exc:
         raise HTTPException(
             status_code=503,
             detail="The original source document is temporarily unavailable",

@@ -2,8 +2,10 @@ import hashlib
 from dataclasses import replace
 from datetime import UTC, date, datetime
 from pathlib import Path
+from unittest.mock import patch
 from uuid import uuid4
 
+import httpx
 import pytest
 from fastapi.testclient import TestClient
 from sqlmodel import Session, select
@@ -380,6 +382,10 @@ def test_tree_history_and_source_are_published_and_release_scoped(
     content = client.get(f"/api/v1/legal/sources/{source.id}/content")
     assert content.status_code == 200 and content.content == pdf
     assert client.get(f"/api/v1/legal/sources/{uuid4()}/content").status_code == 404
+    with patch("app.api.routes.search.get_blob_store") as store:
+        store.return_value.head.side_effect = httpx.ReadTimeout("slow storage")
+        unavailable = client.get(f"/api/v1/legal/sources/{source.id}/content")
+    assert unavailable.status_code == 503
     draft = CorpusRelease(version="private-draft")
     db.add(draft)
     db.commit()
