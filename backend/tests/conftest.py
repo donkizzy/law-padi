@@ -149,6 +149,15 @@ def disable_rate_limits() -> Generator[None]:
 
 
 @pytest.fixture(scope="session", autouse=True)
+def disable_guest_network_limits() -> Generator[None]:
+    """Every test client shares one address; network-limit tests opt back in."""
+    with patch.multiple(
+        settings, CHAT_GUEST_IP_DAILY_LIMIT=10_000, CHAT_GUEST_IP_BURST_LIMIT=10_000
+    ):
+        yield
+
+
+@pytest.fixture(scope="session", autouse=True)
 def local_storage_only() -> Generator[None]:
     """A developer's .env may point at a real bucket; R2 tests supply their own."""
     with patch.multiple(
@@ -174,11 +183,14 @@ def fresh_public_corpus() -> Generator[None]:
 def no_live_search_translation() -> Generator[None]:
     """Search never calls a real provider; tests opt in with a fake."""
     from app.chat import search_language
+    from app.legal.evidence import clear_query_vector_cache
 
     search_language.clear_cache()
+    clear_query_vector_cache()
     with patch.object(settings, "DEEPSEEK_API_KEY", None):
         yield
     search_language.clear_cache()
+    clear_query_vector_cache()
 
 
 @pytest.fixture(scope="module")

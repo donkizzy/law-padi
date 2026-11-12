@@ -1234,11 +1234,15 @@ class GenerationAdmission(SQLModel, table=True):
     __table_args__ = (
         Index("ix_generation_admission_user_time", "user_id", "created_at"),
         Index("ix_generation_admission_guest_time", "guest_digest", "created_at"),
+        Index("ix_generation_admission_client_time", "client_digest", "created_at"),
     )
 
     run_id: uuid.UUID = Field(primary_key=True)
     user_id: uuid.UUID | None = Field(default=None)
     guest_digest: str | None = Field(default=None, max_length=64)
+    # SHA-256 of the client IP, kept only for guest-tier admissions so a new
+    # guest cookie cannot reset the allowance of the network it came from.
+    client_digest: str | None = Field(default=None, max_length=64)
     created_at: datetime = Field(
         sa_type=DateTime(timezone=True),  # type: ignore
         index=True,

@@ -24,6 +24,7 @@ from app.core import rate_limit, sessions
 from app.core.config import settings
 from app.core.security import get_password_hash, verify_password
 from app.models import (
+    AccountDeletion,
     EmailChangeRequest,
     EmailVerification,
     Message,
@@ -211,10 +212,16 @@ def read_user_me(current_user: CurrentUser) -> Any:
 
 
 @router.delete("/me", response_model=Message)
-def delete_user_me(session: SessionDep, current_user: CurrentUser) -> Any:
+def delete_user_me(session: SessionDep, token: TokenDep, body: AccountDeletion) -> Any:
     """
-    Delete own user.
+    Delete own user. A copied access token alone can't erase the account.
     """
+    user_id = authenticated_user(session, token).id
+    rate_limit.enforce(session, rate_limit.ACCOUNT_DELETION_PER_USER, str(user_id))
+    current_user = authenticated_user(session, token, lock=True)
+    verified, _ = verify_password(body.current_password, current_user.hashed_password)
+    if not verified:
+        raise HTTPException(status_code=400, detail="Incorrect password")
     if current_user.is_superuser:
         raise HTTPException(
             status_code=403, detail="Super users are not allowed to delete themselves"

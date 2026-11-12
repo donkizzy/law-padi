@@ -182,7 +182,15 @@ def test_deleting_an_account_deletes_its_research(
         headers=headers,
         json={"enter_to_send": True, "follow_latest": True, "open_sources": False},
     )
-    r = client.delete(f"{settings.API_V1_STR}/users/me", headers=headers)
+    user.hashed_password = security.get_password_hash("account-password")
+    db.add(user)
+    db.commit()
+    r = client.request(
+        "DELETE",
+        f"{settings.API_V1_STR}/users/me",
+        headers=headers,
+        json={"current_password": "account-password"},
+    )
     assert r.status_code == 200
     db.expire_all()
     assert db.get(User, user_id) is None

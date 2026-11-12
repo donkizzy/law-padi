@@ -13,6 +13,8 @@ import {
   DialogFooter,
   DialogTitle,
 } from "@/components/ui/dialog"
+import { Label } from "@/components/ui/label"
+import { PasswordInput } from "@/components/ui/password-input"
 import useAuth from "@/hooks/useAuth"
 import useCustomToast from "@/hooks/useCustomToast"
 import { downloadResearch } from "@/lib/research"
@@ -24,6 +26,7 @@ export function AccountData() {
   const { user, logout } = useAuth()
   const { showErrorToast } = useCustomToast()
   const [confirmOpen, setConfirmOpen] = useState(false)
+  const [password, setPassword] = useState("")
 
   const download = useMutation({
     mutationFn: async () => (await AccountService.exportAccountData()).data,
@@ -35,9 +38,11 @@ export function AccountData() {
   })
 
   const remove = useMutation({
-    mutationFn: () => UsersService.deleteUserMe(),
+    mutationFn: () =>
+      UsersService.deleteUserMe({ body: { current_password: password } }),
     onSuccess: () => {
       setConfirmOpen(false)
+      setPassword("")
       toast.success(t("data.deleted"))
       void logout()
     },
@@ -91,10 +96,37 @@ export function AccountData() {
         )}
       </div>
 
-      <Dialog open={confirmOpen} onOpenChange={setConfirmOpen}>
+      <Dialog
+        open={confirmOpen}
+        onOpenChange={(open) => {
+          setConfirmOpen(open)
+          if (!open) setPassword("")
+        }}
+      >
         <DialogContent>
           <DialogTitle>{t("data.confirmTitle")}</DialogTitle>
           <DialogDescription>{t("data.confirmBody")}</DialogDescription>
+          <form
+            id="delete-account"
+            className="grid gap-2"
+            onSubmit={(event) => {
+              event.preventDefault()
+              if (password) remove.mutate()
+            }}
+          >
+            <Label htmlFor="delete-account-password">
+              {t("password.current")}
+            </Label>
+            <PasswordInput
+              id="delete-account-password"
+              autoComplete="current-password"
+              required
+              minLength={8}
+              value={password}
+              onChange={(event) => setPassword(event.target.value)}
+              data-testid="delete-account-password"
+            />
+          </form>
           <DialogFooter>
             <DialogClose asChild>
               <SquircleButton
@@ -106,10 +138,11 @@ export function AccountData() {
               </SquircleButton>
             </DialogClose>
             <SquircleButton
-              type="button"
+              type="submit"
+              form="delete-account"
               variant="danger"
               loading={remove.isPending}
-              onClick={() => remove.mutate()}
+              disabled={password.length < 8}
             >
               {t("data.delete")}
             </SquircleButton>

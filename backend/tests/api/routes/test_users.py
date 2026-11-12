@@ -428,9 +428,25 @@ def test_delete_user_me(client: TestClient, db: Session) -> None:
     a_token = tokens["access_token"]
     headers = {"Authorization": f"Bearer {a_token}"}
 
-    r = client.delete(
+    wrong = client.request(
+        "DELETE",
         f"{settings.API_V1_STR}/users/me",
         headers=headers,
+        json={"current_password": "not-the-password"},
+    )
+    assert wrong.status_code == 400
+    assert wrong.json()["detail"] == "Incorrect password"
+    assert (
+        client.delete(f"{settings.API_V1_STR}/users/me", headers=headers).status_code
+        == 422
+    )
+    assert db.exec(select(User).where(User.id == user_id)).first() is not None
+
+    r = client.request(
+        "DELETE",
+        f"{settings.API_V1_STR}/users/me",
+        headers=headers,
+        json={"current_password": password},
     )
     assert r.status_code == 200
     deleted_user = r.json()
@@ -446,9 +462,11 @@ def test_delete_user_me(client: TestClient, db: Session) -> None:
 def test_delete_user_me_as_superuser(
     client: TestClient, superuser_token_headers: dict[str, str]
 ) -> None:
-    r = client.delete(
+    r = client.request(
+        "DELETE",
         f"{settings.API_V1_STR}/users/me",
         headers=superuser_token_headers,
+        json={"current_password": settings.FIRST_SUPERUSER_PASSWORD},
     )
     assert r.status_code == 403
     response = r.json()

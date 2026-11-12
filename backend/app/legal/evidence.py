@@ -2,13 +2,17 @@
 
 import hashlib
 import uuid
+from collections import OrderedDict
 from collections.abc import Callable
 from dataclasses import dataclass
+from threading import Lock
 
 import httpx
 from sqlmodel import Session
 
+from app.core import rate_limit
 from app.core.config import settings
+from app.core.db import engine
 from app.ingestion.embedding import (
     DenseEmbeddingProvider,
     EmbeddingProviderError,
@@ -78,6 +82,52 @@ class ExactLookup:
 # A reader is waiting, so a slow provider falls back to lexical search quickly.
 QUERY_EMBEDDING_TIMEOUT_SECONDS = 8
 QUERY_EMBEDDING_ATTEMPTS = 2
+_QUERY_VECTOR_CACHE_SIZE = 2048
+_query_vectors: OrderedDict[tuple[uuid.UUID, str], list[float]] = OrderedDict()
+_query_vectors_lock = Lock()
+
+
+def clear_query_vector_cache() -> None:
+    with _query_vectors_lock:
+        _query_vectors.clear()
+
+
+def _paid_query_embedding_allowed() -> bool:
+    """Count one paid query embedding against the deployment's daily cap.
+
+    A separate session keeps the counter's commit away from the caller's
+    retrieval transaction.
+    """
+    limit = rate_limit.Limit(
+        "query-embeddings-day", settings.QUERY_EMBEDDING_DAILY_LIMIT, 24 * 60 * 60
+    )
+    with Session(engine) as session:
+        return rate_limit.allow(session, limit, "all")
+
+
+def query_vector(
+    profile: EmbeddingProfile,
+    query: str,
+    embedding_provider: Callable[[EmbeddingProfile], DenseEmbeddingProvider],
+) -> list[float]:
+    """Embed ``query`` once per process, within the daily paid-call cap."""
+    key = (profile.id, query)
+    with _query_vectors_lock:
+        cached = _query_vectors.get(key)
+        if cached is not None:
+            _query_vectors.move_to_end(key)
+            return cached
+    if not _paid_query_embedding_allowed():
+        raise EmbeddingProviderError("Daily query embedding allowance is used up")
+    batch = embedding_provider(profile).embed([query])
+    if len(batch.vectors) != 1:
+        raise EmbeddingProviderError("Query embedding response is incomplete")
+    vector = batch.vectors[0]
+    with _query_vectors_lock:
+        _query_vectors[key] = vector
+        while len(_query_vectors) > _QUERY_VECTOR_CACHE_SIZE:
+            _query_vectors.popitem(last=False)
+    return vector
 
 
 def default_embedding_provider(profile: EmbeddingProfile) -> DenseEmbeddingProvider:
@@ -264,14 +314,12 @@ def semantic_lookup(
     try:
         if not settings.EMBEDDING_QUERY_ENABLED:
             raise EmbeddingProviderError("Paid query embeddings are disabled")
-        batch = embedding_provider(profile).embed([query])
-        if len(batch.vectors) != 1:
-            raise EmbeddingProviderError("Query embedding response is incomplete")
+        vector = query_vector(profile, query, embedding_provider)
         ranked = hybrid_search(
             session,
             release_id=release.id,
             embedding_run_id=embedding_run_id,
-            query_vector=batch.vectors[0],
+            query_vector=vector,
             query=query,
             top_k=top_k,
             index_kind=index_kind,

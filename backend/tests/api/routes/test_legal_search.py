@@ -29,7 +29,7 @@ from app.legal.enums import (
     ProvisionKind,
     VectorIndexStatus,
 )
-from app.legal.evidence import evidence_item
+from app.legal.evidence import clear_query_vector_cache, evidence_item
 from app.legal.models import (
     ActiveRetrievalTarget,
     CorpusRelease,
@@ -596,6 +596,8 @@ def test_semantic_and_fallback_results_are_unique_and_canonical(
             raise EmbeddingProviderUnavailable("provider failed")
 
     monkeypatch.setattr(search, "_query_embedding_provider", lambda _: Unavailable())
+    # A vector this process already holds needs no provider; forget it.
+    clear_query_vector_cache()
     fallback = client.post("/api/v1/legal/search", json={"query": "privacy"}).json()
     assert fallback["retrieval_mode"] == "lexical"
     assert fallback["count"] == 1
@@ -781,3 +783,34 @@ def test_failed_pinned_index_is_not_mistaken_for_a_promoted_build(
         json={"query": "privacy", "release_version": release.version},
     )
     assert response.status_code == 503
+
+
+def test_query_vectors_are_reused_and_paid_calls_are_capped(
+    client: TestClient, corpus, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    assert corpus
+    calls: list[str] = []
+
+    class Provider:
+        def embed(self, texts):
+            calls.extend(texts)
+            return EmbeddingBatch(
+                provider="test",
+                model_name="test",
+                model_revision="pinned",
+                vectors=[[1.0] + [0.0] * 1023],
+            )
+
+    monkeypatch.setattr(search, "_query_embedding_provider", lambda _: Provider())
+    monkeypatch.setattr(settings, "RATE_LIMIT_ENABLED", True)
+    monkeypatch.setattr(settings, "QUERY_EMBEDDING_DAILY_LIMIT", 1)
+    modes = [
+        client.post("/api/v1/legal/search", json={"query": query}).json()[
+            "retrieval_mode"
+        ]
+        for query in ("privacy", "privacy", "liberty")
+    ]
+    # The repeat is served from memory; the new query is over the daily cap
+    # and falls back to keyword ranking instead of another paid call.
+    assert modes == ["hybrid", "hybrid", "lexical"]
+    assert calls == ["privacy"]

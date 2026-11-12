@@ -10,13 +10,14 @@ import asyncio
 import json
 import logging
 from collections import OrderedDict
+from collections.abc import Callable
 from dataclasses import dataclass
 from threading import Lock
 from typing import Any
 
 from sqlmodel import Session
 
-from app.chat.budget import BudgetExhausted, reserve, settle
+from app.chat.budget import SEARCH_UNDERSTANDING, BudgetExhausted, reserve, settle
 from app.chat.provider import DeepSeekClient, ProviderError, ProviderResult
 from app.chat.translation import (
     UNDERSTANDING_SYSTEM,
@@ -70,7 +71,7 @@ def _understand(query: str, provider: DeepSeekClient) -> Understanding | None:
             reservation = reserve(
                 session,
                 run_id=None,
-                purpose="search_understanding",
+                purpose=SEARCH_UNDERSTANDING,
                 prompt_chars=len(UNDERSTANDING_SYSTEM.encode())
                 + len(json.dumps(payload, ensure_ascii=False).encode())
                 + 128,
@@ -111,8 +112,17 @@ def _understand(query: str, provider: DeepSeekClient) -> Understanding | None:
             session.commit()
 
 
-def search_query(query: str, provider: DeepSeekClient | None = None) -> SearchQuery:
-    """The text to rank with, and the language the reader searched in."""
+def search_query(
+    query: str,
+    provider: DeepSeekClient | None = None,
+    *,
+    may_translate: Callable[[], bool] | None = None,
+) -> SearchQuery:
+    """The text to rank with, and the language the reader searched in.
+
+    ``may_translate`` is asked only before a paid call, so cached renderings
+    and confidently detected queries never count against the caller.
+    """
     if len(settings.CHAT_LANGUAGES_ENABLED) == 1:
         return SearchQuery(query, None)
     detection = detect(query)
@@ -125,6 +135,8 @@ def search_query(query: str, provider: DeepSeekClient | None = None) -> SearchQu
         return SearchQuery(query, detection.language)
     understood = _cached(query)
     if understood is None:
+        if may_translate is not None and not may_translate():
+            return SearchQuery(query, detection.language)
         understood = _understand(query, provider or DeepSeekClient())
         if understood is None:
             return SearchQuery(query, detection.language)

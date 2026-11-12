@@ -5,6 +5,16 @@ export type ClientOptions = {
 };
 
 /**
+ * AccountDeletion
+ */
+export type AccountDeletion = {
+    /**
+     * Current Password
+     */
+    current_password: string;
+};
+
+/**
  * ActiveRetrievalTargetPublic
  */
 export type ActiveRetrievalTargetPublic = {
@@ -4043,11 +4053,20 @@ export type usersCreateUserResponses = {
 export type usersCreateUserResponse = usersCreateUserResponses[keyof usersCreateUserResponses];
 
 export type usersDeleteUserMeData = {
-    body?: never;
+    body: AccountDeletion;
     path?: never;
     query?: never;
     url: '/api/v1/users/me';
 };
+
+export type usersDeleteUserMeErrors = {
+    /**
+     * Validation Error
+     */
+    422: HTTPValidationError;
+};
+
+export type usersDeleteUserMeError = usersDeleteUserMeErrors[keyof usersDeleteUserMeErrors];
 
 export type usersDeleteUserMeResponses = {
     /**
@@ -4510,7 +4529,7 @@ export type utilsHealthCheckResponses = {
      * Successful Response
      */
     200: {
-        [key: string]: string | boolean;
+        [key: string]: boolean;
     };
 };
 

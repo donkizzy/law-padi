@@ -2,6 +2,7 @@
 
 import asyncio
 import hashlib
+import hmac
 import re
 import secrets
 import uuid
@@ -13,7 +14,7 @@ from zoneinfo import ZoneInfo
 
 from fastapi import APIRouter, Depends, Header, HTTPException, Query, Request, Response
 from fastapi.sse import EventSourceResponse, ServerSentEvent
-from sqlalchemy import and_, or_
+from sqlalchemy import ColumnElement, and_, or_
 from sqlmodel import Session, col, func, select, update
 
 from app.api.deps import SessionDep, authenticated_user, get_current_active_superuser
@@ -34,6 +35,7 @@ from app.chat.schemas import (
     MessageCreate,
     MessagePublic,
 )
+from app.core import rate_limit
 from app.core.config import settings
 from app.core.db import engine
 from app.deployment.chat_dispatch import dispatch_run, stage_dispatch
@@ -71,6 +73,12 @@ class Owner:
     user_id: uuid.UUID | None = None
     guest_digest: str | None = None
     auth_version: int | None = None
+    verified: bool = False
+
+    @property
+    def guest_tier(self) -> bool:
+        """Guests and unconfirmed accounts share the smaller allowance."""
+        return self.user_id is None or not self.verified
 
 
 def _account(request: Request, session: Session) -> User | None:
@@ -97,7 +105,11 @@ def _account(request: Request, session: Session) -> User | None:
 def _owner(request: Request, response: Response, session: Session) -> Owner:
     user = _account(request, session)
     if user:
-        return Owner(user_id=user.id, auth_version=user.auth_version)
+        return Owner(
+            user_id=user.id,
+            auth_version=user.auth_version,
+            verified=user.email_verified_at is not None,
+        )
     token = request.cookies.get(_COOKIE)
     if token is None or not _COOKIE_RE.fullmatch(token):
         token = secrets.token_urlsafe(32)
@@ -107,7 +119,9 @@ def _owner(request: Request, response: Response, session: Session) -> Owner:
             max_age=settings.GUEST_CONVERSATION_RETENTION_DAYS * 24 * 60 * 60,
             httponly=True,
             secure=settings.FASTAPI_ENV != "development",
-            samesite="lax" if settings.FASTAPI_ENV == "development" else "none",
+            # The Worker serves the API on the app's own origin, so the guest
+            # cookie never needs to travel on cross-site requests.
+            samesite="lax",
             path=f"{settings.API_V1_STR}/conversations",
         )
     return Owner(guest_digest=hashlib.sha256(token.encode()).hexdigest())
@@ -552,16 +566,39 @@ def _lock_generation_capacity(session: Session) -> GenerationCapacity:
     ).one()
 
 
+def _client_digest(request: Request) -> str:
+    """Keyed so stored digests cannot be reversed by hashing every IPv4 address."""
+    return hmac.new(
+        settings.SECRET_KEY.encode(),
+        rate_limit.client_ip(request).encode(),
+        hashlib.sha256,
+    ).hexdigest()
+
+
 def _admission_counts(session: Session, owner: Owner, now: datetime) -> tuple[int, int]:
+    owner_filter = (
+        col(GenerationAdmission.user_id) == owner.user_id
+        if owner.user_id
+        else col(GenerationAdmission.guest_digest) == owner.guest_digest
+    )
+    return _counts(session, owner_filter, now)
+
+
+def _client_admission_counts(
+    session: Session, client_digest: str, now: datetime
+) -> tuple[int, int]:
+    return _counts(
+        session, col(GenerationAdmission.client_digest) == client_digest, now
+    )
+
+
+def _counts(
+    session: Session, owner_filter: ColumnElement[bool], now: datetime
+) -> tuple[int, int]:
     today = now.astimezone(_LAGOS).date()
     day_start = datetime.combine(today, datetime.min.time(), _LAGOS).astimezone(UTC)
     day_end = day_start + timedelta(days=1)
     minute_start = now - timedelta(minutes=1)
-    owner_filter = (
-        GenerationAdmission.user_id == owner.user_id
-        if owner.user_id
-        else GenerationAdmission.guest_digest == owner.guest_digest
-    )
     created_at = col(GenerationAdmission.created_at)
     daily, recent = session.exec(
         select(
@@ -679,19 +716,29 @@ def submit_message(
     now = get_datetime_utc()
     daily_count, recent_count = _admission_counts(session, owner, now)
     limit = (
-        settings.CHAT_ACCOUNT_DAILY_LIMIT
-        if owner.user_id
-        else settings.CHAT_GUEST_DAILY_LIMIT
+        settings.CHAT_GUEST_DAILY_LIMIT
+        if owner.guest_tier
+        else settings.CHAT_ACCOUNT_DAILY_LIMIT
     )
+    burst_limit = (
+        settings.CHAT_GUEST_BURST_LIMIT
+        if owner.guest_tier
+        else settings.CHAT_ACCOUNT_BURST_LIMIT
+    )
+    client_digest = _client_digest(request) if owner.guest_tier else None
+    if client_digest is not None:
+        # A fresh guest cookie costs nothing, so the network shares a limit too.
+        client_daily, client_recent = _client_admission_counts(
+            session, client_digest, now
+        )
+        if client_daily >= settings.CHAT_GUEST_IP_DAILY_LIMIT:
+            daily_count = limit
+        if client_recent >= settings.CHAT_GUEST_IP_BURST_LIMIT:
+            recent_count = burst_limit
     if daily_count >= limit:
         raise HTTPException(
             status_code=429, detail="Daily explanation allowance reached"
         )
-    burst_limit = (
-        settings.CHAT_ACCOUNT_BURST_LIMIT
-        if owner.user_id
-        else settings.CHAT_GUEST_BURST_LIMIT
-    )
     if recent_count >= burst_limit:
         raise HTTPException(
             status_code=429, detail="Too many explanations in one minute"
@@ -725,6 +772,7 @@ def submit_message(
             run_id=run.id,
             user_id=owner.user_id,
             guest_digest=owner.guest_digest,
+            client_digest=client_digest,
             created_at=now,
         )
     )

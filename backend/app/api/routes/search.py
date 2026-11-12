@@ -3,13 +3,14 @@ from collections.abc import Iterator
 from typing import Annotated
 
 import httpx
-from fastapi import APIRouter, Depends, HTTPException, Query, Response
+from fastapi import APIRouter, Depends, HTTPException, Query, Request, Response
 from fastapi.responses import RedirectResponse, StreamingResponse
 from sqlalchemy.exc import SQLAlchemyError
 from sqlmodel import Session, col, select
 
 from app.api.deps import SessionDep
 from app.chat.search_language import search_query
+from app.core import rate_limit
 from app.core.config import settings
 from app.ingestion.blob_store import BlobStoreError
 from app.ingestion.embedding import DenseEmbeddingProvider
@@ -132,14 +133,22 @@ def _response(
 
 @router.post("/search", response_model=LegalSearchResponse)
 def search_legal(
-    body: LegalSearchRequest, session: LegalSessionDep
+    body: LegalSearchRequest, request: Request, session: LegalSessionDep
 ) -> LegalSearchResponse:
     if settings.RETRIEVAL_INDEX_BACKEND != "pgvector":
         raise HTTPException(
             status_code=503,
             detail="Production legal search is not configured for pgvector",
         )
-    reader_query = search_query(body.query)
+    # Both limits commit their counters, so they run before any corpus read.
+    ip = rate_limit.client_ip(request)
+    rate_limit.enforce(session, rate_limit.SEARCH_PER_IP, ip)
+    reader_query = search_query(
+        body.query,
+        may_translate=lambda: rate_limit.allow(
+            session, rate_limit.SEARCH_TRANSLATION_PER_IP, ip
+        ),
+    )
     response = _search(body, session, reader_query.text)
     response.message_code = message_code(response.message)
     response.query_language = (

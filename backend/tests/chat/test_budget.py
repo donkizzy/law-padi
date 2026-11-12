@@ -263,3 +263,34 @@ def test_reservations_and_settlement_use_the_calling_providers_prices(
     budget_db.commit()
     budget_db.refresh(reservation)
     assert reservation.actual_micro_usd == 600
+
+
+def test_search_understanding_cannot_spend_past_its_daily_slice(
+    budget_db: Session, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    monkeypatch.setattr(settings, "SEARCH_TRANSLATION_DAILY_BUDGET_USD", 0.003)
+
+    def understand() -> GenerationReservation:
+        return budget.reserve(
+            budget_db,
+            run_id=None,
+            purpose=budget.SEARCH_UNDERSTANDING,
+            prompt_chars=1000,
+            max_output_tokens=1000,
+        )
+
+    first = understand()
+    budget_db.commit()
+    with pytest.raises(budget.BudgetExhausted, match="search_understanding"):
+        understand()
+    budget_db.rollback()
+
+    # Settling at actual cost frees the unused part of the slice.
+    budget.settle(budget_db, first.id, prompt_tokens=100, completion_tokens=100)
+    budget_db.commit()
+    understand()
+    budget_db.commit()
+
+    # Chat explanations still draw on the rest of the shared day.
+    _reserve(budget_db, _run(budget_db).id)
+    budget_db.commit()

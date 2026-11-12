@@ -82,6 +82,7 @@ def login_access_token(
     rate_limit.enforce(
         session, rate_limit.LOGIN_PER_ACCOUNT, f"{ip}|{form_data.username}"
     )
+    rate_limit.enforce(session, rate_limit.LOGIN_PER_EMAIL, form_data.username)
     user = crud.authenticate(
         session=session,
         email=form_data.username,

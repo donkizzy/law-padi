@@ -30,34 +30,25 @@ def test_email(email_to: EmailStr) -> Message:
 
 
 @router.get("/health-check/")
-def health_check(session: SessionDep) -> dict[str, str | bool]:
-    """Verify the database and the configured retrieval backend are usable."""
+def health_check(session: SessionDep) -> dict[str, bool]:
+    """Verify the database and the configured retrieval backend are usable.
+
+    The probe is public, so it reports readiness only, never versions.
+    """
     try:
         session.connection().execute(text("SELECT 1"))
-        if settings.RETRIEVAL_INDEX_BACKEND == "pgvector":
-            extension_version = (
-                session.connection()
-                .execute(
-                    text("SELECT extversion FROM pg_extension WHERE extname = 'vector'")
-                )
-                .scalar_one_or_none()
+        if settings.RETRIEVAL_INDEX_BACKEND == "pgvector" and not (
+            session.connection()
+            .execute(text("SELECT 1 FROM pg_extension WHERE extname = 'vector'"))
+            .scalar_one_or_none()
+        ):
+            raise HTTPException(
+                status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+                detail="Service is not ready",
             )
-            if not extension_version:
-                raise HTTPException(
-                    status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
-                    detail="pgvector extension is not installed",
-                )
-            return {
-                "ok": True,
-                "database": "ready",
-                "retrieval_backend": "pgvector",
-                "pgvector_version": str(extension_version),
-            }
-    except HTTPException:
-        raise
     except SQLAlchemyError as exc:
         raise HTTPException(
             status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
-            detail="database health check failed",
+            detail="Service is not ready",
         ) from exc
-    return {"ok": True, "database": "ready", "retrieval_backend": "qdrant"}
+    return {"ok": True}

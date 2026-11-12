@@ -1,4 +1,5 @@
-from sqlmodel import Session, select
+from sqlalchemy import ColumnElement
+from sqlmodel import Session, col, func, select
 
 from app.core.security import get_password_hash, verify_password
 from app.models import User, UserCreate, UserUpdate
@@ -31,8 +32,13 @@ def update_user(
     return db_user
 
 
+def _email_matches(email: str) -> ColumnElement[bool]:
+    """Mailbox providers ignore case, so one address is one account."""
+    return func.lower(col(User.email)) == email.strip().lower()
+
+
 def get_user_by_email(*, session: Session, email: str) -> User | None:
-    statement = select(User).where(User.email == email)
+    statement = select(User).where(_email_matches(email))
     session_user = session.exec(statement).first()
     return session_user
 
@@ -45,7 +51,7 @@ DUMMY_HASH = "$argon2id$v=19$m=65536,t=3,p=4$MjQyZWE1MzBjYjJlZTI0Yw$YTU4NGM5ZTZm
 def authenticate(
     *, session: Session, email: str, password: str, commit: bool = True
 ) -> User | None:
-    statement = select(User).where(User.email == email)
+    statement = select(User).where(_email_matches(email))
     db_user = session.exec(
         statement.with_for_update().execution_options(populate_existing=True)
     ).first()

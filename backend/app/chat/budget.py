@@ -13,8 +13,9 @@ from dataclasses import dataclass
 from datetime import date, datetime
 from zoneinfo import ZoneInfo
 
+from sqlalchemy import case
 from sqlalchemy.dialects.postgresql import insert
-from sqlmodel import Session, select
+from sqlmodel import Session, col, func, select
 
 from app.core.config import settings
 from app.legal.models import (
@@ -67,6 +68,40 @@ def _month_ledger(session: Session, month: date) -> GenerationBudgetMonth:
     ).one()
 
 
+# Purposes that may only use part of the shared daily budget.
+SEARCH_UNDERSTANDING = "search_understanding"
+
+
+def _purpose_daily_limit_usd(purpose: str) -> float | None:
+    if purpose == SEARCH_UNDERSTANDING:
+        return settings.SEARCH_TRANSLATION_DAILY_BUDGET_USD
+    return None
+
+
+def _purpose_used_micro_usd(session: Session, day: date, purpose: str) -> int:
+    """Held reservations at their reserved amount, settled ones at actual cost."""
+    held = col(GenerationReservation.status).in_(("reserved", "uncertain"))
+    used = session.exec(
+        select(
+            func.coalesce(
+                func.sum(
+                    case(
+                        (held, col(GenerationReservation.reserved_micro_usd)),
+                        else_=func.coalesce(
+                            col(GenerationReservation.actual_micro_usd), 0
+                        ),
+                    )
+                ),
+                0,
+            )
+        ).where(
+            GenerationReservation.day == day,
+            GenerationReservation.purpose == purpose,
+        )
+    ).one()
+    return int(used)
+
+
 def reserve(
     session: Session,
     *,
@@ -90,6 +125,12 @@ def reserve(
         > math.floor(monthly_limit * 1_000_000)
     ):
         raise BudgetExhausted("Monthly AI generation budget is exhausted")
+    purpose_limit = _purpose_daily_limit_usd(purpose)
+    # The month lock above serializes this read with every other reservation.
+    if purpose_limit is not None and _purpose_used_micro_usd(
+        session, day, purpose
+    ) + amount > math.floor(purpose_limit * 1_000_000):
+        raise BudgetExhausted(f"Daily {purpose} budget is exhausted")
     session.exec(
         insert(GenerationBudgetDay)
         .values(day=day, reserved_micro_usd=0, spent_micro_usd=0)

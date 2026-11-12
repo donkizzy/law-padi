@@ -508,3 +508,27 @@ test("A confirmed account brings its saved language to a new browser", async ({
   // The account already has a language, so nothing is written back.
   expect(preferenceWrites).toEqual([])
 })
+
+test("Deleting an account asks for the current password", async ({ page }) => {
+  await mockSettings(page, true)
+  const deletions: unknown[] = []
+  await page.route("**/api/v1/users/me", (route) => {
+    if (route.request().method() === "DELETE") {
+      deletions.push(route.request().postDataJSON())
+      return route.fulfill({ json: { message: "User deleted successfully" } })
+    }
+    return route.fulfill({ json: user })
+  })
+  await page.goto("/settings")
+  await page.getByRole("tab", { name: "Security" }).click()
+  await page.getByRole("button", { name: "Delete my account" }).click()
+
+  const dialog = page.getByRole("dialog")
+  const confirm = dialog.getByRole("button", { name: "Delete my account" })
+  await expect(confirm).toBeDisabled()
+  await dialog.getByLabel("Current Password").fill("account-password")
+  await confirm.click()
+  await expect
+    .poll(() => deletions)
+    .toEqual([{ current_password: "account-password" }])
+})

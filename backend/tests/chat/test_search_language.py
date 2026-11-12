@@ -8,6 +8,7 @@ from app.api.routes import search
 from app.chat import search_language
 from app.chat.budget import BudgetExhausted
 from app.chat.provider import ProviderError, ProviderResult
+from app.core import rate_limit
 from app.core.config import settings
 from app.languages.codes import Language
 from app.legal.evidence import NOT_IN_CONSTITUTION_MESSAGE, message_code
@@ -181,3 +182,82 @@ def test_search_messages_carry_stable_codes(client: TestClient, corpus) -> None:
     ).json()
     assert unsupported["message_code"] == "reference_format"
     assert message_code("A message without a code") is None
+
+
+def test_translation_cap_searches_the_query_as_typed_without_a_call(
+    db: Session, provider: SearchProvider
+) -> None:
+    asked: list[bool] = []
+
+    def refuse() -> bool:
+        asked.append(True)
+        return False
+
+    query = "Kí ni Section 35 sọ?"
+    assert search_language.search_query(query, may_translate=refuse) == (
+        search_language.SearchQuery(query, Language.YORUBA)
+    )
+    assert asked == [True]
+    assert provider.calls == 0
+    assert db.exec(select(GenerationReservation)).first() is None
+
+
+def test_cached_and_english_queries_never_spend_the_translation_cap(
+    provider: SearchProvider,
+) -> None:
+    assert search_language.search_query(_YORUBA).translated
+
+    def refuse() -> bool:
+        raise AssertionError("Only a paid call may consume the cap")
+
+    assert search_language.search_query(_YORUBA, may_translate=refuse).translated
+    assert not search_language.search_query(
+        "Can police search my phone?", may_translate=refuse
+    ).translated
+    assert provider.calls == 1
+
+
+def test_search_route_limits_paid_understanding_per_client(
+    client: TestClient, corpus, provider: SearchProvider, monkeypatch
+) -> None:
+    assert corpus
+    monkeypatch.setattr(settings, "RATE_LIMIT_ENABLED", True)
+    monkeypatch.setattr(
+        rate_limit,
+        "SEARCH_TRANSLATION_PER_IP",
+        rate_limit.Limit("search-translation-ip-test", 2, 60 * 60),
+    )
+    monkeypatch.setattr(
+        search,
+        "_query_embedding_provider",
+        lambda _: pytest.fail("Exact lookup must not embed"),
+    )
+    searched = [
+        client.post(
+            "/api/v1/legal/search",
+            json={"query": f"Kí ni Section 37 sọ nípa {word}?"},
+        )
+        for word in ("ẹni", "ọmọ", "ilé")
+    ]
+    assert [response.status_code for response in searched] == [200, 200, 200]
+    assert [response.json()["searched_query"] is not None for response in searched] == [
+        True,
+        True,
+        False,
+    ]
+    assert provider.calls == 2
+
+
+def test_search_route_rejects_a_flooding_client(
+    client: TestClient, corpus, monkeypatch
+) -> None:
+    assert corpus
+    monkeypatch.setattr(settings, "RATE_LIMIT_ENABLED", True)
+    monkeypatch.setattr(
+        rate_limit, "SEARCH_PER_IP", rate_limit.Limit("search-ip-test", 2, 60)
+    )
+    statuses = [
+        client.post("/api/v1/legal/search", json={"query": "Section 37"}).status_code
+        for _ in range(3)
+    ]
+    assert statuses == [200, 200, 429]

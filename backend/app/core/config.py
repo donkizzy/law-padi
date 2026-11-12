@@ -64,6 +64,9 @@ class Settings(BaseSettings):
     HUGGINGFACE_TEI_ENDPOINT_URL: str | None = None
     HUGGINGFACE_API_TOKEN: str | None = None
     EMBEDDING_QUERY_ENABLED: bool = True
+    # Paid query embeddings per UTC day across the deployment. Past it, search
+    # uses keyword ranking until the next day.
+    QUERY_EMBEDDING_DAILY_LIMIT: int = Field(default=5000, ge=0)
     RETRIEVAL_INDEX_BACKEND: Literal["pgvector", "qdrant"] = "pgvector"
     RETRIEVAL_VECTOR_DIMENSIONS: int = Field(default=1024, ge=1)
     RETRIEVAL_DENSE_CANDIDATE_LIMIT: int = Field(default=50, ge=1)
@@ -86,6 +89,11 @@ class Settings(BaseSettings):
     CHAT_ACCOUNT_DAILY_LIMIT: int = Field(default=200, ge=0)
     CHAT_GUEST_BURST_LIMIT: int = Field(default=3, ge=0)
     CHAT_ACCOUNT_BURST_LIMIT: int = Field(default=10, ge=0)
+    # Guest cookies are free to replace, so guest-tier explanations (guests and
+    # unconfirmed accounts) are also counted per client IP. Mobile carriers
+    # share addresses, so these sit well above the per-guest limits.
+    CHAT_GUEST_IP_DAILY_LIMIT: int = Field(default=30, ge=0)
+    CHAT_GUEST_IP_BURST_LIMIT: int = Field(default=3, ge=0)
     DATABASE_POOL_SIZE: int = Field(default=40, ge=1, le=100)
     DATABASE_GATE_WAIT_SECONDS: float = Field(default=10, gt=0)
     CHAT_DAILY_BUDGET_USD: float = Field(default=100.0, ge=0)
@@ -131,6 +139,9 @@ class Settings(BaseSettings):
     # Search queries longer than this are searched as typed, untranslated.
     SEARCH_TRANSLATION_MAX_CHARS: int = Field(default=300, ge=1, le=2000)
     SEARCH_TRANSLATION_MAX_OUTPUT_TOKENS: int = Field(default=600, ge=1)
+    # Search is anonymous, so its paid query understanding draws on its own
+    # slice of the daily budget and can never starve chat explanations.
+    SEARCH_TRANSLATION_DAILY_BUDGET_USD: float = Field(default=0.5, ge=0)
     TRANSLATION_PROVIDER: Literal["deepseek"] = "deepseek"
     # Yorùbá and Igbo tone marks use far more tokens than the English answer.
     TRANSLATION_MAX_OUTPUT_TOKENS: int = Field(default=6000, ge=1)

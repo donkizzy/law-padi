@@ -3,7 +3,7 @@ from uuid import UUID, uuid4
 
 import pytest
 from fastapi.testclient import TestClient
-from sqlmodel import Session
+from sqlmodel import Session, select
 
 from app.api.routes import conversations
 from app.chat.budget import reserve, settle
@@ -194,7 +194,9 @@ def test_conversation_deletion_does_not_reset_allowance(
     monkeypatch.setattr(settings, limit_name, 1)
     now = get_datetime_utc()
     monkeypatch.setattr(conversations, "get_datetime_utc", lambda: now)
-    user = User(email="quota@example.test", hashed_password="unused")
+    user = User(
+        email="quota@example.test", hashed_password="unused", email_verified_at=now
+    )
     db.add(user)
     db.commit()
     headers = (
@@ -341,7 +343,10 @@ def test_account_deletion_does_not_strand_shared_generation_capacity(
     monkeypatch.setattr(settings, "CHAT_GENERATION_ENABLED", True)
     monkeypatch.setattr(settings, "CHAT_DISPATCH_MODE", "poll")
     monkeypatch.setattr(settings, "CHAT_MAX_ACTIVE_GENERATIONS", 1)
-    user = User(email="delete-capacity@example.test", hashed_password="unused")
+    user = User(
+        email="delete-capacity@example.test",
+        hashed_password=security.get_password_hash("capacity-password"),
+    )
     admin = User(
         email="capacity-admin@example.test", hashed_password="unused", is_superuser=True
     )
@@ -369,7 +374,12 @@ def test_account_deletion_does_not_strand_shared_generation_capacity(
             }
             deleted = client.delete(f"/api/v1/users/{user_id}", headers=admin_headers)
         else:
-            deleted = client.delete("/api/v1/users/me", headers=user_headers)
+            deleted = client.request(
+                "DELETE",
+                "/api/v1/users/me",
+                headers=user_headers,
+                json={"current_password": "capacity-password"},
+            )
         assert deleted.status_code == 200
         db.expire_all()
         assert db.get(GenerationRun, run_id) is None
@@ -500,3 +510,104 @@ def test_message_history_uses_owned_stable_cursor(
         assert third["next_before"] is None
         assert guest.get(base, params={"before": str(foreign.id)}).status_code == 404
         assert guest.get(base, params={"before": str(uuid4())}).status_code == 404
+
+
+def _ask(reader: TestClient, key: str) -> int:
+    chat = reader.post("/api/v1/conversations", json={}).json()["id"]
+    response = reader.post(
+        f"/api/v1/conversations/{chat}/messages",
+        json={"question": "Section 37", "idempotency_key": key},
+    )
+    if response.status_code == 429:
+        assert response.json()["detail"] == "Daily explanation allowance reached"
+    return response.status_code
+
+
+def test_fresh_guest_cookies_share_their_network_allowance(
+    corpus, db: Session, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    assert corpus
+    monkeypatch.setattr(settings, "CHAT_ENABLED", True)
+    monkeypatch.setattr(settings, "CHAT_GENERATION_ENABLED", True)
+    monkeypatch.setattr(settings, "CHAT_DISPATCH_MODE", "poll")
+    monkeypatch.setattr(settings, "CHAT_GUEST_IP_DAILY_LIMIT", 2)
+    statuses = []
+    for index in range(3):
+        # Each client is a new guest cookie from the same address.
+        with TestClient(app, base_url="https://testserver") as guest:
+            statuses.append(_ask(guest, f"network-{index}"))
+    assert statuses == [202, 202, 429]
+    admissions = db.exec(select(GenerationAdmission)).all()
+    assert len(admissions) == 2
+    assert all(row.client_digest and len(row.client_digest) == 64 for row in admissions)
+    assert admissions[0].client_digest == admissions[1].client_digest
+
+    user = User(
+        email=f"{uuid4()}@example.test",
+        hashed_password="unused",
+        email_verified_at=get_datetime_utc(),
+    )
+    db.add(user)
+    db.commit()
+    token = security.create_access_token(
+        user.id, timedelta(hours=1), auth_version=user.auth_version
+    )
+    with TestClient(
+        app,
+        base_url="https://testserver",
+        headers={"Authorization": f"Bearer {token}"},
+    ) as account:
+        assert _ask(account, "network-account") == 202
+    account_row = db.exec(
+        select(GenerationAdmission).where(GenerationAdmission.user_id == user.id)
+    ).one()
+    assert account_row.client_digest is None
+
+
+def test_fresh_guest_cookies_share_their_network_burst(
+    corpus, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    assert corpus
+    monkeypatch.setattr(settings, "CHAT_ENABLED", True)
+    monkeypatch.setattr(settings, "CHAT_GENERATION_ENABLED", True)
+    monkeypatch.setattr(settings, "CHAT_DISPATCH_MODE", "poll")
+    monkeypatch.setattr(settings, "CHAT_GUEST_IP_BURST_LIMIT", 1)
+    with TestClient(app, base_url="https://testserver") as first:
+        assert _ask(first, "burst-network-first") == 202
+    with TestClient(app, base_url="https://testserver") as second:
+        chat = second.post("/api/v1/conversations", json={}).json()["id"]
+        blocked = second.post(
+            f"/api/v1/conversations/{chat}/messages",
+            json={"question": "Section 37", "idempotency_key": "burst-network-next"},
+        )
+    assert blocked.status_code == 429
+    assert blocked.json()["detail"] == "Too many explanations in one minute"
+
+
+def test_unconfirmed_accounts_get_the_guest_allowance(
+    corpus, db: Session, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    assert corpus
+    monkeypatch.setattr(settings, "CHAT_ENABLED", True)
+    monkeypatch.setattr(settings, "CHAT_GENERATION_ENABLED", True)
+    monkeypatch.setattr(settings, "CHAT_DISPATCH_MODE", "poll")
+    monkeypatch.setattr(settings, "CHAT_GUEST_DAILY_LIMIT", 1)
+    monkeypatch.setattr(settings, "CHAT_ACCOUNT_DAILY_LIMIT", 5)
+    for verified_at, expected in ((None, [202, 429]), (get_datetime_utc(), [202, 202])):
+        user = User(
+            email=f"{uuid4()}@example.test",
+            hashed_password="unused",
+            email_verified_at=verified_at,
+        )
+        db.add(user)
+        db.commit()
+        token = security.create_access_token(
+            user.id, timedelta(hours=1), auth_version=user.auth_version
+        )
+        with TestClient(
+            app,
+            base_url="https://testserver",
+            headers={"Authorization": f"Bearer {token}"},
+        ) as reader:
+            statuses = [_ask(reader, f"tier-{user.id}-{index}") for index in range(2)]
+        assert statuses == expected
