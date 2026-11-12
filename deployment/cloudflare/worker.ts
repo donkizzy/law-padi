@@ -244,12 +244,36 @@ export async function handleRequest(
 	return proxied;
 }
 
+// Applied to every response, including proxied API ones. No script-src: the
+// policy only removes framing, plugins and base/form hijacking, which the app
+// never uses, so it cannot break the bundle or edge-rendered pages.
+const SECURITY_HEADERS: Record<string, string> = {
+	"content-security-policy":
+		"frame-ancestors 'none'; object-src 'none'; base-uri 'self'; form-action 'self'",
+	"x-frame-options": "DENY",
+	"x-content-type-options": "nosniff",
+	"referrer-policy": "strict-origin-when-cross-origin",
+	"permissions-policy": "camera=(), microphone=(), geolocation=(), payment=()",
+	"strict-transport-security": "max-age=31536000",
+};
+
+export function withSecurityHeaders(response: Response): Response {
+	// Asset and fetch responses can have immutable headers; keep the stream.
+	const secured = new Response(response.body, response);
+	for (const [name, value] of Object.entries(SECURITY_HEADERS)) {
+		if (!secured.headers.has(name)) secured.headers.set(name, value);
+	}
+	return secured;
+}
+
 export default {
-	fetch(
+	async fetch(
 		request: Request,
 		env: Env,
 		background: BackgroundWork,
 	): Promise<Response> {
-		return handleRequest(request, env, fetch, background);
+		return withSecurityHeaders(
+			await handleRequest(request, env, fetch, background),
+		);
 	},
 };

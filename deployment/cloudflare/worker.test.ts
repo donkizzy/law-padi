@@ -1,5 +1,5 @@
 import { describe, expect, test } from "bun:test";
-import { handleRequest } from "./worker";
+import worker, { handleRequest, withSecurityHeaders } from "./worker";
 
 function env(overrides = {}) {
 	return {
@@ -405,5 +405,34 @@ describe("public read cache", () => {
 		);
 		expect(response.status).toBe(200);
 		expect(response.headers.get("cache-control")).toBe("public, max-age=60");
+	});
+});
+
+describe("security headers", () => {
+	test("every response refuses framing and plugins", async () => {
+		const response = await worker.fetch(
+			new Request("https://constitution.workers.dev/saved"),
+			env({ API_ORIGIN: "" }),
+			{ waitUntil: () => undefined },
+		);
+		expect(await response.text()).toBe("SPA");
+		expect(response.headers.get("content-security-policy")).toContain(
+			"frame-ancestors 'none'",
+		);
+		expect(response.headers.get("x-frame-options")).toBe("DENY");
+		expect(response.headers.get("x-content-type-options")).toBe("nosniff");
+	});
+
+	test("keeps a header the page already set and works on immutable responses", () => {
+		const immutable = Response.redirect("https://constitution.workers.dev/", 302);
+		const secured = withSecurityHeaders(immutable);
+		expect(secured.status).toBe(302);
+		expect(secured.headers.get("referrer-policy")).toBe(
+			"strict-origin-when-cross-origin",
+		);
+		const own = withSecurityHeaders(
+			new Response("ok", { headers: { "referrer-policy": "no-referrer" } }),
+		);
+		expect(own.headers.get("referrer-policy")).toBe("no-referrer");
 	});
 });
