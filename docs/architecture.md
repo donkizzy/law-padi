@@ -112,8 +112,9 @@ Ingestion is an administrative workflow. Its stages are the values of
    instrument's benchmark (`ingestion/embedding.py`).
 10. **Validate and publish.** Index validation checks row counts, hashes,
     dimensions and canonical joins. Publication locks the release, the active
-    target and the run, and commits once (`ingestion/service.py`). A release
-    needs a separate publisher and uploader.
+    target and the run, and commits once
+    (`ingestion/admin/release_publish.py`). A release needs a separate publisher
+    and uploader.
 
 The procedures, including formatting repair and the R2 lifecycle policy, are in
 [`runbooks/ingestion.md`](runbooks/ingestion.md).

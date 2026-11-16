@@ -36,7 +36,7 @@ os.environ.update(
 app_dir = Path("/app/backend/app")
 
 # Exercise the worker's real import graph, which also uses shared legal modules.
-importlib.import_module("app.ingestion.worker")
+importlib.import_module("app.ingestion.runtime.runner")
 importlib.import_module("app.legal.evidence")
 importlib.import_module("psycopg")
 for path in (app_dir / "legal/data").glob("*.json"):
