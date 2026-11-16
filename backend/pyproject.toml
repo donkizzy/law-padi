@@ -79,15 +79,13 @@ ignore = [
 keep-runtime-typing = true
 
 [tool.coverage.run]
-source = ["app"]
-dynamic_context = "test_function"
+source = ["app", "scripts"]
+branch = true
 
 [tool.coverage.report]
+fail_under = 73
 show_missing = true
 sort = "-Cover"
-
-[tool.coverage.html]
-show_contexts = true
 
 [tool.ty.terminal]
 error-on-warning = true
