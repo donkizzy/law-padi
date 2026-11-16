@@ -29,7 +29,7 @@ def load_cases() -> list[dict[str, Any]]:
     for language in LANGUAGES:
         suffix = "" if language == "en" else f"-{language}"
         for split in SPLITS:
-            path = ROOT / f"docs/plain-language-retrieval-{split}{suffix}-v1.json"
+            path = ROOT / f"eval/datasets/plain-language-retrieval-{split}{suffix}-v1.json"
             dataset = json.loads(path.read_text())
             rows.extend(
                 {

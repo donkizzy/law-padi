@@ -103,10 +103,15 @@ What the numbers mean:
   visible, and the three-law held-out set shows no gain from the same kind of
   work. The honest summary is that retrieval is strong on phrasing the guide
   covers and unproven on phrasing it does not.
-- **No retrieval or answer metric is gated in CI.** CI runs the backend tests
-  (real PostgreSQL, a fake model at the provider boundary, 88% coverage floor),
-  lint, type checks, Worker tests and an image smoke test. Benchmarks need a
-  live database and the embedding endpoint and are run by hand.
+- **What CI gates.** One offline retrieval check: lexical and topic ranking,
+  fused as in production, over synthetic text built from the Constitution's
+  section headings, with floors in `eval/baselines/retrieval.json` (held-out
+  hit@1 0.90 on 40 questions). It catches ranking regressions; it does not
+  measure dense retrieval or answer quality, which need a live database and the
+  embedding endpoint and are run by hand. CI also runs the backend tests (real
+  PostgreSQL, a fake model at the provider boundary, 87% floor with branch
+  coverage), a migration check against the models, lint, type checks, Worker
+  tests and an image smoke test. No answer-quality metric is gated.
 - Public generation is enabled although the 200-case human review gate is not
   met. That is recorded as a dated
   [launch exception](docs/evidence-chat-rollout.md#launch-exception-recorded-16-november-2026)

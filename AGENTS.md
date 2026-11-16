@@ -29,7 +29,7 @@ The project's design system (tokens in `frontend/src/index.css`, the constitutio
 
 ## Testing Guidelines
 
-Name backend tests `test_*.py` and Playwright cases `*.spec.ts`. Add regression coverage for behavior changes and keep helpers in existing `tests/utils/` locations. Backend tests produce `htmlcov/index.html`; CI enforces the measured 88% coverage baseline. Playwright requires the backend and Compose services.
+Name backend tests `test_*.py` and Playwright cases `*.spec.ts`. Add regression coverage for behavior changes and keep helpers in existing `tests/utils/` locations. Backend tests produce `htmlcov/index.html`; CI enforces an 87% floor with branch coverage on `backend/app`. Playwright requires the backend and Compose services.
 
 ## Commit & Pull Request Guidelines
 

@@ -33,7 +33,7 @@ Do not edit `frontend/src/client/`, `frontend/src/routeTree.gen.ts` or `backend/
 Every pull request runs these workflows, and all of them should pass before merge.
 
 - **pre-commit**: the hooks above over the files the pull request changes, including Biome, Ruff, mypy, ty, a check that the generated frontend client is current, and zizmor.
-- **Test Backend**: mypy, ty and Ruff on `backend/app`, the Pytest suite against a real PostgreSQL with the 88% coverage floor, and the deployment helper tests. OCR and PDF rendering tests run with `tesseract-ocr` and `poppler-utils` installed.
+- **Test Backend**: mypy, ty and Ruff on `backend/app`, the Pytest suite against a real PostgreSQL with an 87% floor (branch coverage), and the deployment helper tests. OCR and PDF rendering tests run with `tesseract-ocr` and `poppler-utils` installed.
 - **Render CI**: the Biome check, the same-origin frontend build, the Cloudflare Worker and public page tests, and a build and smoke test of the packaged production image.
 - **Playwright Tests**: the browser suite in four shards against the Compose stack. It runs when backend, frontend, packages, scripts, Compose files, lockfiles or the workflow itself change.
 - **Test Docker Compose**: builds the stack and checks that the backend, frontend and Adminer start.

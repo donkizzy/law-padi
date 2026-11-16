@@ -3,8 +3,9 @@
 Each call is priced by its provider; DeepSeek prices are the default.
 
 The monthly generation allowance also cannot exceed the overall AI allowance.
-Query embeddings are disabled for the initial deployment, because metered HF
-inference cannot be bounded safely by this token-based provider ledger.
+Query embeddings are not priced in this ledger: their provider bills by
+inference time, not tokens. They are bounded separately by a daily call count
+(QUERY_EMBEDDING_DAILY_LIMIT, enforced in app.legal.evidence).
 """
 
 import math

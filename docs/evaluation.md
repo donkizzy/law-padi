@@ -9,17 +9,20 @@ named next to it. The datasets live in [`eval/datasets/`](../eval/datasets/);
 
 | Check | How it runs | Gated in CI |
 | --- | --- | --- |
-| Backend unit and integration tests, including deterministic answer validation, budget reservation and topic routing | `backend/scripts/test.sh` in the Test Backend workflow, 88% coverage floor | Yes |
-| Topic routing for the 14 provisional statute cases (`statute-retrieval-benchmark-v1.json`, `statute-retrieval-heldout-v1.json`) against a synthetic release | `backend/tests/legal/test_statute_retrieval.py` | Yes (every case must hit) |
-| Section-level retrieval quality (hit@1, hit@5, MRR) | `backend/scripts/retrieval_benchmark.py` against a live database and the query-embedding endpoint; results copied into the dataset files by hand | No |
+| Backend unit and integration tests, including deterministic answer validation, budget reservation and topic routing | `backend/scripts/test.sh` in the Test Backend workflow, 87% floor with branch coverage on `backend/app` | Yes |
+| Topic routing for the 14 provisional statute cases (`statute-retrieval-benchmark-v1.json`, `statute-retrieval-heldout-v1.json`) against a synthetic release | `backend/tests/legal/test_statute_retrieval.py` | Yes (every development case must hit; the held-out cases are held to a floor of 6 of 7) |
+| Offline ranking over synthetic heading-based text: lexical and topic ranking fused as in production, no embeddings (hit@1, hit@5, MRR@10) | `backend/tests/legal/test_retrieval_quality.py` against the floors in `eval/baselines/retrieval.json` (measured: development 1.00 on 57 questions; held-out hit@1 0.90, hit@5 0.975 on 40) | Yes |
+| Section-level retrieval quality with dense search (hit@1, hit@5, MRR) | `backend/scripts/retrieval_benchmark.py` against a live database and the query-embedding endpoint; results copied into the dataset files by hand | No |
 | Reader-language retrieval parity | `backend/scripts/evaluate_reader_retrieval.py` against a running API | No |
 | Embedding-model selection: Recall@10 of at least 0.95 on the instrument's benchmark | Ingestion worker, before an embedding run can be selected (`backend/app/ingestion/embedding.py`) | Enforced at ingestion time, not in CI |
 | Deterministic citation identities and provenance of captured answers | `backend/scripts/evaluate_explanations.py` | No |
 | Human supported-answer judgments | Offline review page from `backend/scripts/render_explanation_review.py` | No; not yet carried out for the deployed prompt and model |
 
-No retrieval or answer-quality metric is gated in CI today. A change to the
-fusion weights, `RETRIEVAL_RRF_K` or the topic guide can lower hit@1 without any
-check failing, and the runtime safeguards in
+The offline ranking check fails when a change to the fusion weights,
+`RETRIEVAL_RRF_K` or the topic guide lowers its metrics below the committed
+floors. It runs on synthetic text built from section headings, so it says
+nothing about dense retrieval on the real corpus. No answer-quality metric is
+gated in CI: the runtime safeguards in
 [`evidence-chat-rollout.md`](evidence-chat-rollout.md) are what stand between a
 poor answer and a reader.
 
@@ -159,11 +162,13 @@ stating later amendments that the corpus does not contain.
   phrasing.
 - **Small held-out sets.** 40 questions per held-out set: one case is 2.5
   percentage points, and the sets have been looked at during later changes.
-- **Contaminated statute held-out split.** CI requires every statute held-out
-  case to hit (see above).
-- **Results recorded by hand.** `retrieval_benchmark.py` needs the live query
-  embedding endpoint, and its output is pasted into the dataset files; nothing
-  recomputes it on a change.
+- **Statute held-out split was once a pass-all test.** Until November 2026 CI
+  required every statute held-out case to hit, which invited fixing misses by
+  editing the topic guide. It is now held to a floor, but the seven cases have
+  been seen during development.
+- **Dense results recorded by hand.** `retrieval_benchmark.py` needs the live
+  query embedding endpoint, and its output is pasted into the dataset files;
+  only the offline ranking check is recomputed on a change.
 - **Model graders.** The answer comparison used model graders, with possible
   self-preference.
 - **No human grounding review** of the deployed prompt and model.
