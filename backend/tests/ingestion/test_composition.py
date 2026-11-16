@@ -38,9 +38,13 @@ from app.ingestion.service import (
     validate_corpus_release,
 )
 from app.ingestion.worker import _retrieval_documents_payload, run_once
+from app.ingestion.workflow import append_run_event
 from app.legal.enums import (
     CorpusReleaseStatus,
     ExtractionCandidateStatus,
+    IngestionRunStatus,
+    IngestionStage,
+    IngestionStepStatus,
     InstrumentType,
     LegalStatus,
 )
@@ -54,7 +58,9 @@ from app.legal.models import (
     EmbeddingRun,
     ExtractionCandidate,
     IngestionArtifact,
+    IngestionEvent,
     IngestionRun,
+    IngestionStep,
     IngestionTask,
     LegalInstrument,
     Provision,
@@ -429,7 +435,7 @@ def test_correcting_a_source_title_is_audited_and_keeps_composition_gates_clear(
 def test_composite_build_reuses_vectors_promotes_and_preserves_conversation_pins(
     db: Session, members, monkeypatch: pytest.MonkeyPatch, client: TestClient
 ) -> None:
-    base, _acts, profile = members
+    base, acts, profile = members
     actor = _actor(db)
     base_build = db.exec(
         select(RetrievalIndexBuild).where(RetrievalIndexBuild.release_id == base.id)
@@ -437,8 +443,33 @@ def test_composite_build_reuses_vectors_promotes_and_preserves_conversation_pins
     old = Conversation(
         user_id=actor.id, pinned_release_id=base.id, pinned_index_build_id=base_build.id
     )
-    db.add(old)
+    base_run_id = release_entries(db, base.id)[0].ingestion_run_id
+    assert base_run_id is not None
+    base_run = db.get(IngestionRun, base_run_id)
+    assert base_run is not None
+    base_step = db.exec(
+        select(IngestionStep).where(
+            IngestionStep.run_id == base_run_id,
+            IngestionStep.stage == IngestionStage.PUBLISHING,
+        )
+    ).one()
+    base_run.status = IngestionRunStatus.PUBLISHED
+    base_run.current_stage = IngestionStage.PUBLISHING
+    base_step.status = IngestionStepStatus.SUCCEEDED
+    db.add_all([old, base_run, base_step])
     db.commit()
+    base_event = append_run_event(
+        db,
+        base_run,
+        event_type="release_published",
+        message="Base fixture published",
+        step=base_step,
+        stage=IngestionStage.PUBLISHING,
+    )
+    db.refresh(base_run)
+    db.refresh(base_step)
+    base_run_snapshot = base_run.model_dump()
+    base_step_snapshot = base_step.model_dump()
     calls: list[list[str]] = []
 
     class Provider:
@@ -508,7 +539,32 @@ def test_composite_build_reuses_vectors_promotes_and_preserves_conversation_pins
     )
     db.refresh(old)
     db.refresh(run)
+    db.refresh(base_run)
+    db.refresh(base_step)
+    assert base_run.model_dump() == base_run_snapshot
+    assert base_step.model_dump() == base_step_snapshot
+    assert db.exec(
+        select(IngestionEvent.id).where(IngestionEvent.run_id == base_run_id)
+    ).all() == [base_event.id]
     assert run.status == "published"
+    for act in acts:
+        added_run_id = release_entries(db, act.id)[0].ingestion_run_id
+        assert added_run_id is not None
+        added_run = db.get(IngestionRun, added_run_id)
+        assert added_run is not None and added_run.status == "published"
+        added_step = db.exec(
+            select(IngestionStep).where(
+                IngestionStep.run_id == added_run_id,
+                IngestionStep.stage == IngestionStage.PUBLISHING,
+            )
+        ).one()
+        assert added_step.status == IngestionStepStatus.SUCCEEDED
+        assert db.exec(
+            select(IngestionEvent.id).where(
+                IngestionEvent.run_id == added_run_id,
+                IngestionEvent.event_type == "release_published",
+            )
+        ).one()
     assert old.pinned_release_id == base.id
     assert old.pinned_index_build_id == base_build.id
     assert db.get(CorpusRelease, base.id).status == CorpusReleaseStatus.RETIRED

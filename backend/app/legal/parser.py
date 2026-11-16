@@ -6,8 +6,7 @@ from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any, BinaryIO
 
-from app.core.config import settings
-from app.ingestion.blob_store import BlobStoreError, LocalBlobStore
+from app.ingestion.blob_store import BlobStoreError
 from app.legal.enums import ProvisionKind
 from app.legal.models import SourceDocument
 
@@ -29,7 +28,8 @@ _OATH_HEADINGS = {
 _ARRANGEMENT_RE = re.compile(r"\barrangement\s+of\s+(?:sections|provisions)\b", re.I)
 
 _CHAPTER_RE = re.compile(
-    r"^CHAPTER\s+([IVXLCDM]+|\d+|ONE|TWO|THREE|FOUR|FIVE|SIX|SEVEN|EIGHT|NINE)\b(?:\s*[-:]\s*(.*)|\s+(.*))?$", re.I
+    r"^CHAPTER\s+([IVXLCDM]+|\d+|ONE|TWO|THREE|FOUR|FIVE|SIX|SEVEN|EIGHT|NINE)\b(?:\s*[-:]\s*(.*)|\s+(.*))?$",
+    re.I,
 )
 _PART_RE = re.compile(
     r"^PART\s+([IVXLCDM]+|\d+|[A-Z])\b(?:\s*[-:]\s*(.*)|\s+(.*))?$", re.I
@@ -84,14 +84,15 @@ def legal_text_sha256(text: str) -> str:
 
 
 def extract_source_pages(source: SourceDocument) -> list[SourcePage]:
+    from app.ingestion.service import get_blob_store
+
     if not source.storage_key:
         raise ParserError("Source document does not have a stored file")
     if source.mime_type != "application/pdf":
         raise ParserError("Ingestion accepts PDF sources only")
 
-    store = LocalBlobStore(Path(settings.INGESTION_STORAGE_DIR))
     try:
-        with store.open_read(source.storage_key) as source_file:
+        with get_blob_store().open_read(source.storage_key) as source_file:
             return _extract_pdf_pages(source_file)
     except BlobStoreError as exc:
         raise ParserError("Source document storage key is invalid") from exc

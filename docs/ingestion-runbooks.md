@@ -84,6 +84,25 @@ Bucket: `${R2_BUCKET_NAME}`. Apply via Cloudflare dashboard or API
   keys off the same prefixes. There is intentionally no delete path for
   canonical source objects.
 
+## Local Compose review archive
+
+The private R2 archive keeps the original review paths and links. Database dumps
+stay in the local backup. Run these commands from `backend/` with the bucket's
+R2 credentials configured in the repository-root `.env`.
+
+```bash
+uv run python -m scripts.migrate_local_documents \
+  --manifest /path/to/archive.json fetch-archive-manifest SNAPSHOT_ID
+uv run python -m scripts.migrate_local_documents \
+  --manifest /path/to/archive.json lookup RELATIVE_REVIEW_PATH
+uv run python -m scripts.migrate_local_documents \
+  --manifest /path/to/archive.json restore /path/to/new-review-directory
+```
+
+To retrieve a single file, pass `--relative-path RELATIVE_REVIEW_PATH` to
+`restore` and provide a new destination filename. Both restore modes check
+file contents against the archive manifest.
+
 ## Rebuilding pgvector from PostgreSQL (source of truth)
 
 The V1 production backend is PostgreSQL + pgvector. Qdrant remains only as a

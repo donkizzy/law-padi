@@ -43,6 +43,39 @@ from app.legal.models import (
     SourcePage,
 )
 
+REVIEW_IMPORTER_VERSION = "statute-review-import-v2-explicit-roles"
+
+
+def page_role_proposals(
+    pages: list[dict[str, Any]],
+) -> dict[int, tuple[PageRole, str]] | None:
+    """Validate explicit provisional roles before any import writes.
+
+    Older artifacts may omit roles entirely. Once an artifact supplies a role
+    or reason, every page must supply both; never silently mix explicit evidence
+    with the legacy enactment-caption heuristic. These are proposals, not page
+    inclusion decisions or acceptance of legal wording.
+    """
+    if not any("role" in page or "role_reason" in page for page in pages):
+        return None
+    proposals: dict[int, tuple[PageRole, str]] = {}
+    for page in pages:
+        number = page["page_number"]
+        if number in proposals:
+            raise ValueError("Each explicit page role must occur exactly once")
+        raw_role = page.get("role")
+        if not isinstance(raw_role, str):
+            raise ValueError(f"Page {number} requires a valid explicit PageRole")
+        try:
+            role = PageRole(raw_role)
+        except ValueError:
+            raise ValueError(f"Page {number} requires a valid explicit PageRole")
+        reason = page.get("role_reason")
+        if not isinstance(reason, str) or not reason.strip():
+            raise ValueError(f"Page {number} requires an explicit role reason")
+        proposals[number] = (role, reason)
+    return proposals
+
 
 def stage_source(
     session: Session,
@@ -65,6 +98,7 @@ def stage_source(
         range(1, (source.page_count or 0) + 1)
     ):
         raise ValueError("Every source page must be retained exactly once for review")
+    explicit_roles = page_role_proposals(pages)
     runs = session.exec(
         select(IngestionRun).where(IngestionRun.source_document_id == source.id)
     ).all()
@@ -92,6 +126,12 @@ def stage_source(
                 "corpus_legal_status": "historical",
                 "review_import_sha256": artifact_sha256,
                 "review_import_parser_version": ACT_PARSER_VERSION,
+                "review_importer_version": REVIEW_IMPORTER_VERSION,
+                "review_import_page_role_strategy": (
+                    "explicit_provisional_roles"
+                    if explicit_roles is not None
+                    else "legacy_enactment_heuristic"
+                ),
                 "review_import_complete": False,
                 "provisional_page_boundaries": True,
                 "auto_approval_policy": {"enabled": False},
@@ -128,7 +168,9 @@ def stage_source(
                 page_number=page["page_number"],
             )
         row.role = (
-            PageRole.LEGAL_BODY
+            explicit_roles[page["page_number"]][0]
+            if explicit_roles is not None
+            else PageRole.LEGAL_BODY
             if body_started
             else PageRole.TABLE_OF_CONTENTS
             if page["page_number"] > 1
@@ -143,6 +185,15 @@ def stage_source(
             "preview_provisional": True,
             "coordinate_space": page.get("coordinate_space"),
             "ocr_confidence": page["confidence"],
+            **(
+                {
+                    "role_provisional": True,
+                    "role_source": "explicit_import_proposal",
+                    "role_reason": explicit_roles[page["page_number"]][1],
+                }
+                if explicit_roles is not None
+                else {}
+            ),
         }
         session.add(row)
         session.flush()
@@ -165,6 +216,7 @@ def stage_source(
             metadata={
                 "page_number": page["page_number"],
                 "provider_version": payload["version"],
+                "review_importer_version": REVIEW_IMPORTER_VERSION,
                 "review_status": "needs_review",
             },
         )

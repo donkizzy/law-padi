@@ -110,6 +110,41 @@ def test_r2_presigned_put_url_binds_content_type_and_sha256_metadata() -> None:
     assert "SECRET_TEST" not in upload_url
 
 
+def test_r2_put_if_absent_protects_existing_bytes() -> None:
+    transport = _R2MemoryTransport()
+    store = _store(transport)
+    key = "archive/local-compose/snapshot/file.txt"
+    assert store.put_if_absent(
+        key=key, content=b"first", content_type="text/plain", metadata={}
+    )
+    assert not store.put_if_absent(
+        key=key, content=b"second", content_type="text/plain", metadata={}
+    )
+    assert store.read_bytes(key) == b"first"
+    assert transport.requests[1].headers["if-none-match"] == "*"
+
+
+def test_r2_multipart_completion_keeps_create_only_semantics() -> None:
+    transport = _R2MemoryTransport()
+    store = _store(transport)
+    key = "runs/test/artifacts/embeddings/embeddings.json"
+    for index, body in enumerate((b"first", b"replacement")):
+        upload = store.create_multipart_upload(
+            key=key,
+            content_type="application/json",
+            part_count=1,
+            expires_in_seconds=60,
+        )
+        part = transport.browser_put_part(upload.parts[0].upload_url, body)
+        created = store.complete_multipart_upload_if_absent(
+            key=key,
+            upload_id=upload.upload_id,
+            parts=[CompletedMultipartUploadPart(1, part.headers["etag"])],
+        )
+        assert created == (index == 0)
+    assert b"".join(store.iter_read(key)) == b"first"
+
+
 def test_r2_multipart_upload_signs_parts_and_completes_with_sorted_etags() -> None:
     transport = _R2MemoryTransport()
     store = _store(transport)
@@ -219,6 +254,8 @@ class _R2MemoryTransport:
         if request.method == "PUT" and {"partNumber", "uploadId"} <= set(params):
             return self._put_multipart_part(request, params)
         if request.method == "POST" and "uploadId" in params:
+            if request.headers.get("if-none-match") == "*" and key in self.objects:
+                return httpx.Response(412)
             return self._complete_multipart(key, params)
         if request.method == "PUT":
             return self._put_object(request, key)

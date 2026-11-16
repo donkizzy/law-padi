@@ -3727,17 +3727,21 @@ def _publish_pgvector_release(
     build.updated_at = now
     promotion.status = ReleasePromotionStatus.SUCCEEDED
     promotion.completed_at = now
-    contributing_run_ids = set(
-        session.exec(
-            select(CorpusReleaseEntry.ingestion_run_id)
-            .where(
-                CorpusReleaseEntry.release_id == release.id,
-                col(CorpusReleaseEntry.ingestion_run_id).is_not(None),
-            )
-            .distinct()
-        ).all()
-    )
     composition = (release.validation_report or {}).get("composition")
+    contributing_runs = select(CorpusReleaseEntry.ingestion_run_id).where(
+        CorpusReleaseEntry.release_id == release.id,
+        col(CorpusReleaseEntry.ingestion_run_id).is_not(None),
+    )
+    if composition and previous_release is not None:
+        # Runs inherited from production already have their publication history.
+        carried_runs = select(CorpusReleaseEntry.ingestion_run_id).where(
+            CorpusReleaseEntry.release_id == previous_release.id,
+            col(CorpusReleaseEntry.ingestion_run_id).is_not(None),
+        )
+        contributing_runs = contributing_runs.where(
+            col(CorpusReleaseEntry.ingestion_run_id).not_in(carried_runs)
+        )
+    contributing_run_ids = set(session.exec(contributing_runs.distinct()).all())
     if composition:
         contributing_run_ids.add(uuid.UUID(composition["run_id"]))
     for run_id in contributing_run_ids:

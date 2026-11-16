@@ -178,6 +178,28 @@ class R2BlobStore:
                 )
             yield from response.iter_bytes(chunk_size=1024 * 1024)
 
+    def put_if_absent(
+        self,
+        *,
+        key: str,
+        content: bytes,
+        content_type: str,
+        metadata: Mapping[str, str],
+    ) -> bool:
+        """Create an exact key, leaving any existing object intact."""
+        response = self._request(
+            "PUT",
+            key,
+            headers={
+                **_metadata_headers(metadata),
+                "content-type": content_type,
+                "if-none-match": "*",
+            },
+            content=content,
+            expected_statuses={200, 412},
+        )
+        return response.status_code == 200
+
     def put_artifact(
         self,
         *,
@@ -299,6 +321,28 @@ class R2BlobStore:
         upload_id: str,
         parts: list[CompletedMultipartUploadPart],
     ) -> BlobHead:
+        self._complete_multipart_upload(key=key, upload_id=upload_id, parts=parts)
+        return self.head(key)
+
+    def complete_multipart_upload_if_absent(
+        self,
+        *,
+        key: str,
+        upload_id: str,
+        parts: list[CompletedMultipartUploadPart],
+    ) -> bool:
+        return self._complete_multipart_upload(
+            key=key, upload_id=upload_id, parts=parts, if_absent=True
+        )
+
+    def _complete_multipart_upload(
+        self,
+        *,
+        key: str,
+        upload_id: str,
+        parts: list[CompletedMultipartUploadPart],
+        if_absent: bool = False,
+    ) -> bool:
         if not parts:
             raise BlobStoreError("Multipart completion requires at least one part")
         root = ElementTree.Element("CompleteMultipartUpload")
@@ -309,14 +353,18 @@ class R2BlobStore:
             )
             ElementTree.SubElement(part_element, "ETag").text = part.etag
         payload = ElementTree.tostring(root, encoding="utf-8")
-        self._request(
+        headers = {"content-type": "application/xml"}
+        if if_absent:
+            headers["if-none-match"] = "*"
+        response = self._request(
             "POST",
             key,
             query={"uploadId": upload_id},
-            headers={"content-type": "application/xml"},
+            headers=headers,
             content=payload,
+            expected_statuses={200, 412} if if_absent else {200},
         )
-        return self.head(key)
+        return response.status_code == 200
 
     def abort_multipart_upload(self, *, key: str, upload_id: str) -> None:
         self._request(
