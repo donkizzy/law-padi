@@ -1,10 +1,16 @@
 name: "Conflict detector"
 on:
   push:
+    branches: [master]
   pull_request_target: # zizmor: ignore[dangerous-triggers]
     types: [synchronize]
 
 permissions: {}
+
+# Every run scans all open pull requests, so a newer run replaces an older one.
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
 
 jobs:
   main:

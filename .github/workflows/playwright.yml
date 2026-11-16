@@ -15,6 +15,10 @@ on:
 permissions:
   contents: read
 
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   changes:
     runs-on: ubuntu-latest
@@ -35,8 +39,15 @@ jobs:
           changed:
             - backend/**
             - frontend/**
-            - .env
+            - packages/**
+            - scripts/**
             - compose*.yml
+            - .env.example
+            - package.json
+            - bun.lock
+            - pyproject.toml
+            - backend/pyproject.toml
+            - uv.lock
             - .github/workflows/playwright.yml
 
   test-playwright:

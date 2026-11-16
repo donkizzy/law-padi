@@ -26,16 +26,15 @@ jobs:
           bun-version: 1.3.12
       - run: bun ci
       - name: Check frontend without modifying sources
-        run: bunx biome check --no-errors-on-unmatched --files-ignore-unknown=true src tests index.html vite.config.ts openapi-ts.config.ts
-        working-directory: frontend
+        run: bun run lint
       - name: Build the same-origin frontend
         run: |
           export VITE_BUILD_REVISION="$(python scripts/build_revision.py)"
           bun run --filter frontend build
         env:
           VITE_API_URL: ""
-      - name: Test the Cloudflare proxy
-        run: bun test deployment/cloudflare/worker.test.ts
+      - name: Test the Cloudflare proxy and public pages
+        run: bun test deployment/cloudflare/worker.test.ts deployment/cloudflare/public-pages.test.ts
 
   production-container:
     runs-on: ubuntu-latest

@@ -5,8 +5,13 @@ on:
     branches:
       - master
   pull_request:
+
 permissions:
   contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
 
 jobs:
   test-backend:
@@ -25,6 +30,11 @@ jobs:
         uses: astral-sh/setup-uv@20cfd1bf945f4377ade1205e4dbc17946fc9a30d # v10.0.1
         with:
           version: "latest-known"
+      # The OCR and page-rendering tests skip themselves when these are missing.
+      - name: Install OCR and PDF rendering tools
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends tesseract-ocr poppler-utils
       - name: Configure disposable CI services
         run: cp .env.example .env
       - name: Install locked dependencies
