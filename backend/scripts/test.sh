@@ -2,4 +2,4 @@
 
 set -e
 
-python scripts/test_runner.py
+python scripts/test_runner.py "$@"

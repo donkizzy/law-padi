@@ -79,11 +79,13 @@ ignore = [
 keep-runtime-typing = true
 
 [tool.coverage.run]
-source = ["app", "scripts"]
+source = ["app"]
 branch = true
+# Migrations are exercised by the migration tests in a subprocess, not measured here.
+omit = ["app/alembic/*"]
 
 [tool.coverage.report]
-fail_under = 73
+fail_under = 87
 show_missing = true
 sort = "-Cover"
 

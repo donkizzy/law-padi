@@ -59,6 +59,6 @@ jobs:
           include-hidden-files: true
           retention-days: 14
       - name: Coverage report
-        # App + scripts with branch coverage: measured 73.28%; HTML retained above.
-        run: uv run --frozen coverage report --fail-under=73
+        # Application code with branch coverage: measured 87.19%.
+        run: uv run --frozen coverage report --fail-under=87
         working-directory: backend
