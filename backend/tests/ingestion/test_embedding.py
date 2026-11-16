@@ -22,7 +22,7 @@ def test_query_and_corpus_embeddings_ignore_legacy_profile_endpoint(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     from app.api.routes.search import _query_embedding_provider
-    from app.ingestion.worker import _embedding_provider_for_profile
+    from app.ingestion.stages.embedding_profiles import embedding_provider_for_profile
     from app.legal.enums import EmbeddingProviderKind
     from app.legal.models import EmbeddingProfile
 
@@ -37,7 +37,7 @@ def test_query_and_corpus_embeddings_ignore_legacy_profile_endpoint(
         vector_dimensions=1024,
         configuration={"endpoint_url": "https://publisher.example.test/embed"},
     )
-    for factory in (_query_embedding_provider, _embedding_provider_for_profile):
+    for factory in (_query_embedding_provider, embedding_provider_for_profile):
         provider = factory(profile)
         assert isinstance(provider, HuggingFaceTeiEmbeddingProvider)
         assert provider.endpoint_url == endpoint

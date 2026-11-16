@@ -38,8 +38,8 @@ from app.ingestion.service import (
     start_embedding,
     validate_corpus_release,
 )
+from app.ingestion.stages.documents import retrieval_documents_payload
 from app.ingestion.storage import get_blob_store
-from app.ingestion.worker import _retrieval_documents_payload
 from app.legal.enums import (
     CorpusReleaseStatus,
     ExtractionCandidateStatus,
@@ -485,7 +485,7 @@ def test_composite_build_reuses_vectors_promotes_and_preserves_conversation_pins
             )
 
     monkeypatch.setattr(
-        "app.ingestion.worker._embedding_provider_for_profile",
+        "app.ingestion.stages.embedding.embedding_provider_for_profile",
         lambda _profile: Provider(),
     )
     release = compose_corpus_release(db, _body(members), actor)
@@ -642,7 +642,7 @@ def test_vector_reuse_requires_exact_inputs_and_retained_evidence(
     run = db.get(
         IngestionRun, uuid.UUID(release.validation_report["composition"]["run_id"])
     )
-    documents = _retrieval_documents_payload(db, run, release.id)["documents"]
+    documents = retrieval_documents_payload(db, run, release.id)["documents"]
     profile = members[2]
     assert len(member_document_vectors(db, release, profile, documents)) == 3
     if defect == "text":

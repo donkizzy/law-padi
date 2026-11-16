@@ -18,15 +18,15 @@ from app.ingestion.extraction import NATIVE_PDF_EXTRACTOR_VERSION, NativePdfExtr
 from app.ingestion.normalization import legacy_hyphen_loss_matches, normalize_page_text
 from app.ingestion.runtime.queue import append_run_event
 from app.ingestion.service import decide_review_candidate, update_review_candidate
+from app.ingestion.stages.candidates import (
+    upsert_candidate,
+    validate_candidate_for_review,
+)
+from app.ingestion.stages.source_spans import ancestor_headings
 from app.ingestion.text_alignment import (
     aligned_source_spans,
     compact_text,
     unique_text_range,
-)
-from app.ingestion.worker import (
-    _ancestor_headings,
-    _upsert_candidate,
-    _validate_candidate_for_review,
 )
 from app.legal.enums import (
     ExtractionCandidateStatus,
@@ -305,16 +305,16 @@ def repair_run(
                 reviewer,
             )
         for node, aligned in restored_proposals:
-            candidate = _upsert_candidate(
+            candidate = upsert_candidate(
                 session,
                 run=run,
                 source=source,
                 node=node,
                 parent_candidate=by_path.get(node.parent_path or ""),
-                ancestor_headings=_ancestor_headings(node.parent_path, node_by_path),
+                ancestor_headings=ancestor_headings(node.parent_path, node_by_path),
                 source_spans=aligned,
             )
-            _validate_candidate_for_review(session, candidate)
+            validate_candidate_for_review(session, candidate)
             session.commit()
     report["summary"] = {
         name: len(report[name])

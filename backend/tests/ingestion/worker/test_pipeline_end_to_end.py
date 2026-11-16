@@ -225,7 +225,7 @@ def test_api_upload_worker_publish_and_production_search_end_to_end(
             )
 
     monkeypatch.setattr(
-        "app.ingestion.worker._embedding_provider_for_profile",
+        "app.ingestion.stages.embedding.embedding_provider_for_profile",
         lambda _profile: FakeEmbeddingProvider(),
     )
     monkeypatch.setattr(

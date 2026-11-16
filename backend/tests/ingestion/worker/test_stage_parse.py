@@ -5,9 +5,9 @@ import pytest
 from sqlmodel import Session, select
 
 from app.core.config import settings
+from app.ingestion.normalization import NORMALIZER_VERSION
 from app.ingestion.runtime.queue import enqueue_task
 from app.ingestion.runtime.runner import run_until_idle
-from app.ingestion.worker import NORMALIZER_VERSION
 from app.legal.enums import (
     ExtractionCandidateStatus,
     IngestionArtifactType,

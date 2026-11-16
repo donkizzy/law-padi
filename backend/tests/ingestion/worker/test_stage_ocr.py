@@ -33,7 +33,7 @@ def test_worker_local_ocr_artifact_feeds_normalization(
 ) -> None:
     monkeypatch.setattr(settings, "INGESTION_STORAGE_DIR", str(tmp_path))
     monkeypatch.setattr(
-        "app.ingestion.worker.render_page_thumbnail",
+        "app.ingestion.stages.pages.render_page_thumbnail",
         lambda _content, *, page_number, scale_to=1600: RenderedPageThumbnail(
             page_number=page_number,
             content=b"\x89PNG\r\n\x1a\nfake",
@@ -74,7 +74,7 @@ def test_worker_local_ocr_artifact_feeds_normalization(
             )
 
     monkeypatch.setattr(
-        "app.ingestion.worker.TesseractOcrProvider",
+        "app.ingestion.stages.pages.TesseractOcrProvider",
         lambda: FakeLocalOcrProvider(),
     )
     pdf = _pdf_with_pages([f"Scanned placeholder {uuid.uuid4().hex}"])
@@ -137,7 +137,7 @@ def test_worker_managed_ocr_replaces_low_confidence_local_ocr(
 ) -> None:
     monkeypatch.setattr(settings, "INGESTION_STORAGE_DIR", str(tmp_path))
     monkeypatch.setattr(
-        "app.ingestion.worker.render_page_thumbnail",
+        "app.ingestion.stages.pages.render_page_thumbnail",
         lambda _content, *, page_number, scale_to=1600: RenderedPageThumbnail(
             page_number=page_number,
             content=b"\x89PNG\r\n\x1a\nfake",
@@ -198,11 +198,11 @@ def test_worker_managed_ocr_replaces_low_confidence_local_ocr(
             )
 
     monkeypatch.setattr(
-        "app.ingestion.worker.TesseractOcrProvider",
+        "app.ingestion.stages.pages.TesseractOcrProvider",
         lambda: FakeLocalOcrProvider(),
     )
     monkeypatch.setattr(
-        "app.ingestion.worker.managed_ocr_provider_from_settings",
+        "app.ingestion.stages.pages.managed_ocr_provider_from_settings",
         lambda: FakeManagedOcrProvider(),
     )
     pdf = _pdf_with_pages([f"Scanned placeholder {uuid.uuid4().hex}"])

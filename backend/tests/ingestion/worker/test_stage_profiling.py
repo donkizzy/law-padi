@@ -6,7 +6,7 @@ from sqlmodel import Session, select
 
 from app.core.config import settings
 from app.ingestion.runtime.runner import run_until_idle
-from app.ingestion.worker import handle_profiling
+from app.ingestion.stages.pages import handle_profiling
 from app.legal.enums import (
     IngestionArtifactType,
     IngestionRunStatus,

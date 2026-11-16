@@ -11,7 +11,9 @@ from app.ingestion.blob_store import LocalBlobStore
 from app.ingestion.runtime.errors import IngestionWorkerError
 from app.ingestion.runtime.queue import enqueue_task
 from app.ingestion.runtime.runner import run_once, run_until_idle
-from app.ingestion.worker import _upsert_historical_version_from_candidate
+from app.ingestion.stages.materialize_versions import (
+    upsert_historical_version_from_candidate,
+)
 from app.legal.enums import (
     CorpusReleaseStatus,
     ExtractionCandidateStatus,
@@ -250,7 +252,7 @@ def test_historical_materialization_does_not_reuse_current_law(
     db.add(current)
     db.commit()
     with pytest.raises(IngestionWorkerError, match="separate provision identity"):
-        _upsert_historical_version_from_candidate(
+        upsert_historical_version_from_candidate(
             db,
             source=source,
             instrument=instrument,

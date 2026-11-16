@@ -20,8 +20,8 @@ from app.core.config import settings
 from app.core.db import engine
 from app.ingestion.runtime.queue import append_run_event, create_run_steps, enqueue_task
 from app.ingestion.runtime.runner import run_leased_task
+from app.ingestion.stages.artifacts import ensure_artifact
 from app.ingestion.storage import get_blob_store
-from app.ingestion.worker import _ensure_artifact
 from app.legal.act_parser import ACT_PARSER_VERSION
 from app.legal.enums import (
     IngestionArtifactType,
@@ -206,7 +206,7 @@ def stage_source(
             content_type="application/json",
             metadata={"source_sha256": source.sha256, "review_status": "needs_review"},
         )
-        _ensure_artifact(
+        ensure_artifact(
             session,
             run_id=run.id,
             source_page_id=row.id,
@@ -322,7 +322,7 @@ def stage_previews(session: Session, run: IngestionRun, folder: Path) -> None:
                 "review_status": "needs_review",
             },
         )
-        _ensure_artifact(
+        ensure_artifact(
             session,
             run_id=run.id,
             source_page_id=page.id,

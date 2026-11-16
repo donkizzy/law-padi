@@ -10,7 +10,7 @@ from app.ingestion.embedding import EmbeddingBatch
 from app.ingestion.pgvector_repository import dense_search, hybrid_search
 from app.ingestion.runtime.queue import enqueue_task
 from app.ingestion.runtime.runner import run_until_idle
-from app.ingestion.worker import handle_building_retrieval_documents
+from app.ingestion.stages.embedding import handle_building_retrieval_documents
 from app.legal.enums import (
     EmbeddingRunStatus,
     IngestionArtifactType,
@@ -69,7 +69,7 @@ def test_worker_embeds_indexes_and_validates_pgvector_dataset(
             )
 
     monkeypatch.setattr(
-        "app.ingestion.worker._embedding_provider_for_profile",
+        "app.ingestion.stages.embedding.embedding_provider_for_profile",
         lambda _profile: FakeEmbeddingProvider(),
     )
     run.status = IngestionRunStatus.READY_TO_EMBED

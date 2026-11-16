@@ -13,10 +13,10 @@ from app.ingestion.runtime.runner import run_once, run_until_idle
 from app.ingestion.service import (
     start_embedding,
 )
-from app.ingestion.worker import (
-    _benchmark_dataset_for_embedding_profiles,
-    _embed_with_checkpoints,
-    handle_embedding,
+from app.ingestion.stages.embedding import handle_embedding
+from app.ingestion.stages.embedding_checkpoints import embed_with_checkpoints
+from app.ingestion.stages.embedding_profiles import (
+    benchmark_dataset_for_embedding_profiles,
 )
 from app.legal.enums import (
     EmbeddingProviderKind,
@@ -86,7 +86,7 @@ def test_active_embedding_profiles_must_share_one_persisted_benchmark_dataset(
     db.commit()
 
     release = CorpusRelease(version=f"draft-{uuid.uuid4().hex}")
-    recorded, queries = _benchmark_dataset_for_embedding_profiles(
+    recorded, queries = benchmark_dataset_for_embedding_profiles(
         db, [openai_profile, bge_profile], release
     )
     assert recorded == dataset_version
@@ -98,7 +98,7 @@ def test_active_embedding_profiles_must_share_one_persisted_benchmark_dataset(
     db.add(bge_profile)
     db.commit()
     with pytest.raises(IngestionWorkerError, match="same benchmark dataset"):
-        _benchmark_dataset_for_embedding_profiles(
+        benchmark_dataset_for_embedding_profiles(
             db, [openai_profile, bge_profile], release
         )
 
@@ -158,7 +158,7 @@ def test_embedding_benchmark_grades_each_release_instrument_with_its_own_dataset
 
     # An Act in the release without its own benchmark cannot be graded.
     with pytest.raises(IngestionWorkerError, match=f"{act.slug} needs exactly one"):
-        _benchmark_dataset_for_embedding_profiles(db, [profile], release)
+        benchmark_dataset_for_embedding_profiles(db, [profile], release)
 
     act_version_name = f"act-golden-{uuid.uuid4().hex[:8]}"
     _create_retrieval_benchmark_dataset(
@@ -168,9 +168,7 @@ def test_embedding_benchmark_grades_each_release_instrument_with_its_own_dataset
         instrument_slug=act.slug,
     )
 
-    recorded, queries = _benchmark_dataset_for_embedding_profiles(
-        db, [profile], release
-    )
+    recorded, queries = benchmark_dataset_for_embedding_profiles(db, [profile], release)
 
     by_slug = {act.slug: act_version_name, constitution.slug: pinned_version}
     expected = [by_slug[slug] for slug in sorted(by_slug)]
@@ -217,13 +215,11 @@ def test_embedding_run_records_every_benchmark_of_a_composite_release(
         instrument_slug=constitution.slug,
     )
     monkeypatch.setattr(
-        "app.ingestion.worker._benchmark_versions_for_release",
+        "app.ingestion.stages.embedding_profiles.benchmark_versions_for_release",
         lambda *_args: versions,
     )
 
-    recorded, queries = _benchmark_dataset_for_embedding_profiles(
-        db, [profile], release
-    )
+    recorded, queries = benchmark_dataset_for_embedding_profiles(db, [profile], release)
 
     assert recorded == "+".join(versions)
     assert len(recorded) > 128
@@ -239,10 +235,11 @@ def test_embedding_run_records_every_benchmark_of_a_composite_release(
     assert embedding_run.benchmark_dataset_version == recorded
 
     monkeypatch.setattr(
-        "app.ingestion.worker.RECORDED_BENCHMARK_VERSIONS_MAX_LENGTH", len(recorded) - 1
+        "app.ingestion.stages.embedding_profiles.RECORDED_BENCHMARK_VERSIONS_MAX_LENGTH",
+        len(recorded) - 1,
     )
     with pytest.raises(IngestionWorkerError, match="too long to record"):
-        _benchmark_dataset_for_embedding_profiles(db, [profile], release)
+        benchmark_dataset_for_embedding_profiles(db, [profile], release)
 
 
 def test_worker_requires_persisted_embedding_benchmark_dataset(
@@ -260,7 +257,7 @@ def test_worker_requires_persisted_embedding_benchmark_dataset(
             raise AssertionError("Embedding provider should not run without a dataset")
 
     monkeypatch.setattr(
-        "app.ingestion.worker._embedding_provider_for_profile",
+        "app.ingestion.stages.embedding.embedding_provider_for_profile",
         lambda _profile: UnexpectedEmbeddingProvider(),
     )
     run.status = IngestionRunStatus.READY_TO_EMBED
@@ -321,7 +318,7 @@ def test_embedding_rejects_active_profile_without_pinned_revision(
         raise AssertionError("Provider must not run without a pinned revision")
 
     monkeypatch.setattr(
-        "app.ingestion.worker._embedding_provider_for_profile",
+        "app.ingestion.stages.embedding.embedding_provider_for_profile",
         _unexpected_provider,
     )
     run.status = IngestionRunStatus.READY_TO_EMBED
@@ -403,7 +400,7 @@ def test_embedding_honors_configured_batch_size(
             )
 
     monkeypatch.setattr(
-        "app.ingestion.worker._embedding_provider_for_profile",
+        "app.ingestion.stages.embedding.embedding_provider_for_profile",
         lambda _profile: RecordingEmbeddingProvider(),
     )
     run.status = IngestionRunStatus.READY_TO_EMBED
@@ -513,7 +510,7 @@ def test_embedding_can_be_rescored_after_its_benchmark_result_changes(
             )
 
     monkeypatch.setattr(
-        "app.ingestion.worker._embedding_provider_for_profile",
+        "app.ingestion.stages.embedding.embedding_provider_for_profile",
         lambda _profile: FakeEmbeddingProvider(),
     )
     item = db.exec(
@@ -597,11 +594,11 @@ def test_embedding_retry_reuses_completed_batches_and_invalidates_changed_inputs
         "kind": "documents",
     }
     with pytest.raises(RuntimeError, match="provider timeout"):
-        _embed_with_checkpoints(db, texts=["first", "second", "third"], **arguments)
-    batch = _embed_with_checkpoints(db, texts=["first", "second", "third"], **arguments)
+        embed_with_checkpoints(db, texts=["first", "second", "third"], **arguments)
+    batch = embed_with_checkpoints(db, texts=["first", "second", "third"], **arguments)
     assert calls == [["first"], ["second"], ["second"], ["third"]]
     assert len(batch.vectors) == 3
-    _embed_with_checkpoints(db, texts=["changed", "second", "third"], **arguments)
+    embed_with_checkpoints(db, texts=["changed", "second", "third"], **arguments)
     assert calls[-1] == ["changed"]
     assert len(calls) == 5
     assert embedding_run.metrics["documents_progress"]["completed"] == 3

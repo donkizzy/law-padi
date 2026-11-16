@@ -1,22 +1,24 @@
 from app.ingestion.runtime.errors import IngestionWorkerError
 from app.ingestion.runtime.types import StageHandler
-from app.ingestion.worker import (
+from app.ingestion.stages.embedding import (
     handle_building_retrieval_documents,
     handle_embedding,
-    handle_indexing,
+)
+from app.ingestion.stages.indexing import handle_indexing, handle_validating_index
+from app.ingestion.stages.materialize import handle_materializing
+from app.ingestion.stages.pages import (
     handle_local_ocr,
-    handle_malware_scan,
     handle_managed_ocr,
-    handle_materializing,
     handle_native_extraction,
     handle_normalizing,
-    handle_parsing_structure,
     handle_profiling,
     handle_rendering,
-    handle_validating_document,
-    handle_validating_index,
-    handle_verifying_upload,
 )
+from app.ingestion.stages.parsing import (
+    handle_parsing_structure,
+    handle_validating_document,
+)
+from app.ingestion.stages.upload import handle_malware_scan, handle_verifying_upload
 from app.legal.enums import (
     IngestionStage,
 )
