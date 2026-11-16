@@ -3,8 +3,8 @@ import asyncio
 import httpx
 import pytest
 
+from app.chat.llm.deepseek import DeepSeekClient
 from app.chat.prompts import explanation, verifier
-from app.chat.provider import DeepSeekClient
 from app.core.config import settings
 from scripts.chat_provider_simulator import app
 

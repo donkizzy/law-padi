@@ -7,8 +7,8 @@ from fastapi.testclient import TestClient
 from sqlmodel import Session
 
 from app.chat import translation, worker
+from app.chat.llm.protocol import ProviderError, ProviderResult
 from app.chat.prompts import judge, understanding
-from app.chat.provider import ProviderError, ProviderResult
 from app.chat.schemas import ExplanationAnswer, ExplanationBlock
 from app.core.config import settings
 from app.languages.codes import Language
@@ -130,7 +130,7 @@ def _ask(
         assert accepted.status_code == 202, accepted.text
         run_id = UUID(accepted.json()["run_id"])
         assert worker._claim_run("test-worker") == run_id
-        asyncio.run(worker.process_run(run_id, "test-worker", provider))  # type: ignore[arg-type]
+        asyncio.run(worker.process_run(run_id, "test-worker", provider))
     db.expire_all()
     run = db.get(GenerationRun, run_id)
     assert run is not None
@@ -507,7 +507,7 @@ def test_translation_deadline_preserves_verified_english(
             telemetry,
             timeout_seconds=0.001,
         )
-    )  # type: ignore[arg-type]
+    )
     assert answer.blocks[0].text == _ENGLISH_BLOCK
     assert answer.translation is None
     assert telemetry["translation"] == "fallback"

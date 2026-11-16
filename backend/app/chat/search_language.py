@@ -13,13 +13,13 @@ from collections import OrderedDict
 from collections.abc import Callable
 from dataclasses import dataclass
 from threading import Lock
-from typing import Any
 
 from sqlmodel import Session
 
 from app.chat.budget import SEARCH_UNDERSTANDING, BudgetExhausted, reserve, settle
+from app.chat.llm.deepseek import DeepSeekClient
+from app.chat.llm.protocol import ChatModel, JsonObject, ProviderError, ProviderResult
 from app.chat.prompts import understanding
-from app.chat.provider import DeepSeekClient, ProviderError, ProviderResult
 from app.chat.translation import (
     TranslationRejected,
     Understanding,
@@ -64,8 +64,8 @@ def clear_cache() -> None:
         _cache.clear()
 
 
-def _understand(query: str, provider: DeepSeekClient) -> Understanding | None:
-    payload: dict[str, Any] = {"question": query}
+def _understand(query: str, provider: ChatModel) -> Understanding | None:
+    payload: JsonObject = {"question": query}
     with Session(engine) as session:
         try:
             reservation = reserve(
@@ -114,7 +114,7 @@ def _understand(query: str, provider: DeepSeekClient) -> Understanding | None:
 
 def search_query(
     query: str,
-    provider: DeepSeekClient | None = None,
+    provider: ChatModel | None = None,
     *,
     may_translate: Callable[[], bool] | None = None,
 ) -> SearchQuery:

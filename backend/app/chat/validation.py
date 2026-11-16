@@ -2,8 +2,8 @@
 
 import re
 import uuid
-from typing import Any
 
+from app.chat.llm.protocol import JsonObject
 from app.chat.schemas import ExplanationDraft
 from app.legal.instruments import CONSTITUTION_SLUG, law_mentions
 from app.legal.references import (
@@ -191,7 +191,7 @@ def validate_draft(
     return failures
 
 
-def validate_verifier(value: dict[str, Any], *, block_count: int) -> set[int]:
+def validate_verifier(value: JsonObject, *, block_count: int) -> set[int]:
     """Validate the review shape; return indexes of unsupported blocks.
 
     An unsupported opening block, or one that does not answer the question as

@@ -8,15 +8,16 @@ import time
 import uuid
 from dataclasses import dataclass, field
 from datetime import timedelta
-from typing import Any
 
 from sqlmodel import Session, col, delete, select
 
 from app.chat import EXPLANATION_PROMPT_VERSION
-from app.chat.budget import BudgetExhausted, reserve, settle
+from app.chat.budget import BudgetExhausted
 from app.chat.events import emit_event
+from app.chat.llm import budgeted
+from app.chat.llm.deepseek import DeepSeekClient
+from app.chat.llm.protocol import ChatModel, JsonObject, ProviderError, ProviderResult
 from app.chat.prompts import explanation, verifier
-from app.chat.provider import DeepSeekClient, ProviderError, ProviderResult
 from app.chat.schemas import ExplanationAnswer, ExplanationDraft
 from app.chat.translation import TranslationRejected, translate_answer, understand
 from app.chat.validation import (
@@ -142,9 +143,9 @@ class Prepared:
     lookup: LegalSearchResponse
     selected: list[EvidenceItem]
     all_evidence: list[EvidenceItem]
-    prompt_evidence: list[dict[str, Any]]
+    prompt_evidence: list[JsonObject]
     too_large: bool
-    conversation_context: list[dict[str, Any]] = field(default_factory=list)
+    conversation_context: list[JsonObject] = field(default_factory=list)
     clarification_choices: list[str] = field(default_factory=list)
     related_laws: list[str] = field(default_factory=list)
     covered_laws: list[dict[str, str]] = field(default_factory=list)
@@ -164,7 +165,7 @@ def _notice(key: str, prepared: Prepared | None = None) -> str:
     return _with_coverage(_NOTICE[key], prepared)
 
 
-def _notice_fields(key: str, prepared: Prepared | None = None) -> dict[str, Any]:
+def _notice_fields(key: str, prepared: Prepared | None = None) -> JsonObject:
     """English notice plus the key and values a client needs to translate it."""
     laws = [law["label"] for law in prepared.covered_laws] if prepared else []
     return {
@@ -176,7 +177,7 @@ def _notice_fields(key: str, prepared: Prepared | None = None) -> dict[str, Any]
 
 def _conversation_context(
     session: Session, conversation_id: uuid.UUID, message: ConversationMessage
-) -> list[dict[str, Any]]:
+) -> list[JsonObject]:
     """Bound prior user facts and cited identities; never reuse old answer claims."""
     rows = session.exec(
         select(ConversationMessage)
@@ -191,7 +192,7 @@ def _conversation_context(
         )
         .limit(6)
     ).all()
-    context: list[dict[str, Any]] = []
+    context: list[JsonObject] = []
     for row in reversed(rows):
         if row.role == MessageRole.USER:
             context.append(
@@ -515,13 +516,13 @@ def _context(
     return result
 
 
-def _prompt_items(evidence: list[EvidenceItem]) -> list[dict[str, Any]]:
+def _prompt_items(evidence: list[EvidenceItem]) -> list[JsonObject]:
     """Represent contained text once while keeping each citation ID addressable."""
     ordered = sorted(
         evidence, key=lambda item: len(item.authoritative_text), reverse=True
     )
     included: list[EvidenceItem] = []
-    values: dict[str, dict[str, Any]] = {}
+    values: dict[str, JsonObject] = {}
     for item in ordered:
         container = next(
             (
@@ -575,7 +576,7 @@ def _shown_evidence(prepared: Prepared, cited_ids: set[str]) -> list[EvidenceIte
 _KEEP_MATCHES = 4
 
 
-def _prompt_bytes(base: dict[str, Any], prompt_evidence: list[dict[str, Any]]) -> int:
+def _prompt_bytes(base: JsonObject, prompt_evidence: list[JsonObject]) -> int:
     return len(
         json.dumps({**base, "evidence": prompt_evidence}, ensure_ascii=False).encode()
     )
@@ -584,9 +585,9 @@ def _prompt_bytes(base: dict[str, Any], prompt_evidence: list[dict[str, Any]]) -
 def _fit_prompt(
     selected: list[EvidenceItem],
     context: list[EvidenceItem],
-    base: dict[str, Any],
+    base: JsonObject,
     limit: int,
-) -> tuple[list[EvidenceItem], list[EvidenceItem], list[dict[str, Any]], int]:
+) -> tuple[list[EvidenceItem], list[EvidenceItem], list[JsonObject], int]:
     """Shrink the evidence packet to the budget instead of refusing the question.
 
     Broad questions pull in long sections, and refusing them looked like a
@@ -598,7 +599,7 @@ def _fit_prompt(
     selected = list(selected)
     context = list(context)
 
-    def measure() -> tuple[list[dict[str, Any]], int]:
+    def measure() -> tuple[list[JsonObject], int]:
         items = _prompt_items([*selected, *context])
         return items, _prompt_bytes(base, items)
 
@@ -926,92 +927,14 @@ def _emit_progress(run_id: uuid.UUID, event_type: str) -> None:
             session.commit()
 
 
-def _reserve_call(
-    run_id: uuid.UUID,
-    purpose: str,
-    system: str,
-    payload: dict[str, Any],
-    max_tokens: int,
-) -> uuid.UUID:
-    with Session(engine) as session:
-        run = session.exec(
-            select(GenerationRun).where(GenerationRun.id == run_id).with_for_update()
-        ).one()
-        if run.cancellation_requested or settings.CHAT_GENERATION_KILL_SWITCH:
-            raise asyncio.CancelledError
-        reservation = reserve(
-            session,
-            run_id=run_id,
-            purpose=purpose,
-            prompt_chars=len(system.encode())
-            + len(json.dumps(payload, ensure_ascii=False).encode())
-            + 128,
-            max_output_tokens=max_tokens,
-        )
-        run.provider_started_at = get_datetime_utc()
-        session.add(run)
-        session.commit()
-        return reservation.id
-
-
-def _settle_call(
-    reservation_id: uuid.UUID, result: ProviderResult | None, *, uncertain: bool
-) -> None:
-    with Session(engine) as session:
-        settle(
-            session,
-            reservation_id,
-            prompt_tokens=result.prompt_tokens if result else None,
-            completion_tokens=result.completion_tokens if result else None,
-            uncertain=uncertain,
-        )
-        session.commit()
-
-
-async def _call(
-    provider: DeepSeekClient,
-    run_id: uuid.UUID,
-    purpose: str,
-    system: str,
-    payload: dict[str, Any],
-    *,
-    max_tokens: int,
-    thinking: bool = False,
-) -> ProviderResult:
-    for attempt in range(2):
-        reservation_id = await asyncio.to_thread(
-            _reserve_call, run_id, purpose, system, payload, max_tokens
-        )
-        try:
-            result = await provider.complete_json(
-                system=system,
-                payload=payload,
-                max_tokens=max_tokens,
-                thinking=thinking,
-            )
-        except ProviderError as exc:
-            await asyncio.to_thread(
-                _settle_call, reservation_id, None, uncertain=exc.uncertain_charge
-            )
-            if exc.retryable and not exc.uncertain_charge and attempt == 0:
-                continue
-            raise
-        except BaseException:
-            await asyncio.to_thread(_settle_call, reservation_id, None, uncertain=True)
-            raise
-        await asyncio.to_thread(_settle_call, reservation_id, result, uncertain=False)
-        return result
-    raise ProviderError("DeepSeek request failed")
-
-
 def _finish(
     run_id: uuid.UUID,
     worker_id: str,
     answer: ExplanationAnswer,
     *,
     provider_result: ProviderResult | None = None,
-    validation: dict[str, Any] | None = None,
-    telemetry: dict[str, Any] | None = None,
+    validation: JsonObject | None = None,
+    telemetry: JsonObject | None = None,
 ) -> None:
     with Session(engine) as session:
         run = session.exec(
@@ -1149,10 +1072,10 @@ def _record_understanding(
 
 
 async def _reader_languages(
-    provider: DeepSeekClient,
+    provider: ChatModel,
     run_id: uuid.UUID,
     reader: ReaderQuestion,
-    telemetry: dict[str, Any],
+    telemetry: JsonObject,
 ) -> tuple[Language | None, Language]:
     """Return the question's language and the language to answer in.
 
@@ -1176,9 +1099,9 @@ async def _reader_languages(
         if not detection.confident:
 
             async def call(
-                purpose: str, system: str, payload: dict[str, Any], max_tokens: int
+                purpose: str, system: str, payload: JsonObject, max_tokens: int
             ) -> ProviderResult:
-                return await _call(
+                return await budgeted.call(
                     provider, run_id, purpose, system, payload, max_tokens=max_tokens
                 )
 
@@ -1204,20 +1127,20 @@ async def _reader_languages(
 
 
 async def _translate(
-    provider: DeepSeekClient,
+    provider: ChatModel,
     run_id: uuid.UUID,
     answer: ExplanationAnswer,
     language: Language,
-    telemetry: dict[str, Any],
+    telemetry: JsonObject,
     *,
     timeout_seconds: float = 60.0,
 ) -> None:
     """Attach a checked translation; on any failure the English answer stands."""
 
     async def call(
-        purpose: str, system: str, payload: dict[str, Any], max_tokens: int
+        purpose: str, system: str, payload: JsonObject, max_tokens: int
     ) -> ProviderResult:
-        return await _call(
+        return await budgeted.call(
             provider, run_id, purpose, system, payload, max_tokens=max_tokens
         )
 
@@ -1243,11 +1166,11 @@ async def _translate(
 
 
 async def process_run(
-    run_id: uuid.UUID, worker_id: str, provider: DeepSeekClient | None = None
+    run_id: uuid.UUID, worker_id: str, provider: ChatModel | None = None
 ) -> None:
     provider = provider or DeepSeekClient()
     started = time.perf_counter()
-    telemetry: dict[str, Any] = {}
+    telemetry: JsonObject = {}
     prepared: Prepared | None = None
     provider_result: ProviderResult | None = None
     validation_stage = "preparation"
@@ -1307,7 +1230,7 @@ async def process_run(
                     ),
                 )
             else:
-                payload: dict[str, Any] = {
+                payload: JsonObject = {
                     "question": prepared.question,
                     "previous_question": prepared.previous_question,
                     "conversation_context": prepared.conversation_context,
@@ -1335,7 +1258,7 @@ async def process_run(
                 for attempt in range(_DRAFT_ATTEMPTS):
                     try:
                         validation_stage = "generation"
-                        provider_result = await _call(
+                        provider_result = await budgeted.call(
                             provider,
                             run_id,
                             "generation",
@@ -1381,7 +1304,7 @@ async def process_run(
                         )
                         verification_started = time.perf_counter()
                         expected_verdict_count = len(draft.blocks)
-                        verdict = await _call(
+                        verdict = await budgeted.call(
                             provider,
                             run_id,
                             "verification",

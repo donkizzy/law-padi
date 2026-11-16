@@ -14,8 +14,8 @@ from functools import cache
 from pathlib import Path
 from typing import Any
 
+from app.chat.llm.protocol import JsonObject, ProviderResult
 from app.chat.prompts import judge, translation, understanding
-from app.chat.provider import ProviderResult
 from app.chat.schemas import AnswerTranslation, ExplanationAnswer, ExplanationBlock
 from app.languages.codes import DISPLAY_NAMES, Language, parse_language
 from app.languages.detect import detect
@@ -32,7 +32,7 @@ _HEADING = "What you can do:"
 _MIN_RATIO = 0.4
 _MAX_RATIO = 4.0
 
-Call = Callable[[str, str, dict[str, Any], int], Awaitable[ProviderResult]]
+Call = Callable[[str, str, JsonObject, int], Awaitable[ProviderResult]]
 
 
 class TranslationRejected(ValueError):
@@ -46,7 +46,7 @@ class Understanding:
 
 
 @cache
-def glossary(language: Language) -> tuple[str | None, tuple[dict[str, Any], ...]]:
+def glossary(language: Language) -> tuple[str | None, tuple[JsonObject, ...]]:
     path = _GLOSSARY_DIR / f"glossary-{language.value}.json"
     if not path.exists():
         return None, ()
@@ -70,7 +70,7 @@ def _relevant_terms(language: Language, text: str) -> dict[str, str]:
     return selected
 
 
-def parse_understanding(value: dict[str, Any], question: str) -> Understanding:
+def parse_understanding(value: JsonObject, question: str) -> Understanding:
     english = value.get("english_question")
     if not isinstance(english, str) or not english.strip():
         raise TranslationRejected("The English question is missing")
@@ -120,7 +120,7 @@ def _check_text(english: str, translated: str, language: Language) -> None:
 
 def check_translation(
     answer: ExplanationAnswer,
-    value: dict[str, Any],
+    value: JsonObject,
     language: Language,
     *,
     model: str,
@@ -158,7 +158,7 @@ def check_translation(
     )
 
 
-def check_judgment(value: dict[str, Any], count: int) -> None:
+def check_judgment(value: JsonObject, count: int) -> None:
     checks = value.get("checks")
     if not isinstance(checks, list) or len(checks) != count:
         raise TranslationRejected("The translation check is incomplete")
@@ -188,7 +188,7 @@ async def translate_answer(
         *answer.missing_facts,
         *answer.follow_up_questions,
     ]
-    payload: dict[str, Any] = {
+    payload: JsonObject = {
         "glossary": _relevant_terms(language, "\n".join(texts)),
         "blocks": [block.text for block in answer.blocks],
         "missing_facts": answer.missing_facts,

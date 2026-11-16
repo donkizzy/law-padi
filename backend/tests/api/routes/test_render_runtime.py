@@ -10,6 +10,7 @@ from fastapi.responses import StreamingResponse
 from fastapi.testclient import TestClient
 
 from app.chat import worker
+from app.chat.llm import budgeted
 from app.core.config import settings
 from app.deployment import render_app
 from app.main import app as api_app
@@ -153,7 +154,7 @@ def test_shutdown_awaits_uncertain_call_cleanup_and_never_claims_another_run(
             # Exercise the real charged-call cancellation path. Like process_run,
             # this adapter consumes cancellation after its settlement completes.
             try:
-                await worker._call(
+                await budgeted.call(
                     Provider(),  # type: ignore[arg-type]
                     run_id,
                     "generation",
@@ -166,10 +167,10 @@ def test_shutdown_awaits_uncertain_call_cleanup_and_never_claims_another_run(
 
         monkeypatch.setattr(worker, "_claim_run", claim)
         monkeypatch.setattr(worker, "process_run", process)
-        monkeypatch.setattr(worker, "_reserve_call", lambda *_args: uuid4())
+        monkeypatch.setattr(budgeted, "reserve_call", lambda *_args: uuid4())
         monkeypatch.setattr(
-            worker,
-            "_settle_call",
+            budgeted,
+            "settle_call",
             lambda *_args, uncertain: settlements.append(uncertain),
         )
         runtime = render_app.RequestWorker()

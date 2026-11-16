@@ -13,7 +13,7 @@ from fastapi.testclient import TestClient
 from sqlmodel import Session, select
 
 from app.chat import EXPLANATION_PROMPT_VERSION, worker
-from app.chat.provider import ProviderResult
+from app.chat.llm.protocol import ProviderResult
 from app.chat.schemas import ExplanationBlock, ExplanationDraft
 from app.chat.validation import EvidenceValidationError, validate_draft
 from app.core.config import settings

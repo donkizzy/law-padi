@@ -9,8 +9,10 @@ import httpx
 import pytest
 from sqlmodel import Session, delete
 
-from app.chat import budget, worker
-from app.chat.provider import DeepSeekClient, ProviderError
+from app.chat import budget
+from app.chat.llm import budgeted
+from app.chat.llm.deepseek import DeepSeekClient
+from app.chat.llm.protocol import ProviderError, ProviderResult
 from app.core.config import settings
 from app.core.db import engine, init_db
 from app.legal.enums import MessageRole
@@ -183,20 +185,20 @@ def test_uncertain_provider_failure_is_not_retried(
     settlements: list[bool] = []
 
     class UncertainProvider:
-        async def complete_json(self, **_kwargs: Any) -> None:
+        async def complete_json(self, **_kwargs: Any) -> ProviderResult:
             calls.append("provider")
             raise ProviderError("timeout", retryable=True, uncertain_charge=True)
 
-    monkeypatch.setattr(worker, "_reserve_call", lambda *_args: uuid4())
+    monkeypatch.setattr(budgeted, "reserve_call", lambda *_args: uuid4())
     monkeypatch.setattr(
-        worker,
-        "_settle_call",
+        budgeted,
+        "settle_call",
         lambda *_args, uncertain: settlements.append(uncertain),
     )
     with pytest.raises(ProviderError):
         asyncio.run(
-            worker._call(
-                UncertainProvider(),  # type: ignore[arg-type]
+            budgeted.call(
+                UncertainProvider(),
                 uuid4(),
                 "generation",
                 "system",

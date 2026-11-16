@@ -7,8 +7,8 @@ from sqlmodel import Session, select
 from app.api.routes import search
 from app.chat import search_language
 from app.chat.budget import BudgetExhausted
+from app.chat.llm.protocol import ProviderError, ProviderResult
 from app.chat.prompts import understanding
-from app.chat.provider import ProviderError, ProviderResult
 from app.core import rate_limit
 from app.core.config import settings
 from app.languages.codes import Language

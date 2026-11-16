@@ -1,29 +1,11 @@
 """HTTPX adapter for DeepSeek JSON completions."""
 
 import json
-from dataclasses import dataclass
-from typing import Any
 
 import httpx
 
+from app.chat.llm.protocol import JsonObject, ProviderError, ProviderResult
 from app.core.config import settings
-
-
-class ProviderError(RuntimeError):
-    def __init__(
-        self, message: str, *, retryable: bool = False, uncertain_charge: bool = False
-    ):
-        super().__init__(message)
-        self.retryable = retryable
-        self.uncertain_charge = uncertain_charge
-
-
-@dataclass(frozen=True)
-class ProviderResult:
-    value: dict[str, Any]
-    prompt_tokens: int
-    completion_tokens: int
-    model: str
 
 
 class DeepSeekClient:
@@ -34,7 +16,7 @@ class DeepSeekClient:
         self,
         *,
         system: str,
-        payload: dict[str, Any],
+        payload: JsonObject,
         max_tokens: int | None = None,
         thinking: bool = False,
     ) -> ProviderResult:
