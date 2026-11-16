@@ -1,4 +1,5 @@
 import asyncio
+from contextlib import contextmanager
 from typing import Any
 from uuid import UUID, uuid4
 
@@ -132,25 +133,16 @@ def test_review_worker_claims_only_the_requested_run(
         assert second is not None and second.status == "running"
 
 
-@pytest.mark.parametrize(
-    ("question", "supported", "fabricated", "expected"),
-    [
-        ("Section 37", True, False, "completed"),
-        ("Sections 37 and 168", True, False, "partial_evidence"),
-        ("Section 37", False, False, "validation_failed"),
-        ("Section 37", True, True, "validation_failed"),
-    ],
-)
-def test_worker_only_persists_validated_explanations(
-    corpus,
+@contextmanager
+def _validated_explanation(
     db: Session,
     monkeypatch: pytest.MonkeyPatch,
-    question: str,
-    supported: bool,
-    fabricated: bool,
+    *,
+    question: str = "Section 37",
+    supported: bool = True,
+    fabricated: bool = False,
     expected: str,
-) -> None:
-    assert corpus
+):
     monkeypatch.setattr(settings, "CHAT_ENABLED", True)
     monkeypatch.setattr(settings, "CHAT_GENERATION_ENABLED", True)
     provider = FakeProvider(supported=supported, fabricated=fabricated)
@@ -175,49 +167,84 @@ def test_worker_only_persists_validated_explanations(
         assert assistant.validation_result["retrieval_ms"] >= 0
         assert assistant.validation_result["total_ms"] >= 0
         assert assistant.validation_result["retrieval_fallback"] is False
-        if expected == "validation_failed":
-            assert assistant.content == ""
-            assert "The Constitution protects privacy." not in str(
-                assistant.answer_content
-            )
-            assert assistant.validation_result["failure_stage"] == (
-                "deterministic" if fabricated else "verification"
-            )
-            assert assistant.validation_result["expected_verdict_count"] == (
-                None if fabricated else 1
-            )
-            assert assistant.validation_result["failure_reason"] in {
-                "A block references fabricated evidence",
-                "Explanation was not supported by its cited evidence",
-            }
-        else:
-            assert assistant.content == "The Constitution protects privacy."
-            assert assistant.evidence_snapshot
-        if expected == "partial_evidence":
-            assert (
-                assistant.answer_content["citation_outcomes"][1]["status"] == "missing"
-            )
-        if expected == "completed":
-            assert provider.payloads[1]["blocks"][0]["index"] == 0
-            events = client.get(f"/api/v1/conversations/{conversation['id']}/events")
-            assert events.status_code == 200
-            assert "event: retrieval.complete" in events.text
-            assert "event: answer.complete" in events.text
-            assert events.text.index("event: retrieval.complete") < events.text.index(
-                "event: answer.complete"
-            )
-            assert "event: answer.delta" not in events.text
-            last_id = [
-                line.removeprefix("id: ")
-                for line in events.text.splitlines()
-                if line.startswith("id: ")
-            ][-1]
-            replay = client.get(
-                f"/api/v1/conversations/{conversation['id']}/events",
-                headers={"Last-Event-ID": last_id},
-            )
-            assert replay.status_code == 200
-            assert "event: answer.complete" not in replay.text
+        yield assistant, provider, client, conversation["id"]
+
+
+def test_worker_persists_completed_explanation(
+    corpus, db: Session, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    assert corpus
+    with _validated_explanation(db, monkeypatch, expected="completed") as (
+        assistant,
+        provider,
+        client,
+        conversation_id,
+    ):
+        assert assistant.content == "The Constitution protects privacy."
+        assert assistant.evidence_snapshot
+        assert provider.payloads[1]["blocks"][0]["index"] == 0
+        events = client.get(f"/api/v1/conversations/{conversation_id}/events")
+        assert events.status_code == 200
+        assert "event: retrieval.complete" in events.text
+        assert "event: answer.complete" in events.text
+        assert events.text.index("event: retrieval.complete") < events.text.index(
+            "event: answer.complete"
+        )
+        assert "event: answer.delta" not in events.text
+        last_id = [
+            line.removeprefix("id: ")
+            for line in events.text.splitlines()
+            if line.startswith("id: ")
+        ][-1]
+        replay = client.get(
+            f"/api/v1/conversations/{conversation_id}/events",
+            headers={"Last-Event-ID": last_id},
+        )
+        assert replay.status_code == 200
+        assert "event: answer.complete" not in replay.text
+
+
+def test_worker_persists_partial_explanation(
+    corpus, db: Session, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    assert corpus
+    with _validated_explanation(
+        db, monkeypatch, question="Sections 37 and 168", expected="partial_evidence"
+    ) as (assistant, _provider, _client, _conversation_id):
+        assert assistant.content == "The Constitution protects privacy."
+        assert assistant.evidence_snapshot
+        assert assistant.answer_content["citation_outcomes"][1]["status"] == "missing"
+
+
+@pytest.mark.parametrize(
+    ("supported", "fabricated", "failure_stage", "verdict_count"),
+    [(False, False, "verification", 1), (True, True, "deterministic", None)],
+)
+def test_worker_rejects_unvalidated_explanation(
+    corpus,
+    db: Session,
+    monkeypatch: pytest.MonkeyPatch,
+    supported: bool,
+    fabricated: bool,
+    failure_stage: str,
+    verdict_count: int | None,
+) -> None:
+    assert corpus
+    with _validated_explanation(
+        db,
+        monkeypatch,
+        supported=supported,
+        fabricated=fabricated,
+        expected="validation_failed",
+    ) as (assistant, _provider, _client, _conversation_id):
+        assert assistant.content == ""
+        assert "The Constitution protects privacy." not in str(assistant.answer_content)
+        assert assistant.validation_result["failure_stage"] == failure_stage
+        assert assistant.validation_result["expected_verdict_count"] == verdict_count
+        assert assistant.validation_result["failure_reason"] in {
+            "A block references fabricated evidence",
+            "Explanation was not supported by its cited evidence",
+        }
 
 
 def test_selected_ambiguous_identity_is_pinned_and_run_events_are_scoped(

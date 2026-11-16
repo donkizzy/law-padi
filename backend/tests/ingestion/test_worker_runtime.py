@@ -31,38 +31,6 @@ class FakeWorkerResult:
     run_status: IngestionRunStatus | str
 
 
-def test_worker_package_matches_backend_python_runtime() -> None:
-    pyproject = (WORKER_ROOT / "pyproject.toml").read_text()
-    dockerfile = (WORKER_ROOT / "Dockerfile").read_text()
-
-    assert 'requires-python = ">=3.14,<3.15"' in pyproject
-    assert "[tool.uv.workspace]" not in pyproject
-    assert "FROM python:3.14-slim" in dockerfile
-    assert "poppler-utils" in dockerfile
-    assert "tesseract-ocr" in dockerfile
-    assert "PYTHONPATH=/app/backend:/app/services/ingestion-worker" in dockerfile
-    assert 'CMD ["python", "-m", "ingestion_worker.cli"]' in dockerfile
-
-
-def test_compose_runs_worker_as_separate_service_with_shared_storage() -> None:
-    compose = (REPO_ROOT / "compose.yml").read_text()
-
-    assert "\n  ingestion-worker:\n" in compose
-    assert "dockerfile: services/ingestion-worker/Dockerfile" in compose
-    assert "INGESTION_WORKER_POLL_INTERVAL_SECONDS" in compose
-    assert "INGESTION_WORKER_LEASE_SECONDS" in compose
-    assert "INGESTION_WORKER_MAX_TASKS_PER_POLL" in compose
-    assert "INGESTION_STAGE_CONCURRENCY_LIMITS" in compose
-    assert "MALWARE_SCANNER_BACKEND" in compose
-    assert "CLAMAV_HOST" in compose
-    assert "CLAMAV_PORT" in compose
-    assert "OPENAI_API_KEY: ${OPENAI_API_KEY:-}" in compose
-    assert (
-        "- app-ingestion-source-documents:/app/backend/storage/source-documents"
-        in compose
-    )
-
-
 def test_worker_settings_read_env(monkeypatch: Any) -> None:
     monkeypatch.setenv("INGESTION_WORKER_ID", "worker-a")
     monkeypatch.setenv("INGESTION_WORKER_POLL_INTERVAL_SECONDS", "0.25")

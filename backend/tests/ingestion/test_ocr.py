@@ -1,4 +1,5 @@
 import json
+import os
 import shutil
 from io import BytesIO
 
@@ -35,11 +36,12 @@ def test_act_ocr_keeps_line_and_block_boundaries_including_quotes() -> None:
     assert _tesseract_line_text(tsv) == '9. "Search"\n(1) Synthetic\n10. Inventory'
 
 
-@pytest.mark.skipif(
-    not shutil.which("tesseract") or not shutil.which("pdftoppm"),
-    reason="Tesseract and Poppler are required for local OCR",
-)
 def test_tesseract_ocr_provider_extracts_text_confidence_and_coordinates() -> None:
+    if not shutil.which("tesseract") or not shutil.which("pdftoppm"):
+        reason = "Required OCR/rendering tools missing: tesseract, pdftoppm"
+        if os.environ.get("CI"):
+            pytest.fail(reason)
+        pytest.skip(reason)
     thumbnail = render_page_thumbnail(
         _pdf_with_text("37. Right to private and family life"),
         page_number=1,

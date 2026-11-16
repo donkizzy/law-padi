@@ -131,11 +131,12 @@ def test_golden_rotated_page_preserves_text() -> None:
 
 
 def test_golden_corrupt_pdf_rejected() -> None:
-    from pypdf.errors import PdfReadError
+    from app.ingestion.extraction import NativeExtractionError
 
-    with pytest.raises((PdfReadError, ValueError)):
-        PdfReader(BytesIO(b"not a pdf at all")).pages[0].extract_text()
-        raise ValueError("corrupt pdf rejected")
+    with pytest.raises(
+        NativeExtractionError, match="PDF could not be opened for extraction"
+    ):
+        NativePdfExtractor().extract(b"not a pdf at all")
 
 
 @pytest.mark.skipif(
@@ -245,7 +246,7 @@ def test_golden_synthetic_act_excerpt_preserves_pdf_structure(
 
 @pytest.mark.skipif(
     not os.environ.get("LAW_PADI_STATUTE_REVIEW_DIR"),
-    reason="Full scanned-Act gold check requires the retained PDFs and coordinate OCR review artifacts",
+    reason="Full scanned-Act gold check requires retained PDFs and coordinate OCR review artifacts outside the repository",
 )
 @pytest.mark.parametrize(
     "slug,filename,section_count,number,needle",

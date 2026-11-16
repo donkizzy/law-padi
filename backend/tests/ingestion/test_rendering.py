@@ -1,3 +1,4 @@
+import os
 import shutil
 from io import BytesIO
 
@@ -7,8 +8,12 @@ from pypdf import PdfWriter
 from app.ingestion.rendering import PdfRenderingError, render_page_thumbnail
 
 
-@pytest.mark.skipif(not shutil.which("pdftoppm"), reason="Poppler is not installed")
 def test_render_page_thumbnail_outputs_png_bytes() -> None:
+    if not shutil.which("pdftoppm"):
+        reason = "Required OCR/rendering tools missing: pdftoppm"
+        if os.environ.get("CI"):
+            pytest.fail(reason)
+        pytest.skip(reason)
     thumbnail = render_page_thumbnail(_pdf_bytes(), page_number=1, scale_to=160)
 
     assert thumbnail.page_number == 1
