@@ -16,6 +16,7 @@ import {
   clearDrafts,
   discardLegacyDrafts,
 } from "./hooks/useWorkspacePreferences"
+import { anySignal } from "./lib/abort"
 import { stopAccountSync } from "./lib/account-sync"
 import { cancelChatRequests } from "./lib/chat-navigation"
 import { initI18n } from "./lib/i18n"
@@ -58,7 +59,7 @@ client.instance.interceptors.request.use((config: SessionRequest) => {
     const signal = getSessionSignal()
     config.signal =
       config.signal instanceof AbortSignal
-        ? AbortSignal.any([config.signal, signal])
+        ? anySignal([config.signal, signal])
         : signal
   }
   return config
