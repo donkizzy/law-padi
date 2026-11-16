@@ -37,7 +37,6 @@ from app.ingestion.evaluation import (
 )
 from app.ingestion.pdf import PdfInspectionError, inspect_pdf_bytes
 from app.ingestion.pgvector_repository import validate_index_build
-from app.ingestion.qdrant import QdrantHttpIndexAdapter, QdrantIndexError
 from app.ingestion.r2_blob_store import R2BlobStore
 from app.ingestion.text_alignment import compact_text
 from app.ingestion.validation import has_unbalanced_punctuation
@@ -1648,9 +1647,7 @@ def compose_corpus_release(
         "unresolved_gates": [
             "retrieval_documents_pending",
             "selected_embedding_run_missing",
-            "ready_retrieval_index_build_missing"
-            if settings.RETRIEVAL_INDEX_BACKEND == "pgvector"
-            else "ready_vector_index_missing",
+            "ready_retrieval_index_build_missing",
         ],
     }
     session.add_all([release, run])
@@ -1798,27 +1795,17 @@ def validate_corpus_release(
             EmbeddingRun.status == EmbeddingRunStatus.SUCCEEDED,
         )
     ).first()
-    vector_index = None
     retrieval_index_build = None
     if embedding_run:
-        if settings.RETRIEVAL_INDEX_BACKEND == "pgvector":
-            retrieval_index_build = session.exec(
-                select(RetrievalIndexBuild)
-                .where(
-                    RetrievalIndexBuild.release_id == release.id,
-                    RetrievalIndexBuild.embedding_run_id == embedding_run.id,
-                    RetrievalIndexBuild.status == VectorIndexStatus.READY,
-                )
-                .order_by(col(RetrievalIndexBuild.updated_at).desc())
-            ).first()
-        else:
-            vector_index = session.exec(
-                select(VectorIndex).where(
-                    VectorIndex.release_id == release.id,
-                    VectorIndex.embedding_run_id == embedding_run.id,
-                    VectorIndex.status == VectorIndexStatus.READY,
-                )
-            ).first()
+        retrieval_index_build = session.exec(
+            select(RetrievalIndexBuild)
+            .where(
+                RetrievalIndexBuild.release_id == release.id,
+                RetrievalIndexBuild.embedding_run_id == embedding_run.id,
+                RetrievalIndexBuild.status == VectorIndexStatus.READY,
+            )
+            .order_by(col(RetrievalIndexBuild.updated_at).desc())
+        ).first()
     unresolved_gates: list[str] = []
     benchmark_item_count: int | None = None
     if not entries:
@@ -1850,17 +1837,12 @@ def validate_corpus_release(
         benchmark_item_count = sum(dataset_counts)
         if not dataset_counts or any(count <= 0 for count in dataset_counts):
             unresolved_gates.append("benchmark_dataset_missing_or_empty")
-    if settings.RETRIEVAL_INDEX_BACKEND == "pgvector":
-        if not retrieval_index_build:
-            unresolved_gates.append("ready_retrieval_index_build_missing")
-        else:
-            unresolved_gates.extend(
-                _retrieval_index_build_validation_gates(retrieval_index_build)
-            )
-    elif not vector_index:
-        unresolved_gates.append("ready_vector_index_missing")
+    if not retrieval_index_build:
+        unresolved_gates.append("ready_retrieval_index_build_missing")
     else:
-        unresolved_gates.extend(_vector_index_validation_gates(vector_index))
+        unresolved_gates.extend(
+            _retrieval_index_build_validation_gates(retrieval_index_build)
+        )
 
     release.validation_report = {
         **(release.validation_report or {}),
@@ -1870,7 +1852,7 @@ def validate_corpus_release(
             embedding_run.benchmark_dataset_version if embedding_run else None
         ),
         "benchmark_query_count": benchmark_item_count,
-        "ready_vector_index_id": str(vector_index.id) if vector_index else None,
+        "ready_vector_index_id": None,
         "ready_retrieval_index_build_id": (
             str(retrieval_index_build.id) if retrieval_index_build else None
         ),
@@ -2093,7 +2075,6 @@ def publish_corpus_release(
     current_user: User,
     superuser_override_reason: str | None,
 ) -> tuple[CorpusRelease, ReleasePromotionAttempt]:
-    current_user_id = current_user.id
     scope = _idempotency_scope("corpus_release.publish", release_id)
     request_hash = _idempotency_payload_hash(
         {
@@ -2153,116 +2134,26 @@ def publish_corpus_release(
                 "gates": quality_gates,
             },
         )
-    vector_index = None
-    if settings.RETRIEVAL_INDEX_BACKEND == "pgvector":
-        if not _ready_retrieval_index_build(session, release.id):
-            raise HTTPException(
-                status_code=status.HTTP_409_CONFLICT,
-                detail="Release does not have a ready pgvector index build",
-            )
-    else:
-        vector_index = _ready_vector_index(session, release.id)
-        if not vector_index:
-            raise HTTPException(
-                status_code=status.HTTP_409_CONFLICT,
-                detail="Release does not have a ready vector index",
-            )
+    if not _ready_retrieval_index_build(session, release.id):
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail="Release does not have a ready pgvector index build",
+        )
     _enforce_actor_separation(
         session,
         release,
         current_user,
         superuser_override_reason=superuser_override_reason,
     )
-    if settings.RETRIEVAL_INDEX_BACKEND == "pgvector":
-        return _publish_pgvector_release(
-            session,
-            release_id=release_id,
-            expected_version=expected_version,
-            current_user=current_user,
-            idempotency_scope=scope,
-            idempotency_key=idempotency_key,
-            idempotency_request_hash=request_hash,
-        )
-
-    assert vector_index is not None
-    previous_release = session.exec(
-        select(CorpusRelease).where(
-            CorpusRelease.status == CorpusReleaseStatus.PRODUCTION
-        )
-    ).first()
-    promotion = ReleasePromotionAttempt(
-        release_id=release.id,
-        vector_index_id=vector_index.id,
-        requested_by=current_user_id,
-        status=ReleasePromotionStatus.PUBLISHING,
-        previous_release_id=previous_release.id if previous_release else None,
-        previous_collection_name=_production_collection_name(session, previous_release),
-        target_collection_name=vector_index.collection_name,
-        started_at=get_datetime_utc(),
+    return _publish_pgvector_release(
+        session,
+        release_id=release_id,
+        expected_version=expected_version,
+        current_user=current_user,
+        idempotency_scope=scope,
+        idempotency_key=idempotency_key,
+        idempotency_request_hash=request_hash,
     )
-    session.add(promotion)
-    session.commit()
-    try:
-        _switch_qdrant_alias(
-            alias_name=vector_index.alias_name,
-            new_collection_name=vector_index.collection_name,
-            old_collection_name=promotion.previous_collection_name,
-        )
-    except Exception as exc:
-        _record_promotion_failure(
-            session,
-            promotion_id=promotion.id,
-            promotion_status=ReleasePromotionStatus.FAILED,
-            error_details={
-                "phase": "qdrant_alias_switch",
-                "error": str(exc),
-            },
-            rollback_completed=False,
-        )
-        raise HTTPException(
-            status_code=status.HTTP_502_BAD_GATEWAY,
-            detail="Qdrant alias switch failed; production release was not changed",
-        )
-
-    try:
-        _mark_release_production_in_db(
-            session,
-            previous_release=previous_release,
-            release=release,
-            vector_index=vector_index,
-            promotion=promotion,
-            current_user_id=current_user_id,
-            idempotency_scope=scope,
-            idempotency_key=idempotency_key,
-            idempotency_request_hash=request_hash,
-        )
-    except Exception as exc:
-        session.rollback()
-        rollback_completed, rollback_error = _rollback_qdrant_alias(
-            alias_name=vector_index.alias_name,
-            target_collection_name=vector_index.collection_name,
-            previous_collection_name=promotion.previous_collection_name,
-        )
-        _record_promotion_failure(
-            session,
-            promotion_id=promotion.id,
-            promotion_status=ReleasePromotionStatus.ROLLED_BACK
-            if rollback_completed
-            else ReleasePromotionStatus.FAILED,
-            error_details={
-                "phase": "database_promotion",
-                "error": str(exc),
-                "rollback_error": rollback_error,
-            },
-            rollback_completed=rollback_completed,
-        )
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Publication database update failed after Qdrant alias switch",
-        )
-    session.refresh(release)
-    session.refresh(promotion)
-    return release, promotion
 
 
 def user_has_admin_role(session: Session, user: User, role: AdminRole) -> bool:
@@ -3567,19 +3458,6 @@ def _complete_review_and_queue_materialization(
     )
 
 
-def _ready_vector_index(session: Session, release_id: uuid.UUID) -> VectorIndex | None:
-    indexes = session.exec(
-        select(VectorIndex).where(
-            VectorIndex.release_id == release_id,
-            VectorIndex.status == VectorIndexStatus.READY,
-        )
-    ).all()
-    for index in indexes:
-        if not _vector_index_validation_gates(index):
-            return index
-    return None
-
-
 def _ready_retrieval_index_build(
     session: Session, release_id: uuid.UUID
 ) -> RetrievalIndexBuild | None:
@@ -3815,213 +3693,6 @@ def _publish_pgvector_release(
     session.refresh(release)
     session.refresh(promotion)
     return release, promotion
-
-
-def _vector_index_validation_gates(vector_index: VectorIndex) -> list[str]:
-    gates: list[str] = []
-    report = vector_index.validation_report or {}
-    if vector_index.point_count <= 0:
-        gates.append("vector_index_has_no_points")
-    if not vector_index.payload_schema_hash:
-        gates.append("vector_index_payload_schema_hash_missing")
-    if not vector_index.checksum:
-        gates.append("vector_index_checksum_missing")
-    if not vector_index.profile_hash:
-        gates.append("vector_index_profile_hash_missing")
-    if report.get("is_valid") is not True:
-        gates.append("vector_index_local_validation_missing")
-    sparse_errors = report.get("sparse_errors")
-    if isinstance(sparse_errors, list) and sparse_errors:
-        gates.append("vector_index_sparse_validation_failed")
-    if report.get("remote_point_count") != vector_index.point_count:
-        gates.append("vector_index_remote_count_mismatch")
-    smoke_queries = report.get("smoke_queries")
-    if not isinstance(smoke_queries, list) or not smoke_queries:
-        gates.append("vector_index_smoke_queries_missing")
-    elif any(
-        not isinstance(query, dict) or query.get("passed") is not True
-        for query in smoke_queries
-    ):
-        gates.append("vector_index_smoke_queries_failed")
-    return gates
-
-
-def _production_collection_name(
-    session: Session, release: CorpusRelease | None
-) -> str | None:
-    if not release:
-        return None
-    vector_index = session.exec(
-        select(VectorIndex).where(
-            VectorIndex.release_id == release.id,
-            VectorIndex.status == VectorIndexStatus.PROMOTED,
-        )
-    ).first()
-    return vector_index.collection_name if vector_index else None
-
-
-def _mark_release_production_in_db(
-    session: Session,
-    *,
-    previous_release: CorpusRelease | None,
-    release: CorpusRelease,
-    vector_index: VectorIndex,
-    promotion: ReleasePromotionAttempt,
-    current_user_id: uuid.UUID,
-    idempotency_scope: str,
-    idempotency_key: str,
-    idempotency_request_hash: str,
-) -> None:
-    approved_at = get_datetime_utc()
-    if previous_release and previous_release.id != release.id:
-        previous_release.status = CorpusReleaseStatus.RETIRED
-        previous_release.lock_version += 1
-        session.add(previous_release)
-        session.flush()
-
-    release.status = CorpusReleaseStatus.PRODUCTION
-    release.approved_by = current_user_id
-    release.approved_at = approved_at
-    release.lock_version += 1
-    vector_index.status = VectorIndexStatus.PROMOTED
-    vector_index.updated_at = approved_at
-    promotion.status = ReleasePromotionStatus.SUCCEEDED
-    promotion.completed_at = approved_at
-    composition = (release.validation_report or {}).get("composition")
-    if composition:
-        run = _get_run(session, uuid.UUID(composition["run_id"]))
-        step = _get_run_step(session, run.id, IngestionStage.PUBLISHING)
-        run.status = IngestionRunStatus.PUBLISHED
-        run.current_stage = IngestionStage.PUBLISHING
-        run.completed_at = run.updated_at = approved_at
-        run.lock_version += 1
-        step.status = IngestionStepStatus.SUCCEEDED
-        step.completed_at = step.updated_at = approved_at
-        step.lock_version += 1
-        session.add_all([run, step])
-        append_run_event(
-            session,
-            run,
-            event_type="release_published",
-            message="Composite corpus release published",
-            step=step,
-            payload={"release_id": str(release.id)},
-            commit=False,
-        )
-    session.add(release)
-    session.add(vector_index)
-    session.add(promotion)
-    session.add(
-        AuditEvent(
-            actor_user_id=current_user_id,
-            action="corpus_release.publish",
-            entity_type="corpus_release",
-            entity_id=release.id,
-            severity=AuditSeverity.INFO,
-            payload={
-                "vector_index_id": str(vector_index.id),
-                "collection_name": vector_index.collection_name,
-            },
-        )
-    )
-    _add_idempotency_record(
-        session,
-        scope=idempotency_scope,
-        idempotency_key=idempotency_key,
-        request_hash=idempotency_request_hash,
-        result_type="release_promotion_attempt",
-        result_id=promotion.id,
-        created_by=current_user_id,
-    )
-    session.commit()
-
-
-def _rollback_qdrant_alias(
-    *,
-    alias_name: str,
-    target_collection_name: str,
-    previous_collection_name: str | None,
-) -> tuple[bool, str | None]:
-    try:
-        if previous_collection_name:
-            _switch_qdrant_alias(
-                alias_name=alias_name,
-                new_collection_name=previous_collection_name,
-                old_collection_name=target_collection_name,
-            )
-        else:
-            _delete_qdrant_alias(
-                alias_name=alias_name,
-                collection_name=target_collection_name,
-            )
-    except Exception as exc:
-        return False, str(exc)
-    return True, None
-
-
-def _record_promotion_failure(
-    session: Session,
-    *,
-    promotion_id: uuid.UUID,
-    promotion_status: ReleasePromotionStatus,
-    error_details: dict[str, object],
-    rollback_completed: bool,
-) -> None:
-    try:
-        promotion = session.get(ReleasePromotionAttempt, promotion_id)
-        if not promotion:
-            return
-        promotion.status = promotion_status
-        promotion.error_details = error_details
-        promotion.rollback_completed = rollback_completed
-        promotion.completed_at = get_datetime_utc()
-        session.add(promotion)
-        session.add(
-            AuditEvent(
-                actor_user_id=promotion.requested_by,
-                action="corpus_release.publish_failed",
-                entity_type="corpus_release",
-                entity_id=promotion.release_id,
-                severity=AuditSeverity.HIGH,
-                payload={
-                    "promotion_id": str(promotion.id),
-                    "status": promotion_status.value,
-                    "rollback_completed": rollback_completed,
-                    "error_details": error_details,
-                },
-            )
-        )
-        session.commit()
-    except Exception:
-        session.rollback()
-
-
-def _switch_qdrant_alias(
-    *,
-    alias_name: str,
-    new_collection_name: str,
-    old_collection_name: str | None,
-) -> None:
-    adapter = _qdrant_adapter()
-    adapter.switch_alias(
-        alias_name=alias_name,
-        new_collection_name=new_collection_name,
-        old_collection_name=old_collection_name,
-    )
-
-
-def _delete_qdrant_alias(*, alias_name: str, collection_name: str) -> None:
-    adapter = _qdrant_adapter()
-    adapter.delete_alias(alias_name=alias_name, collection_name=collection_name)
-
-
-def _qdrant_adapter() -> QdrantHttpIndexAdapter:
-    if not settings.QDRANT_URL:
-        raise QdrantIndexError("Qdrant URL is not configured")
-    return QdrantHttpIndexAdapter(
-        base_url=settings.QDRANT_URL,
-        api_key=settings.QDRANT_API_KEY,
-    )
 
 
 def _enforce_actor_separation(

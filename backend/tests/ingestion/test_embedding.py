@@ -10,7 +10,6 @@ from app.ingestion.embedding import (
     EmbeddingBenchmarkQuery,
     HuggingFaceTeiEmbeddingProvider,
     OpenAIEmbeddingProvider,
-    SparseLegalEncoder,
     batched_embed,
     evaluate_embedding_benchmark,
     select_best_embedding_run,
@@ -160,18 +159,6 @@ def test_batched_embed_preserves_order_across_batches() -> None:
     assert batch.vectors == [[10.0], [11.0], [20.0], [21.0], [30.0]]
     assert batch.metrics is not None
     assert batch.metrics["batched_batches"] == 3
-
-
-def test_sparse_legal_encoder_is_deterministic_and_normalized() -> None:
-    encoder = SparseLegalEncoder(dimensions=128)
-
-    first = encoder.encode(["Privacy privacy home"])[0]
-    second = encoder.encode(["Privacy privacy home"])[0]
-
-    assert first == second
-    assert len(first.indices) == len(first.values)
-    assert first.indices == sorted(first.indices)
-    assert round(sum(value * value for value in first.values), 4) == 1
 
 
 def test_evaluate_embedding_benchmark_computes_recall_and_ndcg_from_vectors() -> None:

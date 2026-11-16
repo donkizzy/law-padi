@@ -19,7 +19,6 @@ from app.ingestion.blob_store import LocalBlobStore
 from app.ingestion.embedding import EmbeddingBatch
 from app.ingestion.ocr import OcrPageInput, OcrPageResult, OcrWord
 from app.ingestion.pgvector_repository import dense_search, hybrid_search
-from app.ingestion.qdrant import QdrantPoint, QdrantSearchHit
 from app.ingestion.rendering import RenderedPageThumbnail
 from app.ingestion.service import (
     _release_source_and_review_gates,
@@ -89,7 +88,6 @@ from app.legal.models import (
     SourceDocument,
     SourcePage,
     SourceUpload,
-    VectorIndex,
 )
 from app.legal.parser import PARSER_VERSION, legal_text_sha256, normalize_legal_text
 from tests.utils.user import create_random_user
@@ -2018,14 +2016,22 @@ def test_embedding_run_records_every_benchmark_of_a_composite_release(
         _benchmark_dataset_for_embedding_profiles(db, [profile], release)
 
 
-def test_worker_embeds_indexes_and_validates_ready_vector_index(
+def test_worker_embeds_indexes_and_validates_pgvector_dataset(
     db: Session, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
-    monkeypatch.setattr(settings, "RETRIEVAL_INDEX_BACKEND", "qdrant")
+    monkeypatch.setattr(settings, "RETRIEVAL_INDEX_BACKEND", "pgvector")
     monkeypatch.setattr(settings, "INGESTION_STORAGE_DIR", str(tmp_path))
     source, run, release, profile = _release_with_retrieval_documents(
         db, tmp_path=tmp_path
     )
+    release.validation_report = {
+        "unresolved_gates": [
+            "ready_retrieval_index_build_missing",
+            "unrelated_review_gate",
+        ]
+    }
+    db.add(release)
+    db.commit()
 
     class FakeEmbeddingProvider:
         def embed(self, texts: list[str]) -> EmbeddingBatch:
@@ -2048,49 +2054,10 @@ def test_worker_embeds_indexes_and_validates_ready_vector_index(
                 metrics={"batch": "queries"},
             )
 
-    class FakeQdrantAdapter:
-        def __init__(self) -> None:
-            self.collection_name: str | None = None
-            self.point_count = 0
-            self.points: list[QdrantPoint] = []
-
-        def create_collection(
-            self, *, collection_name: str, vector_dimensions: int
-        ) -> None:
-            assert vector_dimensions == 1024
-            self.collection_name = collection_name
-
-        def upsert_points(
-            self, *, collection_name: str, points: list[QdrantPoint]
-        ) -> None:
-            assert collection_name == self.collection_name
-            self.point_count = len(points)
-            self.points = points
-
-        def read_point_count(self, *, collection_name: str) -> int:
-            assert collection_name == self.collection_name
-            return self.point_count
-
-        def search_points(
-            self, *, collection_name: str, vector: list[float], limit: int = 5
-        ) -> list[QdrantSearchHit]:
-            assert collection_name == self.collection_name
-            point = self.points[0]
-            assert point.vector == vector
-            return [
-                QdrantSearchHit(
-                    point_id=point.point_id,
-                    score=1.0,
-                    payload=point.payload,
-                )
-            ]
-
-    fake_qdrant = FakeQdrantAdapter()
     monkeypatch.setattr(
         "app.ingestion.worker._embedding_provider_for_profile",
         lambda _profile: FakeEmbeddingProvider(),
     )
-    monkeypatch.setattr("app.ingestion.worker._qdrant_adapter", lambda: fake_qdrant)
     run.status = IngestionRunStatus.READY_TO_EMBED
     run.current_stage = IngestionStage.EMBEDDING
     run.pipeline_config = {"auto_start_embedding": True}
@@ -2107,7 +2074,7 @@ def test_worker_embeds_indexes_and_validates_ready_vector_index(
         run=run,
         step=embedding_step,
         task_type=IngestionStage.EMBEDDING.value,
-        idempotency_key=f"{run.id}:embedding",
+        idempotency_key=f"{run.id}:pgvector-embedding",
         payload={"source_document_id": str(source.id), "release_id": str(release.id)},
     )
 
@@ -2125,7 +2092,6 @@ def test_worker_embeds_indexes_and_validates_ready_vector_index(
     assert release.embedding_model == "fake-large"
     assert release.embedding_model_version == "pinned-test"
     assert release.validation_report
-    assert release.validation_report["unresolved_gates"] == []
 
     embedding_run = db.exec(
         select(EmbeddingRun).where(
@@ -2162,96 +2128,6 @@ def test_worker_embeds_indexes_and_validates_ready_vector_index(
     assert artifact_payload["benchmark"]["recall_at_10"] == 1
     assert artifact_payload["benchmark"]["benchmark_query_count"] == 1
 
-    vector_index = db.exec(
-        select(VectorIndex).where(VectorIndex.release_id == release.id)
-    ).one()
-    assert vector_index.status == VectorIndexStatus.READY
-    assert vector_index.point_count == 1
-    assert vector_index.vector_dimensions == 1024
-    indexed_point = fake_qdrant.points[0]
-    assert vector_index.validation_report == {
-        "is_valid": True,
-        "duplicate_ids": [],
-        "dimension_errors": [],
-        "payload_errors": [],
-        "sparse_errors": [],
-        "remote_point_count": 1,
-        "smoke_queries": [
-            {
-                "expected_point_id": indexed_point.point_id,
-                "hit_ids": [indexed_point.point_id],
-                "matched_payload": True,
-                "passed": True,
-            }
-        ],
-    }
-    publishing_step = db.exec(
-        select(IngestionStep).where(
-            IngestionStep.run_id == run.id,
-            IngestionStep.stage == IngestionStage.PUBLISHING,
-        )
-    ).one()
-    assert publishing_step.status == IngestionStepStatus.BLOCKED
-
-
-def test_worker_embeds_indexes_and_validates_pgvector_dataset(
-    db: Session, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
-) -> None:
-    monkeypatch.setattr(settings, "RETRIEVAL_INDEX_BACKEND", "pgvector")
-    monkeypatch.setattr(settings, "INGESTION_STORAGE_DIR", str(tmp_path))
-    source, run, release, profile = _release_with_retrieval_documents(
-        db, tmp_path=tmp_path
-    )
-    release.validation_report = {
-        "unresolved_gates": [
-            "ready_retrieval_index_build_missing",
-            "unrelated_review_gate",
-        ]
-    }
-    db.add(release)
-    db.commit()
-
-    class FakeEmbeddingProvider:
-        def embed(self, texts: list[str]) -> EmbeddingBatch:
-            return EmbeddingBatch(
-                provider="fake",
-                model_name=profile.model_name,
-                model_revision=profile.model_revision,
-                vectors=[[1.0] + [0.0] * 1023 for _ in texts],
-                cost_usd=0.01 * len(texts),
-            )
-
-    monkeypatch.setattr(
-        "app.ingestion.worker._embedding_provider_for_profile",
-        lambda _profile: FakeEmbeddingProvider(),
-    )
-    run.status = IngestionRunStatus.READY_TO_EMBED
-    run.current_stage = IngestionStage.EMBEDDING
-    run.pipeline_config = {"auto_start_embedding": True}
-    db.add(run)
-    db.commit()
-    embedding_step = db.exec(
-        select(IngestionStep).where(
-            IngestionStep.run_id == run.id,
-            IngestionStep.stage == IngestionStage.EMBEDDING,
-        )
-    ).one()
-    enqueue_task(
-        db,
-        run=run,
-        step=embedding_step,
-        task_type=IngestionStage.EMBEDDING.value,
-        idempotency_key=f"{run.id}:pgvector-embedding",
-        payload={"source_document_id": str(source.id), "release_id": str(release.id)},
-    )
-
-    results = run_until_idle(db, worker_id="worker-test", max_tasks=3)
-
-    assert [result.stage for result in results] == [
-        IngestionStage.EMBEDDING,
-        IngestionStage.INDEXING,
-        IngestionStage.VALIDATING_INDEX,
-    ]
     build = db.exec(
         select(RetrievalIndexBuild).where(RetrievalIndexBuild.release_id == release.id)
     ).one()
@@ -2629,129 +2505,6 @@ def test_worker_requires_persisted_embedding_benchmark_dataset(
         )
     ).all()
     assert embedding_artifacts == []
-
-
-def test_worker_fails_vector_index_when_qdrant_smoke_query_misses_point(
-    db: Session, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
-) -> None:
-    monkeypatch.setattr(settings, "RETRIEVAL_INDEX_BACKEND", "qdrant")
-    monkeypatch.setattr(settings, "INGESTION_STORAGE_DIR", str(tmp_path))
-    source, run, release, profile = _release_with_retrieval_documents(
-        db, tmp_path=tmp_path
-    )
-
-    class FakeEmbeddingProvider:
-        def embed(self, texts: list[str]) -> EmbeddingBatch:
-            if texts == ["Section 37\nRight to private and family life"]:
-                return EmbeddingBatch(
-                    provider="fake",
-                    model_name=profile.model_name,
-                    model_revision=profile.model_revision,
-                    vectors=[[1.0] + [0.0] * 1023],
-                    metrics={"batch": "documents"},
-                )
-            assert texts == ["Which section protects privacy?"]
-            return EmbeddingBatch(
-                provider="fake",
-                model_name=profile.model_name,
-                model_revision=profile.model_revision,
-                vectors=[[1.0] + [0.0] * 1023],
-                metrics={"batch": "queries"},
-            )
-
-    class FakeQdrantAdapter:
-        def __init__(self) -> None:
-            self.collection_name: str | None = None
-            self.point_count = 0
-
-        def create_collection(
-            self, *, collection_name: str, vector_dimensions: int
-        ) -> None:
-            assert vector_dimensions == 1024
-            self.collection_name = collection_name
-
-        def upsert_points(
-            self, *, collection_name: str, points: list[QdrantPoint]
-        ) -> None:
-            assert collection_name == self.collection_name
-            self.point_count = len(points)
-
-        def read_point_count(self, *, collection_name: str) -> int:
-            assert collection_name == self.collection_name
-            return self.point_count
-
-        def search_points(
-            self, *, collection_name: str, vector: list[float], limit: int = 5
-        ) -> list[QdrantSearchHit]:
-            assert collection_name == self.collection_name
-            assert vector == [1.0] + [0.0] * 1023
-            return [
-                QdrantSearchHit(
-                    point_id="wrong-point",
-                    score=0.1,
-                    payload={"provision_version_id": "wrong-version"},
-                )
-            ]
-
-    monkeypatch.setattr(
-        "app.ingestion.worker._embedding_provider_for_profile",
-        lambda _profile: FakeEmbeddingProvider(),
-    )
-    monkeypatch.setattr(
-        "app.ingestion.worker._qdrant_adapter", lambda: FakeQdrantAdapter()
-    )
-    run.status = IngestionRunStatus.READY_TO_EMBED
-    run.current_stage = IngestionStage.EMBEDDING
-    run.pipeline_config = {"auto_start_embedding": True}
-    db.add(run)
-    db.commit()
-    embedding_step = db.exec(
-        select(IngestionStep).where(
-            IngestionStep.run_id == run.id,
-            IngestionStep.stage == IngestionStage.EMBEDDING,
-        )
-    ).one()
-    enqueue_task(
-        db,
-        run=run,
-        step=embedding_step,
-        task_type=IngestionStage.EMBEDDING.value,
-        idempotency_key=f"{run.id}:embedding-smoke-failure",
-        payload={"source_document_id": str(source.id), "release_id": str(release.id)},
-    )
-
-    embedding_result = run_once(db, worker_id="worker-test")
-    assert embedding_result is not None
-    assert embedding_result.stage == IngestionStage.EMBEDDING
-    indexing_task = db.exec(
-        select(IngestionTask).where(
-            IngestionTask.run_id == run.id,
-            IngestionTask.task_type == IngestionStage.INDEXING.value,
-        )
-    ).one()
-    indexing_task.max_attempts = 1
-    db.add(indexing_task)
-    db.commit()
-
-    indexing_result = run_once(db, worker_id="worker-test")
-
-    assert indexing_result is not None
-    assert indexing_result.stage == IngestionStage.INDEXING
-    db.refresh(run)
-    assert run.status == IngestionRunStatus.FAILED
-    vector_index = db.exec(
-        select(VectorIndex).where(VectorIndex.release_id == release.id)
-    ).one()
-    assert vector_index.status == VectorIndexStatus.FAILED
-    assert vector_index.validation_report
-    assert vector_index.validation_report["smoke_queries"] == [
-        {
-            "expected_point_id": "retrieval-doc-1",
-            "hit_ids": ["wrong-point"],
-            "matched_payload": False,
-            "passed": False,
-        }
-    ]
 
 
 def _stored_source_and_run(
@@ -3198,240 +2951,6 @@ def _escape_pdf_text(text: str) -> str:
 
 def _sha256(content: bytes) -> str:
     return hashlib.sha256(content).hexdigest()
-
-
-def test_vector_index_collection_is_immutable(db: Session) -> None:
-    from app.ingestion.worker import _vector_index_for_collection
-
-    release, other_release = (
-        CorpusRelease(
-            version=f"draft-aaa-{uuid.uuid4().hex[:8]}",
-            status=CorpusReleaseStatus.BUILDING,
-        ),
-        CorpusRelease(
-            version=f"draft-bbb-{uuid.uuid4().hex[:8]}",
-            status=CorpusReleaseStatus.BUILDING,
-        ),
-    )
-    db.add_all([release, other_release])
-    db.commit()
-    db.refresh(release)
-    db.refresh(other_release)
-    profile = EmbeddingProfile(
-        name=f"immutable-{uuid.uuid4().hex}",
-        provider=EmbeddingProviderKind.OPENAI,
-        model_name="text-embedding-3-large",
-        model_revision="pinned-rev",
-        vector_dimensions=1024,
-        configuration={},
-    )
-    db.add(profile)
-    db.commit()
-    db.refresh(profile)
-    run_a = EmbeddingRun(release_id=release.id, profile_id=profile.id)
-    run_b = EmbeddingRun(release_id=other_release.id, profile_id=profile.id)
-    db.add_all([run_a, run_b])
-    db.commit()
-    db.refresh(run_a)
-    db.refresh(run_b)
-
-    shared_name = f"ng_constitution_enacted_pinned_{uuid.uuid4().hex[:8]}"
-    _vector_index_for_collection(
-        db,
-        release=release,
-        embedding_run=run_a,
-        profile=profile,
-        collection_name=shared_name,
-        index_kind="enacted",
-        profile_hash="hash-a",
-    )
-    db.commit()
-
-    with pytest.raises(IngestionWorkerError, match="immutable"):
-        _vector_index_for_collection(
-            db,
-            release=other_release,
-            embedding_run=run_b,
-            profile=profile,
-            collection_name=shared_name,
-            index_kind="enacted",
-            profile_hash="hash-a",
-        )
-
-
-def test_qdrant_points_require_sparse_vectors() -> None:
-    from app.ingestion.worker import (
-        _qdrant_points_from_embedding_payload,
-    )
-
-    with pytest.raises(IngestionWorkerError, match="sparse"):
-        _qdrant_points_from_embedding_payload(
-            {
-                "documents": [
-                    {
-                        "id": "doc-1",
-                        "segment_id": "seg-1",
-                        "citation": "Section 1",
-                        "payload": {"canonical_path": "x"},
-                        "retrieval_text": "hello",
-                    }
-                ],
-                "dense_vectors": [[0.1, 0.2]],
-            }
-        )
-
-
-def test_index_kind_for_points_splits_proposals() -> None:
-    from app.ingestion.worker import _index_kind_for_points
-
-    def _point(status: str) -> QdrantPoint:
-        return QdrantPoint(
-            point_id=f"p-{status}-{uuid.uuid4().hex[:6]}",
-            vector=[0.1, 0.2],
-            payload={"legal_status": status},
-        )
-
-    assert _index_kind_for_points([_point("proposed")]) == "proposals"
-    assert _index_kind_for_points([_point("current")]) == "enacted"
-    assert _index_kind_for_points([_point("current"), _point("proposed")]) == "enacted"
-    assert _index_kind_for_points([]) == "enacted"
-
-
-def test_coerce_sparse_vector_rejects_invalid_payloads() -> None:
-    from app.ingestion.worker import (
-        _coerce_sparse_vector,
-        _qdrant_points_from_embedding_payload,
-    )
-
-    valid = _coerce_sparse_vector({"indices": [1, 7], "values": [0.5, 0.5]})
-    assert valid.indices == [1, 7]
-
-    with pytest.raises(IngestionWorkerError, match="Sparse vector"):
-        _coerce_sparse_vector({"indices": [1], "values": [0.5, 0.5]})
-    with pytest.raises(IngestionWorkerError, match="Sparse vector"):
-        _coerce_sparse_vector({"indices": [-1], "values": [0.5]})
-    with pytest.raises(IngestionWorkerError, match="Sparse vector"):
-        _coerce_sparse_vector(["not-a-dict"])  # type: ignore[arg-type]
-
-    with pytest.raises(IngestionWorkerError, match="counts do not match"):
-        _qdrant_points_from_embedding_payload(
-            {
-                "documents": [
-                    {
-                        "id": "doc-1",
-                        "segment_id": "seg-1",
-                        "citation": "Section 1",
-                        "payload": {"canonical_path": "x"},
-                    }
-                ],
-                "dense_vectors": [[0.1, 0.2], [0.3, 0.4]],
-                "sparse_vectors": [{"indices": [1], "values": [1.0]}],
-            }
-        )
-
-
-def test_vector_index_same_triple_rebuild_while_building_is_allowed(
-    db: Session,
-) -> None:
-    from app.ingestion.worker import _vector_index_for_collection
-
-    release = CorpusRelease(
-        version=f"draft-aaa-{uuid.uuid4().hex[:8]}", status=CorpusReleaseStatus.BUILDING
-    )
-    db.add(release)
-    db.commit()
-    db.refresh(release)
-    profile = EmbeddingProfile(
-        name=f"rebuild-{uuid.uuid4().hex}",
-        provider=EmbeddingProviderKind.OPENAI,
-        model_name="text-embedding-3-large",
-        model_revision="pinned-rev",
-        vector_dimensions=1024,
-        configuration={},
-    )
-    db.add(profile)
-    db.commit()
-    db.refresh(profile)
-    run = EmbeddingRun(release_id=release.id, profile_id=profile.id)
-    db.add(run)
-    db.commit()
-    db.refresh(run)
-    name_rebuild = f"ng_constitution_enacted_rebuild_{uuid.uuid4().hex[:8]}"
-
-    first = _vector_index_for_collection(
-        db,
-        release=release,
-        embedding_run=run,
-        profile=profile,
-        collection_name=name_rebuild,
-        index_kind="enacted",
-        profile_hash="hash-a",
-    )
-    db.commit()
-    second = _vector_index_for_collection(
-        db,
-        release=release,
-        embedding_run=run,
-        profile=profile,
-        collection_name=name_rebuild,
-        index_kind="enacted",
-        profile_hash="hash-a",
-    )
-
-    assert first.id == second.id
-    assert second.profile_hash == "hash-a"
-    assert second.index_kind == "enacted"
-
-
-def test_vector_index_refuses_rebuild_of_ready_collection(db: Session) -> None:
-    from app.ingestion.worker import _vector_index_for_collection
-
-    release = CorpusRelease(
-        version=f"draft-bbb-{uuid.uuid4().hex[:8]}", status=CorpusReleaseStatus.BUILDING
-    )
-    db.add(release)
-    db.commit()
-    db.refresh(release)
-    profile = EmbeddingProfile(
-        name=f"ready-{uuid.uuid4().hex}",
-        provider=EmbeddingProviderKind.OPENAI,
-        model_name="text-embedding-3-large",
-        model_revision="pinned-rev",
-        vector_dimensions=1024,
-        configuration={},
-    )
-    db.add(profile)
-    db.commit()
-    db.refresh(profile)
-    run = EmbeddingRun(release_id=release.id, profile_id=profile.id)
-    db.add(run)
-    db.commit()
-    db.refresh(run)
-    name_ready = f"ng_constitution_enacted_ready_{uuid.uuid4().hex[:8]}"
-
-    index = _vector_index_for_collection(
-        db,
-        release=release,
-        embedding_run=run,
-        profile=profile,
-        collection_name=name_ready,
-        index_kind="enacted",
-        profile_hash="hash-a",
-    )
-    index.status = VectorIndexStatus.READY
-    db.add(index)
-    db.commit()
-
-    with pytest.raises(IngestionWorkerError, match="already ready"):
-        _vector_index_for_collection(
-            db,
-            release=release,
-            embedding_run=run,
-            profile=profile,
-            collection_name=name_ready,
-            index_kind="enacted",
-            profile_hash="hash-a",
-        )
 
 
 def test_embedding_rejects_active_profile_without_pinned_revision(

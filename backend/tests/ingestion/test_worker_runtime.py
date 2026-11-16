@@ -56,7 +56,6 @@ def test_compose_runs_worker_as_separate_service_with_shared_storage() -> None:
     assert "MALWARE_SCANNER_BACKEND" in compose
     assert "CLAMAV_HOST" in compose
     assert "CLAMAV_PORT" in compose
-    assert "QDRANT_URL: ${QDRANT_URL:-}" in compose
     assert "OPENAI_API_KEY: ${OPENAI_API_KEY:-}" in compose
     assert (
         "- app-ingestion-source-documents:/app/backend/storage/source-documents"

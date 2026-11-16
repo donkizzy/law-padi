@@ -17,6 +17,12 @@ from app import crud
 from app.core.config import settings
 from app.core.db import engine
 from app.ingestion import LocalBlobStore, MultipartUpload, MultipartUploadPartUrl
+from app.ingestion.pgvector_repository import (
+    validate_index_build,
+    write_embeddings,
+    write_segments,
+)
+from app.ingestion.retrieval import build_retrieval_documents
 from app.ingestion.service import update_page_selection
 from app.ingestion.worker import run_until_idle
 from app.ingestion.workflow import append_run_event, create_run_steps
@@ -69,6 +75,7 @@ from app.legal.models import (
     Provision,
     ProvisionVersion,
     ReleasePromotionAttempt,
+    RetrievalIndexBuild,
     ReviewDecisionRecord,
     ReviewIssue,
     SourceDocument,
@@ -192,7 +199,7 @@ def test_admin_alerts_surface_dashboard_only_operational_failures(
         message="Candidate requires source-span verification.",
         evidence={"page": 2},
     )
-    release, vector_index = _release_bundle(db, uploader=admin)
+    release, build = _release_bundle(db, uploader=admin)
     failed_profile = EmbeddingProfile(
         name=f"bge-m3-alert-{uuid.uuid4().hex}",
         provider=EmbeddingProviderKind.HUGGINGFACE_TEI,
@@ -214,11 +221,10 @@ def test_admin_alerts_surface_dashboard_only_operational_failures(
     )
     failed_promotion = ReleasePromotionAttempt(
         release_id=release.id,
-        vector_index_id=vector_index.id,
+        retrieval_index_build_id=build.id,
         requested_by=admin.id,
         status=ReleasePromotionStatus.FAILED,
-        target_collection_name=vector_index.collection_name,
-        error_details={"message": "Qdrant alias switch failed."},
+        error_details={"message": "Publication transaction failed."},
         completed_at=now,
     )
     db.add_all([blocking_issue, failed_embedding, failed_promotion])
@@ -2335,31 +2341,8 @@ def test_release_validation_and_publish_require_selected_ready_index_and_two_peo
     client: TestClient,
     superuser_token_headers: dict[str, str],
     db: Session,
-    monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    monkeypatch.setattr(settings, "RETRIEVAL_INDEX_BACKEND", "qdrant")
-    alias_calls: list[dict[str, str | None]] = []
-
-    class FakeQdrantAdapter:
-        def switch_alias(
-            self,
-            *,
-            alias_name: str,
-            new_collection_name: str,
-            old_collection_name: str | None = None,
-        ) -> None:
-            alias_calls.append(
-                {
-                    "alias_name": alias_name,
-                    "new_collection_name": new_collection_name,
-                    "old_collection_name": old_collection_name,
-                }
-            )
-
-    monkeypatch.setattr(
-        "app.ingestion.service._qdrant_adapter", lambda: FakeQdrantAdapter()
-    )
-    release, vector_index = _release_bundle(db, uploader=_superuser(db))
+    release, build = _release_bundle(db, uploader=_superuser(db))
 
     release.validation_report = {
         **(release.validation_report or {}),
@@ -2432,15 +2415,8 @@ def test_release_validation_and_publish_require_selected_ready_index_and_two_peo
     assert payload["release"]["status"] == CorpusReleaseStatus.PRODUCTION
     assert payload["promotion_status"] == "succeeded"
     assert payload["vector_index_status"] == VectorIndexStatus.PROMOTED
-    assert alias_calls == [
-        {
-            "alias_name": vector_index.alias_name,
-            "new_collection_name": vector_index.collection_name,
-            "old_collection_name": None,
-        }
-    ]
-    db.refresh(vector_index)
-    assert vector_index.status == VectorIndexStatus.PROMOTED
+    db.refresh(build)
+    assert build.status == VectorIndexStatus.PROMOTED
     high_audit = db.exec(
         select(AuditEvent).where(
             AuditEvent.action == "corpus_release.publish_override",
@@ -2490,7 +2466,7 @@ def test_read_release_manifest_returns_retained_manifest_artifact(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     monkeypatch.setattr(settings, "INGESTION_STORAGE_DIR", str(tmp_path))
-    release, _vector_index = _release_bundle(db, uploader=_superuser(db))
+    release, _build = _release_bundle(db, uploader=_superuser(db))
     release_entry = db.exec(
         select(CorpusReleaseEntry).where(CorpusReleaseEntry.release_id == release.id)
     ).one()
@@ -2562,7 +2538,7 @@ def test_read_release_manifest_404s_when_artifact_is_missing(
     superuser_token_headers: dict[str, str],
     db: Session,
 ) -> None:
-    release, _vector_index = _release_bundle(db, uploader=_superuser(db))
+    release, _build = _release_bundle(db, uploader=_superuser(db))
 
     response = client.get(
         f"{settings.API_V1_STR}/admin/corpus-releases/{release.id}/manifest",
@@ -2579,7 +2555,21 @@ def test_read_release_publication_evidence_returns_index_actor_and_promotion_his
     db: Session,
 ) -> None:
     uploader = _superuser(db)
-    release, vector_index = _release_bundle(db, uploader=uploader)
+    release, build = _release_bundle(db, uploader=uploader)
+    vector_index = VectorIndex(
+        release_id=release.id,
+        embedding_run_id=build.embedding_run_id,
+        profile_id=build.profile_id,
+        collection_name=f"ng_constitution_enacted_test_{uuid.uuid4().hex}",
+        alias_name="constitution_enacted",
+        status=VectorIndexStatus.READY,
+        point_count=1,
+        vector_dimensions=1024,
+        validation_report={"backend": "qdrant", "remote_point_count": 1},
+    )
+    db.add(vector_index)
+    db.commit()
+    db.refresh(vector_index)
     release.approved_by = uploader.id
     promotion = ReleasePromotionAttempt(
         release_id=release.id,
@@ -2614,7 +2604,12 @@ def test_read_release_publication_evidence_returns_index_actor_and_promotion_his
     payload = response.json()
     assert payload["release_id"] == str(release.id)
     assert payload["vector_indexes"][0]["id"] == str(vector_index.id)
-    assert payload["vector_indexes"][0]["validation_report"]["remote_point_count"] == 1
+    assert payload["vector_indexes"][0]["validation_report"] == {
+        "backend": "qdrant",
+        "remote_point_count": 1,
+    }
+    assert payload["vector_indexes"][0]["alias_name"] == "constitution_enacted"
+    assert payload["retrieval_index_builds"][0]["id"] == str(build.id)
     assert payload["promotion_attempts"][0]["id"] == str(promotion.id)
     assert payload["promotion_attempts"][0]["status"] == (
         ReleasePromotionStatus.ROLLED_BACK
@@ -2636,7 +2631,7 @@ def test_read_release_publication_evidence_requires_admin_role(
     normal_user_token_headers: dict[str, str],
     db: Session,
 ) -> None:
-    release, _vector_index = _release_bundle(db, uploader=_superuser(db))
+    release, _build = _release_bundle(db, uploader=_superuser(db))
 
     response = client.get(
         f"{settings.API_V1_STR}/admin/corpus-releases/{release.id}/publication-evidence",
@@ -2646,65 +2641,14 @@ def test_read_release_publication_evidence_requires_admin_role(
     assert response.status_code == 403
 
 
-def test_publish_release_fails_when_qdrant_alias_adapter_is_not_configured(
-    client: TestClient,
-    superuser_token_headers: dict[str, str],
-    db: Session,
-    monkeypatch: pytest.MonkeyPatch,
-) -> None:
-    monkeypatch.setattr(settings, "RETRIEVAL_INDEX_BACKEND", "qdrant")
-    monkeypatch.setattr("app.ingestion.service.settings.QDRANT_URL", None)
-    release, vector_index = _release_bundle(db, uploader=_superuser(db))
-    validate_response = client.post(
-        f"{settings.API_V1_STR}/admin/corpus-releases/{release.id}/validate",
-        headers=superuser_token_headers,
-        json={
-            "idempotency_key": f"validate-{uuid.uuid4().hex}",
-            "expected_version": release.lock_version,
-        },
-    )
-    assert validate_response.status_code == 200
-    db.refresh(release)
-
-    publish_response = client.post(
-        f"{settings.API_V1_STR}/admin/corpus-releases/{release.id}/publish",
-        headers=superuser_token_headers,
-        json={
-            "idempotency_key": f"publish-{uuid.uuid4().hex}",
-            "expected_version": release.lock_version,
-            "superuser_override_reason": "Solo seeded superuser in route test",
-        },
-    )
-
-    assert publish_response.status_code == 502
-    assert publish_response.json()["detail"] == (
-        "Qdrant alias switch failed; production release was not changed"
-    )
-    db.refresh(release)
-    db.refresh(vector_index)
-    assert release.status == CorpusReleaseStatus.APPROVED
-    assert vector_index.status == VectorIndexStatus.READY
-    promotion = db.exec(
-        select(ReleasePromotionAttempt).where(
-            ReleasePromotionAttempt.release_id == release.id
-        )
-    ).one()
-    assert promotion.status == ReleasePromotionStatus.FAILED
-    assert promotion.rollback_completed is False
-    assert promotion.error_details
-    assert promotion.error_details["phase"] == "qdrant_alias_switch"
-
-
 def test_release_validation_rejects_ready_index_without_validation_evidence(
     client: TestClient,
     superuser_token_headers: dict[str, str],
     db: Session,
-    monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    monkeypatch.setattr(settings, "RETRIEVAL_INDEX_BACKEND", "qdrant")
-    release, vector_index = _release_bundle(db, uploader=_superuser(db))
-    vector_index.validation_report = {"is_valid": True}
-    db.add(vector_index)
+    release, build = _release_bundle(db, uploader=_superuser(db))
+    build.validation_report = {"is_valid": True}
+    db.add(build)
     db.commit()
     db.refresh(release)
 
@@ -2721,8 +2665,8 @@ def test_release_validation_rejects_ready_index_without_validation_evidence(
     payload = response.json()
     assert payload["status"] == CorpusReleaseStatus.VALIDATING
     assert payload["validation_report"]["unresolved_gates"] == [
-        "vector_index_remote_count_mismatch",
-        "vector_index_smoke_queries_missing",
+        "retrieval_index_report_dimensions_mismatch",
+        "retrieval_index_lexical_validation_missing",
     ]
 
 
@@ -2730,10 +2674,8 @@ def test_release_validation_rejects_selected_embedding_below_recall_gate(
     client: TestClient,
     superuser_token_headers: dict[str, str],
     db: Session,
-    monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    monkeypatch.setattr(settings, "RETRIEVAL_INDEX_BACKEND", "qdrant")
-    release, _vector_index = _release_bundle(db, uploader=_superuser(db))
+    release, _build = _release_bundle(db, uploader=_superuser(db))
     embedding_run = db.exec(
         select(EmbeddingRun).where(EmbeddingRun.release_id == release.id)
     ).one()
@@ -2763,10 +2705,8 @@ def test_release_validation_requires_active_retrieval_benchmark_dataset(
     client: TestClient,
     superuser_token_headers: dict[str, str],
     db: Session,
-    monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    monkeypatch.setattr(settings, "RETRIEVAL_INDEX_BACKEND", "qdrant")
-    release, _vector_index = _release_bundle(db, uploader=_superuser(db))
+    release, _build = _release_bundle(db, uploader=_superuser(db))
     embedding_run = db.exec(
         select(EmbeddingRun).where(EmbeddingRun.release_id == release.id)
     ).one()
@@ -2797,173 +2737,6 @@ def test_release_validation_requires_active_retrieval_benchmark_dataset(
     assert payload["validation_report"]["unresolved_gates"] == [
         "benchmark_dataset_missing_or_empty"
     ]
-
-
-def test_publish_release_switches_qdrant_alias_when_adapter_is_configured(
-    client: TestClient,
-    superuser_token_headers: dict[str, str],
-    db: Session,
-    monkeypatch: pytest.MonkeyPatch,
-) -> None:
-    monkeypatch.setattr(settings, "RETRIEVAL_INDEX_BACKEND", "qdrant")
-    alias_calls: list[dict[str, str | None]] = []
-
-    class FakeQdrantAdapter:
-        def switch_alias(
-            self,
-            *,
-            alias_name: str,
-            new_collection_name: str,
-            old_collection_name: str | None = None,
-        ) -> None:
-            alias_calls.append(
-                {
-                    "alias_name": alias_name,
-                    "new_collection_name": new_collection_name,
-                    "old_collection_name": old_collection_name,
-                }
-            )
-
-    monkeypatch.setattr(
-        "app.ingestion.service._qdrant_adapter", lambda: FakeQdrantAdapter()
-    )
-    release, vector_index = _release_bundle(db, uploader=_superuser(db))
-    validate_response = client.post(
-        f"{settings.API_V1_STR}/admin/corpus-releases/{release.id}/validate",
-        headers=superuser_token_headers,
-        json={
-            "idempotency_key": f"validate-{uuid.uuid4().hex}",
-            "expected_version": release.lock_version,
-        },
-    )
-    assert validate_response.status_code == 200
-    db.refresh(release)
-
-    publish_response = client.post(
-        f"{settings.API_V1_STR}/admin/corpus-releases/{release.id}/publish",
-        headers=superuser_token_headers,
-        json={
-            "idempotency_key": f"publish-{uuid.uuid4().hex}",
-            "expected_version": release.lock_version,
-            "superuser_override_reason": "Solo seeded superuser in route test",
-        },
-    )
-
-    assert publish_response.status_code == 200
-    assert alias_calls[-1]["alias_name"] == vector_index.alias_name
-    assert alias_calls[-1]["new_collection_name"] == vector_index.collection_name
-    db.refresh(vector_index)
-    assert vector_index.status == VectorIndexStatus.PROMOTED
-
-
-def test_publish_release_rolls_back_qdrant_alias_when_database_step_fails(
-    client: TestClient,
-    superuser_token_headers: dict[str, str],
-    db: Session,
-    monkeypatch: pytest.MonkeyPatch,
-) -> None:
-    monkeypatch.setattr(settings, "RETRIEVAL_INDEX_BACKEND", "qdrant")
-    _retire_existing_production_release(db)
-    previous_release, previous_index = _release_bundle(db, uploader=_superuser(db))
-    previous_release.status = CorpusReleaseStatus.PRODUCTION
-    previous_index.status = VectorIndexStatus.PROMOTED
-    db.add(previous_release)
-    db.add(previous_index)
-    db.commit()
-    target_release, target_index = _release_bundle(db, uploader=_superuser(db))
-    validate_response = client.post(
-        f"{settings.API_V1_STR}/admin/corpus-releases/{target_release.id}/validate",
-        headers=superuser_token_headers,
-        json={
-            "idempotency_key": f"validate-{uuid.uuid4().hex}",
-            "expected_version": target_release.lock_version,
-        },
-    )
-    assert validate_response.status_code == 200
-    db.refresh(target_release)
-
-    alias_calls: list[dict[str, str | None]] = []
-
-    class FakeQdrantAdapter:
-        def switch_alias(
-            self,
-            *,
-            alias_name: str,
-            new_collection_name: str,
-            old_collection_name: str | None = None,
-        ) -> None:
-            alias_calls.append(
-                {
-                    "alias_name": alias_name,
-                    "new_collection_name": new_collection_name,
-                    "old_collection_name": old_collection_name,
-                }
-            )
-
-        def delete_alias(self, *, alias_name: str, collection_name: str) -> None:
-            alias_calls.append(
-                {
-                    "alias_name": alias_name,
-                    "new_collection_name": None,
-                    "old_collection_name": collection_name,
-                }
-            )
-
-    def fail_database_promotion(*_args: object, **_kwargs: object) -> None:
-        raise RuntimeError("simulated database outage")
-
-    monkeypatch.setattr(
-        "app.ingestion.service._qdrant_adapter", lambda: FakeQdrantAdapter()
-    )
-    monkeypatch.setattr(
-        "app.ingestion.service._mark_release_production_in_db",
-        fail_database_promotion,
-    )
-
-    publish_response = client.post(
-        f"{settings.API_V1_STR}/admin/corpus-releases/{target_release.id}/publish",
-        headers=superuser_token_headers,
-        json={
-            "idempotency_key": f"publish-{uuid.uuid4().hex}",
-            "expected_version": target_release.lock_version,
-            "superuser_override_reason": "Solo seeded superuser in route test",
-        },
-    )
-
-    assert publish_response.status_code == 500
-    assert alias_calls == [
-        {
-            "alias_name": target_index.alias_name,
-            "new_collection_name": target_index.collection_name,
-            "old_collection_name": previous_index.collection_name,
-        },
-        {
-            "alias_name": target_index.alias_name,
-            "new_collection_name": previous_index.collection_name,
-            "old_collection_name": target_index.collection_name,
-        },
-    ]
-    db.refresh(previous_release)
-    db.refresh(target_release)
-    db.refresh(target_index)
-    assert previous_release.status == CorpusReleaseStatus.PRODUCTION
-    assert target_release.status == CorpusReleaseStatus.APPROVED
-    assert target_index.status == VectorIndexStatus.READY
-    promotion = db.exec(
-        select(ReleasePromotionAttempt).where(
-            ReleasePromotionAttempt.release_id == target_release.id
-        )
-    ).one()
-    assert promotion.status == ReleasePromotionStatus.ROLLED_BACK
-    assert promotion.rollback_completed is True
-    assert promotion.error_details
-    assert promotion.error_details["phase"] == "database_promotion"
-    assert db.exec(
-        select(AuditEvent).where(
-            AuditEvent.action == "corpus_release.publish_failed",
-            AuditEvent.entity_id == target_release.id,
-        )
-    ).one()
 
 
 def _complete_pdf_upload(
@@ -3197,7 +2970,7 @@ def _retire_existing_production_release(db: Session) -> None:
 
 def _release_bundle(
     db: Session, *, uploader: User
-) -> tuple[CorpusRelease, VectorIndex]:
+) -> tuple[CorpusRelease, RetrievalIndexBuild]:
     source, run = _source_and_run(db, created_by=uploader.id)
     source.verification_status = VerificationStatus.VERIFIED
     db.add(source)
@@ -3286,41 +3059,45 @@ def _release_bundle(
     db.add_all([entry, embedding_run])
     db.commit()
     db.refresh(embedding_run)
-    vector_index = VectorIndex(
+    documents = build_retrieval_documents(
+        release_version=release.version,
+        entries=[entry],
+        versions_by_id={version.id: version},
+        provisions_by_id={provision.id: provision},
+        instruments_by_id={instrument.id: instrument},
+    )
+    segments = write_segments(
+        db, release_id=release.id, documents=documents, index_kind="enacted"
+    )
+    embeddings = write_embeddings(
+        db,
+        release_id=release.id,
+        embedding_run=embedding_run,
+        profile=profile,
+        segments=segments,
+        vectors=[[1.0] + [0.0] * 1023 for _ in segments],
+    )
+    build = RetrievalIndexBuild(
         release_id=release.id,
         embedding_run_id=embedding_run.id,
         profile_id=profile.id,
-        collection_name=f"ng_constitution_enacted_test_{uuid.uuid4().hex}",
-        alias_name="constitution_enacted",
-        index_kind="enacted",
         profile_hash=_sha256_text("profile-config-v1"),
         status=VectorIndexStatus.READY,
-        point_count=1,
+        expected_segment_count=len(documents),
+        stored_segment_count=len(segments),
+        stored_embedding_count=len(embeddings),
         vector_dimensions=1024,
-        payload_schema_hash=_sha256_text("payload-schema-v1"),
         checksum=_sha256_text("vector-checksum"),
-        validation_report={
-            "is_valid": True,
-            "duplicate_ids": [],
-            "dimension_errors": [],
-            "payload_errors": [],
-            "sparse_errors": [],
-            "remote_point_count": 1,
-            "smoke_queries": [
-                {
-                    "expected_point_id": "point-1",
-                    "hit_ids": ["point-1"],
-                    "matched_payload": True,
-                    "passed": True,
-                }
-            ],
-        },
     )
-    db.add(vector_index)
+    build.validation_report = validate_index_build(
+        db, build=build, expected_segment_count=len(documents)
+    )
+    assert build.validation_report["is_valid"]
+    db.add(build)
     db.commit()
     db.refresh(release)
-    db.refresh(vector_index)
-    return release, vector_index
+    db.refresh(build)
+    return release, build
 
 
 def test_my_roles_returns_superuser_with_all_roles(

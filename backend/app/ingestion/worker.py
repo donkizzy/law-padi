@@ -21,7 +21,6 @@ from app.ingestion.embedding import (
     EmbeddingBenchmarkQuery,
     HuggingFaceTeiEmbeddingProvider,
     OpenAIEmbeddingProvider,
-    SparseLegalEncoder,
     evaluate_embedding_benchmark,
     select_best_embedding_run,
 )
@@ -55,14 +54,6 @@ from app.ingestion.pgvector_repository import (
     validate_index_build,
     write_embeddings,
     write_segments,
-)
-from app.ingestion.qdrant import (
-    QdrantHttpIndexAdapter,
-    QdrantPoint,
-    QdrantSparseVector,
-    alias_for_index_kind,
-    collection_name_for_release,
-    validate_qdrant_points,
 )
 from app.ingestion.quality import (
     LEGAL_GRADE_MIN_CHARACTER_ACCURACY,
@@ -137,7 +128,6 @@ from app.legal.models import (
     SourceDocument,
     SourcePage,
     SourceUpload,
-    VectorIndex,
 )
 from app.legal.parser import (
     PARSER_VERSION,
@@ -1244,11 +1234,7 @@ def handle_materializing(
         "unresolved_gates": [
             "retrieval_documents_pending",
             "selected_embedding_run_missing",
-            (
-                "ready_retrieval_index_build_missing"
-                if settings.RETRIEVAL_INDEX_BACKEND == "pgvector"
-                else "ready_vector_index_missing"
-            ),
+            "ready_retrieval_index_build_missing",
         ],
     }
     session.add(release)
@@ -1365,11 +1351,7 @@ def handle_building_retrieval_documents(
         "retrieval_document_count": len(retrieval_documents),
         "unresolved_gates": [
             "selected_embedding_run_missing",
-            (
-                "ready_retrieval_index_build_missing"
-                if settings.RETRIEVAL_INDEX_BACKEND == "pgvector"
-                else "ready_vector_index_missing"
-            ),
+            "ready_retrieval_index_build_missing",
         ],
     }
     release.lock_version += 1
@@ -1414,11 +1396,6 @@ def handle_embedding(
         _benchmark_dataset_for_embedding_profiles(session, profiles, release)
     )
 
-    sparse_vectors = (
-        SparseLegalEncoder().encode(texts)
-        if settings.RETRIEVAL_INDEX_BACKEND == "qdrant"
-        else []
-    )
     embedding_runs: list[EmbeddingRun] = []
     for profile in profiles:
         if profile.is_active and not profile.model_revision:
@@ -1489,11 +1466,6 @@ def handle_embedding(
                 "documents": documents,
                 "dense_vectors": batch.vectors,
             }
-            if settings.RETRIEVAL_INDEX_BACKEND == "qdrant":
-                artifact_payload["sparse_vectors"] = [
-                    {"indices": vector.indices, "values": vector.values}
-                    for vector in sparse_vectors
-                ]
             content = json.dumps(artifact_payload, sort_keys=True).encode()
             # Artifacts are immutable, so a re-scored run (same vectors, new
             # benchmark result) is stored beside the earlier one, not over it.
@@ -1546,7 +1518,7 @@ def handle_embedding(
                 **benchmark.to_metrics(),
                 "document_count": len(documents),
                 "vector_dimensions": batch.dimensions,
-                "sparse_vector_count": len(sparse_vectors),
+                "sparse_vector_count": 0,
             }
         except Exception as exc:
             embedding_run.status = EmbeddingRunStatus.FAILED
@@ -1594,11 +1566,7 @@ def handle_embedding(
                     "ready_vector_index_missing",
                 }
             ],
-            (
-                "ready_retrieval_index_build_missing"
-                if settings.RETRIEVAL_INDEX_BACKEND == "pgvector"
-                else "ready_vector_index_missing"
-            ),
+            "ready_retrieval_index_build_missing",
         ],
     }
     release.lock_version += 1
@@ -1655,11 +1623,7 @@ def _embed_release_documents(
             batch_size=batch_size,
             kind="documents",
         )
-    reusable = (
-        member_document_vectors(session, release, profile, documents)
-        if settings.RETRIEVAL_INDEX_BACKEND == "pgvector"
-        else {}
-    )
+    reusable = member_document_vectors(session, release, profile, documents)
     positions = [index for index in range(len(documents)) if index not in reusable]
     batch = (
         _embed_with_checkpoints(
@@ -1841,102 +1805,12 @@ def handle_indexing(
     profile = session.get(EmbeddingProfile, embedding_run.profile_id)
     if not profile:
         raise IngestionWorkerError("Embedding run is missing its profile")
-    if settings.RETRIEVAL_INDEX_BACKEND == "pgvector":
-        return _handle_pgvector_indexing(
-            session,
-            run=run,
-            release=release,
-            embedding_run=embedding_run,
-            profile=profile,
-        )
-    payload = _embedding_payload(session, run, embedding_run.id)
-    points = _qdrant_points_from_embedding_payload(payload)
-    report = validate_qdrant_points(points, vector_dimensions=profile.vector_dimensions)
-    validation_report: dict[str, Any] = {
-        "is_valid": report.is_valid,
-        "duplicate_ids": report.duplicate_ids,
-        "dimension_errors": report.dimension_errors,
-        "payload_errors": report.payload_errors,
-        "sparse_errors": report.sparse_errors,
-    }
-    index_kind = _index_kind_for_points(points)
-    profile_hash = _sha256_json(profile.configuration)
-    collection_name = collection_name_for_release(
-        release_version=release.version,
-        embedding_profile_name=profile.name,
-        profile_hash=profile_hash,
-        index_kind=index_kind,
-    )
-    vector_index = _vector_index_for_collection(
+    return _handle_pgvector_indexing(
         session,
+        run=run,
         release=release,
         embedding_run=embedding_run,
         profile=profile,
-        collection_name=collection_name,
-        index_kind=index_kind,
-        profile_hash=profile_hash,
-    )
-    vector_index.point_count = report.point_count
-    vector_index.payload_schema_hash = report.payload_schema_hash
-    vector_index.checksum = report.checksum
-    vector_index.validation_report = validation_report
-    if not report.is_valid:
-        vector_index.status = VectorIndexStatus.FAILED
-        session.add(vector_index)
-        session.commit()
-        raise IngestionWorkerError("Qdrant point validation failed")
-    adapter = _qdrant_adapter()
-    adapter.create_collection(
-        collection_name=collection_name,
-        vector_dimensions=profile.vector_dimensions,
-    )
-    adapter.upsert_points(collection_name=collection_name, points=points)
-    remote_count = adapter.read_point_count(collection_name=collection_name)
-    if remote_count != len(points):
-        vector_index.status = VectorIndexStatus.FAILED
-        vector_index.validation_report = {
-            **(vector_index.validation_report or {}),
-            "remote_point_count": remote_count,
-        }
-        session.add(vector_index)
-        session.commit()
-        raise IngestionWorkerError("Qdrant point count validation failed")
-    smoke_queries = _run_qdrant_smoke_queries(
-        adapter,
-        collection_name=collection_name,
-        points=points,
-    )
-    validation_report = {
-        **validation_report,
-        "remote_point_count": remote_count,
-        "smoke_queries": smoke_queries,
-    }
-    vector_index.validation_report = validation_report
-    if any(not query["passed"] for query in smoke_queries):
-        vector_index.status = VectorIndexStatus.FAILED
-        vector_index.updated_at = get_datetime_utc()
-        session.add(vector_index)
-        session.commit()
-        raise IngestionWorkerError("Qdrant smoke-query validation failed")
-    vector_index.status = VectorIndexStatus.VALIDATING
-    vector_index.point_count = remote_count
-    vector_index.updated_at = get_datetime_utc()
-    session.add(vector_index)
-    session.commit()
-    return StageOutcome(
-        metrics={
-            "release_id": str(release.id),
-            "vector_index_id": str(vector_index.id),
-            "collection_name": collection_name,
-            "point_count": remote_count,
-        },
-        next_stage=IngestionStage.VALIDATING_INDEX,
-        next_status=IngestionRunStatus.INDEXING,
-        next_task_payload={
-            "source_document_id": str(run.source_document_id),
-            "release_id": str(release.id),
-            "vector_index_id": str(vector_index.id),
-        },
     )
 
 
@@ -2073,88 +1947,55 @@ def handle_validating_index(
     session: Session, _run: IngestionRun, task: IngestionTask
 ) -> StageOutcome:
     retrieval_index_build_id = task.payload.get("retrieval_index_build_id")
-    if retrieval_index_build_id:
-        build = session.get(
-            RetrievalIndexBuild, uuid.UUID(str(retrieval_index_build_id))
-        )
-        if not build:
-            raise IngestionWorkerError("Retrieval index build was not found")
-        report = validate_index_build(
-            session,
-            build=build,
-            expected_segment_count=build.expected_segment_count,
-        )
-        build.validation_report = report
-        build.stored_segment_count = int(report["stored_segment_count"])
-        build.stored_embedding_count = int(report["stored_embedding_count"])
-        build.checksum = _sha256_json(
-            {
-                "segment_checksum": report["segment_checksum"],
-                "embedding_checksum": report["embedding_checksum"],
-            }
-        )
-        if not report["is_valid"]:
-            build.status = VectorIndexStatus.FAILED
-            session.add(build)
-            session.commit()
-            raise IngestionWorkerError("pgvector validation did not pass")
-        build.status = VectorIndexStatus.READY
-        build.updated_at = get_datetime_utc()
+    if not retrieval_index_build_id:
+        raise IngestionWorkerError("Task does not identify a retrieval index build")
+    build = session.get(RetrievalIndexBuild, uuid.UUID(str(retrieval_index_build_id)))
+    if not build:
+        raise IngestionWorkerError("Retrieval index build was not found")
+    report = validate_index_build(
+        session,
+        build=build,
+        expected_segment_count=build.expected_segment_count,
+    )
+    build.validation_report = report
+    build.stored_segment_count = int(report["stored_segment_count"])
+    build.stored_embedding_count = int(report["stored_embedding_count"])
+    build.checksum = _sha256_json(
+        {
+            "segment_checksum": report["segment_checksum"],
+            "embedding_checksum": report["embedding_checksum"],
+        }
+    )
+    if not report["is_valid"]:
+        build.status = VectorIndexStatus.FAILED
         session.add(build)
-        release = session.get(CorpusRelease, build.release_id)
-        if release:
-            release.validation_report = {
-                **(release.validation_report or {}),
-                "ready_retrieval_index_build_id": str(build.id),
-                "unresolved_gates": [
-                    gate
-                    for gate in (release.validation_report or {}).get(
-                        "unresolved_gates", []
-                    )
-                    if gate != "ready_retrieval_index_build_missing"
-                ],
-            }
-            release.lock_version += 1
-            session.add(release)
         session.commit()
-        return StageOutcome(
-            metrics={
-                "retrieval_index_build_id": str(build.id),
-                "segment_count": build.stored_segment_count,
-                "embedding_count": build.stored_embedding_count,
-                "checksum": build.checksum,
-            },
-            next_stage=IngestionStage.PUBLISHING,
-            next_status=IngestionRunStatus.READY_TO_PUBLISH,
-            block_next_stage=True,
-        )
-    vector_index_id = task.payload.get("vector_index_id")
-    if not vector_index_id:
-        raise IngestionWorkerError("Task does not identify a vector index")
-    vector_index = session.get(VectorIndex, uuid.UUID(str(vector_index_id)))
-    if not vector_index:
-        raise IngestionWorkerError("Vector index was not found")
-    report = vector_index.validation_report or {}
-    if vector_index.point_count <= 0 or report.get("is_valid") is False:
-        raise IngestionWorkerError("Vector index validation did not pass")
-    vector_index.status = VectorIndexStatus.READY
-    vector_index.updated_at = get_datetime_utc()
-    session.add(vector_index)
-    release = session.get(CorpusRelease, vector_index.release_id)
+        raise IngestionWorkerError("pgvector validation did not pass")
+    build.status = VectorIndexStatus.READY
+    build.updated_at = get_datetime_utc()
+    session.add(build)
+    release = session.get(CorpusRelease, build.release_id)
     if release:
         release.validation_report = {
             **(release.validation_report or {}),
-            "ready_vector_index_id": str(vector_index.id),
-            "unresolved_gates": [],
+            "ready_retrieval_index_build_id": str(build.id),
+            "unresolved_gates": [
+                gate
+                for gate in (release.validation_report or {}).get(
+                    "unresolved_gates", []
+                )
+                if gate != "ready_retrieval_index_build_missing"
+            ],
         }
         release.lock_version += 1
         session.add(release)
     session.commit()
     return StageOutcome(
         metrics={
-            "vector_index_id": str(vector_index.id),
-            "point_count": vector_index.point_count,
-            "checksum": vector_index.checksum,
+            "retrieval_index_build_id": str(build.id),
+            "segment_count": build.stored_segment_count,
+            "embedding_count": build.stored_embedding_count,
+            "checksum": build.checksum,
         },
         next_stage=IngestionStage.PUBLISHING,
         next_status=IngestionRunStatus.READY_TO_PUBLISH,
@@ -3329,70 +3170,6 @@ def _get_embedding_run_for_task(session: Session, task: IngestionTask) -> Embedd
     return embedding_run
 
 
-def _qdrant_points_from_embedding_payload(payload: dict[str, Any]) -> list[QdrantPoint]:
-
-    documents = _payload_list(payload, "documents")
-    dense_vectors = payload.get("dense_vectors")
-    sparse_vectors = payload.get("sparse_vectors")
-    if not isinstance(dense_vectors, list):
-        raise IngestionWorkerError("Embedding artifact did not contain dense vectors")
-    if not isinstance(sparse_vectors, list):
-        raise IngestionWorkerError("Embedding artifact did not contain sparse vectors")
-    if len(documents) != len(dense_vectors) or len(documents) != len(sparse_vectors):
-        raise IngestionWorkerError("Document and embedding vector counts do not match")
-    points: list[QdrantPoint] = []
-    for document, vector, sparse in zip(
-        documents, dense_vectors, sparse_vectors, strict=True
-    ):
-        document_payload = document.get("payload")
-        if not isinstance(document_payload, dict):
-            raise IngestionWorkerError("Retrieval document payload was invalid")
-        point_id = str(document.get("id") or document.get("segment_id"))
-        sparse_vector = _coerce_sparse_vector(sparse)
-        points.append(
-            QdrantPoint(
-                point_id=point_id,
-                vector=_float_vector(vector),
-                payload={
-                    **cast(dict[str, Any], document_payload),
-                    "segment_id": document.get("segment_id"),
-                    "citation": document.get("citation"),
-                },
-                sparse=sparse_vector,
-            )
-        )
-    return points
-
-
-def _coerce_sparse_vector(value: object) -> QdrantSparseVector:
-    if not isinstance(value, dict):
-        raise IngestionWorkerError("Sparse vector payload was invalid")
-    indices = value.get("indices")
-    values = value.get("values")
-    if not isinstance(indices, list) or not isinstance(values, list):
-        raise IngestionWorkerError("Sparse vector payload was invalid")
-    clean_indices: list[int] = []
-    for index in indices:
-        if not isinstance(index, int) or isinstance(index, bool) or index < 0:
-            raise IngestionWorkerError("Sparse vector index was invalid")
-        clean_indices.append(index)
-    clean_values: list[float] = []
-    for item in values:
-        if not isinstance(item, int | float) or isinstance(item, bool):
-            raise IngestionWorkerError("Sparse vector value was invalid")
-        clean_values.append(float(item))
-    if len(clean_indices) != len(clean_values):
-        raise IngestionWorkerError("Sparse vector indices/values length mismatch")
-    return QdrantSparseVector(indices=clean_indices, values=clean_values)
-
-
-def _index_kind_for_points(points: list[QdrantPoint]) -> str:
-    kinds = {str(point.payload.get("legal_status", "")).lower() for point in points}
-    if kinds and kinds <= {"proposed"}:
-        return "proposals"
-    return "enacted"
-
-
 def _index_kind_for_documents(documents: list[RetrievalDocument]) -> str:
     kinds = {
         str(document.payload.get("legal_status", "")).lower() for document in documents
@@ -3411,105 +3188,6 @@ def _float_vector(value: object) -> list[float]:
             raise IngestionWorkerError("Dense vector contained a non-number")
         vector.append(float(item))
     return vector
-
-
-def _vector_index_for_collection(
-    session: Session,
-    *,
-    release: CorpusRelease,
-    embedding_run: EmbeddingRun,
-    profile: EmbeddingProfile,
-    collection_name: str,
-    index_kind: str = "enacted",
-    profile_hash: str | None = None,
-) -> VectorIndex:
-    vector_index = session.exec(
-        select(VectorIndex).where(VectorIndex.collection_name == collection_name)
-    ).first()
-    if vector_index:
-        if (
-            vector_index.release_id != release.id
-            or vector_index.embedding_run_id != embedding_run.id
-            or vector_index.profile_id != profile.id
-        ):
-            raise IngestionWorkerError(
-                f"Collection {collection_name} already exists for a different release/profile; "
-                "collections are immutable"
-            )
-        if vector_index.status in {
-            VectorIndexStatus.READY,
-            VectorIndexStatus.PROMOTED,
-            VectorIndexStatus.VALIDATING,
-        }:
-            raise IngestionWorkerError(
-                f"Collection {collection_name} is already "
-                f"{_enum_value(vector_index.status)}; "
-                "refusing to rebuild an immutable collection"
-            )
-        vector_index.status = VectorIndexStatus.BUILDING
-        if profile_hash is not None:
-            vector_index.profile_hash = profile_hash
-        vector_index.index_kind = index_kind
-        return vector_index
-    vector_index = VectorIndex(
-        release_id=release.id,
-        embedding_run_id=embedding_run.id,
-        profile_id=profile.id,
-        collection_name=collection_name,
-        alias_name=alias_for_index_kind(index_kind),
-        index_kind=index_kind,
-        profile_hash=profile_hash,
-        status=VectorIndexStatus.BUILDING,
-        vector_dimensions=profile.vector_dimensions,
-    )
-    session.add(vector_index)
-    session.flush()
-    return vector_index
-
-
-def _run_qdrant_smoke_queries(
-    adapter: QdrantHttpIndexAdapter,
-    *,
-    collection_name: str,
-    points: list[QdrantPoint],
-) -> list[dict[str, Any]]:
-    if not points:
-        return []
-    probe_points = points[: min(3, len(points))]
-    smoke_results: list[dict[str, Any]] = []
-    for point in probe_points:
-        hits = adapter.search_points(
-            collection_name=collection_name,
-            vector=point.vector,
-            limit=min(5, len(points)),
-        )
-        hit_ids = [hit.point_id for hit in hits]
-        matched_payload = False
-        for hit in hits:
-            if hit.point_id != point.point_id:
-                continue
-            matched_payload = hit.payload.get(
-                "provision_version_id"
-            ) == point.payload.get("provision_version_id")
-            break
-        smoke_results.append(
-            {
-                "expected_point_id": point.point_id,
-                "hit_ids": hit_ids,
-                "matched_payload": matched_payload,
-                "passed": point.point_id in hit_ids and matched_payload,
-            }
-        )
-    return smoke_results
-
-
-def _qdrant_adapter() -> QdrantHttpIndexAdapter:
-    if not settings.QDRANT_URL:
-        raise IngestionWorkerError("Qdrant URL is not configured")
-    return QdrantHttpIndexAdapter(
-        base_url=settings.QDRANT_URL,
-        api_key=settings.QDRANT_API_KEY,
-    )
 
 
 def _enum_value(value: object) -> str:

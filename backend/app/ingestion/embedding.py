@@ -1,7 +1,5 @@
-import hashlib
 import math
 import time
-from collections import Counter
 from collections.abc import Callable, Mapping, Sequence
 from dataclasses import dataclass
 from typing import Any, Protocol, cast
@@ -36,12 +34,6 @@ class EmbeddingBatch:
     @property
     def dimensions(self) -> int:
         return len(self.vectors[0]) if self.vectors else 0
-
-
-@dataclass(frozen=True)
-class SparseVector:
-    indices: list[int]
-    values: list[float]
 
 
 @dataclass(frozen=True)
@@ -222,14 +214,6 @@ class HuggingFaceTeiEmbeddingProvider:
             vectors=vectors,
             metrics={"attempts": attempt},
         )
-
-
-class SparseLegalEncoder:
-    def __init__(self, *, dimensions: int = 4096) -> None:
-        self.dimensions = dimensions
-
-    def encode(self, texts: Sequence[str]) -> list[SparseVector]:
-        return [_encode_sparse(text, dimensions=self.dimensions) for text in texts]
 
 
 def select_best_embedding_run(
@@ -414,27 +398,3 @@ def _ndcg_at_k(*, top_paths: Sequence[str], expected_paths: Sequence[str]) -> fl
     ideal_relevant = min(len(expected), len(top_paths))
     ideal_dcg = sum(1 / math.log2(rank + 1) for rank in range(1, ideal_relevant + 1))
     return dcg / ideal_dcg if ideal_dcg else 0.0
-
-
-def _encode_sparse(text: str, *, dimensions: int) -> SparseVector:
-    tokens = [token.lower() for token in re_tokenize(text)]
-    counts = Counter(tokens)
-    if not counts:
-        return SparseVector(indices=[], values=[])
-    buckets: dict[int, float] = {}
-    for token, count in counts.items():
-        bucket = _stable_bucket(token, dimensions=dimensions)
-        buckets[bucket] = buckets.get(bucket, 0) + float(count)
-    norm = math.sqrt(sum(value * value for value in buckets.values())) or 1
-    indices = sorted(buckets)
-    values = [round(buckets[index] / norm, 6) for index in indices]
-    return SparseVector(indices=indices, values=values)
-
-
-def re_tokenize(text: str) -> list[str]:
-    return [token for token in text.replace("'", " ").split() if token.strip()]
-
-
-def _stable_bucket(token: str, *, dimensions: int) -> int:
-    digest = hashlib.sha256(token.encode()).hexdigest()
-    return int(digest[:8], 16) % dimensions

@@ -67,7 +67,7 @@ class Settings(BaseSettings):
     # Paid query embeddings per UTC day across the deployment. Past it, search
     # uses keyword ranking until the next day.
     QUERY_EMBEDDING_DAILY_LIMIT: int = Field(default=5000, ge=0)
-    RETRIEVAL_INDEX_BACKEND: Literal["pgvector", "qdrant"] = "pgvector"
+    RETRIEVAL_INDEX_BACKEND: Literal["pgvector"] = "pgvector"
     RETRIEVAL_VECTOR_DIMENSIONS: int = Field(default=1024, ge=1)
     RETRIEVAL_DENSE_CANDIDATE_LIMIT: int = Field(default=50, ge=1)
     RETRIEVAL_LEXICAL_CANDIDATE_LIMIT: int = Field(default=50, ge=1)
@@ -146,8 +146,6 @@ class Settings(BaseSettings):
     # Yorùbá and Igbo tone marks use far more tokens than the English answer.
     TRANSLATION_MAX_OUTPUT_TOKENS: int = Field(default=6000, ge=1)
     INGESTION_WORKER_LEASE_SECONDS: int = Field(default=900, ge=1)
-    QDRANT_URL: str | None = None
-    QDRANT_API_KEY: str | None = None
     MANAGED_OCR_PROVIDER: Literal[
         "disabled", "google_document_ai", "azure_document_intelligence"
     ] = "disabled"

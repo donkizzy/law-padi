@@ -105,8 +105,11 @@ file contents against the archive manifest.
 
 ## Rebuilding pgvector from PostgreSQL (source of truth)
 
-The V1 production backend is PostgreSQL + pgvector. Qdrant remains only as a
-transition backend while retained releases are migrated.
+PostgreSQL + pgvector is the only supported retrieval backend. Canonical law,
+release membership, embeddings, validation and active-target publication stay in
+one database, so publication needs no external index or alias switch. Historical
+vector-index and collection metadata remain readable for publication evidence;
+new ingestion runs create only pgvector builds.
 
 1. Confirm the database has the `vector` extension and `RETRIEVAL_VECTOR_DIMENSIONS=1024`.
 2. Pick the release's `RetrievalIndexBuild` and retained retrieval-document and
@@ -122,22 +125,6 @@ transition backend while retained releases are migrated.
 
 Public retrieval must always reload `ProvisionVersion.text` and source provenance
 after ranking. `RetrievalSegment.retrieval_text` is derived context, not legal truth.
-
-## Rebuilding Qdrant from PostgreSQL (legacy transition only)
-
-Qdrant is a derived index. On loss or drift:
-
-1. Pick the production `CorpusRelease` and its ready `VectorIndex`
-   (`index_kind`: `enacted` → alias `constitution_enacted`,
-   `proposals` → alias `constitution_proposals`).
-2. Re-export retrieval documents from `CorpusReleaseEntry` +
-   `ProvisionVersion` (authoritative text always reloaded from PG).
-3. Re-embed with the pinned `EmbeddingProfile.model_revision`, recompute
-   `sparse_legal` vectors, rebuild immutable collections
-   (`ng_constitution_{kind}_{version}_{profile}_{hash}`), validate
-   counts/dimensions/checksums/sparse/smoke queries, then alias-swap.
-4. Never mutate a `READY`/`PROMOTED` collection; a name collision with
-   different release/profile IDs is a hard error.
 
 ## Outbox + SSE contract
 
