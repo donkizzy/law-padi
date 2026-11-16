@@ -80,8 +80,7 @@ def test_companion_profiles_do_not_depend_on_topic_position() -> None:
     reordered = data.model_copy(
         update={"statute_topics": tuple(reversed(data.statute_topics))}
     )
-    # Shared targets retain last-profile precedence, so only move a topic that
-    # has no profile across the former positional boundary.
+    assert build_topic_guide(reordered).companions == load_topic_guide().companions
     entries = list(data.statute_topics)
     no_profile = next(entry for entry in entries if entry.companion_profile is None)
     entries.remove(no_profile)

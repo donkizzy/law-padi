@@ -330,3 +330,29 @@ def test_obvious_typos_are_repaired_without_rewriting_ordinary_words() -> None:
     }
     assert {"acja-2015:18", "police-act-2020:38"} <= targets
     assert not topic_sections("what is the weather like today", instrument_slugs=slugs)
+
+
+def test_cached_matches_return_independent_lists() -> None:
+    question = "Can police search my phone?"
+    original = match_topics(question)
+    changed = match_topics(question)
+    changed.clear()
+    assert match_topics(question) == original
+    assert match_topics(question, limit=1) == original[:1]
+
+
+def test_custom_topics_preserve_duplicate_token_phrase_precedence() -> None:
+    from app.legal.topics import Topic
+
+    custom = Topic(
+        "custom",
+        ("constitution-1999:37",),
+        ("phone phone search", "search phone", "the"),
+    )
+    matches = match_topics("search my phone", topics=(custom,))
+    assert len(matches) == 1
+    # The selected phrase's full token count controls later tie-breaking,
+    # even though matching itself uses its distinct content words.
+    assert matches[0].phrase == "phone phone search"
+    assert matches[0].score == 2.0
+    assert match_topics("search my phone", topics=()) == []

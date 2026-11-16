@@ -15,12 +15,17 @@ import itertools
 import re
 from collections.abc import Collection
 from dataclasses import dataclass
-from functools import cache
+from functools import cache, lru_cache
 
-from app.languages.normalize import fold
 from app.legal.instruments import ACJA_SLUG, CONSTITUTION_SLUG, POLICE_SLUG
 from app.legal.titles import catalogue_titles
-from app.legal.topic_guide import Topic, load_topic_guide
+from app.legal.topic_guide import (
+    PreparedPhrase,
+    Topic,
+    load_topic_guide,
+    prepare_phrase,
+    tokenize,
+)
 
 _SECTION_IN_PATH = re.compile(r"\.section(\d+[a-z]?)(?=\.|$)")
 _CHAPTER_IN_PATH = re.compile(r"\.chapter(\d+)(?=\.|$)")
@@ -49,33 +54,9 @@ STOPWORDS = _GUIDE.stopwords
 _LEMMAS = _GUIDE.lemmas
 
 
-def _stem(word: str) -> str:
-    word = _LEMMAS.get(word, word)
-    if len(word) > 4 and word.endswith("ies"):
-        word = word[:-3] + "y"
-    elif len(word) > 4 and word.endswith(("sses", "xes", "zes", "ches", "shes")):
-        word = word[:-2]
-    elif len(word) > 3 and word.endswith("s") and not word.endswith(("ss", "us", "is")):
-        word = word[:-1]
-    for suffix in ("ing", "ied", "ed"):
-        if word.endswith(suffix) and len(word) - len(suffix) >= 3:
-            word = word[: -len(suffix)] + ("y" if suffix == "ied" else "")
-            if len(word) > 3 and word[-1] == word[-2] and word[-1] not in "aeioulsz":
-                word = word[:-1]
-            break
-    # Drop a final "e" so "leave", "leaving" and "leaves" agree.
-    if len(word) > 3 and word.endswith("e") and not word.endswith("ee"):
-        word = word[:-1]
-    return word
-
-
 def tokens(text: str) -> list[str]:
     """Normalise text to comparable content tokens."""
-    return [
-        _stem(word)
-        for word in _TOKEN.findall(fold(text).lower().replace("'", ""))
-        if word not in STOPWORDS
-    ]
+    return tokenize(text, STOPWORDS, _LEMMAS)
 
 
 def _same(phrase_token: str, query_token: str) -> bool:
@@ -85,7 +66,7 @@ def _same(phrase_token: str, query_token: str) -> bool:
     return len(shorter) >= 6 and longer.startswith(shorter)
 
 
-def _span(phrase_tokens: list[str], query_tokens: list[str]) -> int | None:
+def _span(phrase_tokens: tuple[str, ...], query_tokens: tuple[str, ...]) -> int | None:
     """Smallest window of the query containing every phrase token, in any order."""
     positions = [
         [index for index, token in enumerate(query_tokens) if _same(word, token)]
@@ -112,8 +93,8 @@ class TopicMatch:
 TOPICS = _GUIDE.topics
 STATUTE_TOPICS = _GUIDE.statute_topics
 _PART_TOPICS = _GUIDE.part_topics
-_COMPANION_TOPICS = _GUIDE.companion_topics
 COMPANIONS = _GUIDE.companions
+_COMPANION_TOPICS = _GUIDE.companion_topics
 _TITLE_CONTEXT = _GUIDE.title_context
 _GENERIC_TITLES = _GUIDE.generic_titles
 
@@ -166,13 +147,7 @@ def section_title(
 
 @cache
 def _vocabulary() -> frozenset[str]:
-    return frozenset(
-        word
-        for topic in (*TOPICS, *STATUTE_TOPICS)
-        for phrase in topic.phrases
-        for word in tokens(phrase)
-        if len(word) >= 5
-    )
+    return _GUIDE.vocabulary
 
 
 def _correct_typos(query_tokens: list[str]) -> list[str]:
@@ -197,22 +172,37 @@ def _correct_typos(query_tokens: list[str]) -> list[str]:
     return corrected
 
 
-def match_topics(
+@lru_cache(maxsize=1024)
+def _query_tokens(query: str) -> tuple[str, ...]:
+    return tuple(_correct_typos(tokens(query)))
+
+
+@lru_cache(maxsize=1024)
+def _prepared_phrases(topic: Topic) -> tuple[PreparedPhrase, ...]:
+    prepared = _GUIDE.prepared.get(topic)
+    if prepared is not None:
+        return prepared
+    return tuple(prepare_phrase(phrase, STOPWORDS, _LEMMAS) for phrase in topic.phrases)
+
+
+@lru_cache(maxsize=1024)
+def _match_topics(
     query: str, *, limit: int = 3, topics: tuple[Topic, ...] = TOPICS
-) -> list[TopicMatch]:
+) -> tuple[TopicMatch, ...]:
     """Rank topics by how much of the question their matched phrases explain.
 
     A phrase matches when all its words appear close together, in any order.
     """
-    query_tokens = _correct_typos(tokens(query))
+    query_tokens = _query_tokens(query)
     if not query_tokens:
-        return []
+        return ()
     matches: list[TopicMatch] = []
     for topic in topics:
         covered: set[int] = set()
         best = ""
-        for phrase in topic.phrases:
-            phrase_tokens = list(dict.fromkeys(tokens(phrase)))
+        best_length = 1
+        for phrase in _prepared_phrases(topic):
+            phrase_tokens = phrase.tokens
             if not phrase_tokens:
                 continue
             span = _span(phrase_tokens, query_tokens)
@@ -224,8 +214,9 @@ def match_topics(
                 for index, token in enumerate(query_tokens)
                 if any(_same(word, token) for word in phrase_tokens)
             )
-            if len(phrase_tokens) >= len(tokens(best) or [""]):
-                best = phrase
+            if len(phrase_tokens) >= best_length:
+                best = phrase.text
+                best_length = max(phrase.token_count, 1)
         if covered:
             score = len(covered) - (0.5 if topic.broad else 0.0)
             matches.append(
@@ -238,7 +229,14 @@ def match_topics(
             )
     # Stable sort keeps the curated order for ties.
     matches.sort(key=lambda item: -item.score)
-    return matches[:limit]
+    return tuple(matches[:limit])
+
+
+def match_topics(
+    query: str, *, limit: int = 3, topics: tuple[Topic, ...] = TOPICS
+) -> list[TopicMatch]:
+    """Rank topics, returning a fresh list over immutable cached matches."""
+    return list(_match_topics(query, limit=limit, topics=topics))
 
 
 @cache
@@ -338,14 +336,18 @@ def _is_rights_topic(match: TopicMatch) -> bool:
     )
 
 
+@cache
+def _topics_by_slug() -> dict[str, Topic]:
+    return {topic.slug: topic for topic in TOPICS}
+
+
 def related_laws(
     query: str, *, instrument_slugs: Collection[str] = (CONSTITUTION_SLUG,)
 ) -> list[str]:
     """Other laws on the subjects a question matches, most relevant first."""
-    by_slug = {topic.slug: topic for topic in TOPICS}
     laws: list[str] = []
     for match in match_topics(query):
-        for law in by_slug[match.slug].related_laws:
+        for law in _topics_by_slug()[match.slug].related_laws:
             if (
                 ACJA_SLUG in instrument_slugs
                 and law.startswith("Administration of Criminal Justice Act")
