@@ -7,7 +7,7 @@ from uuid import UUID
 import httpx
 import pytest
 
-from app.chat import EXPLANATION_PROMPT_VERSION, worker
+from app.chat import EXPLANATION_PROMPT_VERSION, runs, worker
 from app.core.config import settings
 from scripts import collect_explanation_review as collector
 from scripts.evaluate_explanations import _check_captures
@@ -138,7 +138,7 @@ def _mock_capture(
         "AsyncClient",
         lambda **kwargs: real_client(transport=httpx.MockTransport(handle), **kwargs),
     )
-    monkeypatch.setattr(worker, "_claim_run", lambda *_args, **_kwargs: UUID(_RUN))
+    monkeypatch.setattr(runs, "claim_run", lambda *_args, **_kwargs: UUID(_RUN))
 
     async def fake_process(*_args: Any) -> None:
         nonlocal generated

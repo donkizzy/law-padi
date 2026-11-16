@@ -234,12 +234,12 @@ async def _capture_case(
             response.raise_for_status()
             accepted = response.json()
             if inline_worker:
-                from app.chat import worker
+                from app.chat import runs, worker
 
                 expected = uuid.UUID(accepted["run_id"])
                 worker_id = f"review-{uuid.uuid4()}"
                 claimed = await asyncio.to_thread(
-                    worker._claim_run, worker_id, run_id=expected
+                    runs.claim_run, worker_id, run_id=expected
                 )
                 if claimed != expected:
                     raise RuntimeError(

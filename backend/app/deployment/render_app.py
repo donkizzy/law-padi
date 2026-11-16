@@ -13,31 +13,14 @@ from secrets import compare_digest
 
 from fastapi import FastAPI, Request
 from fastapi.responses import JSONResponse
-from sqlmodel import Session, col, func, select
 from starlette.types import ASGIApp, Message, Receive, Scope, Send
 
-from app.chat import EXPLANATION_PROMPT_VERSION, worker
-from app.chat.notices import NOTICE
-from app.chat.schemas import ExplanationAnswer
+from app.chat import EXPLANATION_PROMPT_VERSION
+from app.chat import runtime as chat_runtime
 from app.core.config import settings
-from app.core.db import engine
-from app.legal.models import GenerationRun, get_datetime_utc
 from app.main import app as api_app
 
 _logger = logging.getLogger(__name__)
-
-
-def _next_lease_delay() -> float | None:
-    """Schedule recovery only for a lease already known to be outstanding."""
-    now = get_datetime_utc()
-    with Session(engine) as session:
-        deadline = session.exec(
-            select(func.min(GenerationRun.lease_until)).where(
-                GenerationRun.status == "running",
-                col(GenerationRun.lease_until) > now,
-            )
-        ).one()
-    return (deadline - now).total_seconds() + 0.1 if deadline else None
 
 
 class RequestWorker:
@@ -88,46 +71,9 @@ class RequestWorker:
             await asyncio.gather(self.task, return_exceptions=True)
 
     async def _run(self) -> None:
-        next_delay: float | None = None
-        last_retention = float("-inf")
-        while not self.stopping:
-            if next_delay is None:
-                await self.wakeup.wait()
-            else:
-                try:
-                    await asyncio.wait_for(self.wakeup.wait(), timeout=next_delay)
-                except TimeoutError:
-                    pass
-            self.wakeup.clear()
-            await asyncio.to_thread(worker.recover_expired)
-            now = asyncio.get_running_loop().time()
-            if now - last_retention >= 3600:
-                await asyncio.to_thread(worker.expire_guest_conversations)
-                last_retention = now
-            while not self.stopping:
-                run_id = await asyncio.to_thread(worker._claim_run, self.worker_id)
-                if run_id is None or self.stopping:
-                    break
-                if (
-                    not settings.CHAT_ENABLED
-                    or not settings.CHAT_GENERATION_ENABLED
-                    or settings.CHAT_GENERATION_KILL_SWITCH
-                ):
-                    await asyncio.to_thread(
-                        worker._finish,
-                        run_id,
-                        self.worker_id,
-                        ExplanationAnswer(
-                            outcome="cancelled", notice=NOTICE["disabled"]
-                        ),
-                    )
-                else:
-                    # One awaited generation at a time. No polling runs while
-                    # idle, so the database can suspend between real requests.
-                    await worker.process_run(run_id, self.worker_id)
-            if self.stopping:
-                return
-            next_delay = await asyncio.to_thread(_next_lease_delay)
+        await chat_runtime.run_worker(
+            self.worker_id, wakeup=self.wakeup, stopping=lambda: self.stopping
+        )
 
 
 def _is_conversation(scope: Scope) -> bool:

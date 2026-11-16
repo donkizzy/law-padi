@@ -7,7 +7,7 @@ from sqlmodel import Session, select
 
 from app.api.routes import conversations
 from app.chat.budget import reserve, settle
-from app.chat.worker import _claim_run, expire_guest_conversations
+from app.chat.runs import claim_run, expire_guest_conversations
 from app.core import security, sessions
 from app.core.config import settings
 from app.legal.enums import MessageRole
@@ -280,7 +280,7 @@ def test_account_deletion_does_not_strand_shared_generation_capacity(
         assert accepted.status_code == 202
         run_id = UUID(accepted.json()["run_id"])
         if admin_delete:
-            assert _claim_run("test-worker", run_id=run_id) == run_id
+            assert claim_run("test-worker", run_id=run_id) == run_id
             admin_headers = {
                 "Authorization": f"Bearer {security.create_access_token(admin.id, timedelta(hours=1))}"
             }

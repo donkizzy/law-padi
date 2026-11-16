@@ -6,7 +6,7 @@ import pytest
 from fastapi.testclient import TestClient
 from sqlmodel import Session
 
-from app.chat import translation, worker
+from app.chat import runs, translation, worker
 from app.chat.llm.protocol import ProviderError, ProviderResult
 from app.chat.prompts import judge, understanding
 from app.chat.schemas import ExplanationAnswer, ExplanationBlock
@@ -129,7 +129,7 @@ def _ask(
         )
         assert accepted.status_code == 202, accepted.text
         run_id = UUID(accepted.json()["run_id"])
-        assert worker._claim_run("test-worker") == run_id
+        assert runs.claim_run("test-worker") == run_id
         asyncio.run(worker.process_run(run_id, "test-worker", provider))
     db.expire_all()
     run = db.get(GenerationRun, run_id)
@@ -495,7 +495,7 @@ def test_translation_deadline_preserves_verified_english(
         await asyncio.sleep(1)
 
     monkeypatch.setattr(worker, "translate_answer", slow_translation)
-    monkeypatch.setattr(worker, "_emit_progress", lambda *_args: None)
+    monkeypatch.setattr(runs, "emit_progress", lambda *_args: None)
     answer = _answer(_ENGLISH_BLOCK)
     telemetry: dict[str, Any] = {}
     asyncio.run(

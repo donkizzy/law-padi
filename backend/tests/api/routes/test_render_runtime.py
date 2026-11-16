@@ -9,6 +9,8 @@ from fastapi import FastAPI, HTTPException
 from fastapi.responses import StreamingResponse
 from fastapi.testclient import TestClient
 
+from app.chat import runs as run_lifecycle
+from app.chat import runtime as chat_runtime
 from app.chat import worker
 from app.chat.llm import budgeted
 from app.core.config import settings
@@ -33,10 +35,10 @@ def _idle_worker(monkeypatch: pytest.MonkeyPatch) -> dict[str, int]:
 
         return call
 
-    monkeypatch.setattr(worker, "recover_expired", count("recover"))
-    monkeypatch.setattr(worker, "expire_guest_conversations", count("retention"))
-    monkeypatch.setattr(worker, "_claim_run", count("claim"))
-    monkeypatch.setattr(render_app, "_next_lease_delay", count("leases"))
+    monkeypatch.setattr(run_lifecycle, "recover_expired", count("recover"))
+    monkeypatch.setattr(run_lifecycle, "expire_guest_conversations", count("retention"))
+    monkeypatch.setattr(run_lifecycle, "claim_run", count("claim"))
+    monkeypatch.setattr(chat_runtime, "next_lease_delay", count("leases"))
     return calls
 
 
@@ -86,7 +88,7 @@ def test_worker_drains_pending_runs_sequentially(
         completed.append(run_id)
         active -= 1
 
-    monkeypatch.setattr(worker, "_claim_run", claim)
+    monkeypatch.setattr(run_lifecycle, "claim_run", claim)
     monkeypatch.setattr(worker, "process_run", process)
 
     async def exercise() -> None:
@@ -111,7 +113,7 @@ def test_known_outstanding_lease_gets_one_recovery_timer(
         calls["leases"] += 1
         return deadlines.pop(0)
 
-    monkeypatch.setattr(render_app, "_next_lease_delay", next_lease)
+    monkeypatch.setattr(chat_runtime, "next_lease_delay", next_lease)
 
     async def exercise() -> None:
         runtime = render_app.RequestWorker()
@@ -165,7 +167,7 @@ def test_shutdown_awaits_uncertain_call_cleanup_and_never_claims_another_run(
             except asyncio.CancelledError:
                 pass
 
-        monkeypatch.setattr(worker, "_claim_run", claim)
+        monkeypatch.setattr(run_lifecycle, "claim_run", claim)
         monkeypatch.setattr(worker, "process_run", process)
         monkeypatch.setattr(budgeted, "reserve_call", lambda *_args: uuid4())
         monkeypatch.setattr(
@@ -194,7 +196,7 @@ def test_worker_failure_is_supervised_and_chat_and_health_report_unavailable(
         calls["recover"] += 1
         raise RuntimeError("simulated database failure")
 
-    monkeypatch.setattr(worker, "recover_expired", fail)
+    monkeypatch.setattr(run_lifecycle, "recover_expired", fail)
 
     async def exercise() -> None:
         runtime = render_app.RequestWorker()

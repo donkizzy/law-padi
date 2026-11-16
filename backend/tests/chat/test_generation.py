@@ -7,7 +7,7 @@ import pytest
 from fastapi.testclient import TestClient
 from sqlmodel import Session, select
 
-from app.chat import worker
+from app.chat import runs, worker
 from app.chat.llm.protocol import ProviderResult
 from app.chat.prompts import explanation
 from app.core.config import settings
@@ -94,7 +94,7 @@ def _answer_section_37(
         )
         assert accepted.status_code == 202
         run_id = UUID(accepted.json()["run_id"])
-        assert worker._claim_run("test-worker") == run_id
+        assert runs.claim_run("test-worker") == run_id
         asyncio.run(worker.process_run(run_id, "test-worker", provider))
     db.expire_all()
     run = db.get(GenerationRun, run_id)
@@ -123,8 +123,8 @@ def test_review_worker_claims_only_the_requested_run(
             )
             assert accepted.status_code == 202
             run_ids.append(UUID(accepted.json()["run_id"]))
-        assert worker._claim_run("review-worker", run_id=uuid4()) is None
-        assert worker._claim_run("review-worker", run_id=run_ids[1]) == run_ids[1]
+        assert runs.claim_run("review-worker", run_id=uuid4()) is None
+        assert runs.claim_run("review-worker", run_id=run_ids[1]) == run_ids[1]
         db.expire_all()
         first = db.get(GenerationRun, run_ids[0])
         second = db.get(GenerationRun, run_ids[1])
@@ -153,7 +153,7 @@ def _validated_explanation(
         )
         assert accepted.status_code == 202
         run_id = UUID(accepted.json()["run_id"])
-        assert worker._claim_run("test-worker") == run_id
+        assert runs.claim_run("test-worker") == run_id
         asyncio.run(worker.process_run(run_id, "test-worker", provider))
         db.expire_all()
         run = db.get(GenerationRun, run_id)
@@ -282,7 +282,7 @@ def test_selected_ambiguous_identity_is_pinned_and_run_events_are_scoped(
         )
         assert first.status_code == 202
         first_id = UUID(first.json()["run_id"])
-        assert worker._claim_run("test-worker") == first_id
+        assert runs.claim_run("test-worker") == first_id
         asyncio.run(worker.process_run(first_id, "test-worker", provider))
 
         second = client.post(
@@ -302,7 +302,7 @@ def test_selected_ambiguous_identity_is_pinned_and_run_events_are_scoped(
             ).status_code
             == 409
         )
-        assert worker._claim_run("test-worker") == second_id
+        assert runs.claim_run("test-worker") == second_id
         asyncio.run(worker.process_run(second_id, "test-worker", provider))
         db.expire_all()
         second_run = db.get(GenerationRun, second_id)
@@ -348,7 +348,7 @@ def test_elliptical_followup_reuses_one_resolved_identity(
             )
             assert accepted.status_code == 202
             run_id = UUID(accepted.json()["run_id"])
-            assert worker._claim_run("test-worker") == run_id
+            assert runs.claim_run("test-worker") == run_id
             asyncio.run(worker.process_run(run_id, "test-worker", provider))
             db.expire_all()
             run = db.get(GenerationRun, run_id)
@@ -441,7 +441,7 @@ def test_multi_source_followup_preserves_context_without_reusing_old_answer_clai
             )
             assert accepted.status_code == 202
             run_id = UUID(accepted.json()["run_id"])
-            assert worker._claim_run("context-test") == run_id
+            assert runs.claim_run("context-test") == run_id
             asyncio.run(worker.process_run(run_id, "context-test", provider))
             db.expire_all()
             run = db.get(GenerationRun, run_id)
@@ -483,7 +483,7 @@ def test_ambiguous_pronoun_asks_which_source_without_another_provider_call(
             )
             assert accepted.status_code == 202
             run_id = UUID(accepted.json()["run_id"])
-            assert worker._claim_run("clarification-test") == run_id
+            assert runs.claim_run("clarification-test") == run_id
             asyncio.run(worker.process_run(run_id, "clarification-test", provider))
         db.expire_all()
         run = db.get(GenerationRun, run_id)
@@ -521,7 +521,7 @@ def test_followup_keeps_a_user_selected_printed_identity(
             accepted = client.post(endpoint, json=body)
             assert accepted.status_code == 202
             run_id = UUID(accepted.json()["run_id"])
-            assert worker._claim_run("identity-test") == run_id
+            assert runs.claim_run("identity-test") == run_id
             asyncio.run(worker.process_run(run_id, "identity-test", provider))
             db.expire_all()
             run = db.get(GenerationRun, run_id)
