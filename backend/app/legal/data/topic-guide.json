@@ -1,0 +1,4252 @@
+{
+  "constitution_topics": [
+    {
+      "slug": "privacy",
+      "targets": [
+        "constitution-1999:37"
+      ],
+      "phrases": [
+        "privacy",
+        "sirri",
+        "nzuzo",
+        "ìpamọ́",
+        "àsírí",
+        "private life",
+        "family life",
+        "phone",
+        "telephone",
+        "phone call",
+        "tap phone",
+        "wiretap",
+        "intercept",
+        "surveillance",
+        "spy",
+        "read messages",
+        "chat",
+        "whatsapp",
+        "text message",
+        "email",
+        "correspondence",
+        "letter",
+        "search phone",
+        "check phone",
+        "unlock phone",
+        "phone password",
+        "refuse search",
+        "consent search",
+        "search without warrant",
+        "checkpoint search",
+        "search house",
+        "search home",
+        "enter home",
+        "enter house",
+        "raid house",
+        "personal data",
+        "personal information"
+      ],
+      "broad": false,
+      "related_laws": [
+        "Administration of Criminal Justice Act 2015 (arrest, search and detention)",
+        "Police Act 2020 (police powers, including searches)",
+        "Nigeria Data Protection Act 2023 (personal data)"
+      ],
+      "companion_profile": null
+    },
+    {
+      "slug": "arrest-detention",
+      "targets": [
+        "constitution-1999:35"
+      ],
+      "phrases": [
+        "arrest",
+        "detain",
+        "detention",
+        "custody",
+        "police station",
+        "lock up",
+        "locked up",
+        "police cell",
+        "bail",
+        "remain silent",
+        "right to silence",
+        "keep quiet",
+        "reason arrest",
+        "grounds arrest",
+        "24 hours",
+        "48 hours",
+        "brought before court",
+        "charge court",
+        "without charge",
+        "personal liberty",
+        "liberty",
+        "held without",
+        "police carry",
+        "unlawful arrest",
+        "wrongful arrest",
+        "unlawful detention",
+        "compensation apology"
+      ],
+      "broad": false,
+      "related_laws": [
+        "Administration of Criminal Justice Act 2015 (arrest, search and detention)",
+        "Police Act 2020 (police powers, including searches)"
+      ],
+      "companion_profile": null
+    },
+    {
+      "slug": "legal-representation",
+      "targets": [
+        "constitution-1999:35",
+        "constitution-1999:36"
+      ],
+      "phrases": [
+        "lawyer",
+        "legal practitioner",
+        "legal representation",
+        "counsel"
+      ],
+      "broad": false,
+      "related_laws": [],
+      "companion_profile": null
+    },
+    {
+      "slug": "fair-hearing",
+      "targets": [
+        "constitution-1999:36"
+      ],
+      "phrases": [
+        "fair hearing",
+        "fair trial",
+        "trial",
+        "presumed innocent",
+        "presumption innocence",
+        "innocent until proven guilty",
+        "proven guilty",
+        "interpreter",
+        "double jeopardy",
+        "tried twice",
+        "retroactive",
+        "retrospective",
+        "secret trial",
+        "public trial",
+        "self incrimination",
+        "testify against myself",
+        "evidence against myself",
+        "right to be heard",
+        "hear my side",
+        "accused person",
+        "charged offence",
+        "criminal charge"
+      ],
+      "broad": false,
+      "related_laws": [
+        "Administration of Criminal Justice Act 2015 (criminal trials)",
+        "Evidence Act 2011"
+      ],
+      "companion_profile": null
+    },
+    {
+      "slug": "dignity-torture",
+      "targets": [
+        "constitution-1999:34"
+      ],
+      "phrases": [
+        "torture",
+        "dignity",
+        "inhuman",
+        "degrading",
+        "beat",
+        "slap",
+        "flog",
+        "slavery",
+        "slave",
+        "servitude",
+        "forced labour",
+        "forced work",
+        "police brutality",
+        "brutality",
+        "maltreat",
+        "trafficking"
+      ],
+      "broad": false,
+      "related_laws": [
+        "Anti-Torture Act 2017",
+        "Police Act 2020 (police powers, including searches)"
+      ],
+      "companion_profile": null
+    },
+    {
+      "slug": "right-to-life",
+      "targets": [
+        "constitution-1999:33"
+      ],
+      "phrases": [
+        "right to life",
+        "kill",
+        "death penalty",
+        "capital punishment",
+        "execution",
+        "executed",
+        "extrajudicial",
+        "shoot",
+        "self defence",
+        "deadly force",
+        "lethal force",
+        "riot",
+        "kill arrest",
+        "police kill",
+        "police shoot"
+      ],
+      "broad": false,
+      "related_laws": [],
+      "companion_profile": null
+    },
+    {
+      "slug": "expression-press",
+      "targets": [
+        "constitution-1999:39"
+      ],
+      "phrases": [
+        "freedom of speech",
+        "free speech",
+        "speech",
+        "expression",
+        "opinion",
+        "criticise",
+        "press",
+        "journalist",
+        "newspaper",
+        "television",
+        "tv station",
+        "radio",
+        "media",
+        "social media",
+        "tweet",
+        "post online",
+        "blog",
+        "publish",
+        "broadcast",
+        "censor",
+        "censorship",
+        "access information",
+        "receive information",
+        "impart information"
+      ],
+      "broad": false,
+      "related_laws": [],
+      "companion_profile": null
+    },
+    {
+      "slug": "religion-conscience",
+      "targets": [
+        "constitution-1999:38"
+      ],
+      "phrases": [
+        "religion",
+        "religious",
+        "change religion",
+        "convert",
+        "worship",
+        "church",
+        "mosque",
+        "hijab",
+        "faith",
+        "belief",
+        "religious instruction",
+        "secret society",
+        "cult",
+        "cultism",
+        "conscience",
+        "freedom of thought",
+        "atheist",
+        "pray",
+        "prayer"
+      ],
+      "broad": false,
+      "related_laws": [],
+      "companion_profile": null
+    },
+    {
+      "slug": "assembly-association",
+      "targets": [
+        "constitution-1999:40"
+      ],
+      "phrases": [
+        "protest",
+        "demonstration",
+        "demonstrate",
+        "rally",
+        "march",
+        "peaceful assembly",
+        "assemble",
+        "gathering",
+        "association",
+        "associate",
+        "trade union",
+        "union",
+        "join political party",
+        "join party",
+        "peaceful group",
+        "permission meet",
+        "group meet",
+        "public meeting",
+        "hold meeting",
+        "police permit"
+      ],
+      "broad": false,
+      "related_laws": [],
+      "companion_profile": null
+    },
+    {
+      "slug": "movement",
+      "targets": [
+        "constitution-1999:41"
+      ],
+      "phrases": [
+        "freedom of movement",
+        "move freely",
+        "travel",
+        "live anywhere",
+        "reside",
+        "residence",
+        "live any state",
+        "live another state",
+        "deport",
+        "expel",
+        "expelled",
+        "leave nigeria",
+        "enter nigeria",
+        "exit nigeria",
+        "travel ban",
+        "travel abroad",
+        "extradition",
+        "extradite"
+      ],
+      "broad": false,
+      "related_laws": [],
+      "companion_profile": null
+    },
+    {
+      "slug": "discrimination",
+      "targets": [
+        "constitution-1999:42"
+      ],
+      "phrases": [
+        "discrimination",
+        "discriminate",
+        "tribe",
+        "tribal",
+        "ethnic",
+        "ethnicity",
+        "state of origin",
+        "place of origin",
+        "indigene",
+        "sex",
+        "gender",
+        "woman",
+        "female",
+        "political opinion",
+        "circumstances of birth",
+        "out of wedlock",
+        "illegitimate",
+        "equal treatment",
+        "equal rights"
+      ],
+      "broad": false,
+      "related_laws": [],
+      "companion_profile": null
+    },
+    {
+      "slug": "own-property",
+      "targets": [
+        "constitution-1999:43"
+      ],
+      "phrases": [
+        "own property",
+        "own land",
+        "buy land",
+        "buy property",
+        "acquire property",
+        "own house",
+        "land another state",
+        "property anywhere",
+        "immovable property"
+      ],
+      "broad": false,
+      "related_laws": [],
+      "companion_profile": null
+    },
+    {
+      "slug": "compulsory-acquisition",
+      "targets": [
+        "constitution-1999:44"
+      ],
+      "phrases": [
+        "compulsory acquisition",
+        "compulsorily acquired",
+        "take land",
+        "take property",
+        "seize property",
+        "seize",
+        "seizure",
+        "confiscate",
+        "demolish",
+        "demolition",
+        "compensation land",
+        "compensation property",
+        "acquire land",
+        "minerals",
+        "mineral",
+        "who owns oil",
+        "oil belong",
+        "petroleum"
+      ],
+      "broad": false,
+      "related_laws": [],
+      "companion_profile": null
+    },
+    {
+      "slug": "land",
+      "targets": [
+        "constitution-1999:43",
+        "constitution-1999:44"
+      ],
+      "phrases": [
+        "land"
+      ],
+      "broad": true,
+      "related_laws": [],
+      "companion_profile": null
+    },
+    {
+      "slug": "restricting-rights",
+      "targets": [
+        "constitution-1999:45"
+      ],
+      "phrases": [
+        "restrict rights",
+        "limit rights",
+        "rights limited",
+        "rights restricted",
+        "derogation",
+        "suspend rights",
+        "rights absolute",
+        "absolute right",
+        "national security",
+        "public safety",
+        "public morality",
+        "public health"
+      ],
+      "broad": false,
+      "related_laws": [],
+      "companion_profile": null
+    },
+    {
+      "slug": "enforcing-rights",
+      "targets": [
+        "constitution-1999:46"
+      ],
+      "phrases": [
+        "rights violated",
+        "violation rights",
+        "violate rights",
+        "breach rights",
+        "enforce rights",
+        "enforcement rights",
+        "fundamental rights enforcement",
+        "sue police",
+        "fundamental rights claim",
+        "rights claim",
+        "fundamental rights case",
+        "fundamental rights action",
+        "legal aid",
+        "redress",
+        "remedy"
+      ],
+      "broad": false,
+      "related_laws": [],
+      "companion_profile": null
+    },
+    {
+      "slug": "supremacy",
+      "targets": [
+        "constitution-1999:1"
+      ],
+      "phrases": [
+        "supremacy",
+        "supreme law",
+        "highest law",
+        "override",
+        "overridden",
+        "inconsistent law",
+        "inconsistent",
+        "void"
+      ],
+      "broad": false,
+      "related_laws": [],
+      "companion_profile": null
+    },
+    {
+      "slug": "unity",
+      "targets": [
+        "constitution-1999:2"
+      ],
+      "phrases": [
+        "indivisible",
+        "indissoluble",
+        "secede",
+        "secession",
+        "break up",
+        "divide nigeria"
+      ],
+      "broad": false,
+      "related_laws": [],
+      "companion_profile": null
+    },
+    {
+      "slug": "states-list",
+      "targets": [
+        "constitution-1999:3"
+      ],
+      "phrases": [
+        "how many states",
+        "number of states",
+        "36 states",
+        "list of states",
+        "states of the federation",
+        "names of states",
+        "local government areas"
+      ],
+      "broad": false,
+      "related_laws": [],
+      "companion_profile": null
+    },
+    {
+      "slug": "legislative-powers",
+      "targets": [
+        "constitution-1999:4"
+      ],
+      "phrases": [
+        "legislative power",
+        "make laws",
+        "making laws",
+        "power make law",
+        "exclusive legislative list",
+        "concurrent legislative list",
+        "exclusive list",
+        "concurrent list",
+        "residual"
+      ],
+      "broad": false,
+      "related_laws": [],
+      "companion_profile": null
+    },
+    {
+      "slug": "executive-powers",
+      "targets": [
+        "constitution-1999:5"
+      ],
+      "phrases": [
+        "executive power"
+      ],
+      "broad": false,
+      "related_laws": [],
+      "companion_profile": null
+    },
+    {
+      "slug": "judicial-powers",
+      "targets": [
+        "constitution-1999:6"
+      ],
+      "phrases": [
+        "judicial power",
+        "superior courts",
+        "justiciable",
+        "non justiciable"
+      ],
+      "broad": false,
+      "related_laws": [],
+      "companion_profile": null
+    },
+    {
+      "slug": "local-government",
+      "targets": [
+        "constitution-1999:7"
+      ],
+      "phrases": [
+        "local government",
+        "lga",
+        "council chairman",
+        "local council",
+        "local government autonomy",
+        "local government election"
+      ],
+      "broad": false,
+      "related_laws": [],
+      "companion_profile": null
+    },
+    {
+      "slug": "new-states",
+      "targets": [
+        "constitution-1999:8"
+      ],
+      "phrases": [
+        "create new state",
+        "creation of state",
+        "state creation",
+        "new state",
+        "boundary adjustment"
+      ],
+      "broad": false,
+      "related_laws": [],
+      "companion_profile": null
+    },
+    {
+      "slug": "amendment",
+      "targets": [
+        "constitution-1999:9"
+      ],
+      "phrases": [
+        "amend",
+        "amendment",
+        "alter constitution",
+        "alteration",
+        "change constitution",
+        "constitutional review",
+        "rewrite"
+      ],
+      "broad": false,
+      "related_laws": [],
+      "companion_profile": null
+    },
+    {
+      "slug": "state-religion",
+      "targets": [
+        "constitution-1999:10"
+      ],
+      "phrases": [
+        "state religion",
+        "secular",
+        "official religion",
+        "government religion",
+        "national religion"
+      ],
+      "broad": false,
+      "related_laws": [],
+      "companion_profile": null
+    },
+    {
+      "slug": "public-order",
+      "targets": [
+        "constitution-1999:11"
+      ],
+      "phrases": [
+        "public order",
+        "public security"
+      ],
+      "broad": false,
+      "related_laws": [],
+      "companion_profile": null
+    },
+    {
+      "slug": "treaties",
+      "targets": [
+        "constitution-1999:12"
+      ],
+      "phrases": [
+        "treaty",
+        "international agreement",
+        "domesticate",
+        "international law",
+        "convention force law"
+      ],
+      "broad": false,
+      "related_laws": [],
+      "companion_profile": null
+    },
+    {
+      "slug": "state-policy",
+      "targets": [
+        "constitution-1999:13",
+        "constitution-1999:14"
+      ],
+      "phrases": [
+        "fundamental objectives",
+        "directive principles",
+        "chapter two",
+        "chapter 2",
+        "chapter ii",
+        "federal character",
+        "sovereignty belong",
+        "welfare of the people",
+        "security and welfare",
+        "purpose of government"
+      ],
+      "broad": false,
+      "related_laws": [],
+      "companion_profile": null
+    },
+    {
+      "slug": "political-objectives",
+      "targets": [
+        "constitution-1999:15"
+      ],
+      "phrases": [
+        "motto",
+        "national integration",
+        "unity and faith"
+      ],
+      "broad": false,
+      "related_laws": [],
+      "companion_profile": null
+    },
+    {
+      "slug": "economic-objectives",
+      "targets": [
+        "constitution-1999:16"
+      ],
+      "phrases": [
+        "economic objectives",
+        "economy",
+        "minimum wage",
+        "living wage",
+        "shelter",
+        "food",
+        "unemployment"
+      ],
+      "broad": false,
+      "related_laws": [],
+      "companion_profile": null
+    },
+    {
+      "slug": "social-objectives",
+      "targets": [
+        "constitution-1999:17"
+      ],
+      "phrases": [
+        "social objectives",
+        "equal pay",
+        "health care",
+        "healthcare",
+        "medical",
+        "hospital",
+        "child exploitation",
+        "child labour",
+        "old age"
+      ],
+      "broad": false,
+      "related_laws": [],
+      "companion_profile": null
+    },
+    {
+      "slug": "education",
+      "targets": [
+        "constitution-1999:18"
+      ],
+      "phrases": [
+        "education",
+        "free education",
+        "school fees",
+        "illiteracy",
+        "free primary education",
+        "university"
+      ],
+      "broad": false,
+      "related_laws": [],
+      "companion_profile": null
+    },
+    {
+      "slug": "foreign-policy",
+      "targets": [
+        "constitution-1999:19"
+      ],
+      "phrases": [
+        "foreign policy",
+        "international relations"
+      ],
+      "broad": false,
+      "related_laws": [],
+      "companion_profile": null
+    },
+    {
+      "slug": "environment",
+      "targets": [
+        "constitution-1999:20"
+      ],
+      "phrases": [
+        "environment",
+        "environmental",
+        "pollution",
+        "wildlife",
+        "forest",
+        "climate"
+      ],
+      "broad": false,
+      "related_laws": [],
+      "companion_profile": null
+    },
+    {
+      "slug": "culture",
+      "targets": [
+        "constitution-1999:21"
+      ],
+      "phrases": [
+        "culture",
+        "cultural",
+        "tradition"
+      ],
+      "broad": false,
+      "related_laws": [],
+      "companion_profile": null
+    },
+    {
+      "slug": "mass-media",
+      "targets": [
+        "constitution-1999:22"
+      ],
+      "phrases": [
+        "mass media",
+        "media obligation",
+        "hold government accountable"
+      ],
+      "broad": false,
+      "related_laws": [],
+      "companion_profile": null
+    },
+    {
+      "slug": "national-ethics",
+      "targets": [
+        "constitution-1999:23"
+      ],
+      "phrases": [
+        "national ethics",
+        "integrity",
+        "dignity of labour"
+      ],
+      "broad": false,
+      "related_laws": [],
+      "companion_profile": null
+    },
+    {
+      "slug": "citizen-duties",
+      "targets": [
+        "constitution-1999:24"
+      ],
+      "phrases": [
+        "duties of citizen",
+        "duty of citizen",
+        "citizen duty",
+        "civic duty",
+        "obligation of citizen",
+        "pay tax",
+        "respect flag",
+        "national anthem"
+      ],
+      "broad": false,
+      "related_laws": [],
+      "companion_profile": null
+    },
+    {
+      "slug": "citizenship",
+      "targets": [
+        "constitution-1999:25",
+        "constitution-1999:26",
+        "constitution-1999:27"
+      ],
+      "phrases": [
+        "citizenship",
+        "nigerian citizen",
+        "become nigerian",
+        "become citizen",
+        "qualify citizen"
+      ],
+      "broad": true,
+      "related_laws": [],
+      "companion_profile": null
+    },
+    {
+      "slug": "citizenship-birth",
+      "targets": [
+        "constitution-1999:25"
+      ],
+      "phrases": [
+        "citizen by birth",
+        "born in nigeria",
+        "nigerian by birth",
+        "parents nigerian",
+        "grandparent"
+      ],
+      "broad": false,
+      "related_laws": [],
+      "companion_profile": null
+    },
+    {
+      "slug": "citizenship-registration",
+      "targets": [
+        "constitution-1999:26"
+      ],
+      "phrases": [
+        "marry nigerian",
+        "married nigerian",
+        "marriage citizenship",
+        "wife citizenship",
+        "husband citizenship",
+        "foreign wife",
+        "foreign husband",
+        "citizenship by registration"
+      ],
+      "broad": false,
+      "related_laws": [],
+      "companion_profile": null
+    },
+    {
+      "slug": "citizenship-naturalisation",
+      "targets": [
+        "constitution-1999:27"
+      ],
+      "phrases": [
+        "naturalisation",
+        "naturalise",
+        "foreigner become nigerian",
+        "foreigner citizen",
+        "foreigner citizenship"
+      ],
+      "broad": false,
+      "related_laws": [],
+      "companion_profile": null
+    },
+    {
+      "slug": "dual-citizenship",
+      "targets": [
+        "constitution-1999:28"
+      ],
+      "phrases": [
+        "dual citizenship",
+        "dual nationality",
+        "two passports",
+        "second passport",
+        "another citizenship",
+        "citizenship another country",
+        "foreign citizenship",
+        "two citizenship"
+      ],
+      "broad": false,
+      "related_laws": [],
+      "companion_profile": null
+    },
+    {
+      "slug": "renounce-citizenship",
+      "targets": [
+        "constitution-1999:29"
+      ],
+      "phrases": [
+        "renounce",
+        "renounce citizenship",
+        "renunciation",
+        "give up citizenship",
+        "stop being a nigerian citizen"
+      ],
+      "broad": false,
+      "related_laws": [],
+      "companion_profile": null
+    },
+    {
+      "slug": "lose-citizenship",
+      "targets": [
+        "constitution-1999:30"
+      ],
+      "phrases": [
+        "deprived of citizenship",
+        "deprivation citizenship",
+        "lose citizenship",
+        "strip citizenship",
+        "take away citizenship",
+        "revoke citizenship"
+      ],
+      "broad": false,
+      "related_laws": [],
+      "companion_profile": null
+    },
+    {
+      "slug": "national-assembly",
+      "targets": [
+        "constitution-1999:47",
+        "constitution-1999:48",
+        "constitution-1999:49"
+      ],
+      "phrases": [
+        "national assembly",
+        "senate",
+        "senator",
+        "house of representatives",
+        "reps",
+        "how many senators",
+        "number of senators",
+        "lawmakers",
+        "legislature"
+      ],
+      "broad": true,
+      "related_laws": [],
+      "companion_profile": null
+    },
+    {
+      "slug": "presiding-officers",
+      "targets": [
+        "constitution-1999:50"
+      ],
+      "phrases": [
+        "senate president",
+        "speaker"
+      ],
+      "broad": false,
+      "related_laws": [],
+      "companion_profile": null
+    },
+    {
+      "slug": "quorum",
+      "targets": [
+        "constitution-1999:54",
+        "constitution-1999:96"
+      ],
+      "phrases": [
+        "quorum"
+      ],
+      "broad": false,
+      "related_laws": [],
+      "companion_profile": null
+    },
+    {
+      "slug": "languages",
+      "targets": [
+        "constitution-1999:55",
+        "constitution-1999:97"
+      ],
+      "phrases": [
+        "official language",
+        "hausa",
+        "igbo",
+        "ibo",
+        "yoruba",
+        "language national assembly",
+        "language house of assembly"
+      ],
+      "broad": false,
+      "related_laws": [],
+      "companion_profile": null
+    },
+    {
+      "slug": "bills",
+      "targets": [
+        "constitution-1999:58",
+        "constitution-1999:59"
+      ],
+      "phrases": [
+        "bill become law",
+        "pass bill",
+        "passing bill",
+        "assent",
+        "veto",
+        "override veto",
+        "money bill",
+        "how laws are made",
+        "how law made"
+      ],
+      "broad": false,
+      "related_laws": [],
+      "companion_profile": null
+    },
+    {
+      "slug": "assembly-qualification",
+      "targets": [
+        "constitution-1999:65",
+        "constitution-1999:66"
+      ],
+      "phrases": [
+        "qualify senate",
+        "qualification senator",
+        "become senator",
+        "run for senate",
+        "contest senate",
+        "senator age",
+        "how old senator",
+        "become member house of representatives",
+        "run for house of representatives",
+        "contest house of representatives"
+      ],
+      "broad": false,
+      "related_laws": [],
+      "companion_profile": null
+    },
+    {
+      "slug": "defection",
+      "targets": [
+        "constitution-1999:68",
+        "constitution-1999:109"
+      ],
+      "phrases": [
+        "defect",
+        "defection",
+        "cross carpet",
+        "decamp",
+        "change party",
+        "lose seat",
+        "vacate seat",
+        "seat vacant"
+      ],
+      "broad": false,
+      "related_laws": [],
+      "companion_profile": null
+    },
+    {
+      "slug": "recall",
+      "targets": [
+        "constitution-1999:69"
+      ],
+      "phrases": [
+        "recall",
+        "recall senator",
+        "recall rep",
+        "recall member",
+        "recall national assembly",
+        "remove senator",
+        "remove rep"
+      ],
+      "broad": false,
+      "related_laws": [],
+      "companion_profile": null
+    },
+    {
+      "slug": "recall-state",
+      "targets": [
+        "constitution-1999:110"
+      ],
+      "phrases": [
+        "recall house of assembly",
+        "recall state assembly",
+        "recall state lawmaker"
+      ],
+      "broad": false,
+      "related_laws": [],
+      "companion_profile": null
+    },
+    {
+      "slug": "legislator-pay",
+      "targets": [
+        "constitution-1999:70"
+      ],
+      "phrases": [
+        "senator salary",
+        "lawmaker salary",
+        "salary of senator",
+        "senator allowance",
+        "legislator salary"
+      ],
+      "broad": false,
+      "related_laws": [],
+      "companion_profile": null
+    },
+    {
+      "slug": "voting",
+      "targets": [
+        "constitution-1999:77",
+        "constitution-1999:117"
+      ],
+      "phrases": [
+        "right to vote",
+        "vote",
+        "voting",
+        "voting age",
+        "who can vote",
+        "register to vote",
+        "eligible to vote",
+        "voter",
+        "franchise"
+      ],
+      "broad": false,
+      "related_laws": [],
+      "companion_profile": null
+    },
+    {
+      "slug": "inec",
+      "targets": [
+        "constitution-1999:78",
+        "constitution-1999:153"
+      ],
+      "phrases": [
+        "inec",
+        "electoral commission",
+        "conduct election",
+        "supervise election",
+        "election umpire"
+      ],
+      "broad": false,
+      "related_laws": [],
+      "companion_profile": null
+    },
+    {
+      "slug": "budget",
+      "targets": [
+        "constitution-1999:80",
+        "constitution-1999:81",
+        "constitution-1999:82"
+      ],
+      "phrases": [
+        "budget",
+        "appropriation",
+        "public funds",
+        "public money",
+        "consolidated revenue fund",
+        "spend money"
+      ],
+      "broad": false,
+      "related_laws": [],
+      "companion_profile": null
+    },
+    {
+      "slug": "audit",
+      "targets": [
+        "constitution-1999:85",
+        "constitution-1999:86"
+      ],
+      "phrases": [
+        "auditor general",
+        "audit",
+        "public accounts"
+      ],
+      "broad": false,
+      "related_laws": [],
+      "companion_profile": null
+    },
+    {
+      "slug": "legislative-investigations",
+      "targets": [
+        "constitution-1999:88",
+        "constitution-1999:89"
+      ],
+      "phrases": [
+        "national assembly investigate",
+        "probe",
+        "investigative hearing",
+        "summon",
+        "summons",
+        "oversight",
+        "expose corruption"
+      ],
+      "broad": false,
+      "related_laws": [],
+      "companion_profile": null
+    },
+    {
+      "slug": "state-assembly",
+      "targets": [
+        "constitution-1999:90",
+        "constitution-1999:91"
+      ],
+      "phrases": [
+        "house of assembly",
+        "state assembly",
+        "state lawmaker"
+      ],
+      "broad": false,
+      "related_laws": [],
+      "companion_profile": null
+    },
+    {
+      "slug": "state-assembly-qualification",
+      "targets": [
+        "constitution-1999:106",
+        "constitution-1999:107"
+      ],
+      "phrases": [
+        "run for house of assembly",
+        "qualify house of assembly",
+        "contest house of assembly"
+      ],
+      "broad": false,
+      "related_laws": [],
+      "companion_profile": null
+    },
+    {
+      "slug": "oath",
+      "targets": [
+        "constitution-1999:oath-president",
+        "constitution-1999:oath-governor",
+        "constitution-1999:140",
+        "constitution-1999:185"
+      ],
+      "phrases": [
+        "oath of office",
+        "swearing in",
+        "sworn in",
+        "oath",
+        "swear"
+      ],
+      "broad": true,
+      "related_laws": [],
+      "companion_profile": null
+    },
+    {
+      "slug": "oath-president",
+      "targets": [
+        "constitution-1999:oath-president",
+        "constitution-1999:140"
+      ],
+      "phrases": [
+        "president oath",
+        "president swear"
+      ],
+      "broad": false,
+      "related_laws": [],
+      "companion_profile": null
+    },
+    {
+      "slug": "oath-governor",
+      "targets": [
+        "constitution-1999:oath-governor",
+        "constitution-1999:185"
+      ],
+      "phrases": [
+        "governor oath",
+        "governor swear"
+      ],
+      "broad": false,
+      "related_laws": [],
+      "companion_profile": null
+    },
+    {
+      "slug": "oath-allegiance",
+      "targets": [
+        "constitution-1999:oath-allegiance"
+      ],
+      "phrases": [
+        "oath of allegiance",
+        "allegiance"
+      ],
+      "broad": false,
+      "related_laws": [],
+      "companion_profile": null
+    },
+    {
+      "slug": "oath-legislator",
+      "targets": [
+        "constitution-1999:oath-legislator",
+        "constitution-1999:52",
+        "constitution-1999:94"
+      ],
+      "phrases": [
+        "oath national assembly",
+        "oath house of assembly",
+        "oath lawmaker",
+        "oath legislator",
+        "oath member",
+        "member oath"
+      ],
+      "broad": false,
+      "related_laws": [],
+      "companion_profile": null
+    },
+    {
+      "slug": "oath-judicial",
+      "targets": [
+        "constitution-1999:oath-judicial",
+        "constitution-1999:290"
+      ],
+      "phrases": [
+        "judicial oath",
+        "judge oath",
+        "oath judge"
+      ],
+      "broad": false,
+      "related_laws": [],
+      "companion_profile": null
+    },
+    {
+      "slug": "president-office",
+      "targets": [
+        "constitution-1999:130",
+        "constitution-1999:5"
+      ],
+      "phrases": [
+        "president power",
+        "powers of president",
+        "commander in chief",
+        "head of state"
+      ],
+      "broad": false,
+      "related_laws": [],
+      "companion_profile": null
+    },
+    {
+      "slug": "president-qualification",
+      "targets": [
+        "constitution-1999:131",
+        "constitution-1999:137"
+      ],
+      "phrases": [
+        "qualify president",
+        "qualification president",
+        "president qualification",
+        "presidential qualification",
+        "become president",
+        "run for president",
+        "contest president",
+        "age president",
+        "how old president",
+        "president age",
+        "requirements president",
+        "eligible president",
+        "presidential candidate"
+      ],
+      "broad": false,
+      "related_laws": [],
+      "companion_profile": null
+    },
+    {
+      "slug": "presidential-election",
+      "targets": [
+        "constitution-1999:132",
+        "constitution-1999:133",
+        "constitution-1999:134"
+      ],
+      "phrases": [
+        "presidential election",
+        "elect president",
+        "win presidential election",
+        "president elected",
+        "25 percent",
+        "two thirds of states",
+        "run off",
+        "runoff",
+        "second ballot"
+      ],
+      "broad": false,
+      "related_laws": [],
+      "companion_profile": null
+    },
+    {
+      "slug": "president-term",
+      "targets": [
+        "constitution-1999:135",
+        "constitution-1999:137"
+      ],
+      "phrases": [
+        "president term",
+        "presidential term",
+        "how long president",
+        "tenure president",
+        "third term",
+        "two terms",
+        "term limit",
+        "four years term"
+      ],
+      "broad": false,
+      "related_laws": [],
+      "companion_profile": null
+    },
+    {
+      "slug": "president-disqualification",
+      "targets": [
+        "constitution-1999:137"
+      ],
+      "phrases": [
+        "disqualify president",
+        "forged certificate"
+      ],
+      "broad": false,
+      "related_laws": [],
+      "companion_profile": null
+    },
+    {
+      "slug": "vice-president",
+      "targets": [
+        "constitution-1999:141",
+        "constitution-1999:142"
+      ],
+      "phrases": [
+        "vice president",
+        "running mate"
+      ],
+      "broad": false,
+      "related_laws": [],
+      "companion_profile": null
+    },
+    {
+      "slug": "impeach-president",
+      "targets": [
+        "constitution-1999:143"
+      ],
+      "phrases": [
+        "impeach",
+        "impeachment",
+        "remove president",
+        "removal of president",
+        "gross misconduct"
+      ],
+      "broad": false,
+      "related_laws": [],
+      "companion_profile": null
+    },
+    {
+      "slug": "president-incapacity",
+      "targets": [
+        "constitution-1999:144"
+      ],
+      "phrases": [
+        "president incapacity",
+        "president sick",
+        "president ill",
+        "permanent incapacity",
+        "medical incapacity"
+      ],
+      "broad": false,
+      "related_laws": [],
+      "companion_profile": null
+    },
+    {
+      "slug": "acting-president",
+      "targets": [
+        "constitution-1999:145"
+      ],
+      "phrases": [
+        "acting president",
+        "president travel",
+        "president vacation",
+        "president absent",
+        "transmit letter"
+      ],
+      "broad": false,
+      "related_laws": [],
+      "companion_profile": null
+    },
+    {
+      "slug": "president-succession",
+      "targets": [
+        "constitution-1999:146"
+      ],
+      "phrases": [
+        "president die",
+        "death of president",
+        "succeed president",
+        "succession",
+        "president resign"
+      ],
+      "broad": false,
+      "related_laws": [],
+      "companion_profile": null
+    },
+    {
+      "slug": "ministers",
+      "targets": [
+        "constitution-1999:147",
+        "constitution-1999:148"
+      ],
+      "phrases": [
+        "minister",
+        "appoint minister",
+        "cabinet",
+        "federal executive council",
+        "minister every state"
+      ],
+      "broad": false,
+      "related_laws": [],
+      "companion_profile": null
+    },
+    {
+      "slug": "attorney-general",
+      "targets": [
+        "constitution-1999:150",
+        "constitution-1999:195"
+      ],
+      "phrases": [
+        "attorney general",
+        "minister of justice",
+        "attorney general federation"
+      ],
+      "broad": false,
+      "related_laws": [],
+      "companion_profile": null
+    },
+    {
+      "slug": "federal-bodies",
+      "targets": [
+        "constitution-1999:153"
+      ],
+      "phrases": [
+        "federal commission",
+        "code of conduct bureau",
+        "police service commission",
+        "federal character commission",
+        "national judicial council",
+        "njc",
+        "federal civil service commission"
+      ],
+      "broad": false,
+      "related_laws": [],
+      "companion_profile": null
+    },
+    {
+      "slug": "revenue-allocation",
+      "targets": [
+        "constitution-1999:162"
+      ],
+      "phrases": [
+        "federation account",
+        "revenue allocation",
+        "revenue sharing",
+        "sharing formula",
+        "derivation",
+        "13 percent",
+        "faac",
+        "oil revenue",
+        "distributable pool",
+        "state allocation"
+      ],
+      "broad": false,
+      "related_laws": [],
+      "companion_profile": null
+    },
+    {
+      "slug": "presidential-appointments",
+      "targets": [
+        "constitution-1999:171"
+      ],
+      "phrases": [
+        "presidential appointment",
+        "ambassador",
+        "head of service",
+        "permanent secretary"
+      ],
+      "broad": false,
+      "related_laws": [],
+      "companion_profile": null
+    },
+    {
+      "slug": "code-of-conduct",
+      "targets": [
+        "constitution-1999:172",
+        "constitution-1999:209"
+      ],
+      "phrases": [
+        "code of conduct",
+        "asset declaration",
+        "declare asset",
+        "declaration of asset"
+      ],
+      "broad": false,
+      "related_laws": [],
+      "companion_profile": null
+    },
+    {
+      "slug": "prosecutions",
+      "targets": [
+        "constitution-1999:174",
+        "constitution-1999:211"
+      ],
+      "phrases": [
+        "public prosecution",
+        "nolle prosequi",
+        "discontinue case",
+        "take over prosecution",
+        "prosecute",
+        "prosecution"
+      ],
+      "broad": false,
+      "related_laws": [],
+      "companion_profile": null
+    },
+    {
+      "slug": "pardon",
+      "targets": [
+        "constitution-1999:175",
+        "constitution-1999:212"
+      ],
+      "phrases": [
+        "pardon",
+        "prerogative of mercy",
+        "clemency",
+        "commute sentence",
+        "reprieve"
+      ],
+      "broad": false,
+      "related_laws": [],
+      "companion_profile": null
+    },
+    {
+      "slug": "governor-office",
+      "targets": [
+        "constitution-1999:176"
+      ],
+      "phrases": [
+        "governor power",
+        "powers of governor"
+      ],
+      "broad": false,
+      "related_laws": [],
+      "companion_profile": null
+    },
+    {
+      "slug": "governor-qualification",
+      "targets": [
+        "constitution-1999:177"
+      ],
+      "phrases": [
+        "qualify governor",
+        "qualification governor",
+        "governor qualification",
+        "become governor",
+        "run for governor",
+        "contest governor",
+        "governor age",
+        "how old governor",
+        "requirements governor",
+        "governorship candidate",
+        "eligible governor"
+      ],
+      "broad": false,
+      "related_laws": [],
+      "companion_profile": null
+    },
+    {
+      "slug": "governor-disqualification",
+      "targets": [
+        "constitution-1999:182"
+      ],
+      "phrases": [
+        "disqualify governor",
+        "ineligible governor",
+        "barred governor"
+      ],
+      "broad": false,
+      "related_laws": [],
+      "companion_profile": null
+    },
+    {
+      "slug": "governorship-election",
+      "targets": [
+        "constitution-1999:178",
+        "constitution-1999:179"
+      ],
+      "phrases": [
+        "governorship election",
+        "elect governor",
+        "win governorship"
+      ],
+      "broad": false,
+      "related_laws": [],
+      "companion_profile": null
+    },
+    {
+      "slug": "governor-term",
+      "targets": [
+        "constitution-1999:180",
+        "constitution-1999:182"
+      ],
+      "phrases": [
+        "governor term",
+        "governor tenure",
+        "how long governor"
+      ],
+      "broad": false,
+      "related_laws": [],
+      "companion_profile": null
+    },
+    {
+      "slug": "deputy-governor",
+      "targets": [
+        "constitution-1999:186",
+        "constitution-1999:187"
+      ],
+      "phrases": [
+        "deputy governor"
+      ],
+      "broad": false,
+      "related_laws": [],
+      "companion_profile": null
+    },
+    {
+      "slug": "impeach-governor",
+      "targets": [
+        "constitution-1999:188"
+      ],
+      "phrases": [
+        "impeach governor",
+        "remove governor",
+        "removal of governor",
+        "governor impeachment",
+        "remove deputy governor"
+      ],
+      "broad": false,
+      "related_laws": [],
+      "companion_profile": null
+    },
+    {
+      "slug": "acting-governor",
+      "targets": [
+        "constitution-1999:190"
+      ],
+      "phrases": [
+        "acting governor"
+      ],
+      "broad": false,
+      "related_laws": [],
+      "companion_profile": null
+    },
+    {
+      "slug": "commissioners",
+      "targets": [
+        "constitution-1999:192"
+      ],
+      "phrases": [
+        "state commissioner",
+        "commissioner",
+        "appoint commissioner",
+        "state executive council"
+      ],
+      "broad": false,
+      "related_laws": [],
+      "companion_profile": null
+    },
+    {
+      "slug": "census",
+      "targets": [
+        "constitution-1999:213"
+      ],
+      "phrases": [
+        "census",
+        "population count",
+        "headcount"
+      ],
+      "broad": false,
+      "related_laws": [],
+      "companion_profile": null
+    },
+    {
+      "slug": "police",
+      "targets": [
+        "constitution-1999:214",
+        "constitution-1999:215"
+      ],
+      "phrases": [
+        "state police",
+        "police force",
+        "own police",
+        "community police",
+        "regional police",
+        "local police",
+        "amotekun",
+        "establish police",
+        "nigeria police"
+      ],
+      "broad": false,
+      "related_laws": [],
+      "companion_profile": null
+    },
+    {
+      "slug": "police-control",
+      "targets": [
+        "constitution-1999:215",
+        "constitution-1999:216"
+      ],
+      "phrases": [
+        "inspector general",
+        "igp",
+        "commissioner of police",
+        "control police",
+        "controls police",
+        "command police",
+        "police council"
+      ],
+      "broad": false,
+      "related_laws": [],
+      "companion_profile": null
+    },
+    {
+      "slug": "armed-forces",
+      "targets": [
+        "constitution-1999:217",
+        "constitution-1999:218"
+      ],
+      "phrases": [
+        "armed forces",
+        "army",
+        "military",
+        "navy",
+        "air force",
+        "soldier",
+        "deploy army",
+        "military deployment"
+      ],
+      "broad": false,
+      "related_laws": [],
+      "companion_profile": null
+    },
+    {
+      "slug": "military-service",
+      "targets": [
+        "constitution-1999:220"
+      ],
+      "phrases": [
+        "compulsory military service",
+        "conscription",
+        "national service"
+      ],
+      "broad": false,
+      "related_laws": [],
+      "companion_profile": null
+    },
+    {
+      "slug": "independent-candidates",
+      "targets": [
+        "constitution-1999:221"
+      ],
+      "phrases": [
+        "independent candidate",
+        "independent candidacy",
+        "run without party",
+        "contest without party"
+      ],
+      "broad": false,
+      "related_laws": [],
+      "companion_profile": null
+    },
+    {
+      "slug": "party-registration",
+      "targets": [
+        "constitution-1999:222",
+        "constitution-1999:223"
+      ],
+      "phrases": [
+        "form political party",
+        "register political party",
+        "political party registration",
+        "new party",
+        "form party"
+      ],
+      "broad": false,
+      "related_laws": [],
+      "companion_profile": null
+    },
+    {
+      "slug": "party-finance",
+      "targets": [
+        "constitution-1999:225",
+        "constitution-1999:226"
+      ],
+      "phrases": [
+        "party finance",
+        "party funding",
+        "campaign finance",
+        "fund political party"
+      ],
+      "broad": false,
+      "related_laws": [],
+      "companion_profile": null
+    },
+    {
+      "slug": "militia",
+      "targets": [
+        "constitution-1999:227"
+      ],
+      "phrases": [
+        "militia",
+        "quasi military",
+        "armed group",
+        "vigilante"
+      ],
+      "broad": false,
+      "related_laws": [],
+      "companion_profile": null
+    },
+    {
+      "slug": "supreme-court",
+      "targets": [
+        "constitution-1999:230",
+        "constitution-1999:231"
+      ],
+      "phrases": [
+        "supreme court"
+      ],
+      "broad": false,
+      "related_laws": [],
+      "companion_profile": null
+    },
+    {
+      "slug": "judicial-appointments",
+      "targets": [
+        "constitution-1999:231"
+      ],
+      "phrases": [
+        "chief justice",
+        "cjn",
+        "justice supreme court",
+        "appoint judge",
+        "appointment of judge"
+      ],
+      "broad": false,
+      "related_laws": [],
+      "companion_profile": null
+    },
+    {
+      "slug": "supreme-court-original",
+      "targets": [
+        "constitution-1999:232"
+      ],
+      "phrases": [
+        "dispute between federation and state",
+        "state sue federal government",
+        "original jurisdiction"
+      ],
+      "broad": false,
+      "related_laws": [],
+      "companion_profile": null
+    },
+    {
+      "slug": "supreme-court-appeal",
+      "targets": [
+        "constitution-1999:233"
+      ],
+      "phrases": [
+        "appeal to supreme court",
+        "appeal supreme court"
+      ],
+      "broad": false,
+      "related_laws": [],
+      "companion_profile": null
+    },
+    {
+      "slug": "court-of-appeal",
+      "targets": [
+        "constitution-1999:237",
+        "constitution-1999:240",
+        "constitution-1999:241"
+      ],
+      "phrases": [
+        "court of appeal",
+        "appeal court"
+      ],
+      "broad": false,
+      "related_laws": [],
+      "companion_profile": null
+    },
+    {
+      "slug": "federal-high-court-jurisdiction",
+      "targets": [
+        "constitution-1999:251"
+      ],
+      "phrases": [
+        "federal high court jurisdiction",
+        "jurisdiction federal high court"
+      ],
+      "broad": false,
+      "related_laws": [],
+      "companion_profile": null
+    },
+    {
+      "slug": "federal-high-court",
+      "targets": [
+        "constitution-1999:249",
+        "constitution-1999:251"
+      ],
+      "phrases": [
+        "federal high court",
+        "fhc",
+        "admiralty",
+        "tax case",
+        "revenue case"
+      ],
+      "broad": false,
+      "related_laws": [],
+      "companion_profile": null
+    },
+    {
+      "slug": "state-high-court",
+      "targets": [
+        "constitution-1999:270",
+        "constitution-1999:272"
+      ],
+      "phrases": [
+        "state high court",
+        "high court of a state",
+        "high court jurisdiction"
+      ],
+      "broad": false,
+      "related_laws": [],
+      "companion_profile": null
+    },
+    {
+      "slug": "sharia-court",
+      "targets": [
+        "constitution-1999:275",
+        "constitution-1999:277"
+      ],
+      "phrases": [
+        "sharia",
+        "sharia court",
+        "islamic law",
+        "kadi"
+      ],
+      "broad": false,
+      "related_laws": [],
+      "companion_profile": null
+    },
+    {
+      "slug": "customary-court",
+      "targets": [
+        "constitution-1999:280",
+        "constitution-1999:282"
+      ],
+      "phrases": [
+        "customary court",
+        "customary law"
+      ],
+      "broad": false,
+      "related_laws": [],
+      "companion_profile": null
+    },
+    {
+      "slug": "election-petitions",
+      "targets": [
+        "constitution-1999:285"
+      ],
+      "phrases": [
+        "election tribunal",
+        "election petition",
+        "challenge election",
+        "election result",
+        "tribunal election",
+        "petition election"
+      ],
+      "broad": false,
+      "related_laws": [],
+      "companion_profile": null
+    },
+    {
+      "slug": "court-orders",
+      "targets": [
+        "constitution-1999:287"
+      ],
+      "phrases": [
+        "enforce judgment",
+        "obey court order",
+        "disobey court order",
+        "court order enforcement",
+        "contempt"
+      ],
+      "broad": false,
+      "related_laws": [],
+      "companion_profile": null
+    },
+    {
+      "slug": "judges-tenure",
+      "targets": [
+        "constitution-1999:291",
+        "constitution-1999:292"
+      ],
+      "phrases": [
+        "judge retire",
+        "retirement age judge",
+        "remove judge",
+        "removal of judge",
+        "sack judge",
+        "judicial misconduct"
+      ],
+      "broad": false,
+      "related_laws": [],
+      "companion_profile": null
+    },
+    {
+      "slug": "fct",
+      "targets": [
+        "constitution-1999:297",
+        "constitution-1999:299",
+        "constitution-1999:302"
+      ],
+      "phrases": [
+        "fct",
+        "federal capital territory",
+        "abuja",
+        "fct minister",
+        "abuja land"
+      ],
+      "broad": false,
+      "related_laws": [],
+      "companion_profile": null
+    },
+    {
+      "slug": "state-of-emergency",
+      "targets": [
+        "constitution-1999:305"
+      ],
+      "phrases": [
+        "state of emergency",
+        "emergency rule",
+        "declare emergency",
+        "proclamation of emergency",
+        "emergency power"
+      ],
+      "broad": false,
+      "related_laws": [],
+      "companion_profile": null
+    },
+    {
+      "slug": "resignation",
+      "targets": [
+        "constitution-1999:306"
+      ],
+      "phrases": [
+        "resign",
+        "resignation"
+      ],
+      "broad": false,
+      "related_laws": [],
+      "companion_profile": null
+    },
+    {
+      "slug": "immunity",
+      "targets": [
+        "constitution-1999:308"
+      ],
+      "phrases": [
+        "immunity",
+        "immune",
+        "sue governor",
+        "sue president",
+        "sue vice president",
+        "sue deputy governor",
+        "arrest governor",
+        "arrest president",
+        "prosecute governor",
+        "prosecute president",
+        "governor court case",
+        "president court case"
+      ],
+      "broad": false,
+      "related_laws": [],
+      "companion_profile": null
+    },
+    {
+      "slug": "existing-law",
+      "targets": [
+        "constitution-1999:315"
+      ],
+      "phrases": [
+        "existing law",
+        "military decree",
+        "decree",
+        "law before 1999"
+      ],
+      "broad": false,
+      "related_laws": [],
+      "companion_profile": null
+    },
+    {
+      "slug": "interpretation",
+      "targets": [
+        "constitution-1999:318"
+      ],
+      "phrases": [
+        "interpretation",
+        "definition",
+        "define"
+      ],
+      "broad": false,
+      "related_laws": [],
+      "companion_profile": null
+    },
+    {
+      "slug": "civil-service",
+      "targets": [
+        "constitution-1999:169",
+        "constitution-1999:206"
+      ],
+      "phrases": [
+        "civil service",
+        "civil servant",
+        "public servant"
+      ],
+      "broad": false,
+      "related_laws": [],
+      "companion_profile": null
+    },
+    {
+      "slug": "pension",
+      "targets": [
+        "constitution-1999:173",
+        "constitution-1999:210"
+      ],
+      "phrases": [
+        "pension",
+        "gratuity"
+      ],
+      "broad": false,
+      "related_laws": [],
+      "companion_profile": null
+    }
+  ],
+  "statute_topics": [
+    {
+      "slug": "phone-search",
+      "targets": [
+        "acja-2015:9",
+        "police-act-2020:49"
+      ],
+      "phrases": [
+        "search phone",
+        "search telephone",
+        "unlock phone",
+        "police phone"
+      ],
+      "broad": false,
+      "related_laws": [],
+      "companion_profile": "rights"
+    },
+    {
+      "slug": "arrested-search",
+      "targets": [
+        "acja-2015:9",
+        "police-act-2020:52"
+      ],
+      "phrases": [
+        "search arrested suspect",
+        "search arrested person",
+        "search after arrest"
+      ],
+      "broad": false,
+      "related_laws": [],
+      "companion_profile": "search"
+    },
+    {
+      "slug": "arrest-without-warrant",
+      "targets": [
+        "acja-2015:18",
+        "police-act-2020:38"
+      ],
+      "phrases": [
+        "arrest without warrant",
+        "arrest no warrant"
+      ],
+      "broad": false,
+      "related_laws": [],
+      "companion_profile": "rights"
+    },
+    {
+      "slug": "stop-search",
+      "targets": [
+        "police-act-2020:49",
+        "police-act-2020:50",
+        "police-act-2020:51"
+      ],
+      "phrases": [
+        "stop and search",
+        "stopped searched",
+        "reasonable suspicion search"
+      ],
+      "broad": false,
+      "related_laws": [],
+      "companion_profile": "search"
+    },
+    {
+      "slug": "statute-bail",
+      "targets": [
+        "acja-2015:30",
+        "acja-2015:31",
+        "police-act-2020:62",
+        "police-act-2020:63"
+      ],
+      "phrases": [
+        "bail",
+        "release before charge"
+      ],
+      "broad": false,
+      "related_laws": [],
+      "companion_profile": "rights"
+    },
+    {
+      "slug": "detention-limits",
+      "targets": [
+        "acja-2015:32",
+        "police-act-2020:64"
+      ],
+      "phrases": [
+        "detention",
+        "detained",
+        "held without charge",
+        "custody time limit"
+      ],
+      "broad": false,
+      "related_laws": [],
+      "companion_profile": "rights"
+    },
+    {
+      "slug": "statements",
+      "targets": [
+        "acja-2015:17",
+        "police-act-2020:60"
+      ],
+      "phrases": [
+        "record statement",
+        "recording statement",
+        "suspect statement"
+      ],
+      "broad": false,
+      "related_laws": [],
+      "companion_profile": "rights"
+    },
+    {
+      "slug": "premises-search",
+      "targets": [
+        "acja-2015:12",
+        "police-act-2020:55",
+        "police-act-2020:58"
+      ],
+      "phrases": [
+        "search premises",
+        "search house",
+        "search place",
+        "search warrant safeguards"
+      ],
+      "broad": false,
+      "related_laws": [],
+      "companion_profile": "search"
+    },
+    {
+      "slug": "arrest-in-place",
+      "targets": [
+        "acja-2015:7",
+        "police-act-2020:36"
+      ],
+      "phrases": [
+        "arrest in lieu",
+        "arrest instead",
+        "arrest someone else",
+        "arrest family",
+        "arrest relative",
+        "arrest brother",
+        "arrest sister",
+        "arrest wife",
+        "arrest husband",
+        "arrest father",
+        "arrest mother",
+        "arrest son",
+        "arrest daughter"
+      ],
+      "broad": false,
+      "related_laws": [],
+      "companion_profile": "rights"
+    },
+    {
+      "slug": "police-funding",
+      "targets": [
+        "police-act-2020:26"
+      ],
+      "phrases": [
+        "police funding",
+        "police budget",
+        "police finance"
+      ],
+      "broad": false,
+      "related_laws": [],
+      "companion_profile": "rights"
+    },
+    {
+      "slug": "police-reward-fund",
+      "targets": [
+        "police-act-2020:91"
+      ],
+      "phrases": [
+        "reward fund"
+      ],
+      "broad": false,
+      "related_laws": [],
+      "companion_profile": "rights"
+    },
+    {
+      "slug": "sitting-leader-court",
+      "targets": [
+        "constitution-1999:308"
+      ],
+      "phrases": [
+        "court while office",
+        "taken court office",
+        "sued while office",
+        "sued in office",
+        "charged while office",
+        "criminal case office",
+        "prosecuted while office",
+        "civil case office",
+        "immune governor",
+        "immune president",
+        "legal action governor",
+        "legal action president"
+      ],
+      "broad": false,
+      "related_laws": [],
+      "companion_profile": null
+    },
+    {
+      "slug": "election-disputes",
+      "targets": [
+        "constitution-1999:285",
+        "constitution-1999:239",
+        "constitution-1999:246"
+      ],
+      "phrases": [
+        "election dispute",
+        "election disputes",
+        "dispute election",
+        "election tribunal",
+        "election petition",
+        "election case",
+        "challenge election",
+        "challenge result",
+        "contest election",
+        "contest result",
+        "disputed election",
+        "election result court",
+        "petition tribunal",
+        "governorship tribunal",
+        "presidential tribunal"
+      ],
+      "broad": false,
+      "related_laws": [],
+      "companion_profile": null
+    },
+    {
+      "slug": "community-policing",
+      "targets": [
+        "police-act-2020:113",
+        "police-act-2020:114",
+        "police-act-2020:115",
+        "police-act-2020:116",
+        "police-act-2020:118"
+      ],
+      "phrases": [
+        "community policing",
+        "community police",
+        "community policing committee",
+        "neighbourhood watch",
+        "local policing committee",
+        "vigilante police"
+      ],
+      "broad": false,
+      "related_laws": [],
+      "companion_profile": null
+    },
+    {
+      "slug": "capital-offence-bail",
+      "targets": [
+        "acja-2015:161",
+        "constitution-1999:35"
+      ],
+      "phrases": [
+        "bail murder",
+        "bail capital",
+        "bail armed robbery",
+        "bail treason",
+        "bail death penalty",
+        "murder suspect bail",
+        "capital offence bail",
+        "accused murder bail",
+        "bail kidnapping"
+      ],
+      "broad": false,
+      "related_laws": [],
+      "companion_profile": null
+    },
+    {
+      "slug": "general-bail-right",
+      "targets": [
+        "acja-2015:158",
+        "acja-2015:165",
+        "acja-2015:167",
+        "constitution-1999:35"
+      ],
+      "phrases": [
+        "right bail",
+        "entitled bail",
+        "bail right",
+        "granted bail",
+        "conditions bail",
+        "bail conditions",
+        "who stands surety",
+        "bail surety",
+        "bail bond"
+      ],
+      "broad": false,
+      "related_laws": [],
+      "companion_profile": null
+    },
+    {
+      "slug": "plea-bargain",
+      "targets": [
+        "acja-2015:270"
+      ],
+      "phrases": [
+        "plea bargain",
+        "plea bargaining",
+        "plead guilty deal",
+        "negotiate plea",
+        "plea deal",
+        "guilty plea agreement"
+      ],
+      "broad": false,
+      "related_laws": [],
+      "companion_profile": null
+    },
+    {
+      "slug": "remand",
+      "targets": [
+        "acja-2015:293",
+        "acja-2015:294",
+        "acja-2015:295",
+        "acja-2015:296",
+        "acja-2015:299"
+      ],
+      "phrases": [
+        "remand",
+        "remanded",
+        "remand prison",
+        "prison custody trial",
+        "awaiting trial",
+        "held trial",
+        "pending trial custody",
+        "prison before trial",
+        "send prison trial",
+        "jail before trial",
+        "pretrial detention",
+        "magistrate prison"
+      ],
+      "broad": false,
+      "related_laws": [],
+      "companion_profile": null
+    },
+    {
+      "slug": "bail-forfeiture",
+      "targets": [
+        "acja-2015:179",
+        "acja-2015:181",
+        "acja-2015:183",
+        "acja-2015:184",
+        "acja-2015:185"
+      ],
+      "phrases": [
+        "surety fails",
+        "surety produce",
+        "forfeit bail",
+        "bail forfeited",
+        "forfeiture bail",
+        "jump bail",
+        "skip bail",
+        "absconds bail",
+        "recognizance forfeited",
+        "defendant fails appear"
+      ],
+      "broad": false,
+      "related_laws": [],
+      "companion_profile": null
+    },
+    {
+      "slug": "child-suspect",
+      "targets": [
+        "acja-2015:452",
+        "acja-2015:264",
+        "acja-2015:265",
+        "acja-2015:371",
+        "acja-2015:405"
+      ],
+      "phrases": [
+        "child offender",
+        "child suspect",
+        "minor arrested",
+        "juvenile",
+        "underage arrested",
+        "child tried",
+        "child crime",
+        "teenager arrested",
+        "tried adult",
+        "tried as adult",
+        "treated adult",
+        "years old arrested",
+        "aged arrested",
+        "age offender"
+      ],
+      "broad": false,
+      "related_laws": [],
+      "companion_profile": null
+    },
+    {
+      "slug": "police-complaints",
+      "targets": [
+        "police-act-2020:131",
+        "police-act-2020:132",
+        "police-act-2020:133",
+        "police-act-2020:134"
+      ],
+      "phrases": [
+        "report police",
+        "complain police",
+        "complaint police",
+        "police misconduct",
+        "police harassment",
+        "police brutality",
+        "police extortion",
+        "complaints unit",
+        "report officer",
+        "police wrongdoing",
+        "police abuse"
+      ],
+      "broad": false,
+      "related_laws": [],
+      "companion_profile": null
+    },
+    {
+      "slug": "fair-hearing-notice",
+      "targets": [
+        "constitution-1999:36",
+        "acja-2015:122"
+      ],
+      "phrases": [
+        "served court",
+        "served papers",
+        "service court papers",
+        "notice court",
+        "court without notice",
+        "judgment without hearing",
+        "right heard",
+        "never heard",
+        "not served"
+      ],
+      "broad": false,
+      "related_laws": [],
+      "companion_profile": null
+    },
+    {
+      "slug": "military-takeover",
+      "targets": [
+        "constitution-1999:1"
+      ],
+      "phrases": [
+        "military takeover",
+        "military take over",
+        "take over government",
+        "coup",
+        "overthrow government",
+        "military rule",
+        "seize power",
+        "military government",
+        "soldiers government"
+      ],
+      "broad": false,
+      "related_laws": [],
+      "companion_profile": null
+    },
+    {
+      "slug": "term-limits",
+      "targets": [
+        "constitution-1999:135",
+        "constitution-1999:137"
+      ],
+      "phrases": [
+        "third term",
+        "three terms",
+        "term limit",
+        "two terms",
+        "stay power",
+        "how long rule",
+        "years rule",
+        "years president",
+        "years governor",
+        "extend tenure",
+        "tenure extension"
+      ],
+      "broad": false,
+      "related_laws": [],
+      "companion_profile": null
+    },
+    {
+      "slug": "raid-seizure",
+      "targets": [
+        "acja-2015:143",
+        "acja-2015:144",
+        "acja-2015:148",
+        "police-act-2020:48",
+        "police-act-2020:58",
+        "constitution-1999:37"
+      ],
+      "phrases": [
+        "police raid",
+        "raid house",
+        "search house",
+        "search home",
+        "search my house",
+        "seize laptop",
+        "seized laptop",
+        "took laptop",
+        "seize property",
+        "night search",
+        "3am",
+        "midnight police",
+        "entered house"
+      ],
+      "broad": false,
+      "related_laws": [],
+      "companion_profile": null
+    },
+    {
+      "slug": "detention-time-limits",
+      "targets": [
+        "constitution-1999:35",
+        "acja-2015:296",
+        "acja-2015:32",
+        "police-act-2020:64",
+        "police-act-2020:43"
+      ],
+      "phrases": [
+        "how long hold",
+        "how long keep",
+        "how long detain",
+        "held weekend",
+        "hold until monday",
+        "kept overnight",
+        "keep overnight",
+        "detained days",
+        "detained months",
+        "six months detained",
+        "weeks detained"
+      ],
+      "broad": false,
+      "related_laws": [],
+      "companion_profile": null
+    },
+    {
+      "slug": "torture-confession",
+      "targets": [
+        "constitution-1999:34",
+        "acja-2015:8",
+        "police-act-2020:37"
+      ],
+      "phrases": [
+        "beat confession",
+        "force confession",
+        "confession torture",
+        "tortured",
+        "beaten police",
+        "forced confess",
+        "police beat",
+        "inhuman treatment suspect"
+      ],
+      "broad": false,
+      "related_laws": [],
+      "companion_profile": null
+    },
+    {
+      "slug": "customary-vs-private-arrest",
+      "targets": [
+        "acja-2015:20",
+        "acja-2015:23",
+        "acja-2015:21"
+      ],
+      "phrases": [
+        "private person arrest",
+        "citizen arrest",
+        "security guard arrest",
+        "guard held",
+        "hand over police",
+        "handed over police",
+        "shop arrest",
+        "vigilante arrest"
+      ],
+      "broad": false,
+      "related_laws": [],
+      "companion_profile": null
+    },
+    {
+      "slug": "hold-wrongful-compensation",
+      "targets": [
+        "constitution-1999:35",
+        "constitution-1999:46",
+        "acja-2015:314"
+      ],
+      "phrases": [
+        "compensation arrest",
+        "compensation wrongful",
+        "apology arrest",
+        "sue police",
+        "sue wrongful arrest",
+        "damages wrongful arrest",
+        "damages detention"
+      ],
+      "broad": false,
+      "related_laws": [],
+      "companion_profile": null
+    },
+    {
+      "slug": "emergency-powers",
+      "targets": [
+        "constitution-1999:305"
+      ],
+      "phrases": [
+        "state emergency",
+        "emergency rule",
+        "declare emergency",
+        "emergency powers",
+        "emergency proclamation"
+      ],
+      "broad": false,
+      "related_laws": [],
+      "companion_profile": null
+    },
+    {
+      "slug": "treaty-law",
+      "targets": [
+        "constitution-1999:12"
+      ],
+      "phrases": [
+        "treaty law",
+        "treaty force",
+        "sign treaty",
+        "international agreement",
+        "ratify treaty",
+        "treaty become law"
+      ],
+      "broad": false,
+      "related_laws": [],
+      "companion_profile": null
+    },
+    {
+      "slug": "local-government-dissolution",
+      "targets": [
+        "constitution-1999:7"
+      ],
+      "phrases": [
+        "sack local government",
+        "dissolve local government",
+        "local government chairmen",
+        "dissolve council",
+        "caretaker committee",
+        "remove council"
+      ],
+      "broad": false,
+      "related_laws": [],
+      "companion_profile": null
+    },
+    {
+      "slug": "minerals-oil",
+      "targets": [
+        "constitution-1999:44"
+      ],
+      "phrases": [
+        "oil minerals",
+        "own minerals",
+        "own oil",
+        "mineral ownership",
+        "natural gas",
+        "crude oil",
+        "who owns oil"
+      ],
+      "broad": false,
+      "related_laws": [],
+      "companion_profile": null
+    },
+    {
+      "slug": "police-appointment",
+      "targets": [
+        "police-act-2020:7",
+        "constitution-1999:215",
+        "constitution-1999:216"
+      ],
+      "phrases": [
+        "appoint inspector",
+        "inspector general",
+        "igp tenure",
+        "igp appoint",
+        "remove igp",
+        "police chief appoint"
+      ],
+      "broad": false,
+      "related_laws": [],
+      "companion_profile": null
+    },
+    {
+      "slug": "executive-immunity-term",
+      "targets": [
+        "constitution-1999:137"
+      ],
+      "phrases": [
+        "successor term",
+        "complete term",
+        "serve out term",
+        "finish term",
+        "oath twice"
+      ],
+      "broad": false,
+      "related_laws": [],
+      "companion_profile": null
+    }
+  ],
+  "part_topics": [
+    {
+      "slug": "speedy-trial",
+      "targets": [
+        "acja-2015:396",
+        "acja-2015:306",
+        "acja-2015:266"
+      ],
+      "phrases": [
+        "speedy trial",
+        "trial delay",
+        "delay trial",
+        "adjournment limit",
+        "case adjourned",
+        "adjourned many times",
+        "day to day trial",
+        "how soon trial",
+        "how soon tried",
+        "tried quickly",
+        "trial how long",
+        "how long trial",
+        "trial taking long",
+        "stay proceedings",
+        "interlocutory appeal",
+        "adjourn case"
+      ],
+      "broad": false,
+      "related_laws": [],
+      "companion_profile": null
+    },
+    {
+      "slug": "mental-incapacity",
+      "targets": [
+        "acja-2015:278",
+        "acja-2015:279",
+        "acja-2015:281",
+        "acja-2015:284",
+        "acja-2015:288"
+      ],
+      "phrases": [
+        "unsound mind",
+        "mentally ill",
+        "mental illness",
+        "insane defendant",
+        "insanity",
+        "unfit plead",
+        "mentally unfit",
+        "mental health defendant",
+        "mental patient trial"
+      ],
+      "broad": false,
+      "related_laws": [],
+      "companion_profile": null
+    },
+    {
+      "slug": "sentencing",
+      "targets": [
+        "acja-2015:311",
+        "acja-2015:416",
+        "acja-2015:418",
+        "acja-2015:419",
+        "acja-2015:312"
+      ],
+      "phrases": [
+        "sentencing",
+        "pass sentence",
+        "sentence hearing",
+        "how sentence decided",
+        "mitigation",
+        "plea mercy",
+        "consecutive sentence",
+        "prison term judge",
+        "judge sentence"
+      ],
+      "broad": false,
+      "related_laws": [],
+      "companion_profile": null
+    },
+    {
+      "slug": "victim-compensation",
+      "targets": [
+        "acja-2015:314",
+        "acja-2015:319",
+        "acja-2015:321",
+        "acja-2015:328"
+      ],
+      "phrases": [
+        "victim compensation",
+        "compensate victim",
+        "restitution",
+        "pay victim",
+        "compensation order",
+        "return stolen property",
+        "victim paid"
+      ],
+      "broad": false,
+      "related_laws": [],
+      "companion_profile": null
+    },
+    {
+      "slug": "non-custodial",
+      "targets": [
+        "acja-2015:460",
+        "acja-2015:461",
+        "acja-2015:462",
+        "acja-2015:453",
+        "acja-2015:455"
+      ],
+      "phrases": [
+        "community service",
+        "probation",
+        "suspended sentence",
+        "non custodial",
+        "alternative prison",
+        "probation officer",
+        "avoid prison"
+      ],
+      "broad": false,
+      "related_laws": [],
+      "companion_profile": null
+    },
+    {
+      "slug": "parole",
+      "targets": [
+        "acja-2015:468"
+      ],
+      "phrases": [
+        "parole",
+        "early release prisoner",
+        "release before sentence ends",
+        "prisoner release early"
+      ],
+      "broad": false,
+      "related_laws": [],
+      "companion_profile": null
+    },
+    {
+      "slug": "death-sentence",
+      "targets": [
+        "acja-2015:401",
+        "acja-2015:402",
+        "acja-2015:403",
+        "acja-2015:407",
+        "acja-2015:409",
+        "acja-2015:411"
+      ],
+      "phrases": [
+        "death sentence",
+        "execution",
+        "hanging",
+        "carry out death",
+        "capital punishment",
+        "prerogative mercy",
+        "death row"
+      ],
+      "broad": false,
+      "related_laws": [],
+      "companion_profile": null
+    },
+    {
+      "slug": "deportation",
+      "targets": [
+        "acja-2015:439",
+        "acja-2015:440",
+        "acja-2015:448",
+        "acja-2015:451"
+      ],
+      "phrases": [
+        "deportation",
+        "deported",
+        "expel foreigner",
+        "citizens deported"
+      ],
+      "broad": false,
+      "related_laws": [],
+      "companion_profile": null
+    },
+    {
+      "slug": "open-court",
+      "targets": [
+        "acja-2015:259",
+        "acja-2015:260",
+        "acja-2015:261",
+        "acja-2015:262"
+      ],
+      "phrases": [
+        "public hearing",
+        "open court",
+        "press court",
+        "children court",
+        "exclude public",
+        "closed court",
+        "media trial"
+      ],
+      "broad": false,
+      "related_laws": [],
+      "companion_profile": null
+    },
+    {
+      "slug": "witnesses",
+      "targets": [
+        "acja-2015:241",
+        "acja-2015:246",
+        "acja-2015:250",
+        "acja-2015:251",
+        "acja-2015:256"
+      ],
+      "phrases": [
+        "witness summons",
+        "compel witness",
+        "witness refuses",
+        "witness expenses",
+        "oath court",
+        "subpoena",
+        "witness attend court",
+        "witness fails"
+      ],
+      "broad": false,
+      "related_laws": [],
+      "companion_profile": null
+    },
+    {
+      "slug": "no-case-submission",
+      "targets": [
+        "acja-2015:302",
+        "acja-2015:303"
+      ],
+      "phrases": [
+        "no case submission",
+        "case to answer",
+        "dismiss case evidence",
+        "discharge no case",
+        "insufficient evidence trial"
+      ],
+      "broad": false,
+      "related_laws": [],
+      "companion_profile": null
+    },
+    {
+      "slug": "charge-form",
+      "targets": [
+        "acja-2015:194",
+        "acja-2015:196",
+        "acja-2015:193"
+      ],
+      "phrases": [
+        "charge sheet",
+        "particulars charge",
+        "how charge written",
+        "framing charge",
+        "charge contents"
+      ],
+      "broad": false,
+      "related_laws": [],
+      "companion_profile": null
+    },
+    {
+      "slug": "double-jeopardy",
+      "targets": [
+        "acja-2015:238",
+        "acja-2015:239",
+        "acja-2015:277",
+        "constitution-1999:36"
+      ],
+      "phrases": [
+        "tried twice",
+        "double jeopardy",
+        "acquitted again",
+        "same offence twice",
+        "retried acquittal"
+      ],
+      "broad": false,
+      "related_laws": [],
+      "companion_profile": null
+    },
+    {
+      "slug": "attorney-general-powers",
+      "targets": [
+        "acja-2015:104",
+        "acja-2015:105",
+        "acja-2015:106",
+        "acja-2015:107",
+        "acja-2015:108",
+        "constitution-1999:174"
+      ],
+      "phrases": [
+        "attorney general prosecution",
+        "withdraw prosecution",
+        "nolle prosequi",
+        "take over case",
+        "discontinue case",
+        "director public prosecutions",
+        "state prosecutes",
+        "attorney general powers"
+      ],
+      "broad": false,
+      "related_laws": [],
+      "companion_profile": null
+    },
+    {
+      "slug": "private-prosecution",
+      "targets": [
+        "acja-2015:109",
+        "acja-2015:110",
+        "acja-2015:383",
+        "acja-2015:384"
+      ],
+      "phrases": [
+        "private prosecution",
+        "private complaint",
+        "private person prosecute",
+        "file complaint court",
+        "lay complaint"
+      ],
+      "broad": false,
+      "related_laws": [],
+      "companion_profile": null
+    },
+    {
+      "slug": "court-summons",
+      "targets": [
+        "acja-2015:116",
+        "acja-2015:117",
+        "acja-2015:122",
+        "acja-2015:131"
+      ],
+      "phrases": [
+        "court summons",
+        "summons served",
+        "service summons",
+        "summons ignored",
+        "refuse summons",
+        "ignore summons"
+      ],
+      "broad": false,
+      "related_laws": [],
+      "companion_profile": null
+    },
+    {
+      "slug": "search-warrants",
+      "targets": [
+        "acja-2015:143",
+        "acja-2015:146",
+        "acja-2015:148",
+        "acja-2015:149",
+        "acja-2015:150"
+      ],
+      "phrases": [
+        "search warrant",
+        "apply search warrant",
+        "warrant search",
+        "who signs warrant",
+        "warrant time search",
+        "closed place search"
+      ],
+      "broad": false,
+      "related_laws": [],
+      "companion_profile": null
+    },
+    {
+      "slug": "arrest-warrants",
+      "targets": [
+        "acja-2015:35",
+        "acja-2015:36",
+        "acja-2015:43",
+        "acja-2015:44"
+      ],
+      "phrases": [
+        "arrest warrant",
+        "warrant arrest",
+        "warrant of arrest",
+        "execute warrant",
+        "issue warrant"
+      ],
+      "broad": false,
+      "related_laws": [],
+      "companion_profile": null
+    },
+    {
+      "slug": "keep-the-peace",
+      "targets": [
+        "acja-2015:54",
+        "acja-2015:55",
+        "acja-2015:56"
+      ],
+      "phrases": [
+        "keep peace",
+        "good behaviour",
+        "bond peace",
+        "habitual offender security",
+        "security peace"
+      ],
+      "broad": false,
+      "related_laws": [],
+      "companion_profile": null
+    },
+    {
+      "slug": "public-nuisance",
+      "targets": [
+        "acja-2015:72",
+        "acja-2015:79"
+      ],
+      "phrases": [
+        "public nuisance",
+        "nuisance order",
+        "remove nuisance"
+      ],
+      "broad": false,
+      "related_laws": [],
+      "companion_profile": null
+    },
+    {
+      "slug": "court-venue",
+      "targets": [
+        "acja-2015:93",
+        "acja-2015:98",
+        "acja-2015:101",
+        "acja-2015:102"
+      ],
+      "phrases": [
+        "which court trial",
+        "place trial",
+        "transfer case",
+        "change venue",
+        "wrong court",
+        "trial location",
+        "move case"
+      ],
+      "broad": false,
+      "related_laws": [],
+      "companion_profile": null
+    },
+    {
+      "slug": "corporate-liability",
+      "targets": [
+        "acja-2015:477",
+        "acja-2015:478",
+        "acja-2015:479"
+      ],
+      "phrases": [
+        "company prosecuted",
+        "corporation crime",
+        "trial company",
+        "corporate liability",
+        "company charged"
+      ],
+      "broad": false,
+      "related_laws": [],
+      "companion_profile": null
+    },
+    {
+      "slug": "magistrate-appeal",
+      "targets": [
+        "acja-2015:485"
+      ],
+      "phrases": [
+        "appeal magistrate",
+        "magistrate decision appeal",
+        "appeal high court"
+      ],
+      "broad": false,
+      "related_laws": [],
+      "companion_profile": null
+    },
+    {
+      "slug": "justice-monitoring",
+      "targets": [
+        "acja-2015:469",
+        "acja-2015:470"
+      ],
+      "phrases": [
+        "monitoring committee",
+        "criminal justice committee",
+        "reform committee"
+      ],
+      "broad": false,
+      "related_laws": [],
+      "companion_profile": null
+    },
+    {
+      "slug": "guilty-plea",
+      "targets": [
+        "acja-2015:273",
+        "acja-2015:274",
+        "acja-2015:275"
+      ],
+      "phrases": [
+        "plead guilty",
+        "pleading guilty",
+        "effect guilty plea",
+        "plea not guilty",
+        "plea charge"
+      ],
+      "broad": false,
+      "related_laws": [],
+      "companion_profile": null
+    },
+    {
+      "slug": "lawyer-in-court",
+      "targets": [
+        "acja-2015:267",
+        "acja-2015:349"
+      ],
+      "phrases": [
+        "lawyer court",
+        "prosecutor lawyer",
+        "legal practitioner absent",
+        "lawyer missing trial"
+      ],
+      "broad": false,
+      "related_laws": [],
+      "companion_profile": null
+    },
+    {
+      "slug": "fines",
+      "targets": [
+        "acja-2015:420",
+        "acja-2015:422",
+        "acja-2015:429",
+        "acja-2015:433",
+        "acja-2015:426"
+      ],
+      "phrases": [
+        "fine",
+        "pay fine",
+        "default fine",
+        "fine instalments",
+        "imprison default fine",
+        "cannot pay fine"
+      ],
+      "broad": false,
+      "related_laws": [],
+      "companion_profile": null
+    },
+    {
+      "slug": "forfeiture-property",
+      "targets": [
+        "acja-2015:333",
+        "acja-2015:346",
+        "acja-2015:343",
+        "acja-2015:345"
+      ],
+      "phrases": [
+        "forfeiture",
+        "confiscate property",
+        "seize instrument crime",
+        "destroy counterfeit",
+        "proceeds crime"
+      ],
+      "broad": false,
+      "related_laws": [],
+      "companion_profile": null
+    },
+    {
+      "slug": "seized-property",
+      "targets": [
+        "acja-2015:329",
+        "acja-2015:330",
+        "acja-2015:331",
+        "acja-2015:337",
+        "acja-2015:342"
+      ],
+      "phrases": [
+        "seized property return",
+        "police hold property",
+        "recover seized",
+        "property custody court",
+        "property disposal"
+      ],
+      "broad": false,
+      "related_laws": [],
+      "companion_profile": null
+    },
+    {
+      "slug": "vary-bail",
+      "targets": [
+        "acja-2015:168",
+        "acja-2015:169",
+        "acja-2015:175",
+        "acja-2015:176"
+      ],
+      "phrases": [
+        "vary bail",
+        "reduce bail",
+        "bail amount",
+        "change bail",
+        "review bail",
+        "bail too high"
+      ],
+      "broad": false,
+      "related_laws": [],
+      "companion_profile": null
+    },
+    {
+      "slug": "bondsperson",
+      "targets": [
+        "acja-2015:187",
+        "acja-2015:188"
+      ],
+      "phrases": [
+        "bondsperson",
+        "professional surety",
+        "bail agent"
+      ],
+      "broad": false,
+      "related_laws": [],
+      "companion_profile": null
+    },
+    {
+      "slug": "police-gender",
+      "targets": [
+        "police-act-2020:135"
+      ],
+      "phrases": [
+        "women police",
+        "female officers",
+        "gender discrimination police",
+        "equal promotion police",
+        "gender police",
+        "women join police"
+      ],
+      "broad": false,
+      "related_laws": [],
+      "companion_profile": null
+    },
+    {
+      "slug": "special-constables",
+      "targets": [
+        "police-act-2020:105",
+        "police-act-2020:106",
+        "police-act-2020:108",
+        "police-act-2020:111"
+      ],
+      "phrases": [
+        "special constable",
+        "special constables",
+        "volunteer police",
+        "emergency constable"
+      ],
+      "broad": false,
+      "related_laws": [],
+      "companion_profile": null
+    },
+    {
+      "slug": "traffic-wardens",
+      "targets": [
+        "police-act-2020:120",
+        "police-act-2020:124",
+        "police-act-2020:126",
+        "police-act-2020:128"
+      ],
+      "phrases": [
+        "traffic warden",
+        "traffic wardens",
+        "road marshal",
+        "traffic offence officer"
+      ],
+      "broad": false,
+      "related_laws": [],
+      "companion_profile": null
+    },
+    {
+      "slug": "lost-property",
+      "targets": [
+        "police-act-2020:88",
+        "police-act-2020:90"
+      ],
+      "phrases": [
+        "lost property",
+        "found property",
+        "unclaimed property",
+        "missing person",
+        "report missing",
+        "found item police"
+      ],
+      "broad": false,
+      "related_laws": [],
+      "companion_profile": null
+    },
+    {
+      "slug": "unlawful-orders",
+      "targets": [
+        "police-act-2020:137",
+        "police-act-2020:96"
+      ],
+      "phrases": [
+        "illegal order",
+        "unlawful order",
+        "disobey order",
+        "superior order",
+        "boss order police"
+      ],
+      "broad": false,
+      "related_laws": [],
+      "companion_profile": null
+    },
+    {
+      "slug": "attack-police",
+      "targets": [
+        "police-act-2020:98",
+        "police-act-2020:99",
+        "police-act-2020:101",
+        "police-act-2020:102"
+      ],
+      "phrases": [
+        "hit police",
+        "assault police",
+        "attack officer",
+        "impersonate police",
+        "fake police",
+        "obstruct police"
+      ],
+      "broad": false,
+      "related_laws": [],
+      "companion_profile": null
+    },
+    {
+      "slug": "record-arrest",
+      "targets": [
+        "police-act-2020:44",
+        "police-act-2020:89",
+        "acja-2015:15"
+      ],
+      "phrases": [
+        "record arrest",
+        "arrest register",
+        "write arrest",
+        "station record",
+        "arrest book",
+        "custody record"
+      ],
+      "broad": false,
+      "related_laws": [],
+      "companion_profile": null
+    },
+    {
+      "slug": "igp-powers",
+      "targets": [
+        "police-act-2020:9",
+        "police-act-2020:10",
+        "police-act-2020:7"
+      ],
+      "phrases": [
+        "inspector general powers",
+        "igp duties",
+        "igp functions",
+        "igp removal"
+      ],
+      "broad": false,
+      "related_laws": [],
+      "companion_profile": null
+    },
+    {
+      "slug": "police-council",
+      "targets": [
+        "police-act-2020:6"
+      ],
+      "phrases": [
+        "police council",
+        "police service commission"
+      ],
+      "broad": false,
+      "related_laws": [],
+      "companion_profile": null
+    },
+    {
+      "slug": "join-police",
+      "targets": [
+        "police-act-2020:17",
+        "police-act-2020:18",
+        "police-act-2020:19"
+      ],
+      "phrases": [
+        "join police",
+        "recruit police",
+        "police recruitment",
+        "police training",
+        "police oath",
+        "become police officer"
+      ],
+      "broad": false,
+      "related_laws": [],
+      "companion_profile": null
+    },
+    {
+      "slug": "police-welfare",
+      "targets": [
+        "police-act-2020:15",
+        "police-act-2020:20",
+        "police-act-2020:92"
+      ],
+      "phrases": [
+        "police pension",
+        "police salary",
+        "police pay",
+        "police welfare",
+        "police gratuity",
+        "police gallantry"
+      ],
+      "broad": false,
+      "related_laws": [],
+      "companion_profile": null
+    },
+    {
+      "slug": "police-conflict",
+      "targets": [
+        "police-act-2020:93",
+        "police-act-2020:94",
+        "police-act-2020:95"
+      ],
+      "phrases": [
+        "officer indebted",
+        "officer debt",
+        "police business",
+        "police conflict interest",
+        "officer private business"
+      ],
+      "broad": false,
+      "related_laws": [],
+      "companion_profile": null
+    },
+    {
+      "slug": "police-prosecution",
+      "targets": [
+        "police-act-2020:66",
+        "police-act-2020:104"
+      ],
+      "phrases": [
+        "police prosecute",
+        "police power prosecute",
+        "police prosecution"
+      ],
+      "broad": false,
+      "related_laws": [],
+      "companion_profile": null
+    },
+    {
+      "slug": "criminal-records",
+      "targets": [
+        "police-act-2020:67",
+        "police-act-2020:68"
+      ],
+      "phrases": [
+        "fingerprint",
+        "criminal record",
+        "criminal records registry",
+        "take fingerprints"
+      ],
+      "broad": false,
+      "related_laws": [],
+      "companion_profile": null
+    },
+    {
+      "slug": "police-functions",
+      "targets": [
+        "police-act-2020:4",
+        "police-act-2020:5",
+        "police-act-2020:3"
+      ],
+      "phrases": [
+        "police duties",
+        "functions police",
+        "role police",
+        "police responsibilities",
+        "police mandate"
+      ],
+      "broad": false,
+      "related_laws": [],
+      "companion_profile": null
+    },
+    {
+      "slug": "police-complaint-outcome",
+      "targets": [
+        "police-act-2020:134",
+        "police-act-2020:131",
+        "police-act-2020:133"
+      ],
+      "phrases": [
+        "complaint outcome",
+        "police discipline",
+        "police sanction",
+        "punish officer",
+        "officer disciplined"
+      ],
+      "broad": false,
+      "related_laws": [],
+      "companion_profile": null
+    }
+  ],
+  "companions": {
+    "constitution-1999:33": [
+      "constitution-1999:46"
+    ],
+    "constitution-1999:34": [
+      "constitution-1999:46"
+    ],
+    "constitution-1999:35": [
+      "constitution-1999:46",
+      "acja-2015:18",
+      "acja-2015:32",
+      "police-act-2020:38",
+      "police-act-2020:64"
+    ],
+    "constitution-1999:36": [
+      "constitution-1999:46"
+    ],
+    "constitution-1999:37": [
+      "constitution-1999:45",
+      "constitution-1999:46",
+      "acja-2015:9",
+      "police-act-2020:49",
+      "police-act-2020:52"
+    ],
+    "constitution-1999:38": [
+      "constitution-1999:45",
+      "constitution-1999:46"
+    ],
+    "constitution-1999:39": [
+      "constitution-1999:45",
+      "constitution-1999:46"
+    ],
+    "constitution-1999:40": [
+      "constitution-1999:45",
+      "constitution-1999:46"
+    ],
+    "constitution-1999:41": [
+      "constitution-1999:45",
+      "constitution-1999:46"
+    ],
+    "constitution-1999:42": [
+      "constitution-1999:46"
+    ],
+    "constitution-1999:43": [
+      "constitution-1999:46"
+    ],
+    "constitution-1999:44": [
+      "constitution-1999:46"
+    ],
+    "constitution-1999:131": [
+      "constitution-1999:137"
+    ],
+    "constitution-1999:135": [
+      "constitution-1999:137"
+    ],
+    "constitution-1999:177": [
+      "constitution-1999:182"
+    ],
+    "constitution-1999:65": [
+      "constitution-1999:66"
+    ],
+    "constitution-1999:106": [
+      "constitution-1999:107"
+    ]
+  },
+  "companion_profiles": {
+    "rights": [
+      "constitution-1999:35",
+      "constitution-1999:46"
+    ],
+    "search": [
+      "constitution-1999:37",
+      "constitution-1999:45",
+      "constitution-1999:46",
+      "constitution-1999:35"
+    ]
+  },
+  "rights_sections": [
+    33,
+    46
+  ],
+  "rights_noise": [
+    "128",
+    "129",
+    "214",
+    "215",
+    "216",
+    "88",
+    "89"
+  ],
+  "title_context": [
+    [
+      47,
+      89,
+      "National Assembly"
+    ],
+    [
+      90,
+      129,
+      "House of Assembly"
+    ],
+    [
+      130,
+      152,
+      "President"
+    ],
+    [
+      153,
+      161,
+      "federal bodies"
+    ],
+    [
+      176,
+      196,
+      "Governor"
+    ],
+    [
+      197,
+      205,
+      "state bodies"
+    ],
+    [
+      221,
+      229,
+      "political parties"
+    ],
+    [
+      230,
+      236,
+      "Supreme Court"
+    ],
+    [
+      237,
+      248,
+      "Court of Appeal"
+    ],
+    [
+      249,
+      254,
+      "Federal High Court"
+    ],
+    [
+      255,
+      259,
+      "High Court of the FCT"
+    ],
+    [
+      260,
+      264,
+      "Sharia Court of Appeal of the FCT"
+    ],
+    [
+      265,
+      269,
+      "Customary Court of Appeal of the FCT"
+    ],
+    [
+      270,
+      274,
+      "State High Court"
+    ],
+    [
+      275,
+      279,
+      "State Sharia Court of Appeal"
+    ],
+    [
+      280,
+      284,
+      "State Customary Court of Appeal"
+    ]
+  ],
+  "generic_titles": [
+    "appellate jurisdiction",
+    "appointment of auditor-general",
+    "appointment of chairman and members",
+    "audit of public accounts",
+    "committees",
+    "constitution",
+    "contingencies fund",
+    "direct election and franchise",
+    "disqualifications",
+    "establishment of consolidated revenue fund",
+    "independence of certain bodies",
+    "interpretation",
+    "jurisdiction",
+    "languages",
+    "original jurisdiction",
+    "power as to matters of evidence",
+    "power to conduct investigations",
+    "powers",
+    "powers and procedure",
+    "practice and procedure",
+    "presiding at sittings",
+    "qualification for membership",
+    "qualifications for election",
+    "quorum",
+    "quorum and decisions",
+    "recall",
+    "regulation of procedure",
+    "removal of members",
+    "remuneration",
+    "sittings",
+    "special advisers",
+    "supervision of election",
+    "tenure of office of auditor-general",
+    "tenure of office of members",
+    "tenure of office of the members",
+    "tenure of seat of members",
+    "unqualified person sitting or voting",
+    "voting"
+  ],
+  "stopwords": [
+    "a",
+    "abeg",
+    "about",
+    "all",
+    "also",
+    "am",
+    "an",
+    "and",
+    "any",
+    "are",
+    "as",
+    "at",
+    "be",
+    "been",
+    "being",
+    "but",
+    "by",
+    "can",
+    "could",
+    "dey",
+    "did",
+    "do",
+    "does",
+    "done",
+    "even",
+    "for",
+    "from",
+    "get",
+    "gets",
+    "got",
+    "had",
+    "has",
+    "have",
+    "he",
+    "her",
+    "here",
+    "him",
+    "his",
+    "how",
+    "i",
+    "if",
+    "in",
+    "into",
+    "is",
+    "it",
+    "its",
+    "just",
+    "kindly",
+    "madam",
+    "may",
+    "me",
+    "mean",
+    "meaning",
+    "means",
+    "might",
+    "mine",
+    "much",
+    "must",
+    "my",
+    "myself",
+    "na",
+    "no",
+    "not",
+    "of",
+    "oga",
+    "on",
+    "only",
+    "onto",
+    "or",
+    "our",
+    "please",
+    "pls",
+    "really",
+    "said",
+    "say",
+    "says",
+    "shall",
+    "she",
+    "should",
+    "sir",
+    "so",
+    "some",
+    "still",
+    "talk",
+    "talks",
+    "tell",
+    "than",
+    "that",
+    "the",
+    "their",
+    "them",
+    "then",
+    "there",
+    "these",
+    "they",
+    "this",
+    "those",
+    "to",
+    "una",
+    "us",
+    "very",
+    "was",
+    "we",
+    "were",
+    "wetin",
+    "wey",
+    "what",
+    "when",
+    "where",
+    "which",
+    "who",
+    "whom",
+    "whose",
+    "why",
+    "will",
+    "with",
+    "would",
+    "yes",
+    "you",
+    "your",
+    "yours"
+  ],
+  "lemmas": {
+    "sued": "sue",
+    "suing": "sue",
+    "sues": "sue",
+    "children": "child",
+    "women": "woman",
+    "men": "man",
+    "people": "person",
+    "persons": "person",
+    "took": "take",
+    "taken": "take",
+    "taking": "take",
+    "seized": "seize",
+    "seizing": "seize",
+    "beaten": "beat",
+    "shot": "shoot",
+    "married": "marry",
+    "lying": "lie",
+    "dies": "die",
+    "died": "die",
+    "dying": "die",
+    "criticize": "criticise",
+    "criticizing": "criticise",
+    "naturalization": "naturalisation",
+    "naturalize": "naturalise",
+    "defense": "defence",
+    "labor": "labour",
+    "nigerian": "nigeria",
+    "nigerians": "nigeria",
+    "presidency": "president",
+    "presidential": "president",
+    "governorship": "governor",
+    "qualification": "qualify",
+    "qualifications": "qualify",
+    "qualified": "qualify",
+    "qualifies": "qualify",
+    "disqualification": "disqualify",
+    "disqualifications": "disqualify",
+    "disqualified": "disqualify",
+    "disqualifies": "disqualify"
+  }
+}

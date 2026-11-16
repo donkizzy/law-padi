@@ -48,7 +48,9 @@ def test_public_outputs_match_golden() -> None:
         Path(__file__).with_suffix(".json").read_text(encoding="utf-8")
     )
     assert len(fixture["cases"]) >= 300
-    actual_topics = [asdict(topic) for topic in (*topics.TOPICS, *topics.STATUTE_TOPICS)]
+    actual_topics = [
+        asdict(topic) for topic in (*topics.TOPICS, *topics.STATUTE_TOPICS)
+    ]
     assert json.loads(json.dumps(actual_topics)) == fixture["topics"]
     assert json.loads(json.dumps(dict(topics.COMPANIONS))) == fixture["companions"]
     for case in fixture["cases"]:
