@@ -22,7 +22,6 @@ from app.ingestion.service import (
     create_source_upload_session,
     decide_review_candidate,
     derive_review_candidate,
-    get_blob_store,
     get_source_upload_for_user,
     latest_revision_text,
     publish_corpus_release,
@@ -44,6 +43,7 @@ from app.ingestion.service import (
     validate_corpus_release,
     verify_source_document,
 )
+from app.ingestion.storage import get_blob_store
 from app.legal.enums import (
     AdminRole,
     CorpusReleaseStatus,

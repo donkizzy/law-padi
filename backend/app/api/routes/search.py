@@ -19,7 +19,7 @@ from app.ingestion.pgvector_repository import (
     active_target,
 )
 from app.ingestion.r2_blob_store import R2BlobStore
-from app.ingestion.service import get_blob_store
+from app.ingestion.storage import get_blob_store
 from app.legal.enums import (
     InstrumentType,
     LegalStatus,

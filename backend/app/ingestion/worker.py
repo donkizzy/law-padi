@@ -68,9 +68,9 @@ from app.ingestion.service import (
     MAX_UPLOAD_BYTES,
     _release_source_and_review_gates,
     finalize_verified_upload,
-    get_blob_store,
     get_datetime_utc,
 )
+from app.ingestion.storage import get_blob_store
 from app.ingestion.structure_validators import validate_document_graph
 from app.ingestion.text_alignment import aligned_source_spans, compact_text
 from app.ingestion.validation import has_unbalanced_punctuation

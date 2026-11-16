@@ -7,6 +7,7 @@ from pathlib import Path
 from typing import Any, BinaryIO
 
 from app.ingestion.blob_store import BlobStoreError
+from app.ingestion.storage import get_blob_store
 from app.legal.enums import ProvisionKind
 from app.legal.models import SourceDocument
 
@@ -84,8 +85,6 @@ def legal_text_sha256(text: str) -> str:
 
 
 def extract_source_pages(source: SourceDocument) -> list[SourcePage]:
-    from app.ingestion.service import get_blob_store
-
     if not source.storage_key:
         raise ParserError("Source document does not have a stored file")
     if source.mime_type != "application/pdf":

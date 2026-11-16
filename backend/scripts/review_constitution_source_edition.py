@@ -22,8 +22,8 @@ from app.ingestion.service import (
     update_review_issue,
     verify_source_document,
 )
+from app.ingestion.storage import get_blob_store
 from app.ingestion.text_alignment import compact_text
-from app.ingestion.worker import get_blob_store
 from app.legal.enums import (
     EmbeddingProviderKind,
     EvaluationDatasetKind,

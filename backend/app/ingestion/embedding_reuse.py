@@ -9,6 +9,7 @@ from typing import Any
 from sqlmodel import Session, col, select
 
 from app.ingestion.pgvector_repository import embedding_sha256, validate_vector
+from app.ingestion.storage import get_blob_store
 from app.legal.models import (
     CorpusRelease,
     EmbeddingProfile,
@@ -80,8 +81,6 @@ def member_document_vectors(
     # PostgreSQL stores float32 vectors; the original checksum describes the
     # provider's float64 JSON. Verify both against the retained hashed artifact
     # rather than treating harmless storage rounding as corruption.
-    from app.ingestion.service import get_blob_store
-
     originals: dict[tuple[uuid.UUID, str], list[float]] = {}
     artifacts = session.exec(
         select(IngestionArtifact).where(IngestionArtifact.artifact_type == "embeddings")

@@ -37,7 +37,7 @@ from app.ingestion.evaluation import (
 )
 from app.ingestion.pdf import PdfInspectionError, inspect_pdf_bytes
 from app.ingestion.pgvector_repository import validate_index_build
-from app.ingestion.r2_blob_store import R2BlobStore
+from app.ingestion.storage import get_blob_store
 from app.ingestion.text_alignment import compact_text
 from app.ingestion.validation import has_unbalanced_punctuation
 from app.ingestion.workflow import (
@@ -306,31 +306,6 @@ def read_admin_operational_alerts(
 
     alerts.sort(key=lambda alert: alert.detected_at, reverse=True)
     return alerts[:limit]
-
-
-def get_blob_store() -> BlobStore:
-    if settings.INGESTION_STORAGE_BACKEND == "r2":
-        missing = [
-            name
-            for name, value in {
-                "R2_ENDPOINT_URL": settings.R2_ENDPOINT_URL,
-                "R2_BUCKET_NAME": settings.R2_BUCKET_NAME,
-                "R2_ACCESS_KEY_ID": settings.R2_ACCESS_KEY_ID,
-                "R2_SECRET_ACCESS_KEY": settings.R2_SECRET_ACCESS_KEY,
-            }.items()
-            if not value
-        ]
-        if missing:
-            raise BlobStoreError(
-                f"R2 storage is missing required settings: {', '.join(missing)}"
-            )
-        return R2BlobStore(
-            endpoint_url=cast(str, settings.R2_ENDPOINT_URL),
-            bucket_name=cast(str, settings.R2_BUCKET_NAME),
-            access_key_id=cast(str, settings.R2_ACCESS_KEY_ID),
-            secret_access_key=cast(str, settings.R2_SECRET_ACCESS_KEY),
-        )
-    return LocalBlobStore(Path(settings.INGESTION_STORAGE_DIR))
 
 
 def upload_url_for_upload(upload: SourceUpload) -> str:
