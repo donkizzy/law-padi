@@ -1,48 +1,54 @@
 import { expect, type Page, test } from "@playwright/test"
+import type {
+  LegalSearchResponse,
+  LegalSearchResult,
+  ProvisionKind,
+} from "../src/client"
+import { chatCapabilities, conversationList } from "./fixtures/chat.ts"
+import {
+  currentRelease,
+  legalInstrument,
+  legalInstruments,
+  legalSearchResponse,
+  legalSearchResult,
+  provisionReference,
+  provisionTree,
+} from "./fixtures/legal.ts"
+import {
+  mockChatShell,
+  mockCurrentRelease,
+  mockInstruments,
+} from "./fixtures/shell.ts"
 import { mockSignedIn } from "./utils/session.ts"
 
 const release = "published-historical-test"
 const path = "constitution-1999.chapter4.section33.subsection2.paragrapha"
-const edition = "Historical/source Constitution compilation (LFN 2004)"
 const reference = (
   canonical_path: string,
-  kind: string,
+  kind: ProvisionKind,
   citation: string,
   has_text = true,
-) => ({
-  id: canonical_path,
-  canonical_path,
-  kind,
-  number: citation,
-  heading: citation,
-  citation,
-  has_text,
-  authoritative_text: has_text ? "Parent context retained separately." : null,
-})
-const provision = {
+) =>
+  provisionReference({
+    canonical_path,
+    kind,
+    number: citation,
+    heading: citation,
+    citation,
+    has_text,
+    authoritative_text: has_text ? "Parent context retained separately." : null,
+  })
+const provision = legalSearchResult({
   canonical_path: path,
   citation: "Section 33(2)(a)",
   heading: "Defence from unlawful violence",
   ancestor_headings: ["Fundamental Rights"],
   authoritative_text:
     "(a) for the defence of any person from unlawful violence or for the defence of property;",
-  source_document_id: "22222222-2222-4222-8222-222222222222",
   source_page_start: 34,
   source_page_end: 34,
-  legal_status: "historical",
   release_version: release,
-  dense_rank: null,
-  lexical_rank: null,
-  hybrid_score: 1,
-  provision_id: "33333333-3333-4333-8333-333333333333",
-  provision_version_id: "44444444-4444-4444-8444-444444444444",
-  release_id: "55555555-5555-4555-8555-555555555555",
   kind: "paragraph",
-  edition_label: edition,
-  source_title: "Constitution compilation",
-  source_authority: "Retained source authority",
-  source_url: "https://example.test/constitution.pdf",
-  source_content_url: `/api/v1/legal/sources/22222222-2222-4222-8222-222222222222/content?release_version=${release}`,
   ancestors: [
     reference("constitution-1999.chapter4", "chapter", "Chapter 4", false),
     reference("constitution-1999.chapter4.section33", "section", "Section 33"),
@@ -52,68 +58,42 @@ const provision = {
       "Section 33(2)",
     ),
   ],
-  children: [],
-}
+})
 const response = (
-  outcome = "exact",
+  outcome: LegalSearchResponse["outcome"] = "exact",
   data = [provision],
   message: string | null = null,
-) => ({
-  data,
-  count: data.length,
-  outcome,
-  retrieval_mode: "exact",
-  release_version: release,
-  edition_label: edition,
-  message,
-})
+) => legalSearchResponse({ data, outcome, message, release_version: release })
 
 test.use({ storageState: { cookies: [], origins: [] } })
 
 async function mockCorpus(page: Page) {
   await page.route("**/api/v1/conversations/capabilities", (route) =>
     route.fulfill({
-      json: {
+      json: chatCapabilities({
         conversations_enabled: false,
         explanations_enabled: false,
-        supported_languages: ["English"],
-        question_max_length: 2000,
-        build_revision: "test",
-        prompt_version: "constitution-english-v8",
-      },
+      }),
     }),
   )
   await page.route("**/api/v1/legal/**", async (route) => {
     const url = new URL(route.request().url())
     if (url.pathname.endsWith("/instruments"))
       return route.fulfill({
-        json: {
-          data: [
-            {
-              slug: "constitution-1999",
+        json: legalInstruments(
+          [
+            legalInstrument({
               title: "Constitution",
               short_title: "Constitution",
-              edition_label: edition,
               edition_note: "Later amendments may differ.",
-              section_count: 320,
-            },
+            }),
           ],
-          count: 1,
-          release_version: release,
-        },
+          release,
+        ),
       })
     if (url.pathname.endsWith("/releases/current"))
       return route.fulfill({
-        json: {
-          release_id: provision.release_id,
-          release_version: release,
-          index_kind: "enacted",
-          embedding_run_id: provision.provision_id,
-          retrieval_index_build_id: provision.provision_version_id,
-          edition_label: edition,
-          available: true,
-          legal_statuses: ["historical"],
-        },
+        json: currentRelease({ release_version: release }),
       })
     if (url.pathname.endsWith("/provision-history"))
       return route.fulfill({
@@ -123,33 +103,24 @@ async function mockCorpus(page: Page) {
           "This is the only version of this section available so far.",
         ),
       })
-    if (url.pathname.endsWith("/provisions/tree"))
+    if (url.pathname.endsWith("/provisions/tree")) {
+      const chapter = reference(
+        "constitution-1999.chapter4",
+        "chapter",
+        "Chapter 4",
+        false,
+      )
+      const children = url.searchParams.has("parent_path")
       return route.fulfill({
-        json: {
-          data: url.searchParams.has("parent_path")
+        json: provisionTree({
+          data: children
             ? [reference(path, "paragraph", provision.citation)]
-            : [
-                reference(
-                  "constitution-1999.chapter4",
-                  "chapter",
-                  "Chapter 4",
-                  false,
-                ),
-              ],
-          count: 1,
-          parent: url.searchParams.has("parent_path")
-            ? reference(
-                "constitution-1999.chapter4",
-                "chapter",
-                "Chapter 4",
-                false,
-              )
-            : null,
-          scope: "children",
+            : [chapter],
+          parent: children ? chapter : null,
           release_version: release,
-          edition_label: edition,
-        },
+        }),
       })
+    }
     if (url.pathname.endsWith("/search")) {
       const { query, mode } = route.request().postDataJSON()
       if (query === "Section 168")
@@ -201,6 +172,14 @@ async function mockCorpus(page: Page) {
       })
     return route.fulfill({ status: 404, json: { detail: "Not found" } })
   })
+}
+
+// The pages that need no corpus fixtures still load the chat capabilities, the
+// current release and the instrument list.
+async function mockShell(page: Page) {
+  await mockChatShell(page)
+  await mockCurrentRelease(page, { release_version: release })
+  await mockInstruments(page, [legalInstrument()], release)
 }
 
 async function submit(page: Page, query: string) {
@@ -307,7 +286,7 @@ test("Topic queries lead with the top-ranked wording and allow another source", 
       json: {
         ...response("matches", [provision, alternative]),
         retrieval_mode: "hybrid",
-      },
+      } satisfies LegalSearchResponse,
     }),
   )
   await page.route("**/api/v1/legal/provisions/**", (route) =>
@@ -350,7 +329,7 @@ test("A containing section leads when the first ranked clause is only part of th
     }),
   )
   await mockCorpus(page)
-  const child = {
+  const child: LegalSearchResult = {
     ...provision,
     canonical_path: "constitution-1999.chapter6.part1.section131.paragraphd",
     citation: "Section 131(d)",
@@ -359,7 +338,7 @@ test("A containing section leads when the first ranked clause is only part of th
     kind: "paragraph",
     hybrid_score: 0.01639,
   }
-  const parent = {
+  const parent: LegalSearchResult = {
     ...provision,
     canonical_path: "constitution-1999.chapter6.part1.section131",
     provision_version_id: "66666666-6666-4666-8666-666666666666",
@@ -373,7 +352,7 @@ test("A containing section leads when the first ranked clause is only part of th
       json: {
         ...response("matches", [child, parent]),
         retrieval_mode: "hybrid",
-      },
+      } satisfies LegalSearchResponse,
     }),
   )
   await page.route("**/api/v1/legal/provisions/**", (route) =>
@@ -448,7 +427,7 @@ test("Unavailable search can retry and keyword fallback is disclosed", async ({
             retrieval_mode: "lexical",
             message:
               "Search is running in a simpler mode right now, so these keyword matches may be less precise.",
-          },
+          } satisfies LegalSearchResponse,
         })
   })
   await page.goto("/?intent=find")
@@ -590,17 +569,10 @@ test("Browse search always finds sections even when chat is available", async ({
     const request = route.request()
     if (new URL(request.url()).pathname.endsWith("/capabilities"))
       return route.fulfill({
-        json: {
-          conversations_enabled: true,
-          explanations_enabled: true,
-          supported_languages: ["English"],
-          question_max_length: 2000,
-          build_revision: "test",
-          prompt_version: "constitution-english-v8",
-        },
+        json: chatCapabilities(),
       })
     if (request.method() === "POST") createdConversations += 1
-    return route.fulfill({ json: { data: [], count: 0 } })
+    return route.fulfill({ json: conversationList() })
   })
   await page.goto("/constitution")
   await page
@@ -650,6 +622,7 @@ for (const mobile of [false, true]) {
 test("guests landing on the home URL see the welcome page first", async ({
   page,
 }) => {
+  await mockShell(page)
   await page.goto("/")
   await expect(page).toHaveURL(/\/welcome$/)
   await page
@@ -663,6 +636,7 @@ test("guests landing on the home URL see the welcome page first", async ({
 test("signed-in visitors landing on the home URL go straight to the app", async ({
   page,
 }) => {
+  await mockShell(page)
   await mockSignedIn(page)
   await page.goto("/")
   await expect(page).not.toHaveURL(/\/welcome/)
@@ -671,6 +645,7 @@ test("signed-in visitors landing on the home URL go straight to the app", async 
 test("the privacy notice is linked from the welcome page and sign-up", async ({
   page,
 }) => {
+  await mockShell(page)
   await page.goto("/welcome")
   await page
     .getByRole("navigation", { name: "Footer" })
@@ -761,7 +736,7 @@ test("A translated search says what was searched and translates server messages"
         message_code: "simpler_search",
         query_language: "yo",
         searched_query: "Can police search my phone?",
-      },
+      } satisfies LegalSearchResponse,
     }),
   )
   await page.goto(`/?q=${encodeURIComponent("Ṣé ọlọ́pàá lè yẹ fóònù mi wò?")}`)
@@ -786,7 +761,7 @@ test("Uncorroborated results show a warning and neutral match heading", async ({
         message:
           "The published provisions don't seem to answer this directly. These are the closest sections we found.",
         message_code: "not_covered",
-      },
+      } satisfies LegalSearchResponse,
     }),
   )
   await page.goto("/?intent=find&q=Who+won+the+World+Cup", {
@@ -815,7 +790,7 @@ test("An English search shows the server message as sent", async ({ page }) => {
         message_code: "partial_sections",
         query_language: "en",
         searched_query: null,
-      },
+      } satisfies LegalSearchResponse,
     }),
   )
   await page.goto("/?q=privacy")

@@ -3,9 +3,24 @@ import { expect, type Page, test } from "@playwright/test"
 import type {
   CitationOutcome,
   EvidenceItem,
+  FeedbackPublic,
+  Language,
   MessagePublic,
 } from "../src/client"
-import { type ChatAnswer, chatAnswer } from "./fixtures/chat.ts"
+import { userPublic } from "./fixtures/account.ts"
+import {
+  type ChatAnswer,
+  type ChatStreamEvent,
+  chatAnswer,
+  chatCapabilities,
+  conversationDetail,
+  conversationList,
+  conversationPublic,
+  eventStreamBody,
+  messageAccepted,
+  messagePublic,
+} from "./fixtures/chat.ts"
+import { legalSearchResponse } from "./fixtures/legal.ts"
 import { mockSignedIn } from "./utils/session.ts"
 
 const conversationId = "11111111-1111-4111-8111-111111111111"
@@ -52,14 +67,14 @@ const answer = chatAnswer({
   citation_outcomes: [outcome],
   evidence: [evidence],
 })
-const conversation = {
+const conversation = conversationPublic({
   id: conversationId,
   title: question,
   release_version: releaseVersion,
   edition_label: editionLabel,
-  created_at: "2026-10-08T08:00:00Z",
-  updated_at: "2026-10-08T08:00:00Z",
-}
+})
+const acceptedMessageId = "77777777-7777-4777-8777-777777777777"
+const answerMessageId = "88888888-8888-4888-8888-888888888888"
 
 test.use({ storageState: { cookies: [], origins: [] } })
 
@@ -72,7 +87,7 @@ async function mockChat(
     failedSubmissions?: number
     historyFailures?: number
     interruptStream?: boolean
-    answerLanguages?: string[]
+    answerLanguages?: Language[]
   } = {},
 ) {
   let created = false
@@ -89,17 +104,14 @@ async function mockChat(
   }> = []
   await page.route("**/api/v1/legal/search", (route) =>
     route.fulfill({
-      json: {
+      json: legalSearchResponse({
         data: [],
-        count: 0,
         outcome: "not_found",
-        retrieval_mode: "exact",
         release_version: releaseVersion,
         edition_label: editionLabel,
         citation_outcomes: [outcome],
         evidence: [evidence],
-        message: null,
-      },
+      }),
     }),
   )
   await page.route("**/api/v1/conversations**", async (route) => {
@@ -107,25 +119,24 @@ async function mockChat(
     const path = new URL(request.url()).pathname
     if (path.endsWith("/capabilities"))
       return route.fulfill({
-        json: {
-          conversations_enabled: true,
-          explanations_enabled: true,
-          supported_languages: ["English"],
+        json: chatCapabilities({
           answer_languages: options.answerLanguages ?? ["en"],
-          question_max_length: 2000,
-          build_revision: "test",
-          prompt_version: "constitution-english-v8",
-        },
+        }),
       })
     if (path.endsWith(`/conversations/${conversationId}/events`)) {
       if (options.events) await options.events
       expect(new URL(request.url()).searchParams.get("run_id")).toBe(runId)
       completed = true
-      const events = [
+      const events: ChatStreamEvent[] = [
         {
           id: 1,
           event: "retrieval.complete",
-          data: { evidence: [evidence], citation_outcomes: [outcome] },
+          data: {
+            evidence: [evidence],
+            citation_outcomes: [outcome],
+            retrieval_mode: "exact",
+            message: null,
+          },
         },
         ...(options.interruptStream
           ? []
@@ -133,18 +144,13 @@ async function mockChat(
               {
                 id: 2,
                 event: "answer.complete",
-                data: { answer: deliveredAnswer },
-              },
+                data: { message_id: answerMessageId, answer: deliveredAnswer },
+              } as const,
             ]),
       ]
       return route.fulfill({
         contentType: "text/event-stream",
-        body: events
-          .map(
-            ({ id, event, data }) =>
-              `id: ${id}\nevent: ${event}\ndata: ${JSON.stringify(data)}\n\n`,
-          )
-          .join(""),
+        body: eventStreamBody(events),
       })
     }
     if (
@@ -162,11 +168,10 @@ async function mockChat(
       completed = false
       return route.fulfill({
         status: 202,
-        json: {
+        json: messageAccepted({
           run_id: runId,
-          user_message_id: "77777777-7777-4777-8777-777777777777",
-          status: "pending",
-        },
+          user_message_id: acceptedMessageId,
+        }),
       })
     }
     if (
@@ -174,34 +179,26 @@ async function mockChat(
       request.method() === "GET"
     ) {
       const messages: MessagePublic[] = submitted
-        ? [
-            {
-              id: "77777777-7777-4777-8777-777777777777",
-              role: "user",
-              content: question,
-              answer_status: null,
-              answer_content: null,
-              evidence_snapshot: null,
-              created_at: "2026-10-08T08:00:01Z",
-            },
-          ]
+        ? [messagePublic({ id: acceptedMessageId, content: question })]
         : []
       if (completed)
-        messages.push({
-          id: "88888888-8888-4888-8888-888888888888",
-          role: "assistant",
-          content: "",
-          answer_status: "completed",
-          answer_content: deliveredAnswer,
-          evidence_snapshot: [evidence],
-          created_at: "2026-10-08T08:00:02Z",
-        })
+        messages.push(
+          messagePublic({
+            id: answerMessageId,
+            role: "assistant",
+            content: "",
+            answer_status: "completed",
+            answer_content: deliveredAnswer,
+            evidence_snapshot: [evidence],
+            created_at: "2026-10-08T08:00:02Z",
+          }),
+        )
       return route.fulfill({
-        json: {
+        json: conversationDetail({
           ...conversation,
           messages,
           active_run_id: submitted && !completed ? runId : null,
-        },
+        }),
       })
     }
     if (path.endsWith("/conversations") && request.method() === "POST") {
@@ -216,19 +213,16 @@ async function mockChat(
           json: { detail: "History unavailable" },
         })
       return route.fulfill({
-        json: {
-          data: created ? [conversation] : [],
-          count: created ? 1 : 0,
-        },
+        json: conversationList(created ? [conversation] : []),
       })
     }
     if (path.endsWith("/feedback"))
       return route.fulfill({
         json: {
-          message_id: "88888888-8888-4888-8888-888888888888",
+          message_id: answerMessageId,
           helpful: request.postDataJSON().helpful,
           updated_at: "2026-10-13T12:00:00Z",
-        },
+        } satisfies FeedbackPublic,
       })
     return route.fulfill({ status: 404, json: { detail: "Not found" } })
   })
@@ -402,53 +396,39 @@ test("Logout clears private conversation data and drafts in another tab", async 
   const otherTab = await context.newPage()
   await context.route("**/api/v1/users/me", (route) =>
     route.fulfill({
-      json: {
-        id: "99999999-9999-4999-8999-999999999999",
+      json: userPublic({
         email: "account@example.test",
         full_name: "Test Account",
-        is_active: true,
-        is_superuser: false,
-      },
+      }),
     }),
   )
   await context.route("**/api/v1/conversations**", (route) => {
     const path = new URL(route.request().url()).pathname
     if (path.endsWith("/capabilities"))
-      return route.fulfill({
-        json: {
-          conversations_enabled: true,
-          explanations_enabled: true,
-          supported_languages: ["English"],
-          question_max_length: 2000,
-          build_revision: "test",
-          prompt_version: "constitution-english-v8",
-        },
-      })
+      return route.fulfill({ json: chatCapabilities() })
     const authenticated =
       route.request().headers().authorization === "Bearer account-token"
     if (path.endsWith(`/${conversationId}`))
       return authenticated
         ? route.fulfill({
-            json: {
+            json: conversationDetail({
               ...conversation,
               messages: [
-                {
-                  id: "77777777-7777-4777-8777-777777777777",
-                  role: "user",
+                messagePublic({
+                  id: acceptedMessageId,
                   content: "Private account question",
                   created_at: conversation.created_at,
-                },
+                }),
               ],
-            },
+            }),
           })
         : route.fulfill({ status: 404, json: { detail: "Not found" } })
     return route.fulfill({
-      json: {
-        data: authenticated
+      json: conversationList(
+        authenticated
           ? [{ ...conversation, title: "Private account conversation" }]
           : [],
-        count: authenticated ? 1 : 0,
-      },
+      ),
     })
   })
   await mockSignedIn(page)

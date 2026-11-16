@@ -1,8 +1,21 @@
 import { readFile } from "node:fs/promises"
 import { expect, type Page, test } from "@playwright/test"
+import type { LegalSearchResponse, LegalSearchResult } from "../src/client"
+import { chatCapabilities } from "./fixtures/chat.ts"
+import {
+  constitutionEdition,
+  currentRelease,
+  legalInstrument,
+  legalInstruments,
+  legalSearchResponse,
+  legalSearchResult,
+  provisionReference,
+  provisionTree,
+} from "./fixtures/legal.ts"
 
 // Synthetic published release: no real Act is approved by these UI fixtures.
 const release = "synthetic-composite"
+const syntheticEditions = "Synthetic published source editions"
 const constitution = "constitution-1999"
 const acja = "acja-2015"
 const police = "police-act-2020"
@@ -12,37 +25,37 @@ const paths: Record<string, string> = {
   [police]: `${police}.section49`,
 }
 const laws = [
-  {
+  legalInstrument({
     slug: constitution,
     title: "Constitution",
     short_title: "Constitution",
-    edition_label: "Historical/source Constitution compilation (LFN 2004)",
+    edition_label: constitutionEdition,
     edition_note: "Later amendments aren't included yet.",
-  },
-  {
+    section_count: 1,
+  }),
+  legalInstrument({
     slug: acja,
     title: "Administration of Criminal Justice Act 2015",
     short_title: "ACJA 2015",
+    instrument_type: "act",
     edition_label: "As enacted, 2015",
     edition_note: "As enacted, may have been amended.",
-  },
-  {
+    section_count: 1,
+  }),
+  legalInstrument({
     slug: police,
     title: "Nigeria Police Act 2020",
     short_title: "Police Act 2020",
+    instrument_type: "act",
     edition_label: "As enacted, 2020",
     edition_note: "As enacted, may have been amended.",
-  },
-].map((law) => ({
-  ...law,
-  instrument_type: law.slug === constitution ? "constitution" : "act",
-  section_count: 1,
-  legal_statuses: ["historical"],
-}))
-function provision(slug: string, version = release) {
+    section_count: 1,
+  }),
+]
+function provision(slug: string, version = release): LegalSearchResult {
   const law = laws.find((item) => item.slug === slug)!
   const number = slug === acja ? "9" : slug === police ? "49" : "37"
-  return {
+  return legalSearchResult({
     canonical_path: paths[slug],
     citation: `Section ${number}${slug === constitution ? "" : `, ${law.short_title}`}`,
     short_citation:
@@ -57,25 +70,18 @@ function provision(slug: string, version = release) {
     instrument_type: law.instrument_type,
     title: `Synthetic ${law.short_title} section`,
     heading: "Synthetic section",
-    ancestor_headings: [],
     authoritative_text: `Synthetic ${law.short_title} wording for UI testing.`,
-    source_document_id: "22222222-2222-4222-8222-222222222222",
     source_page_start: 9,
     source_page_end: 9,
-    legal_status: "historical",
     release_version: version,
     provision_id: slug,
     provision_version_id: `${slug}-version`,
     release_id: "synthetic",
-    kind: "section",
     edition_label: law.edition_label,
     source_title: `Synthetic ${law.short_title} fixture`,
     source_authority: "Synthetic test publisher",
-    source_url: "https://example.test/synthetic.pdf",
     source_content_url: "/api/v1/legal/sources/synthetic/content",
-    ancestors: [],
-    children: [],
-  }
+  })
 }
 
 test.use({ storageState: { cookies: [], origins: [] } })
@@ -84,41 +90,34 @@ async function mockLaws(page: Page) {
   const searches: Record<string, unknown>[] = []
   await page.route("**/api/v1/conversations/capabilities", (route) =>
     route.fulfill({
-      json: {
+      json: chatCapabilities({
         conversations_enabled: false,
         explanations_enabled: false,
-        supported_languages: ["English"],
-        question_max_length: 2000,
-      },
+      }),
     }),
   )
   await page.route("**/api/v1/legal/**", (route) => {
     const url = new URL(route.request().url())
     const version = url.searchParams.get("release_version") || release
-    const data = (slug: string) => ({
-      data: [provision(slug, version)],
-      count: 1,
-      outcome: "exact",
-      retrieval_mode: "exact",
-      release_version: version,
-      edition_label: "Synthetic published source editions",
-    })
+    const data = (slug: string) =>
+      legalSearchResponse({
+        data: [provision(slug, version)],
+        release_version: version,
+        edition_label: syntheticEditions,
+      })
     if (url.pathname.endsWith("/instruments"))
       return route.fulfill({
-        json: {
-          data: version === "retired-constitution" ? [laws[0]] : laws,
-          count: version === "retired-constitution" ? 1 : 3,
-          release_version: version,
-        },
+        json: legalInstruments(
+          version === "retired-constitution" ? [laws[0]] : laws,
+          version,
+        ),
       })
     if (url.pathname.endsWith("/releases/current"))
       return route.fulfill({
-        json: {
-          available: true,
+        json: currentRelease({
           release_version: release,
-          edition_label: "Synthetic published source editions",
-          legal_statuses: ["historical"],
-        },
+          edition_label: syntheticEditions,
+        }),
       })
     if (url.pathname.endsWith("/tree")) {
       const slug = url.searchParams.get("instrument") || constitution
@@ -132,17 +131,19 @@ async function mockLaws(page: Page) {
         })
       const item = provision(slug, version)
       return route.fulfill({
-        json: {
+        json: provisionTree({
           data: [
-            { ...item, id: item.canonical_path, number: "9", has_text: true },
+            provisionReference({
+              ...item,
+              id: item.canonical_path,
+              number: "9",
+              has_text: true,
+            }),
           ],
-          count: 1,
-          scope: "children",
-          parent: null,
           instrument_slug: slug,
           release_version: version,
           edition_label: item.edition_label,
-        },
+        }),
       })
     }
     if (url.pathname.endsWith("/search")) {
@@ -155,7 +156,7 @@ async function mockLaws(page: Page) {
         json: {
           ...data(slug),
           release_version: body.release_version || release,
-        },
+        } satisfies LegalSearchResponse,
       })
     }
     if (url.pathname.includes("/provisions/")) {
@@ -166,7 +167,13 @@ async function mockLaws(page: Page) {
       return route.fulfill({ json: data(slug) })
     }
     if (url.pathname.endsWith("/provision-history"))
-      return route.fulfill({ json: { data: [], count: 0 } })
+      return route.fulfill({
+        json: legalSearchResponse({
+          data: [],
+          release_version: version,
+          edition_label: syntheticEditions,
+        }),
+      })
     return route.fulfill({ status: 404, json: { detail: "Missing" } })
   })
   return searches
@@ -178,7 +185,7 @@ test("A stored schedule table reads as a table, not a run-on paragraph", async (
   await mockLaws(page)
   await page.route("**/api/v1/legal/provisions/**", (route) =>
     route.fulfill({
-      json: {
+      json: legalSearchResponse({
         data: [
           {
             ...provision(acja, release),
@@ -186,12 +193,9 @@ test("A stored schedule table reads as a table, not a run-on paragraph", async (
               "Sections 165(2) and 183\nS/N | Sub-Sector | Threshold\n1 |  | ₦500m\n2 | Aquaculture |",
           },
         ],
-        count: 1,
-        outcome: "exact",
-        retrieval_mode: "exact",
         release_version: release,
-        edition_label: "Synthetic published source editions",
-      },
+        edition_label: syntheticEditions,
+      }),
     }),
   )
 
@@ -401,7 +405,7 @@ test("Provision reader notices show on the section page and in its source panel"
     "The published Act prints the same wording here as section 121, under the heading “Discretion in ex parte application”. The intended text of section 120 is not known from any available copy."
   await page.route("**/api/v1/legal/provisions/**", (route) =>
     route.fulfill({
-      json: {
+      json: legalSearchResponse({
         data: [
           {
             ...provision(acja),
@@ -418,12 +422,9 @@ test("Provision reader notices show on the section page and in its source panel"
             ],
           },
         ],
-        count: 1,
-        outcome: "exact",
-        retrieval_mode: "exact",
         release_version: release,
-        edition_label: "Synthetic published source editions",
-      },
+        edition_label: syntheticEditions,
+      }),
     }),
   )
   await page.goto(`/laws/${acja}/${paths[acja]}?release=${release}`)

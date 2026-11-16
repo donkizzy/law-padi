@@ -1,4 +1,10 @@
 import { expect, test } from "@playwright/test"
+import { legalInstrument } from "./fixtures/legal.ts"
+import {
+  mockChatShell,
+  mockCurrentRelease,
+  mockInstruments,
+} from "./fixtures/shell.ts"
 
 const languages = [
   ["en", "English"],
@@ -16,47 +22,12 @@ for (const width of [320, 375, 640, 768, 1280]) {
       page,
     }) => {
       await page.setViewportSize({ width, height: 812 })
-      await page.route("**/api/v1/conversations**", (route) =>
-        route.fulfill({
-          json: route.request().url().endsWith("/capabilities")
-            ? {
-                conversations_enabled: true,
-                explanations_enabled: true,
-                supported_languages: languages.map(([, label]) => label),
-                answer_languages: languages.map(([language]) => language),
-                question_max_length: 2000,
-                build_revision: "qa",
-                prompt_version: "qa",
-              }
-            : { data: [], count: 0 },
-        }),
-      )
-      await page.route("**/api/v1/legal/releases/current", (route) =>
-        route.fulfill({
-          json: {
-            release_version: "qa",
-            edition_label:
-              "Historical/source Constitution compilation (LFN 2004)",
-            legal_statuses: ["historical"],
-            available: true,
-          },
-        }),
-      )
-      await page.route("**/api/v1/legal/instruments**", (route) =>
-        route.fulfill({
-          json: {
-            data: [
-              {
-                slug: "constitution-1999",
-                title: "Constitution of the Federal Republic of Nigeria 1999",
-                short_title: "1999 Constitution",
-                instrument_type: "constitution",
-              },
-            ],
-            count: 1,
-          },
-        }),
-      )
+      await mockChatShell(page, {
+        supported_languages: languages.map(([, label]) => label),
+        answer_languages: languages.map(([language]) => language),
+      })
+      await mockCurrentRelease(page)
+      await mockInstruments(page, [legalInstrument()])
       await page.goto("/?intent=find")
       if (code !== "en") {
         await page.getByRole("button", { name: "Language: English" }).click()

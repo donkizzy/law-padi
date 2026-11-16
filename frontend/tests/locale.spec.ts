@@ -1,34 +1,16 @@
 import { expect, type Page, test } from "@playwright/test"
-
-const capabilities = {
-  conversations_enabled: true,
-  explanations_enabled: true,
-  supported_languages: ["English"],
-  question_max_length: 2000,
-  build_revision: "test",
-  prompt_version: "constitution-english-v8",
-}
+import { legalInstrument, provisionTree } from "./fixtures/legal.ts"
+import {
+  mockChatShell,
+  mockCurrentRelease,
+  mockInstruments,
+} from "./fixtures/shell.ts"
 
 test.use({ storageState: { cookies: [], origins: [] } })
 
 async function mockApi(page: Page) {
-  await page.route("**/api/v1/conversations**", (route) =>
-    route.fulfill({
-      json: new URL(route.request().url()).pathname.endsWith("/capabilities")
-        ? capabilities
-        : { data: [], count: 0 },
-    }),
-  )
-  await page.route("**/api/v1/legal/releases/current", (route) =>
-    route.fulfill({
-      json: {
-        release_version: "published-test",
-        edition_label: "Historical/source Constitution compilation (LFN 2004)",
-        legal_statuses: ["historical"],
-        available: true,
-      },
-    }),
-  )
+  await mockChatShell(page)
+  await mockCurrentRelease(page)
 }
 
 test("English is the default language", async ({ page }) => {
@@ -44,33 +26,15 @@ test("Translated Browse does not repeat the edition warning in English", async (
   page,
 }) => {
   await mockApi(page)
-  await page.route("**/api/v1/legal/instruments**", (route) =>
-    route.fulfill({
-      json: {
-        data: [
-          {
-            slug: "constitution-1999",
-            title: "1999 Constitution",
-            short_title: "1999 Constitution",
-            section_count: 320,
-            edition_label: "LFN 2004",
-            edition_note:
-              "Historical source edition. Later amendments may differ.",
-          },
-        ],
-        count: 1,
-      },
+  await mockInstruments(page, [
+    legalInstrument({
+      title: "1999 Constitution",
+      edition_label: "LFN 2004",
+      edition_note: "Historical source edition. Later amendments may differ.",
     }),
-  )
-  await page.route("**/api/v1/legal/tree**", (route) =>
-    route.fulfill({
-      json: {
-        data: [],
-        count: 0,
-        release_version: "published-test",
-        edition_label: "LFN 2004",
-      },
-    }),
+  ])
+  await page.route("**/api/v1/legal/provisions/tree**", (route) =>
+    route.fulfill({ json: provisionTree({ edition_label: "LFN 2004" }) }),
   )
   await page.goto("/laws")
   await page.getByRole("button", { name: "Language: English" }).click()

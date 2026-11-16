@@ -1,4 +1,5 @@
 import type { Page } from "@playwright/test"
+import type { Message, Token } from "../../src/client"
 
 export const SESSION_HINT_KEY = "constitution_session"
 
@@ -15,12 +16,15 @@ export async function mockSignedIn(page: Page, accessToken = "account-token") {
   await page.route("**/api/v1/login/refresh", (route) =>
     signedIn
       ? route.fulfill({
-          json: { access_token: accessToken, token_type: "bearer" },
+          json: {
+            access_token: accessToken,
+            token_type: "bearer",
+          } satisfies Token,
         })
       : route.fulfill({ status: 401, json: { detail: "Session expired" } }),
   )
   await page.route("**/api/v1/login/logout", (route) => {
     signedIn = false
-    return route.fulfill({ json: { message: "Signed out" } })
+    return route.fulfill({ json: { message: "Signed out" } satisfies Message })
   })
 }

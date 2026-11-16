@@ -1,4 +1,14 @@
-import type { CitationOutcome, EvidenceItem, Language } from "../../src/client"
+import type {
+  ChatCapabilities,
+  CitationOutcome,
+  ConversationDetail,
+  ConversationList,
+  ConversationPublic,
+  EvidenceItem,
+  Language,
+  MessageAccepted,
+  MessagePublic,
+} from "../../src/client"
 
 // The answer the server stores in `MessagePublic.answer_content` and sends in
 // the `answer.complete` stream event. The OpenAPI schema types that field as a
@@ -69,4 +79,111 @@ export function chatAnswer(overrides: Partial<ChatAnswer> = {}): ChatAnswer {
     translation: null,
     ...overrides,
   }
+}
+
+// Bodies of the conversation endpoints, typed against the generated client so
+// a renamed or newly required field fails the type-check instead of silently
+// leaving the mocks behind.
+
+/** Matches `EXPLANATION_PROMPT_VERSION` in `backend/app/chat/__init__.py`. */
+export const explanationPromptVersion = "constitution-english-v11"
+
+export function chatCapabilities(
+  overrides: Partial<ChatCapabilities> = {},
+): ChatCapabilities {
+  return {
+    conversations_enabled: true,
+    explanations_enabled: true,
+    supported_languages: ["English"],
+    answer_languages: ["en"],
+    question_max_length: 2000,
+    build_revision: "test",
+    prompt_version: explanationPromptVersion,
+    ...overrides,
+  }
+}
+
+export function conversationPublic(
+  overrides: Partial<ConversationPublic> = {},
+): ConversationPublic {
+  return {
+    id: "11111111-1111-4111-8111-111111111111",
+    title: "What does Section 37 protect?",
+    release_version: "published-test",
+    edition_label: "Historical/source Constitution compilation (LFN 2004)",
+    created_at: "2026-10-08T08:00:00Z",
+    updated_at: "2026-10-08T08:00:00Z",
+    ...overrides,
+  }
+}
+
+export function conversationList(
+  data: ConversationPublic[] = [],
+): ConversationList {
+  return { data, count: data.length }
+}
+
+export function messagePublic(
+  overrides: Partial<MessagePublic> = {},
+): MessagePublic {
+  return {
+    id: "77777777-7777-4777-8777-777777777777",
+    role: "user",
+    content: "What does Section 37 protect?",
+    answer_status: null,
+    answer_content: null,
+    evidence_snapshot: null,
+    created_at: "2026-10-08T08:00:01Z",
+    ...overrides,
+  }
+}
+
+export function conversationDetail(
+  overrides: Partial<ConversationDetail> = {},
+): ConversationDetail {
+  return {
+    ...conversationPublic(),
+    messages: [],
+    active_run_id: null,
+    ...overrides,
+  }
+}
+
+export function messageAccepted(
+  overrides: Partial<MessageAccepted> = {},
+): MessageAccepted {
+  return {
+    run_id: "22222222-2222-4222-8222-222222222222",
+    user_message_id: "77777777-7777-4777-8777-777777777777",
+    status: "pending",
+    ...overrides,
+  }
+}
+
+// Server-sent events on `/conversations/{id}/events`. These are the events the
+// worker emits that the page reads (`backend/app/chat/worker.py`).
+export type ChatStreamEvent = { id: number } & (
+  | {
+      event: "retrieval.complete"
+      data: {
+        evidence: EvidenceItem[]
+        citation_outcomes: CitationOutcome[]
+        retrieval_mode: "exact" | "hybrid" | "lexical" | null
+        message: string | null
+      }
+    }
+  | {
+      event: "answer.complete"
+      data: { message_id: string; answer: ChatAnswer }
+    }
+)
+
+/** The `text/event-stream` body the server would send for these events. */
+export function eventStreamBody(events: ChatStreamEvent[]): string {
+  return events
+    .map(
+      ({ id, event, data }) =>
+        `id: ${id}\nevent: ${event}\ndata: ${JSON.stringify(data)}\n\n`,
+    )
+    .join("")
 }

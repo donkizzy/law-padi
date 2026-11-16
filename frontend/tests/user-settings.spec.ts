@@ -1,67 +1,50 @@
 import { expect, type Page, test } from "@playwright/test"
+import type { ClaimResult, Message } from "../src/client"
+import {
+  preferencesPublic,
+  savedProvision,
+  userPublic,
+} from "./fixtures/account.ts"
+import { legalInstrument } from "./fixtures/legal.ts"
+import {
+  mockChatShell,
+  mockCurrentRelease,
+  mockInstruments,
+} from "./fixtures/shell.ts"
 import { mockSignedIn, SESSION_HINT_KEY } from "./utils/session.ts"
 
-const user = {
-  id: "99999999-9999-4999-8999-999999999999",
-  full_name: "Test Reader",
-  email: "reader@example.test",
-  is_active: true,
-  is_superuser: false,
-}
-const capabilities = {
-  conversations_enabled: true,
-  explanations_enabled: true,
-  supported_languages: ["English"],
-  question_max_length: 2000,
-  build_revision: "test",
-  prompt_version: "constitution-english-v8",
-}
+const user = userPublic()
 
 test.use({ storageState: { cookies: [], origins: [] } })
 
 async function mockSettings(page: Page, signedIn = false) {
-  let account = { ...user }
+  let account = user
   const profileWrites: unknown[] = []
   const emailRequests: unknown[] = []
   const passwordWrites: unknown[] = []
   if (signedIn) await mockSignedIn(page, "mock-account")
-  await page.route("**/api/v1/conversations**", (route) =>
-    route.fulfill({
-      json: new URL(route.request().url()).pathname.endsWith("/capabilities")
-        ? capabilities
-        : { data: [], count: 0 },
-    }),
-  )
-  await page.route("**/api/v1/legal/releases/current", (route) =>
-    route.fulfill({
-      json: {
-        release_version: "published-test",
-        edition_label: "Historical/source Constitution compilation (LFN 2004)",
-        legal_statuses: ["historical"],
-        available: true,
-      },
-    }),
-  )
-  await page.route("**/api/v1/legal/instruments**", (route) =>
-    route.fulfill({ json: { data: [], count: 0 } }),
-  )
+  await mockChatShell(page)
+  await mockCurrentRelease(page)
+  await mockInstruments(page)
   await page.route("**/api/v1/users/me**", (route) => {
     if (route.request().url().endsWith("/email-change")) {
       emailRequests.push(route.request().postDataJSON())
       return route.fulfill({
-        json: { message: "Check the new email address." },
+        json: {
+          message: "Check the new email address to confirm the change.",
+        } satisfies Message,
       })
     }
     if (route.request().url().includes("password")) {
       passwordWrites.push(route.request().postDataJSON())
       return route.fulfill({
-        json: { message: "Password updated successfully" },
+        json: { message: "Password updated successfully" } satisfies Message,
       })
     }
     if (route.request().method() === "PATCH") {
       const data = route.request().postDataJSON()
       profileWrites.push(data)
-      account = { ...account, ...data }
+      account = userPublic({ ...account, ...data })
     }
     return route.fulfill({ json: account })
   })
@@ -72,26 +55,31 @@ test("Settings lists every published law with its own source caveat", async ({
   page,
 }) => {
   await mockSettings(page)
-  const laws = [
-    {
+  await mockInstruments(page, [
+    legalInstrument({
       slug: "constitution-1999",
       edition_label: "LFN 2004",
       edition_note: "Constitution: later amendments are not included.",
-    },
-    {
+    }),
+    legalInstrument({
       slug: "acja-2015",
+      title: "Administration of Criminal Justice Act 2015",
+      short_title: "ACJA 2015",
+      instrument_type: "act",
+      section_count: 495,
       edition_label: "As enacted, 2015",
       edition_note: "ACJA: as enacted, may have been amended.",
-    },
-    {
+    }),
+    legalInstrument({
       slug: "police-act-2020",
+      title: "Nigeria Police Act 2020",
+      short_title: "Police Act 2020",
+      instrument_type: "act",
+      section_count: 150,
       edition_label: "As enacted, 2020",
       edition_note: "Police Act: as enacted, may have been amended.",
-    },
-  ]
-  await page.route("**/api/v1/legal/instruments**", (route) =>
-    route.fulfill({ json: { data: laws, count: laws.length } }),
-  )
+    }),
+  ])
   await page.goto("/settings")
   for (const label of [
     "1999 Constitution (2004 edition)",
@@ -268,7 +256,9 @@ test("Opening an email confirmation link waits for the reader to confirm", async
   let requests = 0
   await page.route("**/api/v1/users/verify-email", (route) => {
     requests += 1
-    return route.fulfill({ json: { message: "Email confirmed" } })
+    return route.fulfill({
+      json: { message: "Email confirmed" } satisfies Message,
+    })
   })
   await page.goto("/verify-email?token=dummy-email-change-token")
   const confirm = page.getByRole("button", { name: "Confirm email address" })
@@ -352,7 +342,7 @@ test("A confirmed account takes in this browser's research and guest chats", asy
   // Registered later, so it wins over mockSettings' unconfirmed user.
   await page.route("**/api/v1/users/me", (route) =>
     route.fulfill({
-      json: { ...user, email_verified_at: "2026-10-01T00:00:00Z" },
+      json: userPublic({ email_verified_at: "2026-10-01T00:00:00Z" }),
     }),
   )
   const merged: unknown[] = []
@@ -360,7 +350,7 @@ test("A confirmed account takes in this browser's research and guest chats", asy
   let claims = 0
   await page.route("**/api/v1/conversations/claim", (route) => {
     claims += 1
-    return route.fulfill({ json: { claimed_count: 2 } })
+    return route.fulfill({ json: { claimed_count: 2 } satisfies ClaimResult })
   })
   await page.route("**/api/v1/account/saved-provisions/merge", (route) => {
     const body = route.request().postDataJSON() as { items: unknown[] }
@@ -368,11 +358,10 @@ test("A confirmed account takes in this browser's research and guest chats", asy
     return route.fulfill({
       json: [
         ...body.items,
-        {
+        savedProvision({
           canonical_path: "chapter-iv/section-40",
-          release_version: "published-test",
           saved_at: "2026-09-01T00:00:00Z",
-        },
+        }),
       ],
     })
   })
@@ -449,11 +438,11 @@ test("A different account does not import the legacy account bookmark mirror", a
   })
   await page.route("**/api/v1/users/me", (route) =>
     route.fulfill({
-      json: { ...user, email_verified_at: "2026-10-01T00:00:00Z" },
+      json: userPublic({ email_verified_at: "2026-10-01T00:00:00Z" }),
     }),
   )
   await page.route("**/api/v1/account/preferences", (route) =>
-    route.fulfill({ json: { enter_to_send: true, language: "english" } }),
+    route.fulfill({ json: preferencesPublic({ language: "english" }) }),
   )
   await page.route("**/api/v1/account/saved-provisions/merge", (route) =>
     route.fulfill({ json: [] }),
@@ -469,11 +458,11 @@ test("A confirmed account brings its saved language to a new browser", async ({
   await mockSettings(page, true)
   await page.route("**/api/v1/users/me", (route) =>
     route.fulfill({
-      json: { ...user, email_verified_at: "2026-10-01T00:00:00Z" },
+      json: userPublic({ email_verified_at: "2026-10-01T00:00:00Z" }),
     }),
   )
   await page.route("**/api/v1/conversations/claim", (route) =>
-    route.fulfill({ json: { claimed_count: 0 } }),
+    route.fulfill({ json: { claimed_count: 0 } satisfies ClaimResult }),
   )
   await page.route("**/api/v1/account/saved-provisions/merge", (route) =>
     route.fulfill({ json: [] }),
@@ -484,14 +473,7 @@ test("A confirmed account brings its saved language to a new browser", async ({
       preferenceWrites.push(route.request().postDataJSON())
       return route.fulfill({ json: route.request().postDataJSON() })
     }
-    return route.fulfill({
-      json: {
-        enter_to_send: true,
-        follow_latest: true,
-        open_sources: false,
-        language: "hausa",
-      },
-    })
+    return route.fulfill({ json: preferencesPublic({ language: "hausa" }) })
   })
 
   await page.goto("/settings")
@@ -515,7 +497,9 @@ test("Deleting an account asks for the current password", async ({ page }) => {
   await page.route("**/api/v1/users/me", (route) => {
     if (route.request().method() === "DELETE") {
       deletions.push(route.request().postDataJSON())
-      return route.fulfill({ json: { message: "User deleted successfully" } })
+      return route.fulfill({
+        json: { message: "User deleted successfully" } satisfies Message,
+      })
     }
     return route.fulfill({ json: user })
   })
