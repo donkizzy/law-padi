@@ -384,7 +384,7 @@ def parse_scheduled_code_pages(
         label = marker.group(1).replace(" ", "") if marker else None
         if line.startswith("l") and label:
             label = "1" + label
-        if marker and label == expected:
+        if marker and label is not None and label == expected:
             finish()
             position += 1
             number, rest = label, marker.group(2).strip()
