@@ -3,7 +3,7 @@ from collections.abc import Generator
 import pytest
 from sqlmodel import Session, delete, select
 
-from app.ingestion.workflow import (
+from app.ingestion.runtime.queue import (
     PIPELINE_STAGES,
     append_run_event,
     complete_task,
@@ -499,7 +499,7 @@ def _create_run(db: Session) -> IngestionRun:
 
 
 def test_outbox_drain_marks_pending_events_published(db: Session) -> None:
-    from app.ingestion.workflow import append_run_event, drain_outbox_batch
+    from app.ingestion.runtime.queue import append_run_event, drain_outbox_batch
     from app.legal.models import IngestionRun, TransactionalOutbox
 
     run = IngestionRun(source_document_id=None)

@@ -5,10 +5,8 @@ import pytest
 from sqlmodel import Session, select
 
 from app.core.config import settings
-from app.ingestion.worker import (
-    handle_profiling,
-    run_until_idle,
-)
+from app.ingestion.runtime.runner import run_until_idle
+from app.ingestion.worker import handle_profiling
 from app.legal.enums import (
     IngestionArtifactType,
     IngestionRunStatus,

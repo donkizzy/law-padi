@@ -6,6 +6,7 @@ from uuid import UUID
 from sqlalchemy import and_, or_
 from sqlmodel import Session, col, func, select
 
+from app.ingestion.common import enum_value, get_datetime_utc
 from app.legal.enums import (
     IngestionRunStatus,
     IngestionStage,
@@ -59,10 +60,6 @@ TERMINAL_RUN_STATUSES: tuple[IngestionRunStatus, ...] = (
 )
 
 
-def get_datetime_utc() -> datetime:
-    return datetime.now(UTC)
-
-
 def create_run_steps(
     session: Session,
     run: IngestionRun,
@@ -77,7 +74,7 @@ def create_run_steps(
         stage_order = {stage.value: index for index, stage in enumerate(stages)}
         return sorted(
             existing_steps,
-            key=lambda step: stage_order.get(_enum_value(step.stage), len(stages)),
+            key=lambda step: stage_order.get(enum_value(step.stage), len(stages)),
         )
 
     steps: list[IngestionStep] = []
@@ -144,7 +141,7 @@ def append_run_event(
             "run_id": str(run.id),
             "step_id": str(event.step_id) if event.step_id else None,
             "sequence": sequence,
-            "stage": _enum_value(event_stage) if event_stage else None,
+            "stage": enum_value(event_stage) if event_stage else None,
             "message": message,
             "payload": payload or {},
         },
@@ -479,7 +476,3 @@ def _task_type_at_concurrency_limit(
         )
     ).one()
     return int(active_count or 0) >= limit
-
-
-def _enum_value(value: object) -> str:
-    return str(getattr(value, "value", value))

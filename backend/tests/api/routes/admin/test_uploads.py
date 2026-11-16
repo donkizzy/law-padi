@@ -7,7 +7,7 @@ from sqlmodel import Session, func, select
 
 from app import crud
 from app.core.config import settings
-from app.ingestion.worker import run_until_idle
+from app.ingestion.runtime.runner import run_until_idle
 from app.legal.enums import (
     AdminRole,
     IngestionRunStatus,

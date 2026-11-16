@@ -8,7 +8,7 @@ import pytest
 from sqlmodel import Session, delete, select
 
 from app.ingestion.blob_store import LocalBlobStore
-from app.ingestion.workflow import create_run_steps, enqueue_task
+from app.ingestion.runtime.queue import create_run_steps, enqueue_task
 from app.legal.enums import (
     CorpusReleaseStatus,
     EmbeddingProviderKind,

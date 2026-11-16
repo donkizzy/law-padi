@@ -5,7 +5,7 @@ from fastapi.testclient import TestClient
 from sqlmodel import Session, func, select
 
 from app.core.config import settings
-from app.ingestion.workflow import append_run_event
+from app.ingestion.runtime.queue import append_run_event
 from app.legal.enums import (
     IngestionRunStatus,
     IngestionStage,

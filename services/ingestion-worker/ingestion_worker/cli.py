@@ -13,8 +13,9 @@ from typing import Any
 from sqlmodel import Session
 
 from app.core.db import engine
-from app.ingestion.worker import run_once
-from app.ingestion.workflow import drain_outbox_batch
+from app.ingestion.common import enum_value
+from app.ingestion.runtime.queue import drain_outbox_batch
+from app.ingestion.runtime.runner import run_once
 from app.legal.models import TransactionalOutbox
 
 logger = logging.getLogger(__name__)
@@ -135,9 +136,9 @@ def run_worker(
                 extra={
                     "task_id": str(result.task_id),
                     "run_id": str(result.run_id),
-                    "stage": _enum_value(result.stage),
-                    "task_status": _enum_value(result.task_status),
-                    "run_status": _enum_value(result.run_status),
+                    "stage": enum_value(result.stage),
+                    "task_status": enum_value(result.task_status),
+                    "run_status": enum_value(result.run_status),
                 },
             )
 
@@ -254,10 +255,6 @@ def _env_int_map(name: str) -> dict[str, int]:
             raise ValueError(f"{name} values must be integers")
         limits[key] = raw_limit
     return limits
-
-
-def _enum_value(value: object) -> str:
-    return str(getattr(value, "value", value))
 
 
 if __name__ == "__main__":

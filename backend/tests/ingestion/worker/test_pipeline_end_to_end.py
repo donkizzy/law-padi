@@ -9,9 +9,7 @@ from sqlmodel import Session, select
 
 from app.core.config import settings
 from app.ingestion.embedding import EmbeddingBatch
-from app.ingestion.worker import (
-    run_until_idle,
-)
+from app.ingestion.runtime.runner import run_until_idle
 from app.legal.enums import (
     CorpusReleaseStatus,
     EmbeddingProviderKind,

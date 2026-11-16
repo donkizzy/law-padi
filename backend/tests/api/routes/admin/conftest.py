@@ -12,7 +12,7 @@ from app.ingestion.pgvector_repository import (
     write_segments,
 )
 from app.ingestion.retrieval import build_retrieval_documents
-from app.ingestion.workflow import create_run_steps
+from app.ingestion.runtime.queue import create_run_steps
 from app.legal.enums import (
     CorpusReleaseStatus,
     EmbeddingProviderKind,

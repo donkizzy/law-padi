@@ -7,18 +7,17 @@ from sqlmodel import Session, select
 
 from app.core.config import settings
 from app.ingestion.embedding import EmbeddingBatch
+from app.ingestion.runtime.errors import IngestionWorkerError
+from app.ingestion.runtime.queue import enqueue_task
+from app.ingestion.runtime.runner import run_once, run_until_idle
 from app.ingestion.service import (
     start_embedding,
 )
 from app.ingestion.worker import (
-    IngestionWorkerError,
     _benchmark_dataset_for_embedding_profiles,
     _embed_with_checkpoints,
     handle_embedding,
-    run_once,
-    run_until_idle,
 )
-from app.ingestion.workflow import enqueue_task
 from app.legal.enums import (
     EmbeddingProviderKind,
     EmbeddingRunStatus,

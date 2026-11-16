@@ -5,9 +5,7 @@ import pytest
 from sqlmodel import Session
 
 from app.core.config import settings
-from app.ingestion.worker import (
-    run_once,
-)
+from app.ingestion.runtime.runner import run_once
 from app.legal.enums import (
     IngestionRunStatus,
     IngestionStage,
@@ -62,7 +60,9 @@ def test_worker_records_database_failure_after_rolling_back_partial_stage(
         session.add(source)
         session.flush()
 
-    monkeypatch.setattr("app.ingestion.worker._handler_for", lambda _stage: fail_flush)
+    monkeypatch.setattr(
+        "app.ingestion.runtime.runner.handler_for", lambda _stage: fail_flush
+    )
     result = run_once(db, worker_id="worker-test", task_type="verifying_upload")
 
     assert result is not None

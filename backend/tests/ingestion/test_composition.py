@@ -27,6 +27,8 @@ from app.ingestion.pgvector_repository import (
     write_segments,
 )
 from app.ingestion.retrieval import build_retrieval_documents
+from app.ingestion.runtime.queue import append_run_event
+from app.ingestion.runtime.runner import run_once
 from app.ingestion.service import (
     _release_id_for_run,
     compose_corpus_release,
@@ -37,8 +39,7 @@ from app.ingestion.service import (
     validate_corpus_release,
 )
 from app.ingestion.storage import get_blob_store
-from app.ingestion.worker import _retrieval_documents_payload, run_once
-from app.ingestion.workflow import append_run_event
+from app.ingestion.worker import _retrieval_documents_payload
 from app.legal.enums import (
     CorpusReleaseStatus,
     ExtractionCandidateStatus,

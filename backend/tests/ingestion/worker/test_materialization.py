@@ -8,13 +8,10 @@ from sqlmodel import Session, col, select
 
 from app.core.config import settings
 from app.ingestion.blob_store import LocalBlobStore
-from app.ingestion.worker import (
-    IngestionWorkerError,
-    _upsert_historical_version_from_candidate,
-    run_once,
-    run_until_idle,
-)
-from app.ingestion.workflow import enqueue_task
+from app.ingestion.runtime.errors import IngestionWorkerError
+from app.ingestion.runtime.queue import enqueue_task
+from app.ingestion.runtime.runner import run_once, run_until_idle
+from app.ingestion.worker import _upsert_historical_version_from_candidate
 from app.legal.enums import (
     CorpusReleaseStatus,
     ExtractionCandidateStatus,

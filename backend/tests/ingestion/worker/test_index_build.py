@@ -8,11 +8,9 @@ from app.core.config import settings
 from app.ingestion.blob_store import LocalBlobStore
 from app.ingestion.embedding import EmbeddingBatch
 from app.ingestion.pgvector_repository import dense_search, hybrid_search
-from app.ingestion.worker import (
-    handle_building_retrieval_documents,
-    run_until_idle,
-)
-from app.ingestion.workflow import enqueue_task
+from app.ingestion.runtime.queue import enqueue_task
+from app.ingestion.runtime.runner import run_until_idle
+from app.ingestion.worker import handle_building_retrieval_documents
 from app.legal.enums import (
     EmbeddingRunStatus,
     IngestionArtifactType,

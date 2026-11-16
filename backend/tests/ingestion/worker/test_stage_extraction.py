@@ -5,10 +5,8 @@ import pytest
 from sqlmodel import Session, select
 
 from app.core.config import settings
-from app.ingestion.worker import (
-    run_once,
-)
-from app.ingestion.workflow import create_run_steps, enqueue_task
+from app.ingestion.runtime.queue import create_run_steps, enqueue_task
+from app.ingestion.runtime.runner import run_once
 from app.legal.enums import (
     IngestionArtifactType,
     IngestionStage,

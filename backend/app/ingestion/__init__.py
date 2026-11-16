@@ -9,7 +9,7 @@ from app.ingestion.contracts import (
     MultipartUploadPartUrl,
 )
 from app.ingestion.r2_blob_store import R2BlobStore
-from app.ingestion.workflow import (
+from app.ingestion.runtime.queue import (
     PIPELINE_STAGES,
     append_run_event,
     complete_task,

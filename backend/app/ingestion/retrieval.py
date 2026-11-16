@@ -4,6 +4,7 @@ import re
 import uuid
 from dataclasses import dataclass
 
+from app.ingestion.common import enum_value
 from app.legal.citations import qualify_citation, rules_citation
 from app.legal.enums import InstrumentType
 from app.legal.models import (
@@ -107,12 +108,12 @@ def build_retrieval_documents(
                 "instrument_id": str(provision.instrument_id),
                 "provision_version_id": str(version.id),
                 "canonical_path": provision.canonical_path,
-                "kind": _enum_value(provision.kind),
+                "kind": enum_value(provision.kind),
                 "number": provision.number,
                 "source_document_id": str(version.source_document_id),
                 "source_page_start": version.source_page_start,
                 "source_page_end": version.source_page_end,
-                "legal_status": _enum_value(version.legal_status),
+                "legal_status": enum_value(version.legal_status),
                 "segment_index": segment_index,
                 "segment_count": len(segments),
                 "text_sha256": version.text_sha256,
@@ -153,7 +154,7 @@ def citation_for_provision(
         "schedule": "Schedule",
         "schedule_item": "Schedule Item",
     }
-    kind = _enum_value(provision.kind)
+    kind = enum_value(provision.kind)
     label = label_by_kind.get(kind, kind.title())
     citation = f"{label} {provision.number}" if provision.number else label
     if instrument is not None:
@@ -346,7 +347,3 @@ def deterministic_segment_id(
 
 def _sha256(value: str) -> str:
     return hashlib.sha256(value.encode()).hexdigest()
-
-
-def _enum_value(value: object) -> str:
-    return str(getattr(value, "value", value))

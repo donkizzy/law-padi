@@ -18,9 +18,10 @@ from sqlmodel import Session, col, select
 
 from app.core.config import settings
 from app.core.db import engine
+from app.ingestion.runtime.queue import append_run_event, create_run_steps, enqueue_task
+from app.ingestion.runtime.runner import run_leased_task
 from app.ingestion.storage import get_blob_store
-from app.ingestion.worker import _ensure_artifact, run_leased_task
-from app.ingestion.workflow import append_run_event, create_run_steps, enqueue_task
+from app.ingestion.worker import _ensure_artifact
 from app.legal.act_parser import ACT_PARSER_VERSION
 from app.legal.enums import (
     IngestionArtifactType,

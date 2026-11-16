@@ -7,7 +7,7 @@ from sqlmodel import Session
 
 from app.chat import events
 from app.core.config import Settings, settings
-from app.ingestion.workflow import drain_outbox_batch
+from app.ingestion.runtime.queue import drain_outbox_batch
 from app.legal.models import TransactionalOutbox
 
 

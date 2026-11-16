@@ -16,6 +16,7 @@ from app.ingestion.blob_store import (
     LocalBlobStore,
     verify_blob_contents,
 )
+from app.ingestion.common import enum_value, get_datetime_utc
 from app.ingestion.composition import (
     act_review_gates,
     composition_gates,
@@ -37,15 +38,15 @@ from app.ingestion.evaluation import (
 )
 from app.ingestion.pdf import PdfInspectionError, inspect_pdf_bytes
 from app.ingestion.pgvector_repository import validate_index_build
-from app.ingestion.storage import get_blob_store
-from app.ingestion.text_alignment import compact_text
-from app.ingestion.validation import has_unbalanced_punctuation
-from app.ingestion.workflow import (
+from app.ingestion.runtime.queue import (
     append_run_event,
     create_run_steps,
     enqueue_task,
     mark_run_cancelled,
 )
+from app.ingestion.storage import get_blob_store
+from app.ingestion.text_alignment import compact_text
+from app.ingestion.validation import has_unbalanced_punctuation
 from app.legal.enums import (
     AdminRole,
     AuditSeverity,
@@ -111,15 +112,21 @@ from app.legal.schemas import (
 from app.models import User
 
 MAX_UPLOAD_BYTES = 500 * 1024 * 1024
+
+
 MAX_SOURCE_PAGES = 1000
+
+
 MULTIPART_THRESHOLD_BYTES = 100 * 1024 * 1024
+
+
 UPLOAD_URL_TTL_SECONDS = 15 * 60
+
+
 MIN_PUBLICATION_RECALL_AT_10 = 0.95
+
+
 OPERATIONAL_ALERT_LIMIT = 100
-
-
-def get_datetime_utc() -> datetime:
-    return datetime.now(UTC)
 
 
 def read_admin_operational_alerts(
@@ -146,13 +153,13 @@ def read_admin_operational_alerts(
                 title="Terminal ingestion failure",
                 message=_alert_error_message(
                     run.error_details,
-                    f"{_enum_value(run.current_stage)} ended in a failed run.",
+                    f"{enum_value(run.current_stage)} ended in a failed run.",
                 ),
                 detected_at=_alert_time(detected_now, run.completed_at, run.updated_at),
                 run_id=run.id,
                 evidence={
-                    "status": _enum_value(run.status),
-                    "stage": _enum_value(run.current_stage),
+                    "status": enum_value(run.status),
+                    "stage": enum_value(run.current_stage),
                     "error_details": run.error_details,
                 },
             )
@@ -187,7 +194,7 @@ def read_admin_operational_alerts(
                 task_id=task.id,
                 evidence={
                     "task_type": task.task_type,
-                    "status": _enum_value(task.status),
+                    "status": enum_value(task.status),
                     "lease_owner": task.lease_owner,
                     "leased_until": task.leased_until.isoformat()
                     if task.leased_until
@@ -225,7 +232,7 @@ def read_admin_operational_alerts(
                 issue_id=issue.id,
                 evidence={
                     "issue_type": issue.issue_type,
-                    "severity": _enum_value(issue.severity),
+                    "severity": enum_value(issue.severity),
                     "candidate_path": candidate.canonical_path if candidate else None,
                     "evidence": issue.evidence,
                 },
@@ -2227,7 +2234,7 @@ def resume_ingestion_run(
             detail="Only waiting or cancelled ingestion runs can be resumed",
         )
     was_cancelled = run.status == IngestionRunStatus.CANCELLED
-    resume_stage = IngestionStage(_enum_value(run.current_stage))
+    resume_stage = IngestionStage(enum_value(run.current_stage))
     is_page_confirmation = resume_stage == IngestionStage.AWAITING_PAGE_CONFIRMATION
     if not was_cancelled:
         append_run_event(
@@ -2450,7 +2457,7 @@ def retry_ingestion_run(
     run.error_details = None
     run.updated_at = get_datetime_utc()
     session.add(run)
-    stage_value = _enum_value(run.current_stage)
+    stage_value = enum_value(run.current_stage)
     # Stages such as embedding read their release from the task payload, so the
     # retry carries over the stage's latest payload that holds those inputs
     # (an earlier retry queued before this fix may hold only the retry flag).
@@ -2517,10 +2524,6 @@ def release_entry_count(session: Session, release_id: uuid.UUID) -> int:
 
 def _idempotency_scope(operation: str, entity_id: uuid.UUID) -> str:
     return f"{operation}:{entity_id}"
-
-
-def _enum_value(value: object) -> str:
-    return str(getattr(value, "value", value))
 
 
 def _alert_time(fallback: datetime, *values: datetime | None) -> datetime:

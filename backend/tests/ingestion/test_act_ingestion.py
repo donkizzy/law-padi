@@ -7,8 +7,8 @@ from fastapi.testclient import TestClient
 from sqlmodel import Session, select
 
 from app.core.config import settings
-from app.ingestion.worker import run_until_idle
-from app.ingestion.workflow import enqueue_task
+from app.ingestion.runtime.queue import enqueue_task
+from app.ingestion.runtime.runner import run_until_idle
 from app.legal.act_parser import ACT_PARSER_VERSION
 from app.legal.enums import (
     CorpusReleaseStatus,

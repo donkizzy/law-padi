@@ -9,10 +9,8 @@ from app.core.config import settings
 from app.ingestion.blob_store import LocalBlobStore
 from app.ingestion.ocr import OcrPageInput, OcrPageResult, OcrWord
 from app.ingestion.rendering import RenderedPageThumbnail
-from app.ingestion.worker import (
-    run_until_idle,
-)
-from app.ingestion.workflow import enqueue_task
+from app.ingestion.runtime.queue import enqueue_task
+from app.ingestion.runtime.runner import run_until_idle
 from app.legal.enums import (
     IngestionArtifactType,
     IngestionStage,
