@@ -577,6 +577,7 @@ function AnswerView({
               </h3>
             )}
             <StatuteText
+              canonicalPath={bestSource.canonical_path}
               className="mt-3 font-legal text-statute-sm"
               text={bestSource.authoritative_text}
             />

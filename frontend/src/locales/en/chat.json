@@ -174,7 +174,7 @@
     "partial_sections": "We found some of these sections, but not all of them.",
     "simpler_search": "Search is running in a simpler mode right now, so these keyword matches may be less precise.",
     "reference_format": "Try a reference like Section 35, Section 35(1) or Section 35(1)(c). Lists and ranges can include up to 20 sections.",
-    "unknown_law": "Recognised laws are Nigeria's Constitution, ACJA 2015 and Police Act 2020. A law must also be included in the selected published edition before its sections can be served."
+    "unknown_law": "The law name or year in this reference is unrecognised or conflicting. Sections are available for laws included in the selected published edition."
   },
   "translation": {
     "label": "Translated from English",

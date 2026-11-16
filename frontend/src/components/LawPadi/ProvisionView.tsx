@@ -196,7 +196,10 @@ export function ProvisionView({
       <OfficialTextBlock
         title={t("source.whatLawSays", { law: provision.citation })}
       >
-        <StatuteText text={provision.authoritative_text} />
+        <StatuteText
+          canonicalPath={provision.canonical_path}
+          text={provision.authoritative_text}
+        />
       </OfficialTextBlock>
       <EditionNotice
         label={provision.edition_label}
@@ -230,6 +233,7 @@ export function ProvisionView({
               {t("provision.readAll", { citation: ancestor.citation })}
             </summary>
             <StatuteText
+              canonicalPath={ancestor.canonical_path}
               className="mt-4 font-legal text-sm leading-7"
               text={ancestor.authoritative_text ?? ""}
             />

@@ -123,6 +123,7 @@ export function SourcePanelContent({
           {t("source.whatLawSays", { law: lawName(provision) })}
         </h3>
         <StatuteText
+          canonicalPath={provision.canonical_path}
           className="font-legal text-sm leading-7"
           text={provision.authoritative_text}
         />

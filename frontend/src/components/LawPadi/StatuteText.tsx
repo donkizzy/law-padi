@@ -8,14 +8,32 @@ import {
 } from "@/components/ui/table"
 import { statuteBlocks } from "@/lib/legal-provisions"
 
-/** Stored statute wording as prose, with printed tables shown as tables. */
+const warrantPath = "nigeria-revenue-service-establishment-act-2025.schedule3"
+
+/** Display stored prose, tables and the source layout of the NRS warrant. */
 export function StatuteText({
   text,
   className,
+  canonicalPath,
 }: {
   text: string
   className?: string
+  canonicalPath: string
 }) {
+  if (
+    canonicalPath === warrantPath ||
+    canonicalPath === `${warrantPath}.item1` ||
+    canonicalPath === `${warrantPath}.item2`
+  ) {
+    return (
+      <div lang="en" className={className}>
+        <pre className="overflow-x-auto whitespace-pre font-mono text-code [contain:inline-size]">
+          {text}
+        </pre>
+      </div>
+    )
+  }
+
   return (
     <div lang="en" className={className}>
       {statuteBlocks(text).map((block, index) =>

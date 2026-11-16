@@ -76,6 +76,7 @@ function SourceContent({
           {t("source.whatLawSays", { law: lawName(evidence) })}
         </h3>
         <StatuteText
+          canonicalPath={evidence.canonical_path}
           className="font-legal text-statute-sm"
           text={evidence.authoritative_text}
         />
