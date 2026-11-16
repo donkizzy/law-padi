@@ -1,11 +1,9 @@
 from datetime import UTC, date, datetime
-from io import BytesIO
+from functools import partial
 from pathlib import Path
 from uuid import uuid4
 
 import pytest
-from pypdf import PdfWriter
-from pypdf.generic import DictionaryObject, NameObject, StreamObject
 
 from app.core.config import settings
 from app.ingestion.blob_store import LocalBlobStore
@@ -20,6 +18,9 @@ from app.legal.parser import (
     normalize_legal_text,
     parse_constitution_pages,
 )
+from tests.factories.pdf import pdf_with_text
+
+_pdf_with_text = partial(pdf_with_text, height=144, x=72, y=72)
 
 
 def test_oaths_are_retained_and_appended_rules_do_not_become_constitution_items() -> (
@@ -382,35 +383,6 @@ def test_extract_source_pages_rejects_missing_or_unsupported_sources(
         extract_source_pages(missing)
     with pytest.raises(ParserError, match="PDF sources only"):
         extract_source_pages(unsupported)
-
-
-def _pdf_with_text(text: str) -> bytes:
-    output = BytesIO()
-    writer = PdfWriter()
-    page = writer.add_blank_page(width=300, height=144)
-    font = DictionaryObject(
-        {
-            NameObject("/Type"): NameObject("/Font"),
-            NameObject("/Subtype"): NameObject("/Type1"),
-            NameObject("/BaseFont"): NameObject("/Helvetica"),
-        }
-    )
-    font_ref = writer._add_object(font)
-    resources = DictionaryObject(
-        {
-            NameObject("/Font"): DictionaryObject({NameObject("/F1"): font_ref}),
-        }
-    )
-    content = StreamObject()
-    content._data = f"BT /F1 12 Tf 72 72 Td ({_escape_pdf_text(text)}) Tj ET".encode()
-    page[NameObject("/Resources")] = resources
-    page[NameObject("/Contents")] = writer._add_object(content)
-    writer.write(output)
-    return output.getvalue()
-
-
-def _escape_pdf_text(text: str) -> str:
-    return text.replace("\\", "\\\\").replace("(", "\\(").replace(")", "\\)")
 
 
 def test_hierarchy_replay_keeps_wrapped_references_and_roman_clauses() -> None:

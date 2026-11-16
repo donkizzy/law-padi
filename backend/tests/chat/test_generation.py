@@ -13,8 +13,6 @@ from app.core.config import settings
 from app.legal.models import ConversationMessage, GenerationRun, ProvisionVersion
 from app.main import app
 
-pytest_plugins = ["tests.api.routes.test_legal_search"]
-
 
 class FakeProvider:
     def __init__(
@@ -105,10 +103,10 @@ def _answer_section_37(
     return run, message
 
 
+@pytest.mark.usefixtures("corpus")
 def test_review_worker_claims_only_the_requested_run(
-    corpus, db: Session, monkeypatch: pytest.MonkeyPatch
+    db: Session, monkeypatch: pytest.MonkeyPatch
 ) -> None:
-    assert corpus
     monkeypatch.setattr(settings, "CHAT_ENABLED", True)
     monkeypatch.setattr(settings, "CHAT_GENERATION_ENABLED", True)
     with TestClient(app) as client:
@@ -170,10 +168,10 @@ def _validated_explanation(
         yield assistant, provider, client, conversation["id"]
 
 
+@pytest.mark.usefixtures("corpus")
 def test_worker_persists_completed_explanation(
-    corpus, db: Session, monkeypatch: pytest.MonkeyPatch
+    db: Session, monkeypatch: pytest.MonkeyPatch
 ) -> None:
-    assert corpus
     with _validated_explanation(db, monkeypatch, expected="completed") as (
         assistant,
         provider,
@@ -204,10 +202,10 @@ def test_worker_persists_completed_explanation(
         assert "event: answer.complete" not in replay.text
 
 
+@pytest.mark.usefixtures("corpus")
 def test_worker_persists_partial_explanation(
-    corpus, db: Session, monkeypatch: pytest.MonkeyPatch
+    db: Session, monkeypatch: pytest.MonkeyPatch
 ) -> None:
-    assert corpus
     with _validated_explanation(
         db, monkeypatch, question="Sections 37 and 168", expected="partial_evidence"
     ) as (assistant, _provider, _client, _conversation_id):
@@ -216,12 +214,12 @@ def test_worker_persists_partial_explanation(
         assert assistant.answer_content["citation_outcomes"][1]["status"] == "missing"
 
 
+@pytest.mark.usefixtures("corpus")
 @pytest.mark.parametrize(
     ("supported", "fabricated", "failure_stage", "verdict_count"),
     [(False, False, "verification", 1), (True, True, "deterministic", None)],
 )
 def test_worker_rejects_unvalidated_explanation(
-    corpus,
     db: Session,
     monkeypatch: pytest.MonkeyPatch,
     supported: bool,
@@ -229,7 +227,6 @@ def test_worker_rejects_unvalidated_explanation(
     failure_stage: str,
     verdict_count: int | None,
 ) -> None:
-    assert corpus
     with _validated_explanation(
         db,
         monkeypatch,
@@ -334,10 +331,10 @@ def test_selected_ambiguous_identity_is_pinned_and_run_events_are_scoped(
         )
 
 
+@pytest.mark.usefixtures("corpus")
 def test_elliptical_followup_reuses_one_resolved_identity(
-    corpus, db: Session, monkeypatch: pytest.MonkeyPatch
+    db: Session, monkeypatch: pytest.MonkeyPatch
 ) -> None:
-    assert corpus
     monkeypatch.setattr(settings, "CHAT_ENABLED", True)
     monkeypatch.setattr(settings, "CHAT_GENERATION_ENABLED", True)
     provider = FakeProvider()
@@ -361,10 +358,10 @@ def test_elliptical_followup_reuses_one_resolved_identity(
         assert provider.payloads[2]["previous_question"] == "Section 37"
 
 
+@pytest.mark.usefixtures("corpus")
 def test_unsupported_later_blocks_are_removed_from_a_verified_answer(
-    corpus, db: Session, monkeypatch: pytest.MonkeyPatch
+    db: Session, monkeypatch: pytest.MonkeyPatch
 ) -> None:
-    assert corpus
     provider = FakeProvider(
         blocks=[
             {"text": "The Constitution protects privacy.", "evidence_ids": ["E1"]},
@@ -397,10 +394,10 @@ def test_unsupported_later_blocks_are_removed_from_a_verified_answer(
     assert "edition" not in provider.payloads[0]
 
 
+@pytest.mark.usefixtures("corpus")
 def test_question_the_evidence_does_not_answer_skips_verification(
-    corpus, db: Session, monkeypatch: pytest.MonkeyPatch
+    db: Session, monkeypatch: pytest.MonkeyPatch
 ) -> None:
-    assert corpus
     provider = FakeProvider(blocks=[], follow_ups=("What does Section 37 protect?",))
     run, message = _answer_section_37(db, monkeypatch, provider)
     answer = message.answer_content
@@ -416,10 +413,10 @@ def test_question_the_evidence_does_not_answer_skips_verification(
     assert len(provider.calls) == 1
 
 
+@pytest.mark.usefixtures("corpus")
 def test_multi_source_followup_preserves_context_without_reusing_old_answer_claims(
-    corpus, db: Session, monkeypatch: pytest.MonkeyPatch
+    db: Session, monkeypatch: pytest.MonkeyPatch
 ) -> None:
-    assert corpus
     monkeypatch.setattr(settings, "CHAT_ENABLED", True)
     monkeypatch.setattr(settings, "CHAT_GENERATION_ENABLED", True)
     provider = FakeProvider(
@@ -458,10 +455,10 @@ def test_multi_source_followup_preserves_context_without_reusing_old_answer_clai
         assert all("blocks" not in turn for turn in payload["conversation_context"])
 
 
+@pytest.mark.usefixtures("corpus")
 def test_ambiguous_pronoun_asks_which_source_without_another_provider_call(
-    corpus, db: Session, monkeypatch: pytest.MonkeyPatch
+    db: Session, monkeypatch: pytest.MonkeyPatch
 ) -> None:
-    assert corpus
     monkeypatch.setattr(settings, "CHAT_ENABLED", True)
     monkeypatch.setattr(settings, "CHAT_GENERATION_ENABLED", True)
     provider = FakeProvider(
@@ -497,10 +494,10 @@ def test_ambiguous_pronoun_asks_which_source_without_another_provider_call(
         assert len(provider.calls) == 2
 
 
+@pytest.mark.usefixtures("corpus")
 def test_followup_keeps_a_user_selected_printed_identity(
-    corpus, db: Session, monkeypatch: pytest.MonkeyPatch
+    db: Session, monkeypatch: pytest.MonkeyPatch
 ) -> None:
-    assert corpus
     monkeypatch.setattr(settings, "CHAT_ENABLED", True)
     monkeypatch.setattr(settings, "CHAT_GENERATION_ENABLED", True)
     selected = db.exec(
@@ -536,10 +533,10 @@ def test_followup_keeps_a_user_selected_printed_identity(
             )
 
 
+@pytest.mark.usefixtures("corpus")
 def test_an_opening_that_misreads_the_question_is_rewritten_once(
-    corpus, db: Session, monkeypatch: pytest.MonkeyPatch
+    db: Session, monkeypatch: pytest.MonkeyPatch
 ) -> None:
-    assert corpus
     provider = FakeProvider(answers=(False, True))
     run, message = _answer_section_37(db, monkeypatch, provider)
     assert run.outcome == "completed"
@@ -558,10 +555,10 @@ def test_an_opening_that_misreads_the_question_is_rewritten_once(
     assert message.validation_result["draft_attempts"] == 2
 
 
+@pytest.mark.usefixtures("corpus")
 def test_a_second_misread_opening_fails_closed(
-    corpus, db: Session, monkeypatch: pytest.MonkeyPatch
+    db: Session, monkeypatch: pytest.MonkeyPatch
 ) -> None:
-    assert corpus
     provider = FakeProvider(answers=(False,))
     run, message = _answer_section_37(db, monkeypatch, provider)
     assert run.outcome == "validation_failed"
@@ -572,10 +569,10 @@ def test_a_second_misread_opening_fails_closed(
     )
 
 
+@pytest.mark.usefixtures("corpus")
 def test_thinking_and_stage_limits_follow_settings(
-    corpus, db: Session, monkeypatch: pytest.MonkeyPatch
+    db: Session, monkeypatch: pytest.MonkeyPatch
 ) -> None:
-    assert corpus
     provider = FakeProvider()
     _answer_section_37(db, monkeypatch, provider)
     assert provider.thinking == [True, False]
@@ -586,10 +583,10 @@ def test_thinking_and_stage_limits_follow_settings(
     assert provider.thinking == [False, True]
 
 
+@pytest.mark.usefixtures("corpus")
 def test_privacy_answers_signpost_other_laws(
-    corpus, db: Session, monkeypatch: pytest.MonkeyPatch
+    db: Session, monkeypatch: pytest.MonkeyPatch
 ) -> None:
-    assert corpus
     monkeypatch.setattr(settings, "CHAT_ENABLED", True)
     monkeypatch.setattr(settings, "CHAT_GENERATION_ENABLED", True)
     monkeypatch.setattr(

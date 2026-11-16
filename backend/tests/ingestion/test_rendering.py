@@ -1,11 +1,13 @@
 import os
 import shutil
-from io import BytesIO
+from functools import partial
 
 import pytest
-from pypdf import PdfWriter
 
 from app.ingestion.rendering import PdfRenderingError, render_page_thumbnail
+from tests.factories.pdf import pdf_bytes
+
+_pdf_bytes = partial(pdf_bytes, width=120, height=160)
 
 
 def test_render_page_thumbnail_outputs_png_bytes() -> None:
@@ -25,11 +27,3 @@ def test_render_page_thumbnail_outputs_png_bytes() -> None:
 def test_render_page_thumbnail_requires_one_based_page_number() -> None:
     with pytest.raises(PdfRenderingError, match="one-based"):
         render_page_thumbnail(_pdf_bytes(), page_number=0)
-
-
-def _pdf_bytes() -> bytes:
-    output = BytesIO()
-    writer = PdfWriter()
-    writer.add_blank_page(width=120, height=160)
-    writer.write(output)
-    return output.getvalue()

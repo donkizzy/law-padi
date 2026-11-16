@@ -11,13 +11,11 @@ from app.legal.evidence import (
     default_embedding_provider,
 )
 
-pytest_plugins = ["tests.api.routes.test_legal_search"]
 
-
+@pytest.mark.usefixtures("corpus")
 def test_disabled_query_embeddings_use_disclosed_keyword_and_topic_retrieval(
-    client: TestClient, corpus, monkeypatch: pytest.MonkeyPatch
+    client: TestClient, monkeypatch: pytest.MonkeyPatch
 ) -> None:
-    assert corpus
     monkeypatch.setattr(settings, "EMBEDDING_QUERY_ENABLED", False)
     monkeypatch.setattr(
         search,

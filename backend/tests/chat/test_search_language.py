@@ -14,8 +14,6 @@ from app.languages.codes import Language
 from app.legal.evidence import NOT_IN_CONSTITUTION_MESSAGE, message_code
 from app.legal.models import GenerationReservation
 
-pytest_plugins = ["tests.api.routes.test_legal_search"]
-
 _YORUBA = "Kí ni Section 37 sọ nípa ìpamọ́ ẹni?"
 
 
@@ -119,10 +117,10 @@ def test_exhausted_budget_searches_the_query_as_typed(
     assert provider.calls == 0
 
 
+@pytest.mark.usefixtures("corpus")
 def test_search_route_reports_the_language_and_english_query(
-    client: TestClient, corpus, provider: SearchProvider, monkeypatch
+    client: TestClient, provider: SearchProvider, monkeypatch
 ) -> None:
-    assert corpus
     monkeypatch.setattr(
         search,
         "_query_embedding_provider",
@@ -136,6 +134,7 @@ def test_search_route_reports_the_language_and_english_query(
     assert body["searched_query"] == "What does Section 37 say about privacy?"
 
 
+@pytest.mark.usefixtures("corpus")
 @pytest.mark.parametrize(
     ("setting", "value"),
     [
@@ -146,14 +145,12 @@ def test_search_route_reports_the_language_and_english_query(
 )
 def test_search_route_keeps_query_local_when_explanations_are_disabled(
     client: TestClient,
-    corpus,
     db: Session,
     provider: SearchProvider,
     monkeypatch: pytest.MonkeyPatch,
     setting: str,
     value: bool,
 ) -> None:
-    assert corpus
     monkeypatch.setattr(settings, setting, value)
     monkeypatch.setattr(
         search,
@@ -170,8 +167,8 @@ def test_search_route_keeps_query_local_when_explanations_are_disabled(
     assert db.exec(select(GenerationReservation)).first() is None
 
 
-def test_search_messages_carry_stable_codes(client: TestClient, corpus) -> None:
-    assert corpus
+@pytest.mark.usefixtures("corpus")
+def test_search_messages_carry_stable_codes(client: TestClient) -> None:
     missing = client.post("/api/v1/legal/search", json={"query": "Section 168"}).json()
     assert missing["message"] == NOT_IN_CONSTITUTION_MESSAGE
     assert missing["message_code"] == "section_not_found"
@@ -217,10 +214,10 @@ def test_cached_and_english_queries_never_spend_the_translation_cap(
     assert provider.calls == 1
 
 
+@pytest.mark.usefixtures("corpus")
 def test_search_route_limits_paid_understanding_per_client(
-    client: TestClient, corpus, provider: SearchProvider, monkeypatch
+    client: TestClient, provider: SearchProvider, monkeypatch
 ) -> None:
-    assert corpus
     monkeypatch.setattr(settings, "RATE_LIMIT_ENABLED", True)
     monkeypatch.setattr(
         rate_limit,
@@ -248,10 +245,10 @@ def test_search_route_limits_paid_understanding_per_client(
     assert provider.calls == 2
 
 
+@pytest.mark.usefixtures("corpus")
 def test_search_route_rejects_a_flooding_client(
-    client: TestClient, corpus, monkeypatch
+    client: TestClient, monkeypatch
 ) -> None:
-    assert corpus
     monkeypatch.setattr(settings, "RATE_LIMIT_ENABLED", True)
     monkeypatch.setattr(
         rate_limit, "SEARCH_PER_IP", rate_limit.Limit("search-ip-test", 2, 60)

@@ -1,12 +1,10 @@
 import json
 import os
 import shutil
-from io import BytesIO
+from functools import partial
 
 import httpx
 import pytest
-from pypdf import PdfWriter
-from pypdf.generic import DictionaryObject, NameObject, StreamObject
 
 from app.core.config import settings
 from app.ingestion.ocr import (
@@ -20,6 +18,9 @@ from app.ingestion.ocr import (
     managed_ocr_provider_from_settings,
 )
 from app.ingestion.rendering import render_page_thumbnail
+from tests.factories.pdf import pdf_with_text
+
+_pdf_with_text = partial(pdf_with_text, height=120, font_size=18, x=24, y=70)
 
 
 def test_act_ocr_keeps_line_and_block_boundaries_including_quotes() -> None:
@@ -250,32 +251,3 @@ def test_managed_ocr_provider_from_settings_selects_configured_provider(
     provider = managed_ocr_provider_from_settings()
 
     assert isinstance(provider, AzureDocumentIntelligenceOcrProvider)
-
-
-def _pdf_with_text(text: str) -> bytes:
-    output = BytesIO()
-    writer = PdfWriter()
-    page = writer.add_blank_page(width=300, height=120)
-    font = DictionaryObject(
-        {
-            NameObject("/Type"): NameObject("/Font"),
-            NameObject("/Subtype"): NameObject("/Type1"),
-            NameObject("/BaseFont"): NameObject("/Helvetica"),
-        }
-    )
-    font_ref = writer._add_object(font)
-    resources = DictionaryObject(
-        {
-            NameObject("/Font"): DictionaryObject({NameObject("/F1"): font_ref}),
-        }
-    )
-    content = StreamObject()
-    content._data = f"BT /F1 18 Tf 24 70 Td ({_escape_pdf_text(text)}) Tj ET".encode()
-    page[NameObject("/Resources")] = resources
-    page[NameObject("/Contents")] = writer._add_object(content)
-    writer.write(output)
-    return output.getvalue()
-
-
-def _escape_pdf_text(text: str) -> str:
-    return text.replace("\\", "\\\\").replace("(", "\\(").replace(")", "\\)")

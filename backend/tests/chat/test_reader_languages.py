@@ -14,8 +14,6 @@ from app.languages.codes import Language
 from app.legal.models import ConversationMessage, GenerationRun
 from app.main import app
 
-pytest_plugins = ["tests.api.routes.test_legal_search"]
-
 _ENGLISH_BLOCK = "The Constitution protects privacy."
 _YORUBA_BLOCK = "Constitution ṣe ààbò fún ìpamọ́ ẹni."
 _YORUBA_FOLLOW_UP = "Ṣé ọlọ́pàá lè yẹ fóònù mi wò lábẹ́ Section 37?"
@@ -141,10 +139,10 @@ def _ask(
     return question_message, answer_message
 
 
+@pytest.mark.usefixtures("corpus")
 def test_yoruba_question_is_answered_in_english_then_translated(
-    corpus, db: Session, monkeypatch: pytest.MonkeyPatch
+    db: Session, monkeypatch: pytest.MonkeyPatch
 ) -> None:
-    assert corpus
     provider = LanguageProvider()
     question, answer = _ask(
         db,
@@ -183,10 +181,10 @@ def test_yoruba_question_is_answered_in_english_then_translated(
     assert answer.validation_result["translation"] == "completed"
 
 
+@pytest.mark.usefixtures("corpus")
 def test_failed_meaning_check_keeps_the_english_answer(
-    corpus, db: Session, monkeypatch: pytest.MonkeyPatch
+    db: Session, monkeypatch: pytest.MonkeyPatch
 ) -> None:
-    assert corpus
     _, answer = _ask(
         db,
         monkeypatch,
@@ -204,10 +202,10 @@ def test_failed_meaning_check_keeps_the_english_answer(
     assert "meaning" in answer.validation_result["translation_reason"]
 
 
+@pytest.mark.usefixtures("corpus")
 def test_failed_understanding_falls_back_to_the_original_question(
-    corpus, db: Session, monkeypatch: pytest.MonkeyPatch
+    db: Session, monkeypatch: pytest.MonkeyPatch
 ) -> None:
-    assert corpus
     provider = LanguageProvider(understanding_fails=True)
     question, answer = _ask(
         db,
@@ -226,10 +224,10 @@ def test_failed_understanding_falls_back_to_the_original_question(
     assert answer.validation_result["understanding"] == "fallback"
 
 
+@pytest.mark.usefixtures("corpus")
 def test_english_only_deployments_make_no_language_calls(
-    corpus, db: Session, monkeypatch: pytest.MonkeyPatch
+    db: Session, monkeypatch: pytest.MonkeyPatch
 ) -> None:
-    assert corpus
     provider = LanguageProvider()
     question, answer = _ask(
         db,
@@ -247,10 +245,10 @@ def test_english_only_deployments_make_no_language_calls(
     assert answer.answer_content["translation"] is None
 
 
+@pytest.mark.usefixtures("corpus")
 def test_explicit_answer_language_translates_an_english_question(
-    corpus, db: Session, monkeypatch: pytest.MonkeyPatch
+    db: Session, monkeypatch: pytest.MonkeyPatch
 ) -> None:
-    assert corpus
     provider = LanguageProvider()
     question, answer = _ask(
         db,
@@ -268,10 +266,8 @@ def test_explicit_answer_language_translates_an_english_question(
     assert answer.answer_content["translation"]["language"] == "yo"
 
 
-def test_unknown_answer_language_is_rejected(
-    corpus, monkeypatch: pytest.MonkeyPatch
-) -> None:
-    assert corpus
+@pytest.mark.usefixtures("corpus")
+def test_unknown_answer_language_is_rejected(monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.setattr(settings, "CHAT_ENABLED", True)
     monkeypatch.setattr(settings, "CHAT_GENERATION_ENABLED", True)
     with TestClient(app) as client:
@@ -287,10 +283,10 @@ def test_unknown_answer_language_is_rejected(
     assert response.status_code == 422
 
 
+@pytest.mark.usefixtures("corpus")
 def test_capabilities_and_conversations_report_languages(
-    corpus, monkeypatch: pytest.MonkeyPatch
+    monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    assert corpus
     monkeypatch.setattr(settings, "CHAT_ENABLED", True)
     monkeypatch.setattr(
         settings, "CHAT_LANGUAGES_ENABLED", [Language.ENGLISH, Language.PIDGIN]

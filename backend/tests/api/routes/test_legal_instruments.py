@@ -14,8 +14,6 @@ from app.legal.models import (
     ProvisionVersion,
 )
 
-pytest_plugins = ["tests.legal.test_statute_retrieval"]
-
 
 def test_only_published_instruments_are_listed(
     client: TestClient, db: Session, statute_corpus

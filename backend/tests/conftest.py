@@ -4,62 +4,13 @@ from urllib.parse import urlsplit
 
 import pytest
 from fastapi.testclient import TestClient
-from sqlmodel import Session, delete, update
+from sqlmodel import Session
 
 from app.core.config import settings
 from app.core.db import engine, init_db
-from app.legal.enums import CorpusReleaseStatus
-from app.legal.models import (
-    ActiveRetrievalTarget,
-    AdminRoleAssignment,
-    Amendment,
-    AmendmentOperation,
-    AuditEvent,
-    CandidateRevision,
-    ConstitutionalBill,
-    Conversation,
-    ConversationMessage,
-    CorpusRelease,
-    CorpusReleaseEntry,
-    EmbeddingProfile,
-    EmbeddingRun,
-    EvaluationDataset,
-    EvaluationItem,
-    ExtractionCandidate,
-    GenerationAdmission,
-    GenerationBudgetDay,
-    GenerationBudgetMonth,
-    GenerationCapacity,
-    GenerationEvent,
-    GenerationReservation,
-    GenerationRun,
-    IngestionArtifact,
-    IngestionEvent,
-    IngestionRun,
-    IngestionStep,
-    IngestionTask,
-    LegalConcept,
-    LegalConceptAlias,
-    LegalInstrument,
-    LegislativeEvent,
-    MessageEvidence,
-    Provision,
-    ProvisionVersion,
-    ReleasePromotionAttempt,
-    RetrievalEmbedding,
-    RetrievalIndexBuild,
-    RetrievalSegment,
-    ReviewDecisionRecord,
-    ReviewIssue,
-    SourceDocument,
-    SourcePage,
-    SourceUpload,
-    TransactionalOutbox,
-    VectorIndex,
-)
 from app.legal.public_corpus import clear_public_corpus_cache
 from app.main import app
-from app.models import RateLimitCounter, User
+from tests.db import reset_database
 from tests.utils.user import authentication_token_from_email
 from tests.utils.utils import get_superuser_token_headers
 
@@ -74,71 +25,10 @@ def db() -> Generator[Session]:
         )
     with Session(engine) as session:
         init_db(session)
-        _cleanup_db(session)
+        reset_database(session)
         init_db(session)
         yield session
-        _cleanup_db(session)
-
-
-def _cleanup_db(session: Session) -> None:
-    session.rollback()
-    # Published releases are intentionally immutable in application traffic.
-    # Test teardown must first move them back to a draft state so the
-    # immutability trigger does not turn cleanup into a failed test run.
-    session.exec(update(CorpusRelease).values(status=CorpusReleaseStatus.BUILDING))
-    session.commit()
-    for model in (
-        AuditEvent,
-        AdminRoleAssignment,
-        GenerationAdmission,
-        GenerationEvent,
-        GenerationReservation,
-        GenerationRun,
-        GenerationBudgetDay,
-        GenerationBudgetMonth,
-        MessageEvidence,
-        ConversationMessage,
-        Conversation,
-        ReleasePromotionAttempt,
-        ActiveRetrievalTarget,
-        RetrievalEmbedding,
-        RetrievalIndexBuild,
-        RetrievalSegment,
-        VectorIndex,
-        EmbeddingRun,
-        EmbeddingProfile,
-        EvaluationItem,
-        EvaluationDataset,
-        ReviewDecisionRecord,
-        ReviewIssue,
-        CandidateRevision,
-        ExtractionCandidate,
-        IngestionArtifact,
-        SourcePage,
-        TransactionalOutbox,
-        IngestionTask,
-        IngestionEvent,
-        IngestionStep,
-        IngestionRun,
-        SourceUpload,
-        LegalConceptAlias,
-        LegalConcept,
-        LegislativeEvent,
-        ConstitutionalBill,
-        AmendmentOperation,
-        CorpusReleaseEntry,
-        ProvisionVersion,
-        Amendment,
-        Provision,
-        SourceDocument,
-        CorpusRelease,
-        LegalInstrument,
-    ):
-        session.exec(delete(model))
-    session.exec(delete(RateLimitCounter))
-    session.exec(delete(User))
-    session.exec(update(GenerationCapacity).values(active_count=0))
-    session.commit()
+        reset_database(session)
 
 
 @pytest.fixture(scope="session", autouse=True)
@@ -209,3 +99,9 @@ def normal_user_token_headers(client: TestClient, db: Session) -> dict[str, str]
     return authentication_token_from_email(
         client=client, email=settings.EMAIL_TEST_USER, db=db
     )
+
+
+pytest_plugins = ["tests.fixtures.corpus", "tests.fixtures.statute_corpus"]
+
+# Compatibility for test modules that still import the original reset name.
+_cleanup_db = reset_database

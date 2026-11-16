@@ -1,16 +1,13 @@
-import hashlib
 import json
 import threading
 import uuid
 from concurrent.futures import ThreadPoolExecutor
 from datetime import UTC, date, datetime, timedelta
-from io import BytesIO
 from pathlib import Path
 
 import pytest
 from fastapi import HTTPException
 from fastapi.testclient import TestClient
-from pypdf import PdfWriter
 from sqlmodel import Session, col, delete, func, select
 
 from app import crud
@@ -85,6 +82,10 @@ from app.legal.models import (
 )
 from app.legal.schemas import PageSelectionUpdate
 from app.models import User
+from tests.factories.pdf import pdf_bytes as _pdf_bytes
+from tests.factories.pdf import sha256 as _sha256
+from tests.factories.pdf import sha256_text as _sha256_text
+from tests.factories.pdf import unique_pdf as _unique_pdf_bytes
 from tests.utils.user import authentication_token_from_email
 from tests.utils.utils import random_email
 
@@ -2871,31 +2872,6 @@ class _ManagedLocalBlobStore(LocalBlobStore):
 
     def abort_multipart_upload(self, *, key: str, upload_id: str) -> None:
         return None
-
-
-def _pdf_bytes() -> bytes:
-    output = BytesIO()
-    writer = PdfWriter()
-    writer.add_blank_page(width=72, height=72)
-    writer.write(output)
-    return output.getvalue()
-
-
-def _unique_pdf_bytes() -> bytes:
-    output = BytesIO()
-    writer = PdfWriter()
-    writer.add_blank_page(width=72, height=72)
-    writer.add_metadata({"/Title": f"constitution-{uuid.uuid4().hex}"})
-    writer.write(output)
-    return output.getvalue()
-
-
-def _sha256(content: bytes) -> str:
-    return hashlib.sha256(content).hexdigest()
-
-
-def _sha256_text(content: str) -> str:
-    return _sha256(content.encode())
 
 
 def _superuser(db: Session) -> User:

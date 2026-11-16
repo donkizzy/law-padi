@@ -13,8 +13,6 @@ from tests.utils.utils import random_email, random_lower_string
 
 API = settings.API_V1_STR
 
-pytest_plugins = ["tests.api.routes.test_legal_search"]
-
 
 def test_one_account_is_throttled_across_many_addresses(
     monkeypatch: pytest.MonkeyPatch,
@@ -47,10 +45,10 @@ def test_public_health_check_reports_readiness_only(client: TestClient) -> None:
     assert response.json() == {"ok": True}
 
 
+@pytest.mark.usefixtures("corpus")
 def test_guest_cookie_stays_on_same_site_requests(
-    corpus, monkeypatch: pytest.MonkeyPatch
+    monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    assert corpus
     monkeypatch.setattr(settings, "CHAT_ENABLED", True)
     with TestClient(app, base_url="https://testserver") as guest:
         created = guest.post(f"{API}/conversations", json={})

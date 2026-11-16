@@ -9,18 +9,12 @@ opt-in via LAW_PADI_PERF=1.
 import hashlib
 import json
 import os
+from functools import partial
 from io import BytesIO
 from pathlib import Path
 
 import pytest
-from pypdf import PdfReader, PdfWriter
-from pypdf.generic import (
-    ArrayObject,
-    DecodedStreamObject,
-    DictionaryObject,
-    NameObject,
-    NumberObject,
-)
+from pypdf import PdfReader
 
 from app.ingestion.extraction import NativePdfExtractor
 from app.ingestion.normalization import normalize_page_text
@@ -28,35 +22,11 @@ from app.ingestion.pdf import profile_pdf_pages
 from app.legal.instrument_parser import parse_instrument_pages
 from app.legal.parser import SourcePage as ParserSourcePage
 from app.legal.titles import title_catalog
+from tests.factories.pdf import pdf_with_pages
 
-
-def _pdf_with_text_pages(texts: list[str], rotation: int = 0) -> bytes:
-    output = BytesIO()
-    writer = PdfWriter()
-    for text in texts:
-        page = writer.add_blank_page(width=612, height=792)
-        if rotation:
-            page[NameObject("/Rotate")] = NumberObject(rotation)
-        if text:
-            font = DictionaryObject(
-                {
-                    NameObject("/Type"): NameObject("/Font"),
-                    NameObject("/Subtype"): NameObject("/Type1"),
-                    NameObject("/BaseFont"): NameObject("/Helvetica"),
-                }
-            )
-            font_ref = writer._add_object(font)
-            resources = DictionaryObject(
-                {NameObject("/Font"): DictionaryObject({NameObject("/F1"): font_ref})}
-            )
-            content = DecodedStreamObject()
-            escaped = text.replace("\\", "\\\\").replace("(", "\\(").replace(")", "\\)")
-            content._data = f"BT /F1 12 Tf 36 700 Td ({escaped}) Tj ET".encode()
-            content_ref = writer._add_object(content)
-            page[NameObject("/Resources")] = resources
-            page[NameObject("/Contents")] = ArrayObject([content_ref])
-    writer.write(output)
-    return output.getvalue()
+_pdf_with_text_pages = partial(
+    pdf_with_pages, width=612, height=792, y=700, content_array=True, skip_empty=True
+)
 
 
 def _extract_texts(pdf_bytes: bytes) -> list[str]:

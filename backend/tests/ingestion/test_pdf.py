@@ -1,8 +1,6 @@
-from io import BytesIO
+from functools import partial
 
 import pytest
-from pypdf import PdfWriter
-from pypdf.generic import DictionaryObject, NameObject, StreamObject
 
 from app.ingestion.pdf import (
     MalwareScanError,
@@ -12,6 +10,10 @@ from app.ingestion.pdf import (
     scan_pdf_bytes,
 )
 from app.legal.enums import PageInclusionStatus, PageRole
+from tests.factories.pdf import pdf_with_pages
+from tests.factories.pdf import pdf_with_pages as _pdf_with_pages
+
+_encrypted_pdf = partial(pdf_with_pages, password="secret")
 
 
 def test_inspect_pdf_bytes_verifies_magic_hash_size_and_page_limit() -> None:
@@ -175,69 +177,3 @@ def test_profile_pdf_pages_records_rotated_page_orientation() -> None:
 
     assert profile.orientation == "portrait_rotated_90"
     assert profile.quality_signals["rotation_degrees"] == 90
-
-
-def _pdf_with_pages(
-    texts: list[str],
-    *,
-    width: float = 300,
-    height: float = 500,
-    rotate: int | None = None,
-) -> bytes:
-    output = BytesIO()
-    writer = PdfWriter()
-    for text in texts:
-        page = writer.add_blank_page(width=width, height=height)
-        if rotate is not None:
-            page.rotate(rotate)
-        font = DictionaryObject(
-            {
-                NameObject("/Type"): NameObject("/Font"),
-                NameObject("/Subtype"): NameObject("/Type1"),
-                NameObject("/BaseFont"): NameObject("/Helvetica"),
-            }
-        )
-        font_ref = writer._add_object(font)
-        resources = DictionaryObject(
-            {
-                NameObject("/Font"): DictionaryObject({NameObject("/F1"): font_ref}),
-            }
-        )
-        content = StreamObject()
-        content._data = (
-            f"BT /F1 12 Tf 36 450 Td ({_escape_pdf_text(text)}) Tj ET".encode()
-        )
-        page[NameObject("/Resources")] = resources
-        page[NameObject("/Contents")] = writer._add_object(content)
-    writer.write(output)
-    return output.getvalue()
-
-
-def _encrypted_pdf(texts: list[str]) -> bytes:
-    output = BytesIO()
-    writer = PdfWriter()
-    for text in texts:
-        page = writer.add_blank_page(width=300, height=500)
-        font = DictionaryObject(
-            {
-                NameObject("/Type"): NameObject("/Font"),
-                NameObject("/Subtype"): NameObject("/Type1"),
-                NameObject("/BaseFont"): NameObject("/Helvetica"),
-            }
-        )
-        font_ref = writer._add_object(font)
-        page[NameObject("/Resources")] = DictionaryObject(
-            {NameObject("/Font"): DictionaryObject({NameObject("/F1"): font_ref})}
-        )
-        content = StreamObject()
-        content._data = (
-            f"BT /F1 12 Tf 36 450 Td ({_escape_pdf_text(text)}) Tj ET".encode()
-        )
-        page[NameObject("/Contents")] = writer._add_object(content)
-    writer.encrypt("secret")
-    writer.write(output)
-    return output.getvalue()
-
-
-def _escape_pdf_text(text: str) -> str:
-    return text.replace("\\", "\\\\").replace("(", "\\(").replace(")", "\\)")

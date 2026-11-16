@@ -52,8 +52,6 @@ from app.legal.references import (
 )
 from app.legal.schemas import EvidenceItem
 
-pytest_plugins = ["tests.api.routes.test_legal_search"]
-
 
 @pytest.fixture
 def mixed_corpus(db: Session, corpus):

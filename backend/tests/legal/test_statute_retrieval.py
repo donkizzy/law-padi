@@ -1,6 +1,5 @@
 """Synthetic mixed releases exercise routing without approving any real Act."""
 
-import hashlib
 import json
 from datetime import date
 from pathlib import Path
@@ -14,117 +13,23 @@ from app.chat.worker import _relative_query, _source_crossrefs
 from app.ingestion.pgvector_repository import (
     fuse_rankings,
     topic_search,
-    write_segments,
 )
-from app.ingestion.retrieval import build_retrieval_documents
 from app.legal.enums import (
-    CorpusReleaseStatus,
-    InstrumentType,
     LegalStatus,
     ProvisionKind,
 )
 from app.legal.models import (
     CorpusReleaseEntry,
-    LegalInstrument,
     Provision,
     ProvisionVersion,
-    SourceDocument,
 )
 from app.legal.parser import legal_text_sha256
 from app.legal.public_corpus import load_public_corpus
 from app.legal.references import SectionReference
 from app.legal.release_scope import release_instruments
-from app.legal.titles import catalogue_titles
 from app.legal.topics import demoted_sections, rights_question, section_target
 
-pytest_plugins = ["tests.api.routes.test_legal_search"]
 ROOT = Path(__file__).resolve().parents[3]
-
-
-@pytest.fixture
-def statute_texts() -> dict[str, str]:
-    return {}
-
-
-@pytest.fixture
-def statute_corpus(db: Session, corpus, statute_texts: dict[str, str]):
-    release, source, _nodes, _pdf = corpus
-    release.status = CorpusReleaseStatus.BUILDING
-    db.add(release)
-    db.commit()
-    db.refresh(source)
-    instruments, provisions, versions, entries = {}, {}, {}, []
-    for slug, label in (
-        ("acja-2015", "ACJA 2015"),
-        ("police-act-2020", "Police Act 2020"),
-    ):
-        instrument = LegalInstrument(
-            slug=slug,
-            title=label,
-            short_title=label,
-            instrument_type=InstrumentType.ACT,
-        )
-        db.add(instrument)
-        db.flush()
-        instruments[instrument.id] = instrument
-        document = SourceDocument.model_validate(
-            {
-                **source.model_dump(),
-                "id": uuid4(),
-                "legal_instrument_id": instrument.id,
-                "title": f"Synthetic {label}",
-                "sha256": hashlib.sha256(slug.encode()).hexdigest(),
-            }
-        )
-        db.add(document)
-        db.flush()
-        for number, title in catalogue_titles(slug, "sections").items():
-            provision = Provision(
-                instrument_id=instrument.id,
-                kind=ProvisionKind.SECTION,
-                number=number,
-                heading=title,
-                canonical_path=f"{slug}.section{number}",
-                sort_key=number.zfill(3),
-            )
-            db.add(provision)
-            db.flush()
-            text = statute_texts.get(
-                f"{slug}:{number}", f"Synthetic test wording: {title}."
-            )
-            version = ProvisionVersion(
-                provision_id=provision.id,
-                source_document_id=document.id,
-                text=text,
-                normalized_text=text.lower(),
-                text_sha256=legal_text_sha256(text),
-                valid_from=date(2020, 1, 1),
-                legal_status=LegalStatus.HISTORICAL,
-            )
-            db.add(version)
-            db.flush()
-            entry = CorpusReleaseEntry(
-                release_id=release.id,
-                provision_version_id=version.id,
-                source_document_id=document.id,
-            )
-            db.add(entry)
-            entries.append(entry)
-            versions[version.id] = version
-            provisions[provision.id] = provision
-    db.flush()
-    documents = build_retrieval_documents(
-        release_version=release.version,
-        entries=entries,
-        versions_by_id=versions,
-        provisions_by_id=provisions,
-        instruments_by_id=instruments,
-    )
-    write_segments(db, release_id=release.id, documents=documents)
-    release.status = CorpusReleaseStatus.PRODUCTION
-    db.add(release)
-    db.commit()
-    return release
 
 
 @pytest.mark.parametrize(
@@ -152,10 +57,10 @@ def test_public_exact_lookup_preserves_law_identity(
     assert body["data"][0]["instrument_slug"] == path.partition(".")[0]
 
 
+@pytest.mark.usefixtures("corpus")
 def test_recognised_act_absent_from_release_is_not_a_constitution_lookup(
-    client: TestClient, corpus
+    client: TestClient,
 ) -> None:
-    assert corpus
     body = client.post("/api/v1/legal/search", json={"query": "ACJA s.37"}).json()
     assert body["outcome"] == "not_found"
     assert body["data"] == []

@@ -1,17 +1,13 @@
-import hashlib
 import json
 import uuid
 from collections.abc import Generator
 from concurrent.futures import ThreadPoolExecutor
 from datetime import UTC, date, datetime
-from io import BytesIO
 from pathlib import Path
 
 import pytest
 from fastapi import HTTPException
 from fastapi.testclient import TestClient
-from pypdf import PdfWriter
-from pypdf.generic import DictionaryObject, NameObject, StreamObject
 from sqlmodel import Session, col, delete, select
 
 from app.core.config import settings
@@ -90,6 +86,8 @@ from app.legal.models import (
     SourceUpload,
 )
 from app.legal.parser import PARSER_VERSION, legal_text_sha256, normalize_legal_text
+from tests.factories.pdf import pdf_with_pages as _pdf_with_pages
+from tests.factories.pdf import sha256 as _sha256
 from tests.utils.user import create_random_user
 
 
@@ -2915,42 +2913,6 @@ def _instrument_slug(db: Session, source: SourceDocument) -> str:
     instrument = db.get(LegalInstrument, source.legal_instrument_id)
     assert instrument
     return instrument.slug
-
-
-def _pdf_with_pages(texts: list[str]) -> bytes:
-    output = BytesIO()
-    writer = PdfWriter()
-    for text in texts:
-        page = writer.add_blank_page(width=300, height=500)
-        font = DictionaryObject(
-            {
-                NameObject("/Type"): NameObject("/Font"),
-                NameObject("/Subtype"): NameObject("/Type1"),
-                NameObject("/BaseFont"): NameObject("/Helvetica"),
-            }
-        )
-        font_ref = writer._add_object(font)
-        resources = DictionaryObject(
-            {
-                NameObject("/Font"): DictionaryObject({NameObject("/F1"): font_ref}),
-            }
-        )
-        content = StreamObject()
-        content._data = (
-            f"BT /F1 12 Tf 36 450 Td ({_escape_pdf_text(text)}) Tj ET".encode()
-        )
-        page[NameObject("/Resources")] = resources
-        page[NameObject("/Contents")] = writer._add_object(content)
-    writer.write(output)
-    return output.getvalue()
-
-
-def _escape_pdf_text(text: str) -> str:
-    return text.replace("\\", "\\\\").replace("(", "\\(").replace(")", "\\)")
-
-
-def _sha256(content: bytes) -> str:
-    return hashlib.sha256(content).hexdigest()
 
 
 def test_embedding_rejects_active_profile_without_pinned_revision(

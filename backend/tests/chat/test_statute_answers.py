@@ -36,8 +36,6 @@ from app.legal.parser import legal_text_sha256
 from app.legal.public_corpus import load_public_corpus
 from app.legal.schemas import EvidenceItem
 
-pytest_plugins = ["tests.legal.test_statute_retrieval"]
-
 
 @pytest.fixture
 def statute_texts() -> dict[str, str]:
@@ -442,10 +440,10 @@ def test_worker_sends_scoped_context_and_keeps_answers_grounded(
     assert corpus.result(act).edition_label == "As enacted, may have been amended."
 
 
+@pytest.mark.usefixtures("corpus")
 def test_constitution_only_missing_law_notice_does_not_claim_act_coverage(
-    client: TestClient, db: Session, corpus, monkeypatch: pytest.MonkeyPatch
+    client: TestClient, db: Session, monkeypatch: pytest.MonkeyPatch
 ) -> None:
-    assert corpus
     monkeypatch.setattr(settings, "CHAT_ENABLED", True)
     monkeypatch.setattr(settings, "CHAT_GENERATION_ENABLED", True)
     provider = ScriptedProvider()

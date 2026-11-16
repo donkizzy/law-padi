@@ -9,8 +9,6 @@ from app.legal.enums import MessageRole
 from app.legal.models import ConversationMessage, MessageFeedback
 from app.main import app
 
-pytest_plugins = ["tests.api.routes.test_legal_search"]
-
 
 @pytest.mark.parametrize(
     ("chat", "generation", "kill", "enabled"),
@@ -43,10 +41,10 @@ def test_capabilities_are_available_when_history_is_disabled(
     assert "key" not in response.json()
 
 
+@pytest.mark.usefixtures("corpus")
 def test_history_search_is_owner_scoped_and_escapes_wildcards(
-    corpus, monkeypatch: pytest.MonkeyPatch
+    monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    assert corpus
     monkeypatch.setattr(settings, "CHAT_ENABLED", True)
     with TestClient(app) as owner, TestClient(app) as stranger:
         owner.post("/api/v1/conversations", json={"title": "Privacy 100%"})
@@ -62,10 +60,10 @@ def test_history_search_is_owner_scoped_and_escapes_wildcards(
         assert result["data"][0]["title"] == "Privacy 100%"
 
 
+@pytest.mark.usefixtures("corpus")
 def test_feedback_is_durable_owner_scoped_and_does_not_change_validation(
-    corpus, db: Session, monkeypatch: pytest.MonkeyPatch
+    db: Session, monkeypatch: pytest.MonkeyPatch
 ) -> None:
-    assert corpus
     monkeypatch.setattr(settings, "CHAT_ENABLED", True)
     with TestClient(app) as owner, TestClient(app) as stranger:
         conversation = owner.post("/api/v1/conversations", json={}).json()

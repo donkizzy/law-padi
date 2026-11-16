@@ -22,12 +22,12 @@ from app.legal.models import (
     GenerationReservation,
     GenerationRun,
 )
-from tests.conftest import _cleanup_db
+from tests.db import reset_database
 
 
 @pytest.fixture
 def budget_db(db: Session, monkeypatch: pytest.MonkeyPatch) -> Session:
-    _cleanup_db(db)
+    reset_database(db)
     init_db(db)
     monkeypatch.setattr(settings, "CHAT_DAILY_BUDGET_USD", 1.0)
     monkeypatch.setattr(settings, "CHAT_MONTHLY_BUDGET_USD", 1.0)

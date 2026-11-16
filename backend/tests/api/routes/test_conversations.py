@@ -24,13 +24,11 @@ from app.legal.models import (
 from app.main import app
 from app.models import User
 
-pytest_plugins = ["tests.api.routes.test_legal_search"]
 
-
+@pytest.mark.usefixtures("corpus")
 def test_guest_ownership_idempotency_and_claim(
-    corpus, db: Session, monkeypatch: pytest.MonkeyPatch
+    db: Session, monkeypatch: pytest.MonkeyPatch
 ) -> None:
-    assert corpus
     monkeypatch.setattr(settings, "CHAT_ENABLED", True)
     monkeypatch.setattr(settings, "CHAT_GENERATION_ENABLED", True)
     with TestClient(app) as guest, TestClient(app) as stranger:
@@ -137,10 +135,10 @@ def test_pinned_release_and_no_generation_when_disabled(
         assert guest.get(f"/api/v1/conversations/{conversation_id}").status_code == 404
 
 
+@pytest.mark.usefixtures("corpus")
 def test_guest_burst_limit_counts_cancelled_runs_and_preserves_idempotency(
-    corpus, monkeypatch: pytest.MonkeyPatch
+    monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    assert corpus
     monkeypatch.setattr(settings, "CHAT_ENABLED", True)
     monkeypatch.setattr(settings, "CHAT_GENERATION_ENABLED", True)
     monkeypatch.setattr(settings, "CHAT_GUEST_BURST_LIMIT", 2)
@@ -171,6 +169,7 @@ def test_guest_burst_limit_counts_cancelled_runs_and_preserves_idempotency(
         assert blocked.json()["detail"] == "Too many explanations in one minute"
 
 
+@pytest.mark.usefixtures("corpus")
 @pytest.mark.parametrize(
     ("limit_name", "expected"),
     [
@@ -181,13 +180,11 @@ def test_guest_burst_limit_counts_cancelled_runs_and_preserves_idempotency(
     ],
 )
 def test_conversation_deletion_does_not_reset_allowance(
-    corpus,
     db: Session,
     monkeypatch: pytest.MonkeyPatch,
     limit_name: str,
     expected: str,
 ) -> None:
-    assert corpus
     monkeypatch.setattr(settings, "CHAT_ENABLED", True)
     monkeypatch.setattr(settings, "CHAT_GENERATION_ENABLED", True)
     monkeypatch.setattr(settings, "CHAT_DISPATCH_MODE", "poll")
@@ -225,10 +222,10 @@ def test_conversation_deletion_does_not_reset_allowance(
         assert rejected.json()["detail"] == expected
 
 
+@pytest.mark.usefixtures("corpus")
 def test_claim_counts_admissions_for_account_and_original_guest(
-    corpus, db: Session, monkeypatch: pytest.MonkeyPatch
+    db: Session, monkeypatch: pytest.MonkeyPatch
 ) -> None:
-    assert corpus
     monkeypatch.setattr(settings, "CHAT_ENABLED", True)
     monkeypatch.setattr(settings, "CHAT_GENERATION_ENABLED", True)
     monkeypatch.setattr(settings, "CHAT_DISPATCH_MODE", "poll")
@@ -293,10 +290,10 @@ def test_lagos_day_and_rolling_minute_have_independent_boundaries(db: Session) -
         db.rollback()
 
 
+@pytest.mark.usefixtures("corpus")
 def test_open_event_stream_stops_reading_after_credentials_change(
-    corpus, db: Session, monkeypatch: pytest.MonkeyPatch
+    db: Session, monkeypatch: pytest.MonkeyPatch
 ) -> None:
-    assert corpus
     monkeypatch.setattr(settings, "CHAT_ENABLED", True)
     monkeypatch.setattr(settings, "CHAT_GENERATION_ENABLED", True)
     user = User(email=f"{uuid4()}@example.test", hashed_password="unused")
@@ -331,14 +328,13 @@ def test_open_event_stream_stops_reading_after_credentials_change(
         db.commit()
 
 
+@pytest.mark.usefixtures("corpus")
 @pytest.mark.parametrize("admin_delete", [False, True])
 def test_account_deletion_does_not_strand_shared_generation_capacity(
-    corpus,
     db: Session,
     monkeypatch: pytest.MonkeyPatch,
     admin_delete: bool,
 ) -> None:
-    assert corpus
     monkeypatch.setattr(settings, "CHAT_ENABLED", True)
     monkeypatch.setattr(settings, "CHAT_GENERATION_ENABLED", True)
     monkeypatch.setattr(settings, "CHAT_DISPATCH_MODE", "poll")
@@ -392,10 +388,10 @@ def test_account_deletion_does_not_strand_shared_generation_capacity(
         assert replacement.status_code == 202
 
 
+@pytest.mark.usefixtures("corpus")
 def test_expired_guest_history_removes_runs_and_capacity(
-    corpus, db: Session, monkeypatch: pytest.MonkeyPatch
+    db: Session, monkeypatch: pytest.MonkeyPatch
 ) -> None:
-    assert corpus
     monkeypatch.setattr(settings, "CHAT_ENABLED", True)
     monkeypatch.setattr(settings, "CHAT_GENERATION_ENABLED", True)
     with TestClient(app) as guest:
@@ -418,10 +414,10 @@ def test_expired_guest_history_removes_runs_and_capacity(
         assert capacity is not None and capacity.active_count == 0
 
 
+@pytest.mark.usefixtures("corpus")
 def test_deleting_active_conversation_keeps_spend_reservation(
-    corpus, db: Session, monkeypatch: pytest.MonkeyPatch
+    db: Session, monkeypatch: pytest.MonkeyPatch
 ) -> None:
-    assert corpus
     monkeypatch.setattr(settings, "CHAT_ENABLED", True)
     monkeypatch.setattr(settings, "CHAT_GENERATION_ENABLED", True)
     with TestClient(app) as guest:
@@ -462,10 +458,10 @@ def test_deleting_active_conversation_keeps_spend_reservation(
         assert ledger.spent_micro_usd == retained.actual_micro_usd
 
 
+@pytest.mark.usefixtures("corpus")
 def test_message_history_uses_owned_stable_cursor(
-    corpus, db: Session, monkeypatch: pytest.MonkeyPatch
+    db: Session, monkeypatch: pytest.MonkeyPatch
 ) -> None:
-    assert corpus
     monkeypatch.setattr(settings, "CHAT_ENABLED", True)
     with TestClient(app) as guest:
         conversation_id = UUID(
@@ -523,10 +519,10 @@ def _ask(reader: TestClient, key: str) -> int:
     return response.status_code
 
 
+@pytest.mark.usefixtures("corpus")
 def test_fresh_guest_cookies_share_their_network_allowance(
-    corpus, db: Session, monkeypatch: pytest.MonkeyPatch
+    db: Session, monkeypatch: pytest.MonkeyPatch
 ) -> None:
-    assert corpus
     monkeypatch.setattr(settings, "CHAT_ENABLED", True)
     monkeypatch.setattr(settings, "CHAT_GENERATION_ENABLED", True)
     monkeypatch.setattr(settings, "CHAT_DISPATCH_MODE", "poll")
@@ -564,10 +560,10 @@ def test_fresh_guest_cookies_share_their_network_allowance(
     assert account_row.client_digest is None
 
 
+@pytest.mark.usefixtures("corpus")
 def test_fresh_guest_cookies_share_their_network_burst(
-    corpus, monkeypatch: pytest.MonkeyPatch
+    monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    assert corpus
     monkeypatch.setattr(settings, "CHAT_ENABLED", True)
     monkeypatch.setattr(settings, "CHAT_GENERATION_ENABLED", True)
     monkeypatch.setattr(settings, "CHAT_DISPATCH_MODE", "poll")
@@ -584,10 +580,10 @@ def test_fresh_guest_cookies_share_their_network_burst(
     assert blocked.json()["detail"] == "Too many explanations in one minute"
 
 
+@pytest.mark.usefixtures("corpus")
 def test_unconfirmed_accounts_get_the_guest_allowance(
-    corpus, db: Session, monkeypatch: pytest.MonkeyPatch
+    db: Session, monkeypatch: pytest.MonkeyPatch
 ) -> None:
-    assert corpus
     monkeypatch.setattr(settings, "CHAT_ENABLED", True)
     monkeypatch.setattr(settings, "CHAT_GENERATION_ENABLED", True)
     monkeypatch.setattr(settings, "CHAT_DISPATCH_MODE", "poll")
