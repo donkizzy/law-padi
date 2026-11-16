@@ -7,6 +7,7 @@ from sqlmodel import Session, select
 from app.api.routes import search
 from app.chat import search_language
 from app.chat.budget import BudgetExhausted
+from app.chat.prompts import understanding
 from app.chat.provider import ProviderError, ProviderResult
 from app.core import rate_limit
 from app.core.config import settings
@@ -38,7 +39,7 @@ class SearchProvider:
         max_tokens: int,
         thinking: bool = False,
     ) -> ProviderResult:
-        assert system == search_language.UNDERSTANDING_SYSTEM
+        assert system == understanding.TEXT
         assert max_tokens == settings.SEARCH_TRANSLATION_MAX_OUTPUT_TOKENS
         self.calls += 1
         if self.fails:

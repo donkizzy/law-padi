@@ -7,6 +7,7 @@ from fastapi.testclient import TestClient
 from sqlmodel import Session
 
 from app.chat import translation, worker
+from app.chat.prompts import judge, understanding
 from app.chat.provider import ProviderError, ProviderResult
 from app.chat.schemas import ExplanationAnswer, ExplanationBlock
 from app.core.config import settings
@@ -50,7 +51,7 @@ class LanguageProvider:
         assert max_tokens > 0
         self.payloads.append(payload)
         value: dict[str, Any]
-        if system == translation.UNDERSTANDING_SYSTEM:
+        if system == understanding.TEXT:
             self.purposes.append("understanding")
             if self.understanding_fails:
                 raise ProviderError("DeepSeek is temporarily unavailable")
@@ -66,7 +67,7 @@ class LanguageProvider:
                 "follow_up_questions": [_YORUBA_FOLLOW_UP]
                 * len(payload["follow_up_questions"]),
             }
-        elif system == translation.JUDGE_SYSTEM:
+        elif system == judge.TEXT:
             self.purposes.append("translation_check")
             value = {
                 "checks": [

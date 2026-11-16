@@ -18,9 +18,9 @@ from typing import Any
 from sqlmodel import Session
 
 from app.chat.budget import SEARCH_UNDERSTANDING, BudgetExhausted, reserve, settle
+from app.chat.prompts import understanding
 from app.chat.provider import DeepSeekClient, ProviderError, ProviderResult
 from app.chat.translation import (
-    UNDERSTANDING_SYSTEM,
     TranslationRejected,
     Understanding,
     parse_understanding,
@@ -72,7 +72,7 @@ def _understand(query: str, provider: DeepSeekClient) -> Understanding | None:
                 session,
                 run_id=None,
                 purpose=SEARCH_UNDERSTANDING,
-                prompt_chars=len(UNDERSTANDING_SYSTEM.encode())
+                prompt_chars=len(understanding.TEXT.encode())
                 + len(json.dumps(payload, ensure_ascii=False).encode())
                 + 128,
                 max_output_tokens=settings.SEARCH_TRANSLATION_MAX_OUTPUT_TOKENS,
@@ -87,7 +87,7 @@ def _understand(query: str, provider: DeepSeekClient) -> Understanding | None:
     try:
         result = asyncio.run(
             provider.complete_json(
-                system=UNDERSTANDING_SYSTEM,
+                system=understanding.TEXT,
                 payload=payload,
                 max_tokens=settings.SEARCH_TRANSLATION_MAX_OUTPUT_TOKENS,
             )

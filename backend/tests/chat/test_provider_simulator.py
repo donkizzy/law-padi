@@ -3,8 +3,8 @@ import asyncio
 import httpx
 import pytest
 
+from app.chat.prompts import explanation, verifier
 from app.chat.provider import DeepSeekClient
-from app.chat.worker import _SYSTEM, _VERIFIER_SYSTEM
 from app.core.config import settings
 from scripts.chat_provider_simulator import app
 
@@ -22,11 +22,11 @@ def test_simulator_matches_provider_json_contract(
         ) as client:
             provider = DeepSeekClient(client)
             generated = await provider.complete_json(
-                system=_SYSTEM, payload={"evidence": [{"id": "E1"}]}
+                system=explanation.TEXT, payload={"evidence": [{"id": "E1"}]}
             )
             assert generated.value["blocks"][0]["evidence_ids"] == ["E1"]
             verified = await provider.complete_json(
-                system=_VERIFIER_SYSTEM,
+                system=verifier.TEXT,
                 payload={"blocks": generated.value["blocks"]},
             )
             assert verified.value["verdicts"] == [

@@ -8,6 +8,7 @@ from fastapi.testclient import TestClient
 from sqlmodel import Session, select
 
 from app.chat import worker
+from app.chat.prompts import explanation
 from app.chat.provider import ProviderResult
 from app.core.config import settings
 from app.legal.models import ConversationMessage, GenerationRun, ProvisionVersion
@@ -543,7 +544,7 @@ def test_an_opening_that_misreads_the_question_is_rewritten_once(
     generation = [
         payload
         for payload, system in zip(provider.payloads, provider.calls, strict=True)
-        if system == worker._SYSTEM
+        if system == explanation.TEXT
     ]
     assert len(generation) == 2
     assert "revision_reason" not in generation[0]

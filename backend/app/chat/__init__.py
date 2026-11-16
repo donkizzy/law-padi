@@ -1,3 +1,5 @@
 """Conversation, answer validation, and generation worker."""
 
-EXPLANATION_PROMPT_VERSION = "constitution-english-v11"
+from app.chat.prompts.explanation import VERSION as EXPLANATION_PROMPT_VERSION
+
+__all__ = ["EXPLANATION_PROMPT_VERSION"]

@@ -16,7 +16,7 @@ import urllib.request
 from pathlib import Path
 from typing import Any
 
-from app.chat.translation import UNDERSTANDING_PROMPT_VERSION
+from app.chat.prompts.understanding import VERSION as UNDERSTANDING_PROMPT_VERSION
 from app.legal.topics import section_target
 
 ROOT = Path(__file__).resolve().parents[2]
