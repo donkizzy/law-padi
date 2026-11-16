@@ -1,147 +1,87 @@
-# Public SEO and AI search discovery
+# Public pages, search and AI discovery
 
-Implemented 16 October 2026. The confirmed public origin is
-`https://constitition-ng.amosgodwin500.workers.dev` (preserve the Worker spelling).
-Deployed to Cloudflare and Render on 17 October 2026. See the verified rollout below.
+How public law pages are rendered for search engines and AI search crawlers,
+and what to check when releasing them. The Worker code is
+`deployment/cloudflare/worker.ts` and `deployment/cloudflare/public-pages.ts`.
 
 ## Rendering and URL policy
 
-Cloudflare's Worker handles document requests before the assets binding. Public
-landing, publisher/methodology, browse hubs and provision routes receive readable
-HTML before JavaScript. The same published corpus APIs supply the browser and
-server. A public-only JSON bootstrap seeds React Query, so replacing the initial
-reading HTML with the interactive React app does not require a duplicate initial
-corpus request. Server head tags are marked and removed when React mounts;
-TanStack HeadContent then owns one metadata set. This is progressive enhancement
-of public documents, not authenticated app SSR or bot-specific rendering.
+The Cloudflare Worker handles document requests before the static-assets
+binding. Public landing, publisher and methodology pages, browse hubs and
+provision routes are returned as readable HTML before JavaScript runs, built
+from the same published corpus API as the browser app. A public-only JSON
+bootstrap seeds React Query, so the interactive app does not repeat the first
+corpus request. Server head tags are removed when React mounts, leaving one
+metadata set. This is progressive enhancement of public documents; authenticated
+pages are not server-rendered, and crawlers get the same HTML as people.
 
-Provision and chapter URLs are pinned to the backend's published release.
-Unpinned reading aliases resolve with temporary redirects to the current published
-release. Distinct historical wordings retain distinct canonicals. There are no
-invented law-update timestamps. The Worker reads only the public enacted corpus,
-forwards no visitor cookies or authorization during document rendering, and uses
-a 15-second upstream timeout. Upstream failure produces 503/noindex/Retry-After,
-not a false missing-provision response. All document HTML and API responses remain
-private/no-store; only fingerprinted public assets receive immutable caching.
-
-The `/amendments` fixture is no longer public content: direct requests return 410
-and noindex; client navigation shows an unpublished explanation. Known gaps and
-historical-source limitations remain visible. No legal data, publication state,
-AI generation flags, budget or credentials were changed.
+- Provision and chapter URLs are pinned to the published release. Unpinned
+  reading aliases redirect temporarily to the current release. Distinct
+  historical wordings keep distinct canonical URLs, and no law-update timestamps
+  are invented.
+- During document rendering the Worker reads only the public enacted corpus,
+  forwards no visitor cookies or authorisation, and uses a 15-second upstream
+  timeout. An upstream failure returns 503 with `noindex` and `Retry-After`,
+  not a false "missing provision".
+- Document HTML and API responses are `private, no-store`; only fingerprinted
+  assets are cached as immutable. Public API reads have their own edge-cache
+  rules (`deployment/cloudflare/README.md`).
+- `/amendments` returns 410 with `noindex`: no amendment content is published.
 
 ## Discovery and citation
 
-- `/robots.txt` is real text. It explicitly permits OAI-SearchBot,
-  Claude-SearchBot and PerplexityBot to read public pages. The wildcard rules
-  also allow ordinary search bots. API crawling is disallowed; authentication
-  continues to protect private data. These rules do not introduce a training
-  preference; search and training controls are different.
-- `/sitemap.xml` uses the API's release-scoped `all_nodes=true` tree projection.
-  It includes public hubs and top-level reading units, excludes subsection and
-  paragraph duplicates, utilities and amendment fixtures, and omits unverified
-  `lastmod`. An old API without `scope=all` returns 503 instead of a partial sitemap.
-- `/llms.txt` supplies a small directory, edition limits and citation guidance.
-  It is optional and carries no promised Google ranking or LLM citation benefit.
-- WebSite/publisher, WebPage and provision BreadcrumbList entities use real
-  public URLs. The publisher is constitution.ng, per the user's choice, with the
-  repository as a public reference. The retained FAQ markup stays accurate.
-- `/about` names the publisher, source scope, automated-review boundary, known
-  corpus gaps and GitHub corrections channel. `/methodology` links the dated
-  retained retrieval benchmark and distinguishes hits from answer correctness.
-- Utility, arbitrary search and error responses are noindex. Unknown URLs and
-  unsupported special files return actual 404s. Search snippets remain allowed
-  on approved public documents. No `nosnippet` or restrictive snippet cap is added.
+- `/robots.txt` allows ordinary search crawlers and the search crawlers of AI
+  providers (OAI-SearchBot, Claude-SearchBot, PerplexityBot) to read public
+  pages, and disallows the API. These rules express no training preference;
+  search and training controls are separate.
+- `/sitemap.xml` is built from the API's release-scoped full tree. It lists
+  public hubs and top-level reading units, excludes subsection and paragraph
+  duplicates and utility pages, and omits unverified `lastmod`. An API that
+  cannot return the full tree produces a 503 rather than a partial sitemap.
+- `/llms.txt` gives a short directory, the edition limits and citation guidance.
+  It is optional and promises no ranking or citation benefit.
+- Structured data (WebSite and publisher, WebPage, provision BreadcrumbList) uses
+  real public URLs.
+- `/about` names the publisher, the source scope, the automated-review boundary,
+  known corpus gaps and the corrections channel. `/methodology` links the
+  retrieval benchmark, which is served at `/methodology/benchmark.json`, and
+  distinguishes retrieval hits from answer correctness.
+- Utility, arbitrary-search and error responses are `noindex`; unknown URLs
+  return 404.
 
-Crawler access and valid markup establish accessibility, not inclusion. Provider
-crawling schedules, indexing, relevance and independent source trust still determine
-whether Google, ChatGPT, Claude or Perplexity cites the site. No provider submission,
-indexing result, AI citation rate or model-training inclusion is claimed.
+Crawler access and valid markup make the pages readable; they do not establish
+inclusion. Indexing, relevance and whether any search or AI provider cites the
+site are outside the project's control, and no such result is claimed.
 
-Primary references: [OpenAI crawler controls](https://developers.openai.com/api/docs/bots),
+References: [OpenAI crawler controls](https://developers.openai.com/api/docs/bots),
 [Anthropic crawlers](https://support.claude.com/en/articles/8896518-does-anthropic-crawl-data-from-the-web-and-how-can-site-owners-block-the-crawler),
 [Google AI features](https://developers.google.com/search/docs/appearance/ai-features).
 
-## Verification completed locally
+## Release checklist
 
-- Frontend TypeScript/production build and Biome checks.
-- Worker TypeScript check and Wrangler 4.151.0 dry-run bundle (no upload).
-- 20 Worker/proxy tests: published content, metadata, redirects, sitemap marker,
-  errors/HEAD, escaping, private-request isolation, asset cache and existing SSE.
-- Eight legal API tests using the guarded dedicated `_test` database runner,
-  including complete release-scoped index, hub metadata and draft rejection.
-- Backend mypy, ty and Ruff checks; deployment preparation unit tests.
-- 19 mocked browser regression tests cover metadata uniqueness, linked browsing and removal of amendment fixtures.
-- Browser: Section 37 text/edition, single metadata tags, H1, ordinary chapter
-  links and publisher/corrections page. Raw HTTP: correct 200/404/410, plain text
-  robots/LLM directory and parseable XML sitemap with 550 unique URLs from the
-  local published source release. Localhost is deliberately noindexed by the
-  response header because it is not the configured canonical origin.
+1. Deploy the backend first when the Worker depends on a new API projection,
+   and check that `GET /api/v1/legal/provisions/tree?all_nodes=true` returns the
+   full tree for the published edition and rejects private releases.
+2. Build and deploy the Worker. `PUBLIC_SITE_URL` (a bare HTTPS origin) is the
+   canonical origin passed to both Vite and the Worker; its default is in
+   `deployment/cloudflare/wrangler.json`. Changing it does not configure DNS,
+   TLS or routing, so attach and verify the domain before switching it.
+3. On the deployed origin, check raw and rendered metadata, edition labels,
+   source links, status codes, `robots.txt`, the sitemap and SSE.
+4. When a domain is attached, verify it in Google Search Console and Bing
+   Webmaster Tools and submit the sitemap.
+5. For each new release, check sitemap coverage against the published
+   inventory, metadata uniqueness and `noindex` routes. Do not publish generated
+   answers as pages or change historical text to target keywords.
 
-Smoke evidence: `constitution.ng-audit/implementation-smoke.json`. The source
-corpus and browser checks did not generate a paid answer or write a chat.
-The full backend suite subsequently passed: 479 passed, two skipped, with 88% measured coverage.
+## Open items
 
-## Verified production rollout — 17 October 2026
-
-- Backend projection commit `306d7c8` deployed before the public renderer.
-- Implementation commit `4b071ac` is pushed to `master`; Render reports it Live
-  (`dep-db9ksmdg1s2s73ahe9ng`). Its source revision is `source-ae38247178f9bdd8`.
-- Direct Wrangler deployment succeeded with version
-  `494d14ba-5939-432a-9d92-29b0cbff5dbe`. The subsequent GitHub-connected build
-  succeeded and deployed the same source as version
-  `97060d2f-baf9-4cd5-a314-fb61505a0503` at 100% traffic.
-- Live checks: all 16 endpoints passed; sitemap contains 550 unique URLs;
-  published tree returns 1,850 nodes and `scope=all`; benchmark contains 55 cases.
-  Raw HTML is readable and indexable on the canonical host. Unknown URLs return
-  404 and amendment fixtures return 410. API responses remain noindex/no-store.
-- Browser About and Section 37 checks found one title, description and canonical,
-  the primary H1, preserved BreadcrumbList and no console errors. Backend health
-  returns OK; direct origin API access without the proxy credential returns 403.
-- Existing public routing and AI settings were preserved. No migrations, paid
-  generation, chat writes, DNS changes or repository-visibility changes were made.
-  Unrelated local budget edits were excluded from these commits.
-- Evidence: `constitution.ng-audit/deployment-smoke.json`. A generic Python HTTP
-  client received Cloudflare 1010; curl and browser checks succeeded. Search-bot
-  rules are present, but actual verified crawler/WAF traffic remains unmeasured.
-
-## Release procedure and remaining external work
-
-1. Deploy the backend projection first. Verify `GET /api/v1/legal/provisions/tree?all_nodes=true`
-   returns `scope=all` for the published edition and rejects private releases.
-2. Build and deploy the matching frontend/Worker after the existing release
-   controls permit it. Keep the current public-routing and AI approval choices;
-   a successful dry run is not an instruction to change them. No new dependencies
-   or database migrations are required. The rendering approach keeps the current
-   Vite/React architecture and adds HTML at the existing Worker boundary.
-3. Set `PUBLIC_SITE_URL` in Cloudflare's build environment to the canonical HTTPS
-   origin. The build passes the same value to Vite and Wrangler. It defaults to
-   the confirmed Workers address. When the brand domain is connected, change this
-   value in one place, configure host routing/TLS and verify the chosen host's
-   redirects before submitting its sitemap. Do not publish constitution.ng URLs
-   while it still returns NXDOMAIN.
-4. On the deployed origin, verify raw and rendered metadata, edition parity,
-   source links, canonical statuses, robots, sitemap, guest/account flows and SSE.
-   Inspect Cloudflare bot/WAF logs for real verified search-crawler requests;
-   do not disable security globally or trust a spoofed user-agent as verification.
-5. Verify the owned property in Google Search Console and Bing Webmaster Tools,
-   submit its sitemap, inspect landing/hub/provision/missing pages, and check
-   selected canonicals and coverage. Accounts/property verification are required;
-   no credentials for these were available in this session.
-6. Obtain a repeatable mobile trace/PageSpeed result and field LCP/INP/CLS when
-   traffic permits before further font/import optimization. The prior PageSpeed
-   request was rate-limited. Sample real citation queries after indexing and track
-   actual cited URLs/referral traffic; do not treat crawler allowance as a result.
-
-For subsequent releases, check sitemap coverage against the published inventory,
-metadata uniqueness, source-edition agreement, noindex routes and the absence of
-fixture legal-status content. New content should serve real research questions
-and cite the published edition; do not mass-publish generated answers or change
-historical text to target keywords.
-
-The benchmark JSON is served directly at `/methodology/benchmark.json`, so its
-verification does not require repository access. Signed-out checks of the GitHub
-repository/issues returned 404 during this work. Corrections retain the user's
-chosen repository link with an explicit access requirement; no repository visibility
-setting was changed. On 17 October 2026, the user confirmed keeping GitHub as the
-corrections channel with an explicit repository-access requirement. No alternative
-public contact is pending.
+- The canonical origin is still the Workers address configured in
+  `wrangler.json`; moving to the project's own domain needs DNS, TLS, redirects
+  from the old origin (it is the canonical URL in the current sitemap) and a
+  single `PUBLIC_SITE_URL` change.
+- The corrections link points at the GitHub repository's issues
+  (`CORRECTIONS_URL` in `frontend/src/lib/seo.ts`), and the public pages say
+  repository access is required. Update that wording when the repository is
+  public.
+- Field performance (LCP, INP, CLS) has not been measured.

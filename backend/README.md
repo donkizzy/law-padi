@@ -1,164 +1,31 @@
-# FastAPI Project - Backend
+# Backend
 
-## Requirements
+FastAPI application, domain logic, workers and migrations for constitution.ng.
+Python 3.14, managed with [uv](https://docs.astral.sh/uv/).
 
-* [Docker](https://www.docker.com/).
-* [uv](https://docs.astral.sh/uv/) for Python package and environment management.
+| Path | What it holds |
+| --- | --- |
+| `app/api/routes/` | HTTP routes: public legal reads (`search.py`), conversations, accounts, admin. |
+| `app/legal/` | References, parsers, evidence assembly, public corpus reads, topic guide, domain models. |
+| `app/chat/` | Generation worker, answer validation, translation, spend ledger, SSE events. |
+| `app/ingestion/` | Ingestion pipeline: storage, extraction, OCR, review workflow, embeddings, pgvector index, releases. |
+| `app/languages/` | Reader-language detection, normalisation and glossaries. |
+| `app/core/` | Settings, database engine, security, sessions, rate limits. |
+| `app/deployment/render_app.py` | Single-process runtime used on Render. |
+| `app/alembic/versions/` | Migrations. |
+| `scripts/` | Test runner, lint, prestart, evaluation and operator scripts. |
+| `tests/` | Pytest suite against a real PostgreSQL test database. |
 
-## Local Development
-
-Run the backend locally and connect it to PostgreSQL in Docker Compose.
-
-From the project root, start PostgreSQL and Mailpit:
-
-```console
-$ docker compose up -d db mailpit
-```
-
-Then, from `./backend/`, install the dependencies, prepare the database, and start the development server:
-
-```console
-$ uv sync
-$ uv run bash scripts/prestart.sh
-$ uv run fastapi dev
-```
-
-The API is available at `http://localhost:8000`, with automatic interactive docs at `http://localhost:8000/docs`.
-
-## General Workflow
-
-Run backend commands from `./backend/` with `uv run`. Make sure your editor uses the Python interpreter at `.venv/bin/python` in the project root.
-
-Modify or add SQLModel models for data and SQL tables in `./backend/app/models.py`, API endpoints in `./backend/app/api/`, CRUD (Create, Read, Update, Delete) utils in `./backend/app/crud.py`.
-
-## VS Code
-
-There are already configurations in place to run the backend through the VS Code debugger, so that you can use breakpoints, pause and explore variables, etc.
-
-The setup is also already configured so you can run the tests through the VS Code Python tests tab.
-
-## Full Stack with Docker Compose
-
-To run the backend and built frontend in Docker Compose:
-
-```console
-$ docker compose run --rm backend bash scripts/prestart.sh
-$ docker compose watch
-```
-
-The application is available at `http://localhost:8000`.
-
-### Docker Compose Override
-
-The `compose.override.yml` file contains local settings for published ports, source synchronization, automatic image rebuilds, and backend reloads. Docker Compose applies it automatically when you run `docker compose` without an explicit file list.
-
-To open a shell in the backend container:
-
-```console
-$ docker compose exec backend bash
-```
-
-## Backend Tests
-
-To test the backend from the `backend` directory, run:
-
-```console
-$ uv run bash scripts/test.sh
-```
-
-The tests run with Pytest. Modify existing tests or add new ones in `./backend/tests/`.
-
-If you use GitHub Actions, the tests will run automatically.
-
-### Test a Running Stack
-
-Run the guarded workspace runner from `backend/` to pass Pytest arguments:
+Common commands, run from this directory:
 
 ```bash
-uv run python scripts/test_runner.py -x
+uv sync                          # install dependencies
+uv run bash scripts/prestart.sh  # migrate and create the first superuser
+uv run fastapi dev               # serve the API on http://localhost:8000
+uv run bash scripts/lint.sh      # mypy, ty and Ruff checks
+uv run bash scripts/test.sh      # Pytest with coverage on a *_test database
 ```
 
-It creates/migrates a companion database ending in `_test`; destructive fixtures
-reject other database names. Application images may omit the tests, so the
-workspace runner is the supported local entry point.
-
-For repeatable full browser tests, including real signup/login/reset flows, run
-the isolated browser runner:
-
-```bash
-uv run python scripts/browser_test_runner.py
-```
-
-It creates a unique `_e2e_test` database and QA account, keeps rate limits on,
-starts its own loopback API/frontend, and cleans up only its own database and
-processes. PostgreSQL, Mailpit, Bun and matching Playwright browsers are required.
-The root `bun run test` command uses this runner. Artifacts are under
-`output/playwright/isolated-*`.
-
-### Test Coverage
-
-When the tests run, they generate `htmlcov/index.html`. Open it in your browser to inspect the test coverage.
-
-## Migrations
-
-Make sure you create a revision of your models and upgrade the database with that revision every time you change them. From the `backend` directory, use `uv` to run Alembic against the PostgreSQL container:
-
-* Alembic is already configured to import your SQLModel models from `./backend/app/models.py`.
-
-* After changing a model (for example, adding a column), create a revision:
-
-```console
-$ uv run alembic revision --autogenerate -m "Add column last_name to User model"
-```
-
-* Commit to the git repository the files generated in the alembic directory.
-
-* After creating the revision, run the migration in the database (this is what will actually change the database):
-
-```console
-$ uv run alembic upgrade head
-```
-
-If you don't want to use migrations at all, uncomment the lines in the file at `./backend/app/core/db.py` that end in:
-
-```python
-SQLModel.metadata.create_all(engine)
-```
-
-and comment the line in the file `scripts/prestart.sh` that contains:
-
-```console
-$ alembic upgrade head
-```
-
-If you don't want to start with the default models and want to remove them / modify them, from the beginning, without having any previous revision, you can remove the revision files (`.py` Python files) under `./backend/app/alembic/versions/`. And then create a first migration as described above.
-
-## Email Templates
-
-The email templates are written with [React Email](https://react.email) in `./packages/react-email/`. The `emails` directory holds one component per email and the `ui` directory holds the shared components (layout, heading, button, link, callout).
-
-The rendered HTML in `./backend/app/email-templates/` is generated from those components. It is what the application sends and should not be edited by hand.
-
-To preview the emails while editing them, start the dev server from the root of the project:
-
-```console
-$ bun run email:dev
-```
-
-Values coming from the backend are declared as Jinja placeholders in the component props, for example `username = "{{ username }}"`. The context for each email is built in `generate_*_email()` in `./backend/app/utils.py`, so a new placeholder needs to be added there too.
-
-Once you are done, regenerate the templates used by the application:
-
-```console
-$ bun run email:export
-```
-
-## Local AI worker updates
-
-Use the bounded Compose AI-preview workflow in `compose.ai.yml`. Before replacing
-an existing worker, let active generations finish and identify any standalone
-`uv run python -m app.chat.worker` process left from an earlier session. Keep one
-managed local polling workflow; old Python workers retain imported prompts and
-language logic until restarted. Restart the Compose worker after worker-code
-updates and confirm the stored translation `prompt_version` on a labelled QA
-answer. A separate API reload does not update a standalone worker.
+See the [README](../README.md) for setup, [`docs/architecture.md`](../docs/architecture.md)
+for how the pieces fit, and [`docs/development.md`](../docs/development.md) for
+workers, Compose and tests.

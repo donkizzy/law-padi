@@ -1,6 +1,6 @@
 # Search quality vs a general-purpose Claude, 2026-10-29
 
-Scope: the whole active release (Constitution 1999, ACJA 2015, Police Act 2020), 100 realistic questions in `docs/claude-comparison-queries-v2.json` (the `truth` notes there are the writer's recollection and are unverified; grading used the stored provision text).
+Scope: the whole active release (Constitution 1999, ACJA 2015, Police Act 2020), 100 realistic questions in `eval/datasets/claude-comparison-queries-v2.json` (the `truth` notes there are the writer's recollection and are unverified; grading used the stored provision text).
 
 Method: Claude answered blind (no corpus, no tools). The app answered through the real chat path (hybrid retrieval, deepseek-flash, prompt v11) on an isolated clone of the production database. Five independent graders scored both answers against the stored text of the cited provisions: accuracy, helpfulness and citation 0-2, plus listed factual errors. Live spend was under US$1.
 
@@ -32,7 +32,7 @@ Causes of app losses: gave up 20, retrieval miss 12, validation failure 10, draf
 
 87 of 100 now return an explanation. The 13 left are 8 insufficient evidence (mostly correct: nonexistent sections and questions outside these laws) and 5 validation failures.
 
-Retrieval on a held-out set written after the fixes (`docs/claude-comparison-heldout-v3.json`, 40 questions): expected section in the top 5 went from 35 to 36 of 40, and first from 21 to 21. The topic additions do not generalise on their own; the dev-set gain (top 5: 81 to 91 of 95) is partly tuning. Existing benchmarks are unchanged (98% / 97% top-1).
+Retrieval on a held-out set written after the fixes (`eval/datasets/claude-comparison-heldout-v3.json`, 40 questions): expected section in the top 5 went from 35 to 36 of 40, and first from 21 to 21. The topic additions do not generalise on their own; the dev-set gain (top 5: 81 to 91 of 95) is partly tuning. Existing benchmarks are unchanged (98% / 97% top-1).
 
 ## Caveats
 
@@ -42,7 +42,7 @@ Retrieval on a held-out set written after the fixes (`docs/claude-comparison-hel
 
 ## Second round: the open issues
 
-- Companion context was being lost. My first trimming dropped context from the end, which discarded s.45/s.46 and the Act companions while keeping parent sections. Trimming now drops the lowest-ranked matches first (keeping four), then context, and `CHAT_EVIDENCE_MAX_CHARS` defaults to 36,000. Verified: the speech and religion questions now load s.45/s.46, the court-papers question loads s.36, and s.135 now brings in s.137 (the president-term question completes).
+- Companion context was being lost. The first trimming dropped context from the end, which discarded s.45/s.46 and the Act companions while keeping parent sections. Trimming now drops the lowest-ranked matches first (keeping four), then context, and `CHAT_EVIDENCE_MAX_CHARS` defaults to 36,000. Verified: the speech and religion questions now load s.45/s.46, the court-papers question loads s.36, and s.135 now brings in s.137 (the president-term question completes).
 - Statute subjects: every Part of ACJA and the Police Act now has plain-language subject coverage (`_PART_TOPICS` in `app/legal/topics.py`: remand, speedy trial, mental incapacity, sentencing, victim compensation, probation, death sentence, witnesses, warrants, traffic wardens, special constables, gender equality, lost property and others).
 - Padded sources: a delivered explanation now lists only the sections it cited or was asked about (`_shown_evidence`).
 - Re-run of the 18 hardest cases on the final code: 14 completed (including 12 that had been unanswered or weak), 2 insufficient evidence (one is correct: the child-suspect provision defers to the Child's Rights Act, which is not in these three laws), 2 verifier rejections.
@@ -51,6 +51,6 @@ Retrieval on a held-out set written after the fixes (`docs/claude-comparison-hel
 ## Still open
 
 1. "How many years can a president stay in power" still fails the strict verifier even with s.135 and s.137 loaded. It is left failing closed rather than loosening verification.
-2. Out-of-scope questions still use the shared "closest sections we found" wording. The misleading "too broad" label is gone (it was the size gate), but the copy lives in the search path, the English locale catalogue and Playwright specs, so I did not change it without running the browser tests.
+2. Out-of-scope questions still use the shared "closest sections we found" wording. The misleading "too broad" label is gone (it was the size gate), but the copy lives in the search path, the English locale catalogue and Playwright specs, so it was not changed without running the browser tests.
 3. The corpus is the as-enacted text. Claude states later amendments the app does not have (presidential minimum age 35, House 25). Closing this needs the amendments ingested and reviewed; no retrieval change can fix it.
 4. Part-level topics were written after the held-out set, so that set no longer measures generalisation. A new held-out set is needed before the next claim about unseen phrasing.

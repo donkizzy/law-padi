@@ -2,6 +2,16 @@
 
 How Nigerian Pidgin (`pcm`), Yorùbá (`yo`), Hausa (`ha`) and Igbo (`ig`) are measured before each one is switched on. The design is "English core, translated edges": the question is translated to English, the existing English retrieval and answer checks run unchanged, and the verified English answer is translated back.
 
+**Status.** `render.yaml` enables all five reader languages in production, with
+non-English answers labelled Beta. The enable gates below have not been shown
+to pass for any non-English language: no translation evaluation set exists yet,
+and the late-October retrieval run did not show parity for Yorùbá, Hausa or Igbo
+([`reader-language-review-checklist.md`](reader-language-review-checklist.md)).
+The launch exception in
+[`evidence-chat-rollout.md`](evidence-chat-rollout.md#launch-exception-recorded-16-november-2026)
+records that generation is enabled with all five languages; it does not record
+these language gates as met.
+
 All data below is `review_status: "draft"`. It was drafted and cross-checked without a native-speaker reviewer, so it must never be described as reviewed.
 
 ## Data files
@@ -9,8 +19,8 @@ All data below is `review_status: "draft"`. It was drafted and cross-checked wit
 | File | What it holds |
 |---|---|
 | `backend/app/languages/data/glossary-{lang}.json` | 166 legal terms per language, including the fixed answer heading "What you can do:". Each term has `en`, `target`, `alternatives`, `note`, `confidence`, and `locked` on terms that must stay in English form. |
-| `docs/plain-language-retrieval-benchmark-{lang}-v1.json` | The 57 English benchmark cases translated (same order and `expected_sections`; `source_query` holds the English text), plus 10 native citation phrasings with `kind: "citation"`. 67 cases in total. |
-| `docs/plain-language-retrieval-heldout-{lang}-v1.json` | The 40 English held-out cases translated (same order, `kind` and `expected_sections`). Never tune the topic guide on these. |
+| `eval/datasets/plain-language-retrieval-benchmark-{lang}-v1.json` | The 57 English benchmark cases translated (same order and `expected_sections`; `source_query` holds the English text), plus 10 native citation phrasings with `kind: "citation"`. 67 cases in total. |
+| `eval/datasets/plain-language-retrieval-heldout-{lang}-v1.json` | The 40 English held-out cases translated (same order, `kind` and `expected_sections`). Never tune the topic guide on these. |
 
 ### How the glossaries were built
 
@@ -89,7 +99,7 @@ The script already reads `cases[].query` and `cases[].expected_sections` and ign
 Example once translated mode exists:
 
 ```bash
-cd backend && uv run python scripts/retrieval_benchmark.py ../docs/plain-language-retrieval-benchmark-v1.json ../docs/plain-language-retrieval-benchmark-yo-v1.json ../docs/plain-language-retrieval-heldout-v1.json ../docs/plain-language-retrieval-heldout-yo-v1.json
+cd backend && uv run python scripts/retrieval_benchmark.py ../eval/datasets/plain-language-retrieval-benchmark-v1.json ../eval/datasets/plain-language-retrieval-benchmark-yo-v1.json ../eval/datasets/plain-language-retrieval-heldout-v1.json ../eval/datasets/plain-language-retrieval-heldout-yo-v1.json
 ```
 
 ## Known gaps
@@ -98,7 +108,7 @@ cd backend && uv run python scripts/retrieval_benchmark.py ../docs/plain-languag
 - **Keyword cases.** Pidgin speakers type legal titles in English, so the Pidgin keyword cases stay close to English. The Yorùbá, Hausa and Igbo keyword cases mix in English names where the local press does (Grand Kadi, federal character, Code of Conduct Tribunal).
 - **Translation eval set.** The ~60 answers per language for gates 2 and 3 are not built yet.
 
-## Implemented fix-pass tooling (27 October 2026)
+## Release-gate tooling (27 October 2026)
 
 `backend/scripts/evaluate_reader_retrieval.py` now evaluates all 525 existing
 English/native benchmark and held-out queries through the actual search API,

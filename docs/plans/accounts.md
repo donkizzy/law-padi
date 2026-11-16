@@ -1,6 +1,10 @@
 # Accounts and sign-in plan
 
-Status: approved, 2026-10-16. Phases 0–3 and 5 are built. Google sign-in is deferred.
+Status: approved 2026-10-16. Phases 0–3 and 5 are built; production email
+delivery is still open and Google sign-in (Phase 4) is deferred. The "What
+already exists", "Gaps" and "Changes by area" sections describe the starting
+point when the plan was written, not the current code; the session design as
+built is summarised in [`../architecture.md`](../architecture.md#accounts-and-sessions).
 
 ## Goal
 
@@ -24,7 +28,7 @@ The FastAPI template auth is wired end to end, but only at template quality:
   guest chats.
 - **Deployment.** The Cloudflare worker proxies `/api/*` to Render on the same origin,
   so first-party cookies are possible. Password-recovery email isn't configured in
-  production yet (`docs/deployment-status.md`).
+  production yet.
 
 ## Gaps
 
@@ -214,7 +218,7 @@ Built, with these specifics:
 | Area | Files |
 | --- | --- |
 | Models and migrations | `backend/app/models.py`, `backend/app/alembic/versions/` (refresh tokens, email verification, saved provisions, identities) |
-| API | `backend/app/api/routes/login.py`, `users.py`, new `saved.py`, `backend/app/api/deps.py` |
+| API | `backend/app/api/routes/login.py`, `users.py`, a new routes module for saved provisions (built as `account.py`), `backend/app/api/deps.py` |
 | Client | regenerate `frontend/src/client/` with `bash scripts/generate-client.sh` |
 | Frontend auth | `frontend/src/hooks/useAuth.ts`, `frontend/src/main.tsx` (error handling), new `AuthProvider` |
 | Routes | `login.tsx`, `signup.tsx` (redirect param), `_layout/settings.tsx`, `_layout/saved.tsx` |

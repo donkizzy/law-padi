@@ -1,139 +1,29 @@
-# FastAPI Project - Frontend
+# Frontend
 
-The frontend is built with [Vite](https://vitejs.dev/), [React](https://react.dev/), [TypeScript](https://www.typescriptlang.org/), [TanStack Query](https://tanstack.com/query), [TanStack Router](https://tanstack.com/router), [Tailwind CSS](https://tailwindcss.com/), and [shadcn/ui](https://ui.shadcn.com/).
+React and TypeScript client for constitution.ng, built with Vite, TanStack
+Router and Query, Tailwind CSS and typed i18next catalogues.
 
-## Requirements
+| Path | What it holds |
+| --- | --- |
+| `src/routes/` | File-based routes; `src/routeTree.gen.ts` is generated. |
+| `src/components/` | UI components. `LawPadi/` carries the product's former name. |
+| `src/lib/` | Session handling, SEO metadata, public content and shared helpers. |
+| `src/locales/` | Interface catalogues per reader language. |
+| `src/client/` | API client generated from the backend's OpenAPI schema. |
+| `tests/` | Playwright specs. |
 
-- [Bun](https://bun.sh/)
-
-## Quick Start
-
-From the project root, install the dependencies and start the frontend development server:
-
-```bash
-bun install
-bun run dev
-```
-
-Then open <http://localhost:5173/> in your browser.
-
-Run `uv run bash scripts/prestart.sh` and `uv run fastapi dev` from the `backend` directory, with PostgreSQL running in Docker Compose. See [../development.md](../development.md) for the complete setup.
-
-To serve the frontend with FastAPI, run `bun run build` from the `frontend` directory and open `http://localhost:8000`.
-
-Check `frontend/package.json` to see the other available commands.
-
-## Removing the Frontend
-
-If you are developing an API-only app and want to remove the frontend, you can do it easily:
-
-* Remove the `./frontend` directory.
-
-* In the `backend/app/main.py` file, remove the `app.frontend()` call.
-
-* In the `backend/Dockerfile` file, remove the frontend build stage and the `COPY --from=frontend-build` instruction.
-
-* In the `compose.override.yml` file, remove the `playwright` service.
-
-* In the `.github/workflows/deploy.yml` file, remove the **Set up Bun**, **Install frontend dependencies**, and **Build frontend** steps.
-
-* In the `.fastapicloudignore` file, remove the `!backend/app/frontend/` entry.
-
-Done, you now have an API-only app. 🤓
-
-## Generate Client
-
-### Automatically
-
-* From the project root, run the script:
+Run these from the repository root:
 
 ```bash
-bash ./scripts/generate-client.sh
+bun install          # install workspace dependencies
+bun run dev          # Vite on http://localhost:5173, API from frontend/.env
+bun run lint         # Biome, check only (bun run lint:fix applies safe fixes)
+bun run build        # type-check application sources and build into backend/app/frontend
+bun run typecheck    # type-check including tests (not yet run in CI)
+bun run test         # Playwright against the Compose stack
 ```
 
-* Commit the changes.
-
-### Manually
-
-* Make sure the backend is running.
-
-* Download the OpenAPI JSON file from `http://localhost:8000/api/v1/openapi.json` and copy it to a new file `openapi.json` at the root of the `frontend` directory.
-
-* To generate the frontend client, run:
-
-```bash
-bun run generate-client
-```
-
-* Commit the changes.
-
-Regenerate the client whenever backend changes affect the OpenAPI schema.
-
-## Using a Remote API
-
-By default, the built frontend uses the same origin as the FastAPI app. If you want to use a remote API while running the Vite development server, you can set the environment variable `VITE_API_URL` to the URL of the remote API. For example, you can set it in the `frontend/.env` file:
-
-```env
-VITE_API_URL=https://my-domain.example.com
-```
-
-Then, when you run the frontend, it will use that URL as the base URL for the API.
-
-## Code Structure
-
-The frontend code is structured as follows:
-
-* `frontend/src` - The main frontend code.
-* `frontend/public` - Static assets.
-* `frontend/src/client` - The generated OpenAPI client.
-* `frontend/src/components` - The components of the frontend, including the shadcn/ui components in `frontend/src/components/ui`.
-* `frontend/src/hooks` - Custom hooks.
-* `frontend/src/lib` - Shared frontend utilities.
-* `frontend/src/routes` - The frontend routes and pages.
-
-## End-to-End Testing with Playwright
-
-From the repository root, start the local PostgreSQL and email-capture services:
-
-```bash
-docker compose up -d db mailpit
-```
-
-Install workspace/backend dependencies and the required Playwright engines, then
-run the suite from the repository root:
-
-```bash
-bun run test
-```
-
-The default test command creates a unique disposable `_e2e_test` database,
-seeds a QA account, and starts API/frontend servers on temporary loopback ports.
-Rate limits remain enabled. The runner stops its processes and removes its own
-database on exit; the shared app corpus and rate counters are preserved. Logs,
-test results and run-specific browser state are in `output/playwright/isolated-*`.
-The database user needs permission to create/drop these disposable databases.
-
-Pass Playwright arguments through the root command:
-
-```bash
-bun run test tests/login.spec.ts
-```
-
-For interactive testing against the running shared local stack, use:
-
-```bash
-bun run test:live --ui
-```
-
-Shared-stack auth runs use its real rate allowances, so repeated runs can receive
-429 responses. The isolated command is the repeatable regression workflow.
-
-Focused Firefox/WebKit language/layout checks can run from `frontend/` with
-`bunx playwright test --config=playwright.qa.config.ts`. Install matching engines
-with `bunx playwright install firefox webkit` if the cache has a different revision.
-
-Keep regression cases in `frontend/tests/` and backend behavior checks in
-`backend/tests/`. See the [production QA tracker](../docs/production-qa-2026-10-27.md)
-for current findings and evidence limitations.
-
-For more information on writing and running Playwright tests, refer to the official [Playwright documentation](https://playwright.dev/docs/intro).
+Regenerate the API client with `bash scripts/generate-client.sh`; never edit
+`src/client/` or `src/routeTree.gen.ts` by hand. Design tokens are in
+`src/index.css`. See the [README](../README.md) and
+[`docs/development.md`](../docs/development.md) for the rest of the setup.

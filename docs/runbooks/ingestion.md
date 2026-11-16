@@ -1,4 +1,32 @@
-# Ingestion Runbooks (V1, dev mode)
+# Ingestion runbook
+
+Procedures for turning a source PDF into a published release. The pipeline
+stages are described in [`../architecture.md`](../architecture.md#ingestion-pipeline).
+Ingestion runs against a local or staging database with the ingestion worker;
+production receives only finished releases ([`release.md`](release.md)).
+
+## Ingesting a law
+
+1. Allow the instrument type: `INGESTION_ALLOWED_INSTRUMENT_TYPES` defaults to
+   the Constitution only; Acts and rules are opt-in.
+2. Start the database, API and ingestion worker
+   (`docker compose up -d db backend ingestion-worker`, or the local commands
+   in [`../development.md`](../development.md)).
+3. In the admin workspace, register the source with its authority, URL and
+   source tier (`official` or `trusted_secondary`), upload the PDF, and confirm
+   the pages that belong to the instrument.
+4. Resolve the blocking review issues against the PDF. Keep source defects as
+   found; correct only with authoritative evidence. Add a section-title
+   catalogue under `backend/app/legal/data/` and topic-guide entries in
+   `backend/app/legal/topics.py`.
+5. Load the law's retrieval benchmark (`backend/scripts/load_retrieval_benchmark.py`)
+   so the embedding run can pass its Recall@10 gate, then embed, index and
+   validate.
+6. Compose a release from the production base and the approved member, publish
+   it locally, and copy it to production with the release runbook.
+
+Every Act is published with historical, as-enacted semantics unless each
+amendment has been folded in and checked.
 
 ## Source-verified formatting repair
 
@@ -105,11 +133,10 @@ file contents against the archive manifest.
 
 ## Rebuilding pgvector from PostgreSQL (source of truth)
 
-PostgreSQL + pgvector is the only supported retrieval backend. Canonical law,
-release membership, embeddings, validation and active-target publication stay in
-one database, so publication needs no external index or alias switch. Historical
-vector-index and collection metadata remain readable for publication evidence;
-new ingestion runs create only pgvector builds.
+PostgreSQL with pgvector is the only retrieval backend
+([ADR 0001](../adr/0001-postgres-pgvector-retrieval.md)). Canonical law, release
+membership, embeddings, validation and active-target publication stay in one
+database, so publication needs no external index or alias switch.
 
 1. Confirm the database has the `vector` extension and `RETRIEVAL_VECTOR_DIMENSIONS=1024`.
 2. Pick the release's `RetrievalIndexBuild` and retained retrieval-document and
@@ -142,17 +169,16 @@ after ranking. `RetrievalSegment.retrieval_text` is derived context, not legal t
   contract.
   Failures stay on the row (`attempt_count`, `error_message`) for retry.
 
-## Backup, restore, and rollback
+## Restore and rollback of retrieval
 
-- Back up PostgreSQL with WAL/PITR enabled; the `vector` extension must be
-  available before restoring the schema.
-- Restore the database first, then run `alembic upgrade head` and verify
+- Database backups and restore checks are in [`backup-restore.md`](backup-restore.md).
+  The `vector` extension must exist before the schema is restored; after a
+  restore, run `alembic upgrade head` and check
   `SELECT extversion FROM pg_extension WHERE extname = 'vector'`.
 - Rebuild a failed pgvector build into a new release or embedding run. Never
-  update segments or embeddings belonging to an approved/production release.
+  update segments or embeddings belonging to an approved or production release.
 - Roll back retrieval by promoting the previous `ActiveRetrievalTarget` in a
-  normal publication transaction. No external vector-service rollback is
-  required.
+  normal publication transaction.
 
 ## Deferred schema follow-ups (observability, not correctness)
 

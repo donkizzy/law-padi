@@ -1,7 +1,8 @@
 # Reader-language release review
 
-This checklist is the remaining human approval work for QA-005. Automated checks
-and the Beta label do not approve a language. Do not change a draft's review
+This checklist is the remaining human approval work before a reader language
+loses its Beta label. Automated checks and the Beta label do not approve a
+language. Do not change a draft's review
 status or fill reviewer names until that person has completed the review.
 
 ## Reproducible automated evidence
@@ -22,8 +23,9 @@ for this gate.
 
 ## Native review and answer translation
 
-The 27–28 October full live retrieval run failed parity for Yorùbá, Hausa and
-Igbo (see QA-025 in `production-qa-2026-10-27.md`). Before approving release,
+The full live retrieval run of 27–28 October 2026 failed parity for Yorùbá,
+Hausa and Igbo (its report, production-qa-2026-10-27.md, is preserved at git tag
+`archive/pre-public-cleanup`). Before approving release,
 native reviewers must also adjudicate original question / English rendering
 pairs, including offices, actions, negation and uncertain section numbers.
 The answer-translation judge does not validate input-question understanding.
@@ -60,6 +62,6 @@ judged languages, budgeted calls, and a bounded translation deadline. Rejected
 translations keep the verified English answer. These safeguards reduce exposure;
 they do not constitute native review or unconditional language-release approval.
 
-Only after review should the actual glossary metadata, catalogue README, this
-checklist and the QA tracker be updated together. No native reviews were performed
-by the automated fix pass.
+Only after review should the glossary metadata, the catalogue README
+(`frontend/src/locales/README.md`) and this checklist be updated together. No
+native-speaker review has been performed for any language.
