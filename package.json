@@ -13,6 +13,8 @@
     "typecheck": "bun run --filter frontend typecheck",
     "test": "uv run --directory backend python scripts/browser_test_runner.py",
     "test:live": "bun run --filter frontend test",
+    "test:mocked": "bun run --filter frontend test:mocked",
+    "test:cross-engine": "bun run --filter frontend test:cross-engine",
     "test:ui": "bun run --filter frontend test:ui",
     "email:dev": "bun run --filter emails dev",
     "email:export": "bun run --filter emails export"

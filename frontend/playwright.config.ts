@@ -1,5 +1,6 @@
 import { defineConfig, devices } from '@playwright/test';
 import 'dotenv/config'
+import { backendSpecs } from './tests/backend-specs.ts'
 
 const baseURL = process.env.PLAYWRIGHT_BASE_URL ?? 'http://localhost:5173'
 
@@ -22,7 +23,9 @@ export default defineConfig({
   /* Opt out of parallel tests on CI. */
   workers: process.env.CI ? 1 : undefined,
   /* Reporter to use. See https://playwright.dev/docs/test-reporters */
-  reporter: process.env.CI ? 'blob' : 'html',
+  reporter: process.env.CI
+    ? [['blob', { fileName: 'report-backend.zip' }]]
+    : 'html',
   /* Shared settings for all the projects below. See https://playwright.dev/docs/api/class-testoptions. */
   use: {
     /* Base URL to use in actions like `await page.goto('/')`. */
@@ -37,7 +40,10 @@ export default defineConfig({
     { name: 'setup', testMatch: /.*\.setup\.ts/ },
 
     {
+      // Only the specs that use the real backend; the rest run through
+      // playwright.mocked.config.ts without one.
       name: 'chromium',
+      testMatch: backendSpecs,
       use: {
         ...devices['Desktop Chrome'],
         storageState: process.env.PLAYWRIGHT_AUTH_FILE ?? 'playwright/.auth/user.json',

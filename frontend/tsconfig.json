@@ -22,7 +22,13 @@
       "@/*": ["./src/*"]
     }
   },
-  "include": ["src", "tests", "playwright.config.ts"],
+  "include": [
+    "src",
+    "tests",
+    "playwright.config.ts",
+    "playwright.mocked.config.ts",
+    "playwright.qa.config.ts"
+  ],
   "references": [
     {
       "path": "./tsconfig.node.json"

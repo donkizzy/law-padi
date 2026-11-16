@@ -12,6 +12,8 @@
     "preview": "vite preview",
     "generate-client": "bunx --bun openapi-ts",
     "test": "bunx playwright test",
+    "test:mocked": "bunx playwright test -c playwright.mocked.config.ts",
+    "test:cross-engine": "bunx playwright test -c playwright.qa.config.ts",
     "test:ui": "bunx playwright test --ui"
   },
   "dependencies": {
