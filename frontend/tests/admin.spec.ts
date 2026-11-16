@@ -1,6 +1,7 @@
 import { expect, test } from "@playwright/test"
 import type {
   CorpusReleasePublic,
+  CorpusReleasePublicationEvidencePublic,
   CorpusReleasePublishResponse,
   CorpusReleasesPublic,
   ReviewIssuePublic,
@@ -13,6 +14,7 @@ import {
   nativeExtractorVersion,
   publicationFailureMessage,
   releaseId,
+  releasePublicationEvidence,
   reviewItem,
 } from "./admin/fixtures.ts"
 import {
@@ -907,6 +909,28 @@ test("Admin uses range selection, revision diffs, audit history, and OCR benchma
   await page.getByRole("button", { name: "Load dataset" }).click()
   await expect(page.getByText("google_document_ai").first()).toBeVisible()
   await expect(page.getByText("2 pages").first()).toBeVisible()
+})
+
+test("A release with no index build yet shows the pgvector build as pending", async ({
+  page,
+}) => {
+  await mockAdminApi(page)
+  await page.route(
+    `**/api/v1/admin/corpus-releases/${releaseId}/publication-evidence`,
+    (route) =>
+      json<CorpusReleasePublicationEvidencePublic>(route, {
+        ...releasePublicationEvidence(),
+        retrieval_index_builds: [],
+        promotion_attempts: [],
+      }),
+  )
+  await page.goto("/admin")
+  await page.getByRole("tab", { name: "Corpus releases" }).click()
+  await expect(
+    page.getByText("pgvector index build", { exact: true }),
+  ).toBeVisible()
+  await expect(page.getByText("Vector index evidence pending.")).toBeVisible()
+  await expect(page.getByText("pgvector validation")).toHaveCount(0)
 })
 
 test("Accounts without admin roles see read-only controls", async ({

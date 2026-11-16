@@ -2341,7 +2341,7 @@ function ReleaseWorkspace({
                 <p className="text-sm font-bold">
                   {retrievalIndexBuilds.length
                     ? "pgvector validation"
-                    : "Qdrant validation"}
+                    : "pgvector index build"}
                 </p>
                 {retrievalIndexBuilds.length ? (
                   <div className="mt-3 grid gap-2">
