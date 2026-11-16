@@ -98,7 +98,7 @@ test("Legal reviewers cannot override blocking issues in the UI", async ({
   ).toHaveCount(0)
 })
 
-test("Admin legal workspace is accessible and shows evidence operations", async ({
+test("Admin legal workspace shows the metrics, operational alerts and tabs", async ({
   page,
 }) => {
   await mockAdminApi(page)
