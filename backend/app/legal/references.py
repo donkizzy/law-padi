@@ -27,7 +27,13 @@ _TOKEN = re.compile(
 )
 _PROSE_OTHER_INSTRUMENT = re.compile(
     r"\s+(?:of|under|in)\s+(?!the\s+(?:1999\s+)?constitution\b)"
-    r"(?:the\s+)?(?:[\w-]+\s+){0,8}(?:act|code|bill|regulations?|law|decree|ACJL)\b",
+    r"(?:the\s+)?(?:[\w-]+\s+|\([\w -]+\)\s+){0,8}"
+    r"(?:act|code|bill|regulations?|law|decree|ACJL)\b",
+    re.I,
+)
+_COMMA_PARENTHETICAL_LAW = re.compile(
+    r"\s*,\s*(?:[\w-]+\s+){1,8}\([\w -]+\)\s+"
+    r"(?:act|code|bill|regulations?|law|decree|ACJL)\b",
     re.I,
 )
 _MAX_REFERENCES = 20
@@ -191,7 +197,7 @@ def _expand(
 
 
 REFERENCE_FORMAT_MESSAGE = "Try a reference like Section 35, Section 35(1) or Section 35(1)(c). Lists and ranges can include up to 20 sections."
-UNKNOWN_LAW_MESSAGE = "Recognised laws are Nigeria's Constitution, ACJA 2015 and Police Act 2020. A law must also be included in the selected published edition before its sections can be served."
+UNKNOWN_LAW_MESSAGE = "The law name or year in this reference is unrecognised or conflicting. Sections are available for laws included in the selected published edition."
 
 
 def _unsupported() -> ReferenceParse:
@@ -331,14 +337,18 @@ def parse_section_reference(
                 r"[A-Z]{2,}(?!\w)", remaining[qualifier.end() :]
             ):
                 return _unknown_law()
-            if _PROSE_OTHER_INSTRUMENT.match(remaining) or re.match(
-                # In source/answer prose, ordinary verbs followed by "law"
-                # ("shall invalidate any law") do not name another instrument.
-                r"\s*,?\s*(?:[A-Z][\w-]*\s+){0,8}(?:Act|Code|Bill|Regulations?|Law|Decree|ACJL)\b"
-                if prose
-                else r"\s*,?\s*(?:[\w-]+\s+){0,8}(?:act|code|bill|regulations?|law|decree|acjl)\b",
-                remaining,
-                0 if prose else re.I,
+            if (
+                _PROSE_OTHER_INSTRUMENT.match(remaining)
+                or _COMMA_PARENTHETICAL_LAW.match(remaining)
+                or re.match(
+                    # Ordinary prose such as "shall invalidate any law"
+                    # does not name another instrument.
+                    r"\s*,?\s*(?:[A-Z][\w-]*\s+){0,8}(?:Act|Code|Bill|Regulations?|Law|Decree|ACJL)\b"
+                    if prose
+                    else r"\s*,?\s*(?:[\w-]+\s+){0,8}(?:act|code|bill|regulations?|law|decree|acjl)\b",
+                    remaining,
+                    0 if prose else re.I,
+                )
             ):
                 return _unknown_law()
             range_match = _RANGE.match(remaining)

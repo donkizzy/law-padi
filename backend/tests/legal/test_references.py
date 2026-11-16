@@ -162,6 +162,27 @@ def test_qualified_law_aliases(query: str, slug: str, number: str) -> None:
 @pytest.mark.parametrize(
     "query",
     [
+        "Section 41 of the Joint Revenue Board of Nigeria (Establishment) Act, 2025",
+        "Section 41, Joint Revenue Board Act 2025",
+        "Section 41 of the JRB Act",
+        "Joint Revenue Board of Nigeria (Establishment) Act 2025 s.41",
+    ],
+)
+def test_jrb_reference_cannot_match_the_constitution(query: str) -> None:
+    slug = "joint-revenue-board-of-nigeria-establishment-act-2025"
+    for prose in (False, True):
+        parsed = parse_section_reference(query, prose=prose)
+        assert parsed.error is None
+        reference = parsed.reference
+        assert reference is not None
+        assert reference == SectionReference("41", instrument_slug=slug)
+        assert matches_reference(f"{slug}.part6.section41", reference)
+        assert not matches_reference("constitution-1999.chapter4.section41", reference)
+
+
+@pytest.mark.parametrize(
+    "query",
+    [
         "Evidence Act s.9",
         "Section 9, Evidence Act",
         "s.9 of the Evidence Act",
@@ -172,6 +193,9 @@ def test_qualified_law_aliases(query: str, slug: str, number: str) -> None:
         "Lagos Police Act s.9",
         "FOIA s.9",
         "s.9 of the FOIA",
+        "Section 41 of the Joint Revenue Board of Nigeria (Establishment) Act, 2024",
+        "Section 41 of the Joint Revenue Board of Nigeria (Amendment) Act, 2025",
+        "Section 41, Joint Revenue Board of Nigeria (Amendment) Act, 2025",
     ],
 )
 def test_unrecognised_or_conflicting_laws_never_fall_back(query: str) -> None:

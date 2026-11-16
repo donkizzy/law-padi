@@ -26,6 +26,15 @@ INSTRUMENT_NAMES = {
         ),
     ),
     POLICE_SLUG: ("Police Act 2020", "2020", (r"(?:Nigerian?\s+)?Police\s+Act",)),
+    "joint-revenue-board-of-nigeria-establishment-act-2025": (
+        "Joint Revenue Board Act 2025",
+        "2025",
+        (
+            r"Joint\s+Revenue\s+Board\s+of\s+Nigeria\s*\(Establishment\)\s+Act",
+            r"Joint\s+Revenue\s+Board\s+Act",
+            r"JRB\s+Act",
+        ),
+    ),
 }
 _ALIASES = [
     (slug, re.compile(pattern, re.I))
