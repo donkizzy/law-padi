@@ -45,7 +45,7 @@ def main() -> None:
             "frontend/package.json",
             "frontend/vite.config.ts",
             "frontend/index.html",
-            "docs/plain-language-retrieval-benchmark-v1.json",
+            "eval/datasets/plain-language-retrieval-benchmark-v1.json",
             "deployment/cloudflare/worker.ts",
             "deployment/cloudflare/public-pages.ts",
             "deployment/cloudflare/wrangler.json",

@@ -197,7 +197,7 @@ def test_provisional_statute_cases_route_through_synthetic_release(
     db: Session, statute_corpus, split: str
 ) -> None:
     dataset = json.loads(
-        (ROOT / "docs" / f"statute-retrieval-{split}-v1.json").read_text()
+        (ROOT / "eval" / "datasets" / f"statute-retrieval-{split}-v1.json").read_text()
     )
     for case in dataset["cases"]:
         rows = topic_search(db, release_id=statute_corpus.id, query=case["query"])

@@ -1,4 +1,4 @@
-import benchmark from "../../../docs/plain-language-retrieval-benchmark-v1.json"
+import benchmark from "../../../eval/datasets/plain-language-retrieval-benchmark-v1.json"
 import landing from "../locales/en/landing.json"
 
 export const publicBenchmark = benchmark

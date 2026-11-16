@@ -5,8 +5,8 @@ every ranking signal on its own and the production fusion, so a change to one
 signal (for example the topic guide) cannot hide a regression in another.
 
     uv run python scripts/retrieval_benchmark.py \
-        ../docs/plain-language-retrieval-benchmark-v1.json \
-        ../docs/plain-language-retrieval-heldout-v1.json
+        ../eval/datasets/plain-language-retrieval-benchmark-v1.json \
+        ../eval/datasets/plain-language-retrieval-heldout-v1.json
 
 Query embeddings use the configured provider, so the command needs the same
 credentials as live search.

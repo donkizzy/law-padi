@@ -51,7 +51,7 @@ PATHS = (
     "render.yaml",
     "scripts/build_revision.py",
     "scripts/generate-client.sh",
-    "docs/constitution-explanation-evaluation-v1.json",
+    "eval/datasets/constitution-explanation-evaluation-v1.json",
     "docs/evidence-chat-rollout.md",
     "package.json",
     "bun.lock",

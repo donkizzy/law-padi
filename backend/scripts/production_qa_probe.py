@@ -25,7 +25,7 @@ def cases() -> list[dict[str, Any]]:
     selected = []
     for language in LANGUAGES:
         suffix = "" if language == "en" else f"-{language}"
-        dataset = ROOT / f"docs/plain-language-retrieval-benchmark{suffix}-v1.json"
+        dataset = ROOT / f"eval/datasets/plain-language-retrieval-benchmark{suffix}-v1.json"
         source = json.loads(dataset.read_text())["cases"]
         selected.extend(
             {**source[index], "language": language} for index in SAMPLE_INDICES

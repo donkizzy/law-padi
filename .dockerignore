@@ -40,8 +40,9 @@
 !deployment/cloudflare/public-pages.ts
 !deployment/cloudflare/wrangler.json
 !deployment/cloudflare/tsconfig.json
-!docs/
-!docs/plain-language-retrieval-benchmark-v1.json
+!eval/
+!eval/datasets/
+!eval/datasets/plain-language-retrieval-benchmark-v1.json
 !scripts/
 !scripts/build_revision.py
 

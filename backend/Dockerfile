@@ -9,7 +9,7 @@ RUN --mount=type=cache,target=/root/.bun/install/cache \
 COPY frontend/index.html frontend/vite.config.ts frontend/tsconfig*.json frontend/playwright.config.ts /app/frontend/
 COPY frontend/src /app/frontend/src
 COPY frontend/public /app/frontend/public
-COPY docs/plain-language-retrieval-benchmark-v1.json /app/docs/
+COPY eval/datasets/plain-language-retrieval-benchmark-v1.json /app/eval/datasets/
 ARG VITE_API_URL=
 ARG BUILD_REVISION=development
 ENV VITE_BUILD_REVISION=$BUILD_REVISION

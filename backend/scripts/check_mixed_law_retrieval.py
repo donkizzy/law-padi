@@ -65,7 +65,7 @@ def copy_row(row: SQLModel, **changes: Any) -> SQLModel:
 def main() -> None:
     root = Path(__file__).resolve().parents[2]
     datasets = [
-        json.loads((root / "docs" / name).read_text())
+        json.loads((root / "eval" / "datasets" / name).read_text())
         for name in (
             "plain-language-retrieval-benchmark-v1.json",
             "plain-language-retrieval-heldout-v1.json",

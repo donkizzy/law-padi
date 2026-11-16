@@ -11,7 +11,7 @@ COPY backend/pyproject.toml backend/Dockerfile /source/backend/
 COPY deployment/cloudflare/worker.ts deployment/cloudflare/public-pages.ts deployment/cloudflare/wrangler.json deployment/cloudflare/tsconfig.json /source/deployment/cloudflare/
 COPY deployment/render/Dockerfile deployment/render/start.sh /source/deployment/render/
 COPY bun.lock uv.lock package.json .dockerignore /source/
-COPY docs/plain-language-retrieval-benchmark-v1.json /source/docs/
+COPY eval/datasets/plain-language-retrieval-benchmark-v1.json /source/eval/datasets/
 COPY scripts/build_revision.py /source/scripts/
 RUN python scripts/build_revision.py > /source-revision
 
