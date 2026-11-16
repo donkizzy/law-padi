@@ -22,3 +22,8 @@ backend/storage/
 /.playwright-mcp/
 /docs/ux-audit-*/**/*.png
 /docs/ux-audit-*/**/*.jpg
+
+# Local tooling and frontend configuration
+/.claude/
+/.agents/
+/frontend/.env
