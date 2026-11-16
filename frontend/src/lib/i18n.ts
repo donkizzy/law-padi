@@ -6,7 +6,7 @@ import {
   readPreferences,
   workspaceStorageEvent,
 } from "@/hooks/useWorkspacePreferences"
-import type { LanguageValue } from "@/lib/law-padi-data"
+import type { LanguageValue } from "@/lib/languages"
 import { setEditionTranslator } from "@/lib/legal-provisions"
 
 export const namespaces = [

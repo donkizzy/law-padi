@@ -1,4 +1,4 @@
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
+import { useMutation, useQuery } from "@tanstack/react-query"
 import { useNavigate } from "@tanstack/react-router"
 
 import {
@@ -28,7 +28,6 @@ type UseAuthOptions = {
 
 const useAuth = ({ redirect }: UseAuthOptions = {}) => {
   const navigate = useNavigate()
-  const queryClient = useQueryClient()
   const { showErrorToast } = useCustomToast()
   const status = useSessionStatus()
 
@@ -48,9 +47,6 @@ const useAuth = ({ redirect }: UseAuthOptions = {}) => {
       })
     },
     onError: handleError.bind(showErrorToast),
-    onSettled: () => {
-      queryClient.invalidateQueries({ queryKey: ["users"] })
-    },
   })
 
   const login = (data: AccessToken) =>

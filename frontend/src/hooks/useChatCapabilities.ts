@@ -1,16 +1,6 @@
 import { useQuery } from "@tanstack/react-query"
 import { ConversationsService } from "@/client"
 
-export type ChatCapabilities = {
-  conversations_enabled: boolean
-  explanations_enabled: boolean
-  supported_languages: string[]
-  answer_languages?: string[]
-  question_max_length: number
-  build_revision: string
-  prompt_version: string
-}
-
 export function useChatCapabilities() {
   return useQuery({
     queryKey: ["chat-capabilities"],

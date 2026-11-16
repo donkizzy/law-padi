@@ -18,7 +18,7 @@ import {
   useWorkspacePreferences,
 } from "@/hooks/useWorkspacePreferences"
 import { isLanguageAvailable, languageCodes } from "@/lib/i18n"
-import { type LanguageValue, languageOptions } from "@/lib/law-padi-data"
+import { type LanguageValue, languageOptions } from "@/lib/languages"
 import { cn } from "@/lib/utils"
 
 /** The saved language and the languages whose catalogues are complete. */

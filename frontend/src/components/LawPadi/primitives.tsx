@@ -1,23 +1,10 @@
 import { Slot, Slottable } from "@radix-ui/react-slot"
 import type { ComponentProps, ReactNode } from "react"
 import { useTranslation } from "react-i18next"
-import {
-  FiAlertCircle,
-  FiArrowRight,
-  FiCheck,
-  FiChevronRight,
-  FiCopy,
-  FiLoader,
-  FiX,
-} from "react-icons/fi"
+import { FiAlertCircle, FiArrowRight, FiLoader, FiX } from "react-icons/fi"
 import { LiaBalanceScaleSolid } from "react-icons/lia"
-
-import {
-  type LegalStatus,
-  statusMeta,
-  type TimelineEvent,
-} from "@/lib/law-padi-data"
 import { cn } from "@/lib/utils"
+import { type LegalStatus, statusMeta } from "./legal-status"
 
 type ButtonVariant = "primary" | "secondary" | "ghost" | "outline" | "danger"
 type ButtonSize = "sm" | "md" | "lg"
@@ -235,29 +222,6 @@ export function OfficialTextBlock({
   )
 }
 
-export function TranslationBlock() {
-  return (
-    <details className="sq-md border border-border bg-card/70 p-4">
-      <summary className="flex cursor-pointer items-center justify-between gap-3 text-sm font-semibold text-foreground">
-        <span>Show Yorùbá translation</span>
-        <FiChevronRight className="size-4 text-muted-foreground" aria-hidden />
-      </summary>
-      <div className="mt-4 border-t border-border pt-4 text-sm leading-7 text-muted-foreground">
-        <p className="mb-2 font-semibold text-foreground">
-          Translation for accessibility
-        </p>
-        <p>
-          Àṣírí àwọn ará ilu, ilé wọn, ìbánisọrọ àti ìfọ̀rọ̀wérọ̀ lórí foonu ni a
-          dáàbò bo.
-        </p>
-        <p className="mt-3 text-xs">
-          Official legal wording is the English text above.
-        </p>
-      </div>
-    </details>
-  )
-}
-
 export function SegmentedControl<T extends string>({
   options,
   value,
@@ -301,94 +265,6 @@ export function SegmentedControl<T extends string>({
           </button>
         )
       })}
-    </div>
-  )
-}
-
-export function AmendmentTimeline({
-  events,
-  className,
-}: {
-  events: TimelineEvent[]
-  className?: string
-}) {
-  return (
-    <div className={cn("grid gap-3", className)}>
-      {events.map((event, index) => (
-        <div
-          className="grid grid-cols-[4.5rem_1fr] gap-3"
-          key={`${event.marker}-${event.title}`}
-        >
-          <div className="pt-0.5 text-xs font-bold text-muted-foreground">
-            {event.marker}
-          </div>
-          <div className="relative pb-4">
-            {index < events.length - 1 ? (
-              <span
-                aria-hidden
-                className="absolute left-[0.35rem] top-3 h-full w-px bg-border"
-              />
-            ) : null}
-            <span
-              aria-hidden
-              className={cn(
-                "sq-xs absolute left-0 top-1 size-3 border-2 border-primary/35 bg-card",
-                event.status === "proposed" &&
-                  "border-[color:var(--legal-amber)]/45",
-              )}
-            />
-            <div className="pl-6">
-              <p className="text-sm font-semibold text-foreground">
-                {event.title}
-              </p>
-              <p className="mt-1 text-xs leading-5 text-muted-foreground">
-                {event.description}
-              </p>
-            </div>
-          </div>
-        </div>
-      ))}
-    </div>
-  )
-}
-
-export function VersionDiff({
-  previous,
-  current,
-  className,
-}: {
-  previous: string
-  current: string
-  className?: string
-}) {
-  return (
-    <div
-      className={cn("sq-lg overflow-hidden border border-border", className)}
-    >
-      <div className="grid gap-px bg-border md:grid-cols-2">
-        <section className="bg-card p-5">
-          <h3 className="mb-3 text-overline uppercase text-muted-foreground">
-            Previous wording
-          </h3>
-          <p
-            lang="en"
-            className="sq-sm bg-[color:var(--legal-red-soft)] p-3 font-legal text-statute-sm text-[color:var(--legal-red)] line-through"
-          >
-            {previous}
-          </p>
-        </section>
-        <section className="bg-card p-5">
-          <h3 className="mb-3 text-overline uppercase text-muted-foreground">
-            Current wording
-          </h3>
-          <p
-            lang="en"
-            className="sq-sm bg-[color:var(--legal-emerald-soft)] p-3 font-legal text-statute-sm text-[color:var(--legal-emerald-ink)]"
-          >
-            {current}
-          </p>
-        </section>
-      </div>
     </div>
   )
 }
@@ -455,25 +331,6 @@ export function SkeletonBlock() {
         <span className="sq-xs h-3 w-3/5 animate-pulse bg-secondary" />
       </div>
     </div>
-  )
-}
-
-export function CopyButton({
-  copied,
-  ...props
-}: ComponentProps<"button"> & { copied?: boolean }) {
-  const { t } = useTranslation()
-  return (
-    <IconButton
-      label={copied ? t("actions.copied") : t("actions.copy")}
-      {...props}
-    >
-      {copied ? (
-        <FiCheck className="size-4" aria-hidden />
-      ) : (
-        <FiCopy className="size-4" aria-hidden />
-      )}
-    </IconButton>
   )
 }
 
