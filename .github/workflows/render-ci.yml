@@ -53,3 +53,9 @@ jobs:
           test "$actual" = "$expected"
       - name: Check the Render startup script
         run: docker run --rm --entrypoint sh constitution-ng-api:ci -n /app/backend/scripts/start-render.sh
+      - name: Smoke-test the packaged Render runtime
+        run: docker run --rm -i --entrypoint python constitution-ng-api:ci - render < scripts/smoke_docker_image.py
+      - name: Build the Cloud Run runtime
+        run: docker build --target cloud-run -f backend/Dockerfile -t constitution-ng-api:cloud-ci .
+      - name: Smoke-test the packaged Cloud Run runtime
+        run: docker run --rm -i --entrypoint python constitution-ng-api:cloud-ci - cloud-run < scripts/smoke_docker_image.py

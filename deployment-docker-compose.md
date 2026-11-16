@@ -60,6 +60,11 @@ The `compose.deploy.yml` file adds HTTPS and automatic certificate handling to t
 
 The backend Docker image builds the frontend, so the server does not need Bun or prebuilt frontend files.
 
+The default image contains production dependencies and uses Uvicorn. Local
+Compose selects a separate `development` target with the FastAPI CLI, uv and
+maintenance scripts. See [Docker image contents and verification](docs/docker-images.md)
+for build targets, measured sizes and smoke-test commands.
+
 ## Deploy with GitHub Actions
 
 The included `.github/workflows/deploy-docker-compose.yml` workflow runs the deployment commands on the server when manually triggered from GitHub Actions.

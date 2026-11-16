@@ -1,103 +1,46 @@
+# syntax=docker/dockerfile:1
 FROM oven/bun:1 AS frontend-build
-
 WORKDIR /app
-
 COPY package.json bun.lock /app/
 COPY frontend/package.json /app/frontend/
-
 WORKDIR /app/frontend
-
-RUN bun install --frozen-lockfile
-
-COPY ./frontend /app/frontend
+RUN --mount=type=cache,target=/root/.bun/install/cache \
+    bun install --frozen-lockfile
+COPY frontend/index.html frontend/vite.config.ts frontend/tsconfig*.json frontend/playwright.config.ts /app/frontend/
+COPY frontend/src /app/frontend/src
+COPY frontend/public /app/frontend/public
 COPY docs/plain-language-retrieval-benchmark-v1.json /app/docs/
-
 ARG VITE_API_URL=
 ARG BUILD_REVISION=development
 ENV VITE_BUILD_REVISION=$BUILD_REVISION
-
 RUN bun run build
 
-
-FROM python:3.14 AS development
-
-ENV PYTHONUNBUFFERED=1
-
-# PDF rendering is part of the ingestion evidence workflow.
-RUN apt-get update \
-    && apt-get install -y --no-install-recommends poppler-utils \
-    && rm -rf /var/lib/apt/lists/*
-
-# Install uv
-# Ref: https://docs.astral.sh/uv/guides/integration/docker/#installing-uv
-COPY --from=ghcr.io/astral-sh/uv:0.9.26 /uv /uvx /bin/
-
-# Compile bytecode
-# Ref: https://docs.astral.sh/uv/guides/integration/docker/#compiling-bytecode
-ENV UV_COMPILE_BYTECODE=1
-
-# uv Cache
-# Ref: https://docs.astral.sh/uv/guides/integration/docker/#caching
-ENV UV_LINK_MODE=copy
-
-WORKDIR /app/
-
-# Place executables in the environment at the front of the path
-# Ref: https://docs.astral.sh/uv/guides/integration/docker/#using-the-environment
-ENV PATH="/app/.venv/bin:$PATH"
-
-# Install dependencies
-# Ref: https://docs.astral.sh/uv/guides/integration/docker/#intermediate-layers
-RUN --mount=type=cache,target=/root/.cache/uv \
-    --mount=type=bind,source=uv.lock,target=uv.lock \
-    --mount=type=bind,source=pyproject.toml,target=pyproject.toml \
-    uv sync --frozen --no-install-workspace --package app
-
-COPY ./backend/scripts /app/backend/scripts
-
-COPY ./backend/pyproject.toml ./backend/alembic.ini /app/backend/
-
-COPY ./backend/app /app/backend/app
-
-COPY --from=frontend-build /app/backend/app/frontend /app/backend/app/frontend
-
-# Sync the project
-# Ref: https://docs.astral.sh/uv/guides/integration/docker/#intermediate-layers
-RUN --mount=type=cache,target=/root/.cache/uv \
-    --mount=type=bind,source=uv.lock,target=uv.lock \
-    --mount=type=bind,source=pyproject.toml,target=pyproject.toml \
-    uv sync --frozen --package app
-
-ARG BUILD_REVISION=development
-ENV BUILD_REVISION=$BUILD_REVISION
-
-WORKDIR /app/backend/
-
-CMD ["fastapi", "run", "--workers", "4"]
-
-# The Cloud Run target does not depend on the frontend build or Poppler. Keep
-# PDF rendering in the existing development/ingestion image above.
-FROM python:3.14-slim-trixie AS cloud-dependencies
+# Dependency tooling and caches never enter a production image. Import the app
+# from /app/backend rather than installing another copy of its source in .venv.
+FROM python:3.14-slim-trixie AS dependencies
 COPY --from=ghcr.io/astral-sh/uv:0.9.26 /uv /bin/uv
-ENV UV_LINK_MODE=copy UV_COMPILE_BYTECODE=1
+ENV UV_LINK_MODE=copy UV_PYTHON_DOWNLOADS=0
 WORKDIR /app
 COPY pyproject.toml uv.lock /app/
 COPY backend/pyproject.toml /app/backend/pyproject.toml
 RUN --mount=type=cache,target=/root/.cache/uv \
     uv sync --frozen --no-dev --no-install-workspace --package app
-COPY backend/app /app/backend/app
-RUN rm -rf /app/backend/app/frontend
-RUN --mount=type=cache,target=/root/.cache/uv \
-    uv sync --frozen --no-dev --package app
 
-FROM python:3.14-slim-trixie AS cloud-run
+FROM python:3.14-slim-trixie AS runtime
 ENV PYTHONUNBUFFERED=1 \
     PYTHONDONTWRITEBYTECODE=1 \
-    PATH="/app/.venv/bin:$PATH" \
-    SERVE_FRONTEND=false \
-    APP_RUNTIME_ENV_FILE=/run/secrets/runtime.env
-# Match PostgreSQL 18 for scheduled pg_dump exports. No server, compiler,
-# Poppler, frontend, uv cache, or development dependencies in this image.
+    PYTHONPATH=/app/backend \
+    PATH="/app/.venv/bin:$PATH"
+WORKDIR /app/backend
+COPY --from=dependencies /app/.venv /app/.venv
+COPY backend/app /app/backend/app
+COPY backend/alembic.ini /app/backend/alembic.ini
+ARG BUILD_REVISION=development
+ENV BUILD_REVISION=$BUILD_REVISION
+
+# Install the PostgreSQL client in a builder. The backup handler only executes
+# pg_dump; psql, Perl, package caches and the other client tools stay here.
+FROM python:3.14-slim-trixie AS postgres-backup-tools
 RUN apt-get update \
     && apt-get install -y --no-install-recommends ca-certificates curl \
     && curl --fail --silent --show-error \
@@ -107,19 +50,62 @@ RUN apt-get update \
        > /etc/apt/sources.list.d/postgresql.list \
     && apt-get update \
     && apt-get install -y --no-install-recommends postgresql-client-18 \
-    && apt-get purge -y --auto-remove curl \
-    && rm -rf /var/lib/apt/lists/* \
-    && useradd --system --uid 10001 --create-home app
-COPY --from=cloud-dependencies /app/.venv /app/.venv
-COPY --from=cloud-dependencies /app/backend/app /app/backend/app
-COPY backend/alembic.ini /app/backend/alembic.ini
+    && rm -rf /var/lib/apt/lists/*
+# ldd includes the transitive shared-library dependencies. Resolve directory
+# symlinks while retaining each library's SONAME (e.g. libpq.so.5).
+RUN python - <<'PY'
+from pathlib import Path
+import shutil
+import subprocess
+
+root = Path('/pg-runtime')
+binary = Path('/usr/lib/postgresql/18/bin/pg_dump')
+destination = root / 'usr/local/bin/pg_dump'
+destination.parent.mkdir(parents=True)
+shutil.copy2(binary, destination)
+for line in subprocess.check_output(['ldd', str(binary)], text=True).splitlines():
+    if 'not found' in line:
+        raise RuntimeError(line)
+    if '=>' not in line:
+        continue
+    library = Path(line.split('=>', 1)[1].strip().split()[0])
+    destination = root / library.parent.resolve().relative_to('/') / library.name
+    destination.parent.mkdir(parents=True, exist_ok=True)
+    shutil.copy2(library, destination)
+PY
+
+# The API and task handler share this target. pg_dump 18 is required by the
+# scheduled backup handler; PDF/OCR tools and the frontend belong elsewhere.
+FROM runtime AS cloud-run
+ENV SERVE_FRONTEND=false \
+    APP_RUNTIME_ENV_FILE=/run/secrets/runtime.env
+COPY --from=postgres-backup-tools /pg-runtime/ /
+RUN useradd --system --uid 10001 --create-home app
 COPY backend/scripts/start-cloud-run.sh /app/backend/scripts/start-cloud-run.sh
-ARG BUILD_REVISION=development
-ENV BUILD_REVISION=$BUILD_REVISION
-WORKDIR /app/backend
 USER 10001
 EXPOSE 8080
 CMD ["sh", "/app/backend/scripts/start-cloud-run.sh"]
 
-# docker compose and an unqualified docker build retain the existing image.
-FROM development AS default
+# Same-origin frontend + API for server deployments. Migrations remain runnable
+# with: docker compose run --rm backend bash scripts/prestart.sh
+FROM runtime AS production
+COPY backend/scripts/prestart.sh /app/backend/scripts/prestart.sh
+COPY --from=frontend-build /app/backend/app/frontend /app/backend/app/frontend
+EXPOSE 8000
+CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000", "--workers", "4"]
+
+# Local Compose explicitly selects this target for fastapi dev / live reload.
+FROM production AS development
+COPY --from=ghcr.io/astral-sh/uv:0.9.26 /uv /bin/uv
+ENV UV_LINK_MODE=copy UV_PYTHON_DOWNLOADS=0
+COPY pyproject.toml uv.lock /app/
+COPY backend/pyproject.toml /app/backend/pyproject.toml
+COPY backend/scripts /app/backend/scripts
+RUN --mount=type=cache,target=/root/.cache/uv \
+    uv sync --frozen --no-install-workspace --package app
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends poppler-utils \
+    && rm -rf /var/lib/apt/lists/*
+
+# Unqualified builds and production Compose use the lean production target.
+FROM production AS default

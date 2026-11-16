@@ -31,13 +31,13 @@ class FakeWorkerResult:
     run_status: IngestionRunStatus | str
 
 
-def test_worker_package_is_independent_python_312_runtime() -> None:
+def test_worker_package_matches_backend_python_runtime() -> None:
     pyproject = (WORKER_ROOT / "pyproject.toml").read_text()
     dockerfile = (WORKER_ROOT / "Dockerfile").read_text()
 
-    assert 'requires-python = ">=3.12,<3.13"' in pyproject
+    assert 'requires-python = ">=3.14,<3.15"' in pyproject
     assert "[tool.uv.workspace]" not in pyproject
-    assert "FROM python:3.12-slim" in dockerfile
+    assert "FROM python:3.14-slim" in dockerfile
     assert "poppler-utils" in dockerfile
     assert "tesseract-ocr" in dockerfile
     assert "PYTHONPATH=/app/backend:/app/services/ingestion-worker" in dockerfile
