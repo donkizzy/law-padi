@@ -56,13 +56,15 @@ def sector(cx, cy, ro, rix, a0, a1, riy=None, rox=None, roy=None):
     o1 = ell_pt(cx, cy, rox, roy, a1)
     i1 = ell_pt(cx, cy, rix, riy, a1)
     i0 = ell_pt(cx, cy, rix, riy, a0)
-    return [[
-        ("M", *o0),
-        ("A", rox, roy, large, True, *o1),
-        ("L", *i1),
-        ("A", rix, riy, large, False, *i0),
-        ("Z",),
-    ]]
+    return [
+        [
+            ("M", *o0),
+            ("A", rox, roy, large, True, *o1),
+            ("L", *i1),
+            ("A", rix, riy, large, False, *i0),
+            ("Z",),
+        ]
+    ]
 
 
 def xform(subpaths, fn_pt, fn_r=None, flips=False):
@@ -78,7 +80,14 @@ def xform(subpaths, fn_pt, fn_r=None, flips=False):
                 ccw = (not seg[4]) if flips else seg[4]
                 nsp.append(("A", rx, ry, seg[3], ccw, *fn_pt(seg[5], seg[6])))
             elif seg[0] == "C":
-                nsp.append(("C", *fn_pt(seg[1], seg[2]), *fn_pt(seg[3], seg[4]), *fn_pt(seg[5], seg[6])))
+                nsp.append(
+                    (
+                        "C",
+                        *fn_pt(seg[1], seg[2]),
+                        *fn_pt(seg[3], seg[4]),
+                        *fn_pt(seg[5], seg[6]),
+                    )
+                )
             else:
                 nsp.append(seg)
         out.append(nsp)
@@ -109,7 +118,6 @@ def mirror_x(sps, cx):
 
 def reverse(sp):
     """Reverse a single closed subpath's direction."""
-    pts = []  # list of (seg_type, data, endpoint)
     start = None
     cur = None
     segs = []
@@ -156,10 +164,12 @@ def sample(sp, n=24):
             for k in range(1, n + 1):
                 t = k / n
                 u = 1 - t
-                pts.append((
-                    u**3 * x0 + 3 * u * u * t * x1 + 3 * u * t * t * x2 + t**3 * x,
-                    u**3 * y0 + 3 * u * u * t * y1 + 3 * u * t * t * y2 + t**3 * y,
-                ))
+                pts.append(
+                    (
+                        u**3 * x0 + 3 * u * u * t * x1 + 3 * u * t * t * x2 + t**3 * x,
+                        u**3 * y0 + 3 * u * u * t * y1 + 3 * u * t * t * y2 + t**3 * y,
+                    )
+                )
             cur = (x, y)
     return pts
 
@@ -190,7 +200,10 @@ def arc_points(p0, p1, rx, ry, large, ccw, n):
         dt += 2 * math.pi
     if not ccw and dt > 0:
         dt -= 2 * math.pi
-    return [(cx + rx * math.cos(t0 + dt * k / n), cy + ry * math.sin(t0 + dt * k / n)) for k in range(1, n + 1)]
+    return [
+        (cx + rx * math.cos(t0 + dt * k / n), cy + ry * math.sin(t0 + dt * k / n))
+        for k in range(1, n + 1)
+    ]
 
 
 def area(sp):
@@ -245,5 +258,8 @@ def svg(paths, vb, title, extra=""):
     return (
         f'<svg xmlns="http://www.w3.org/2000/svg" viewBox="{" ".join(f(v) for v in vb)}" '
         f'width="{f(w)}" height="{f(h)}" role="img" aria-labelledby="title">\n'
-        f'  <title id="title">{title}</title>\n' + extra + "\n".join(body) + "\n</svg>\n"
+        f'  <title id="title">{title}</title>\n'
+        + extra
+        + "\n".join(body)
+        + "\n</svg>\n"
     )

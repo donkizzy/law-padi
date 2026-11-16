@@ -34,7 +34,7 @@ from app.ingestion.pgvector_repository import (
 from app.legal.evidence import default_embedding_provider
 from app.legal.models import EmbeddingProfile, RetrievalSegment
 from app.legal.release_scope import release_instruments
-from app.legal.topics import demoted_sections, section_target, rights_question
+from app.legal.topics import demoted_sections, rights_question, section_target
 
 TOP_K = 5
 SIGNALS = ("dense", "lexical", "topic", "fallback", "fused")

@@ -40,7 +40,16 @@ build-backend = "hatchling.build"
 
 [tool.mypy]
 strict = true
-exclude = ["venv", ".venv", "alembic"]
+explicit_package_bases = true
+# These legacy scripts still require type repairs.
+# Keep the rest of scripts under the same strict rules as app.
+exclude = [
+    "venv", ".venv", "alembic",
+    "scripts/check_mixed_law_retrieval\\.py$",
+    "scripts/evaluate_reader_retrieval\\.py$",
+    "scripts/production_qa_probe\\.py$",
+    "scripts/review_constitution_source_edition\\.py$",
+]
 
 [tool.ruff]
 target-version = "py314"

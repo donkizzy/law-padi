@@ -27,8 +27,17 @@ def book_page(outer_x, spine_x, top_o, top_s, bot_o, bot_s, r, tail=None):
     dip = top_s - top_o
     sp = [("M", spine_x, Y(top_s))]
     # top edge: rises steeply out of the gutter, then runs level to the outer corner
-    sp.append(("C", spine_x - 0.128 * W, Y(top_s - 0.625 * dip), spine_x - 0.404 * W, Y(top_o),
-               outer_x + 0.255 * W, Y(top_o)))
+    sp.append(
+        (
+            "C",
+            spine_x - 0.128 * W,
+            Y(top_s - 0.625 * dip),
+            spine_x - 0.404 * W,
+            Y(top_o),
+            outer_x + 0.255 * W,
+            Y(top_o),
+        )
+    )
     sp.append(("L", outer_x + r, Y(top_o)))
     sp.append(("A", r, r, 0, True, outer_x, Y(top_o + r)))
     sp.append(("L", outer_x, Y(bot_o - r)))
@@ -37,18 +46,40 @@ def book_page(outer_x, spine_x, top_o, top_s, bot_o, bot_s, r, tail=None):
         base_x, depth, a_left, a_right = tail
         tip_x = base_x - depth / math.tan(math.radians(a_left))
         right_x = tip_x + depth / math.tan(math.radians(a_right))
-        sp += [("L", base_x, Y(bot_o)), ("L", tip_x, Y(bot_o + depth)), ("L", right_x, Y(bot_o))]
+        sp += [
+            ("L", base_x, Y(bot_o)),
+            ("L", tip_x, Y(bot_o + depth)),
+            ("L", right_x, Y(bot_o)),
+        ]
     curve_start = outer_x + 0.40 * W
     sp.append(("L", curve_start, Y(bot_o)))
     # bottom edge: level, then easing down into the gutter
-    sp.append(("C", spine_x - 0.30 * W, Y(bot_o), spine_x - 0.16 * W, Y(bot_o + 0.2 * (bot_s - bot_o)),
-               spine_x, Y(bot_s)))
+    sp.append(
+        (
+            "C",
+            spine_x - 0.30 * W,
+            Y(bot_o),
+            spine_x - 0.16 * W,
+            Y(bot_o + 0.2 * (bot_s - bot_o)),
+            spine_x,
+            Y(bot_s),
+        )
+    )
     sp.append(("Z",))
     return [sp]
 
 
-def book(gutter=20.0, outer=24.0, top_o=60.0, top_s=92.0, bot_o=200.0, bot_s=214.0, r=16.0,
-         tail=(48.0, 32.0, 75.0, 40.0), lift=14.0):
+def book(
+    gutter=20.0,
+    outer=24.0,
+    top_o=60.0,
+    top_s=92.0,
+    bot_o=200.0,
+    bot_s=214.0,
+    r=16.0,
+    tail=(48.0, 32.0, 75.0, 40.0),
+    lift=14.0,
+):
     spine = 128 - gutter / 2
     left = book_page(outer, spine, top_o, top_s, bot_o, bot_s, r, tail)
     right = mirror_x(book_page(outer, spine, top_o, top_s, bot_o, bot_s, r, None), 128)
@@ -66,8 +97,17 @@ def symbol_reversed():
 
 def symbol_small():
     # 16–32 px cut: wider gutter, shallower curves, bigger tail, fills the canvas
-    return book(gutter=40.0, outer=8.0, top_o=34.0, top_s=56.0, bot_o=192.0, bot_s=202.0, r=20.0,
-                tail=(30.0, 42.0, 75.0, 40.0), lift=8.0)
+    return book(
+        gutter=40.0,
+        outer=8.0,
+        top_o=34.0,
+        top_s=56.0,
+        bot_o=192.0,
+        bot_s=202.0,
+        r=20.0,
+        tail=(30.0, 42.0, 75.0, 40.0),
+        lift=8.0,
+    )
 
 
 # ------------------------------------------------------------------ writers
@@ -97,7 +137,9 @@ def place_horizontal(sym_l, sym_r, wm_parts, page_top=130.0, gap=62.0):
     # outer page band in math coords (from the master construction)
     top_m, bot_m = 256 - (60 - 14), 256 - (200 - 14)
     s = page_top / (top_m - bot_m)
-    sym = [translate(scale(translate(p, -sx0, -bot_m), s), 0, 0) for p in (sym_l, sym_r)]
+    sym = [
+        translate(scale(translate(p, -sx0, -bot_m), s), 0, 0) for p in (sym_l, sym_r)
+    ]
     sw = (sx1 - sx0) * s
     wx0 = min(bbox(part)[0] for part in wm_parts if part)
     wm = [translate(part, sw + gap - wx0, 0) for part in wm_parts]
@@ -125,12 +167,32 @@ def frame_free(groups, pad=24):
 
 if __name__ == "__main__":
     L, R = symbol_master()
-    write("constitution-ng-symbol.svg", [(L + R, GREEN)], (0, 0, 256, 256), "constitution.ng")
-    write("constitution-ng-symbol-black.svg", [(L + R, "#000000")], (0, 0, 256, 256), "constitution.ng")
+    write(
+        "constitution-ng-symbol.svg",
+        [(L + R, GREEN)],
+        (0, 0, 256, 256),
+        "constitution.ng",
+    )
+    write(
+        "constitution-ng-symbol-black.svg",
+        [(L + R, "#000000")],
+        (0, 0, 256, 256),
+        "constitution.ng",
+    )
     Lr, Rr = symbol_reversed()
-    write("constitution-ng-symbol-reversed.svg", [(Lr + Rr, WHITE)], (0, 0, 256, 256), "constitution.ng")
+    write(
+        "constitution-ng-symbol-reversed.svg",
+        [(Lr + Rr, WHITE)],
+        (0, 0, 256, 256),
+        "constitution.ng",
+    )
     Ls, Rs = symbol_small()
-    write("constitution-ng-symbol-small.svg", [(Ls + Rs, GREEN)], (0, 0, 256, 256), "constitution.ng")
+    write(
+        "constitution-ng-symbol-small.svg",
+        [(Ls + Rs, GREEN)],
+        (0, 0, 256, 256),
+        "constitution.ng",
+    )
 
     # wordmark alone
     wm, _ = wordmark_shapes()
@@ -141,34 +203,72 @@ if __name__ == "__main__":
     head, tail = wordmark_shapes(split_ng=True)
     (sl, sr), (h, t) = place_horizontal(L, R, [head, tail])
     groups, vb = frame([sl + sr, h, t])
-    write("constitution-ng-horizontal.svg", [(groups[0], GREEN), (groups[1] + groups[2], INK)], vb,
-          "constitution.ng")
-    write("constitution-ng-horizontal-ng-green.svg",
-          [(groups[0], GREEN), (groups[1], INK), (groups[2], GREEN)], vb, "constitution.ng")
-    write("constitution-ng-horizontal-black.svg", [(groups[0] + groups[1] + groups[2], "#000000")], vb,
-          "constitution.ng")
+    write(
+        "constitution-ng-horizontal.svg",
+        [(groups[0], GREEN), (groups[1] + groups[2], INK)],
+        vb,
+        "constitution.ng",
+    )
+    write(
+        "constitution-ng-horizontal-ng-green.svg",
+        [(groups[0], GREEN), (groups[1], INK), (groups[2], GREEN)],
+        vb,
+        "constitution.ng",
+    )
+    write(
+        "constitution-ng-horizontal-black.svg",
+        [(groups[0] + groups[1] + groups[2], "#000000")],
+        vb,
+        "constitution.ng",
+    )
 
     # reversed horizontal: opened gutter + lighter wordmark
     rhead, rtail = wordmark_shapes(weight_delta=0.8, split_ng=True)
     (rsl, rsr), (rh, rt) = place_horizontal(Lr, Rr, [rhead, rtail])
     rgroups, rvb = frame([rsl + rsr, rh, rt])
-    write("constitution-ng-horizontal-reversed.svg", [(rgroups[0], GREEN_LIGHT), (rgroups[1] + rgroups[2], WHITE)],
-          rvb, "constitution.ng")
-    write("constitution-ng-horizontal-white.svg", [(rgroups[0] + rgroups[1] + rgroups[2], WHITE)], rvb,
-          "constitution.ng")
+    write(
+        "constitution-ng-horizontal-reversed.svg",
+        [(rgroups[0], GREEN_LIGHT), (rgroups[1] + rgroups[2], WHITE)],
+        rvb,
+        "constitution.ng",
+    )
+    write(
+        "constitution-ng-horizontal-white.svg",
+        [(rgroups[0] + rgroups[1] + rgroups[2], WHITE)],
+        rvb,
+        "constitution.ng",
+    )
 
     # stacked lockup: symbol centred over the wordmark
     sx0, sy0, sx1, sy1 = bbox(L + R)
     wx0, wy0, wx1, wy1 = bbox(wm)
     ww = wx1 - wx0
     s = (0.30 * ww) / (sx1 - sx0)
-    sym = translate(scale(translate(L + R, -(sx0 + sx1) / 2, -sy0), s), (wx0 + wx1) / 2, wy1 + 80)
+    sym = translate(
+        scale(translate(L + R, -(sx0 + sx1) / 2, -sy0), s), (wx0 + wx1) / 2, wy1 + 80
+    )
     groups, vb = frame_free([sym, wm], pad=24)
-    write("constitution-ng-stacked.svg", [(groups[0], GREEN), (groups[1], INK)], vb, "constitution.ng")
-    write("constitution-ng-stacked-black.svg", [(groups[0] + groups[1], "#000000")], vb, "constitution.ng")
-    symr = translate(scale(translate(Lr + Rr, -(sx0 + sx1) / 2, -sy0), s), (wx0 + wx1) / 2, wy1 + 80)
+    write(
+        "constitution-ng-stacked.svg",
+        [(groups[0], GREEN), (groups[1], INK)],
+        vb,
+        "constitution.ng",
+    )
+    write(
+        "constitution-ng-stacked-black.svg",
+        [(groups[0] + groups[1], "#000000")],
+        vb,
+        "constitution.ng",
+    )
+    symr = translate(
+        scale(translate(Lr + Rr, -(sx0 + sx1) / 2, -sy0), s), (wx0 + wx1) / 2, wy1 + 80
+    )
     rwm, _ = wordmark_shapes(weight_delta=0.8)
     groups, vb2 = frame_free([symr, rwm], pad=24)
-    write("constitution-ng-stacked-reversed.svg", [(groups[0], GREEN_LIGHT), (groups[1], WHITE)], vb2,
-          "constitution.ng")
+    write(
+        "constitution-ng-stacked-reversed.svg",
+        [(groups[0], GREEN_LIGHT), (groups[1], WHITE)],
+        vb2,
+        "constitution.ng",
+    )
     print("ok")

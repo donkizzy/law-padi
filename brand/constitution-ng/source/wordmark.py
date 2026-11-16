@@ -7,7 +7,16 @@ Round letters overshoot by 1.5.
 import math
 
 from geo import (
-    area, bbox, circle, rect, reverse, ring, rotate180, scale, sector, translate,
+    area,
+    bbox,
+    circle,
+    rect,
+    reverse,
+    ring,
+    rotate180,
+    scale,
+    sector,
+    translate,
 )
 
 XH = 100
@@ -28,7 +37,15 @@ def g_o():
 
 def g_c(open_deg=46):
     ro = (XH + 2 * OV) / 2
-    return sector(ro, 50, ro - D / 2, ro - 21 + D / 2, open_deg, 360 - open_deg, riy=ro - 19.5 + D / 2)
+    return sector(
+        ro,
+        50,
+        ro - D / 2,
+        ro - 21 + D / 2,
+        open_deg,
+        360 - open_deg,
+        riy=ro - 19.5 + D / 2,
+    )
 
 
 def g_n(w=88):
@@ -37,7 +54,9 @@ def g_n(w=88):
     h = D / 2
     return (
         rect(h, 0, STEM - h, XH)
-        + sector(r_out, cy, r_out - h, r_out - STEM + h, 0, 180, riy=r_out - STEM + 1.5 + h)
+        + sector(
+            r_out, cy, r_out - h, r_out - STEM + h, 0, 180, riy=r_out - STEM + 1.5 + h
+        )
         + rect(w - STEM + h, 0, w - h, cy)
     )
 
@@ -57,7 +76,15 @@ def g_t():
     return (
         rect(h, foot_c[1], STEM - h, 128)
         + sector(*foot_c, 40 - h, 20 + h, 180, 270, riy=21.5 + h)
-        + [[("M", 40, -OV + h), ("L", 50, -OV + h), ("L", 54, 17 - h), ("L", 40, 17 - h), ("Z",)]]
+        + [
+            [
+                ("M", 40, -OV + h),
+                ("L", 50, -OV + h),
+                ("L", 54, 17 - h),
+                ("L", 40, 17 - h),
+                ("Z",),
+            ]
+        ]
         + rect(-15, 83 + h, 46, XH - h)
     )
 
@@ -130,7 +157,14 @@ def g_g():
     return (
         ring(ro, 50, ro - h, ro - 21 + h, ro - 19.5 + h)
         + rect(stem_x0 + h, hook_c[1], 2 * ro - h, XH)
-        + sector(*hook_c, hook_r - h, hook_r - STEM + h, 205, 360, riy=hook_r - STEM + 1.5 + h)
+        + sector(
+            *hook_c,
+            hook_r - h,
+            hook_r - STEM + h,
+            205,
+            360,
+            riy=hook_r - STEM + 1.5 + h,
+        )
     )
 
 
