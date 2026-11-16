@@ -2,7 +2,7 @@
 
 ## Product Context
 
-Read `PROJECT_CONTEXT.md` before making product, schema, retrieval, ingestion, or UI changes. It captures the Nigerian Constitution RAG architecture and schema plan distilled from the project chat export.
+Read `docs/architecture.md` before making product, schema, retrieval, ingestion, or UI changes. It describes the components, data model, ingestion and answer pipelines, release model and deployment. Decision records are in `docs/adr/`, operating procedures in `docs/runbooks/`.
 
 ## Project Structure & Module Organization
 
@@ -16,8 +16,9 @@ Run frontend commands from the repository root and backend commands from `backen
 - `cd backend && uv sync && uv run bash scripts/prestart.sh` installs dependencies and applies migrations.
 - `cd backend && uv run fastapi dev` serves the API at `http://localhost:8000`.
 - `bun install && bun run dev` installs workspace dependencies and starts Vite at `http://localhost:5173`.
-- `bun run build` type-checks and builds the frontend.
-- `bun run lint` runs Biome; `cd backend && uv run bash scripts/lint.sh` runs mypy, ty, and Ruff checks.
+- `bun run build` type-checks the application sources and builds the frontend.
+- `bun run lint` runs Biome in check-only mode; `bun run lint:fix` applies its safe fixes. `cd backend && uv run bash scripts/lint.sh` runs mypy, ty, and Ruff checks.
+- `bun run typecheck` type-checks the whole frontend project, including tests; CI does not run it yet.
 - `cd backend && uv run bash scripts/test.sh` runs Pytest with coverage; `bun run test` runs Playwright against the full stack.
 
 ## Coding Style & Naming Conventions

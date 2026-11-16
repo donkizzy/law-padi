@@ -2,11 +2,11 @@
 
 constitution.ng lets people ask about Nigerian law in plain language and read the matching sections of the Constitution and other statutes, quoted with exact citations. The backend is FastAPI with PostgreSQL and pgvector retrieval; the frontend is React and TypeScript.
 
-Read [AGENTS.md](AGENTS.md) first. It has the repository layout, the setup and run commands, and the coding conventions. [PROJECT_CONTEXT.md](PROJECT_CONTEXT.md) explains the product and the retrieval design, and you should read it before changing schema, retrieval, ingestion or the UI.
+Read [AGENTS.md](AGENTS.md) first. It has the repository layout, the setup and run commands, and the coding conventions. [docs/architecture.md](docs/architecture.md) explains the product and the retrieval design, and you should read it before changing schema, retrieval, ingestion or the UI.
 
 ## Set up
 
-Follow the commands under "Build, Test, and Development Commands" in `AGENTS.md`: start the database and mail capture with Docker Compose, run `uv sync` and the prestart script in `backend/`, then `bun install` at the root. Copy `.env.example` to `.env` for local settings and never commit credentials.
+Follow the commands under "Build, Test, and Development Commands" in `AGENTS.md`: start the database and mail capture with Docker Compose, run `uv sync` and the prestart script in `backend/`, then `bun install` at the root. Copy `.env.example` to `.env` and `frontend/.env.example` to `frontend/.env` for local settings, and never commit credentials. [docs/development.md](docs/development.md) covers the workers and the full Compose stack.
 
 ## Check your work
 
@@ -17,6 +17,7 @@ Run these before you open a pull request.
 | Frontend lint (check only) | `bun run lint` |
 | Apply safe frontend fixes | `bun run lint:fix` |
 | Frontend type-check and build | `bun run build` |
+| Type-check the frontend including tests (not yet run in CI) | `bun run typecheck` |
 | Backend types and style | `cd backend && uv run bash scripts/lint.sh` |
 | Apply backend fixes | `cd backend && uv run ruff check --fix app && uv run ruff format app` |
 | Backend tests with coverage | `cd backend && uv run bash scripts/test.sh` |
