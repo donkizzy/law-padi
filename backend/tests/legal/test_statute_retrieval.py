@@ -199,11 +199,22 @@ def test_provisional_statute_cases_route_through_synthetic_release(
     dataset = json.loads(
         (ROOT / "eval" / "datasets" / f"statute-retrieval-{split}-v1.json").read_text()
     )
+    hits = 0
     for case in dataset["cases"]:
         rows = topic_search(db, release_id=statute_corpus.id, query=case["query"])
         ranked = fuse_rankings(topics=rows, top_k=6)
         targets = {section_target(item.segment.canonical_path) for item in ranked}
-        assert targets & set(case["expected_sections"]), case["id"]
+        hit = bool(targets & set(case["expected_sections"]))
+        hits += hit
+        if split == "benchmark":
+            assert hit, case["id"]
+    if split == "heldout":
+        # Held-out misses are expected; never fix them by adding topic phrases.
+        baseline = json.loads((ROOT / "eval/baselines/retrieval.json").read_text())[
+            "statute-retrieval-heldout-v1"
+        ]
+        assert len(dataset["cases"]) == baseline["case_count"]
+        assert hits / len(dataset["cases"]) >= baseline["floor"]["hit_at_6"]
     assert {i.slug for i in release_instruments(db, statute_corpus.id).values()} == {
         "constitution-1999",
         "acja-2015",

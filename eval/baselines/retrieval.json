@@ -1,0 +1,47 @@
+{
+  "plain-language-retrieval-benchmark-v1": {
+    "date": "2026-11-16",
+    "case_count": 57,
+    "dataset_case_count": 57,
+    "corpus_section_count": 320,
+    "measured": {
+      "hit_at_1": 1.0,
+      "hit_at_5": 1.0,
+      "mrr_at_10": 1.0
+    },
+    "floor": {
+      "hit_at_1": 0.9824561403508771,
+      "hit_at_5": 0.9824561403508771,
+      "mrr_at_10": 0.9824561403508771
+    },
+    "corpus": "All Constitution catalogue headings with synthetic text and production retrieval phrasing; no real provision wording. All dataset cases are answerable by section identity."
+  },
+  "plain-language-retrieval-heldout-v1": {
+    "date": "2026-11-16",
+    "case_count": 40,
+    "dataset_case_count": 40,
+    "corpus_section_count": 320,
+    "measured": {
+      "hit_at_1": 0.9,
+      "hit_at_5": 0.975,
+      "mrr_at_10": 0.9333333333333333
+    },
+    "floor": {
+      "hit_at_1": 0.875,
+      "hit_at_5": 0.95,
+      "mrr_at_10": 0.9083333333333333
+    },
+    "corpus": "All Constitution catalogue headings with synthetic text and production retrieval phrasing; no real provision wording. All dataset cases are answerable by section identity."
+  },
+  "statute-retrieval-heldout-v1": {
+    "date": "2026-11-16",
+    "case_count": 7,
+    "measured": {
+      "hit_at_6": 1.0
+    },
+    "floor": {
+      "hit_at_6": 0.8571428571428571
+    },
+    "corpus": "Existing statute_corpus fixture; topic-only compatibility check. Held-out misses must not be copied into topic phrases."
+  }
+}
