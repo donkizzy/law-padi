@@ -15,13 +15,10 @@ from sqlmodel import Session, select
 
 from app.core.config import settings
 from app.core.db import engine
+from app.ingestion.admin.review import decide_review_candidate, update_review_issue
+from app.ingestion.admin.sources import verify_source_document
 from app.ingestion.extraction import NativePdfExtractor
 from app.ingestion.normalization import normalize_page_text
-from app.ingestion.service import (
-    decide_review_candidate,
-    update_review_issue,
-    verify_source_document,
-)
 from app.ingestion.storage import get_blob_store
 from app.ingestion.text_alignment import compact_text
 from app.legal.enums import (

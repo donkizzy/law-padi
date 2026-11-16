@@ -14,10 +14,10 @@ from typing import Any
 from sqlmodel import Session, select
 
 from app.core.db import engine
+from app.ingestion.admin.review import decide_review_candidate, update_review_candidate
 from app.ingestion.extraction import NATIVE_PDF_EXTRACTOR_VERSION, NativePdfExtractor
 from app.ingestion.normalization import legacy_hyphen_loss_matches, normalize_page_text
 from app.ingestion.runtime.queue import append_run_event
-from app.ingestion.service import decide_review_candidate, update_review_candidate
 from app.ingestion.stages.candidates import (
     upsert_candidate,
     validate_candidate_for_review,

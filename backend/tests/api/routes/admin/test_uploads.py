@@ -64,7 +64,7 @@ def test_source_upload_mutations_and_replays_require_the_owner(
     monkeypatch.setattr(settings, "INGESTION_STORAGE_DIR", str(tmp_path))
     store = _ManagedLocalBlobStore(tmp_path)
     if backend == "r2":
-        monkeypatch.setattr("app.ingestion.service.get_blob_store", lambda: store)
+        monkeypatch.setattr("app.ingestion.admin.uploads.get_blob_store", lambda: store)
     base = f"{settings.API_V1_STR}/admin"
     pdf = _unique_pdf_bytes()
     body = _source_upload_payload(pdf)
@@ -310,7 +310,7 @@ def test_r2_pdf_upload_session_uses_presigned_quarantine_put_and_completion(
     store = _ManagedLocalBlobStore(tmp_path)
     monkeypatch.setattr(settings, "INGESTION_STORAGE_BACKEND", "r2")
     monkeypatch.setattr(settings, "R2_BUCKET_NAME", "law-padi-ingestion")
-    monkeypatch.setattr("app.ingestion.service.get_blob_store", lambda: store)
+    monkeypatch.setattr("app.ingestion.admin.uploads.get_blob_store", lambda: store)
     pdf = _unique_pdf_bytes()
 
     upload_response = client.post(
@@ -371,7 +371,7 @@ def test_r2_multipart_part_urls_are_issued_by_blob_store_for_large_uploads(
     store = _ManagedLocalBlobStore(tmp_path)
     monkeypatch.setattr(settings, "INGESTION_STORAGE_BACKEND", "r2")
     monkeypatch.setattr(settings, "R2_BUCKET_NAME", "law-padi-ingestion")
-    monkeypatch.setattr("app.ingestion.service.get_blob_store", lambda: store)
+    monkeypatch.setattr("app.ingestion.admin.uploads.get_blob_store", lambda: store)
     pdf = _pdf_bytes()
 
     upload_response = client.post(

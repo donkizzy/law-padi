@@ -7,6 +7,8 @@ from typing import BinaryIO
 from sqlmodel import Session
 
 from app.core.config import settings
+from app.ingestion.admin.upload_promotion import finalize_verified_upload
+from app.ingestion.admin.uploads import MAX_SOURCE_PAGES, MAX_UPLOAD_BYTES
 from app.ingestion.common import get_datetime_utc
 from app.ingestion.contracts import BlobStore
 from app.ingestion.malware import malware_scanner_from_settings
@@ -17,11 +19,6 @@ from app.ingestion.pdf import (
 )
 from app.ingestion.runtime.errors import IngestionWorkerError
 from app.ingestion.runtime.types import StageOutcome
-from app.ingestion.service import (
-    MAX_SOURCE_PAGES,
-    MAX_UPLOAD_BYTES,
-    finalize_verified_upload,
-)
 from app.ingestion.stages.artifacts import ensure_artifact
 from app.ingestion.stages.sources import (
     get_source_for_run,

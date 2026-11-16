@@ -11,38 +11,43 @@ from sqlmodel import Session, col, func, select
 
 from app.api.deps import CurrentUser, SessionDep
 from app.core.config import settings
-from app.ingestion.blob_store import BlobStoreError
-from app.ingestion.r2_blob_store import R2BlobStore
-from app.ingestion.service import (
-    MULTIPART_THRESHOLD_BYTES,
-    cancel_ingestion_run,
-    complete_source_upload,
-    compose_corpus_release,
-    create_source_upload_multipart_parts,
-    create_source_upload_session,
-    decide_review_candidate,
-    derive_review_candidate,
-    get_source_upload_for_user,
-    latest_revision_text,
-    publish_corpus_release,
-    put_local_upload_object,
-    read_admin_operational_alerts,
+from app.ingestion.admin.alerts import read_admin_operational_alerts
+from app.ingestion.admin.pages import update_page_selection
+from app.ingestion.admin.release_compose import compose_corpus_release
+from app.ingestion.admin.release_publish import publish_corpus_release
+from app.ingestion.admin.release_queries import release_entry_count
+from app.ingestion.admin.release_read import (
     read_corpus_release_manifest,
     read_corpus_release_publication_evidence,
-    release_entry_count,
-    require_admin_role,
+)
+from app.ingestion.admin.release_validate import validate_corpus_release
+from app.ingestion.admin.review import (
+    decide_review_candidate,
+    derive_review_candidate,
+    latest_revision_text,
+    update_review_candidate,
+    update_review_issue,
+)
+from app.ingestion.admin.roles import require_admin_role, user_has_admin_role
+from app.ingestion.admin.runs import (
+    cancel_ingestion_run,
     resume_ingestion_run,
     retry_ingestion_run,
     start_embedding,
-    update_page_selection,
-    update_review_candidate,
-    update_review_issue,
+)
+from app.ingestion.admin.sources import verify_source_document
+from app.ingestion.admin.uploads import (
+    MULTIPART_THRESHOLD_BYTES,
+    complete_source_upload,
+    create_source_upload_multipart_parts,
+    create_source_upload_session,
+    get_source_upload_for_user,
+    put_local_upload_object,
     upload_headers_for_upload,
     upload_url_for_upload,
-    user_has_admin_role,
-    validate_corpus_release,
-    verify_source_document,
 )
+from app.ingestion.blob_store import BlobStoreError
+from app.ingestion.r2_blob_store import R2BlobStore
 from app.ingestion.storage import get_blob_store
 from app.legal.enums import (
     AdminRole,
@@ -146,7 +151,7 @@ router = APIRouter(prefix="/admin", tags=["admin"])
 def read_my_admin_roles(
     session: SessionDep, current_user: CurrentUser
 ) -> MyAdminRolesPublic:
-    from app.ingestion.service import user_has_admin_role
+    from app.ingestion.admin.roles import user_has_admin_role
 
     if current_user.is_superuser:
         roles = [

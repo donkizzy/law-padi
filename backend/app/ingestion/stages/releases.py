@@ -2,10 +2,8 @@ import uuid
 
 from sqlmodel import Session, col, select
 
+from app.ingestion.admin.release_gates import release_source_and_review_gates
 from app.ingestion.runtime.errors import IngestionWorkerError
-from app.ingestion.service import (
-    _release_source_and_review_gates,
-)
 from app.legal.models import (
     CorpusRelease,
     CorpusReleaseEntry,
@@ -17,7 +15,7 @@ from app.legal.models import (
 
 def ensure_composite_member_gates(session: Session, release: CorpusRelease) -> None:
     if (release.validation_report or {}).get("composition") is not None:
-        gates = _release_source_and_review_gates(
+        gates = release_source_and_review_gates(
             session, release_entries(session, release.id), release=release
         )
         if gates:

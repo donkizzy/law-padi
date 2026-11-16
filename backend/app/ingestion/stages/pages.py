@@ -3,6 +3,7 @@ from typing import Any
 
 from sqlmodel import Session
 
+from app.ingestion.admin.uploads import MAX_SOURCE_PAGES
 from app.ingestion.extraction import NativePdfExtractor
 from app.ingestion.normalization import NORMALIZER_VERSION, normalize_page_text
 from app.ingestion.ocr import (
@@ -17,9 +18,6 @@ from app.ingestion.pdf import (
 from app.ingestion.rendering import render_page_thumbnail
 from app.ingestion.runtime.errors import IngestionWorkerError
 from app.ingestion.runtime.types import StageOutcome
-from app.ingestion.service import (
-    MAX_SOURCE_PAGES,
-)
 from app.ingestion.stages.artifacts import ensure_artifact
 from app.ingestion.stages.page_payloads import (
     best_extraction_payloads,

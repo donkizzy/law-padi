@@ -6,13 +6,11 @@ import pytest
 from sqlmodel import Session, select
 
 from app.core.config import settings
+from app.ingestion.admin.runs import start_embedding
 from app.ingestion.embedding import EmbeddingBatch
 from app.ingestion.runtime.errors import IngestionWorkerError
 from app.ingestion.runtime.queue import enqueue_task
 from app.ingestion.runtime.runner import run_once, run_until_idle
-from app.ingestion.service import (
-    start_embedding,
-)
 from app.ingestion.stages.embedding import handle_embedding
 from app.ingestion.stages.embedding_checkpoints import embed_with_checkpoints
 from app.ingestion.stages.embedding_profiles import (

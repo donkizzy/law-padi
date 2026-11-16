@@ -9,7 +9,7 @@ from sqlmodel import Session, func, select
 from app import crud
 from app.core.config import settings
 from app.core.db import engine
-from app.ingestion.service import update_page_selection
+from app.ingestion.admin.pages import update_page_selection
 from app.legal.enums import (
     IngestionRunStatus,
     IngestionStage,

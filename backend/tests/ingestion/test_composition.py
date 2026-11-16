@@ -13,6 +13,13 @@ from fastapi.testclient import TestClient
 from sqlmodel import Session, col, delete, select
 
 from app.core.config import settings
+from app.ingestion.admin.queries import release_id_for_run
+from app.ingestion.admin.release_compose import compose_corpus_release
+from app.ingestion.admin.release_publish import publish_corpus_release
+from app.ingestion.admin.release_read import read_corpus_release_manifest
+from app.ingestion.admin.release_validate import validate_corpus_release
+from app.ingestion.admin.runs import start_embedding
+from app.ingestion.admin.sources import correct_source_document_title
 from app.ingestion.composition import (
     composition_gates,
     entry_snapshot,
@@ -29,15 +36,6 @@ from app.ingestion.pgvector_repository import (
 from app.ingestion.retrieval import build_retrieval_documents
 from app.ingestion.runtime.queue import append_run_event
 from app.ingestion.runtime.runner import run_once
-from app.ingestion.service import (
-    _release_id_for_run,
-    compose_corpus_release,
-    correct_source_document_title,
-    publish_corpus_release,
-    read_corpus_release_manifest,
-    start_embedding,
-    validate_corpus_release,
-)
 from app.ingestion.stages.documents import retrieval_documents_payload
 from app.ingestion.storage import get_blob_store
 from app.legal.enums import (
@@ -302,13 +300,13 @@ def test_composition_preserves_union_provenance_manifest_and_idempotency(
     run = db.get(
         IngestionRun, uuid.UUID(release.validation_report["composition"]["run_id"])
     )
-    assert _release_id_for_run(db, run) == release.id
+    assert release_id_for_run(db, run) == release.id
     for member in [members[0], *members[1]]:
         origin = db.get(
             IngestionRun, release_entries(db, member.id)[0].ingestion_run_id
         )
         # A composite must not hijack an original run's release lookup.
-        assert _release_id_for_run(db, origin) == member.id
+        assert release_id_for_run(db, origin) == member.id
 
 
 @pytest.mark.parametrize(

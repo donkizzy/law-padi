@@ -7,10 +7,8 @@ from fastapi import HTTPException
 from sqlmodel import Session, select
 
 from app.core.config import settings
-from app.ingestion.service import (
-    _release_source_and_review_gates,
-    publish_corpus_release,
-)
+from app.ingestion.admin.release_gates import release_source_and_review_gates
+from app.ingestion.admin.release_publish import publish_corpus_release
 from app.legal.enums import (
     CorpusReleaseStatus,
     ExtractionCandidateStatus,
@@ -132,11 +130,11 @@ def test_release_gates_ignore_rejected_candidates_and_their_findings(
         select(CorpusReleaseEntry).where(CorpusReleaseEntry.release_id == release.id)
     ).all()
 
-    assert _release_source_and_review_gates(db, entries, release=release) == []
+    assert release_source_and_review_gates(db, entries, release=release) == []
 
     approved.status = ExtractionCandidateStatus.NEEDS_REVIEW
     db.add(approved)
     db.commit()
-    assert _release_source_and_review_gates(db, entries, release=release) == [
+    assert release_source_and_review_gates(db, entries, release=release) == [
         "release_candidate_not_approved"
     ]
