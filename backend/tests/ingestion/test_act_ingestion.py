@@ -27,7 +27,7 @@ from app.legal.models import (
     ProvisionVersion,
     SourceUpload,
 )
-from tests.api.routes.test_admin_ingestion import _source_upload_payload
+from tests.api.routes.admin.conftest import _source_upload_payload
 from tests.factories.pdf import pdf_with_pages as _pdf_with_pages
 from tests.ingestion.worker.conftest import (
     _clear_run_tasks,

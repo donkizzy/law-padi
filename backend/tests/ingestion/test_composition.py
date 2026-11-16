@@ -71,7 +71,7 @@ from app.legal.models import (
 from app.legal.parser import legal_text_sha256
 from app.legal.schemas import CompositeReleaseCreate, CompositeReleaseMember
 from app.models import User
-from tests.api.routes.test_admin_ingestion import (
+from tests.api.routes.admin.conftest import (
     _retire_existing_production_release,
     _source_and_run,
 )
