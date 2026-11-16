@@ -6,7 +6,7 @@ const release = "synthetic-composite"
 const constitution = "constitution-1999"
 const acja = "acja-2015"
 const police = "police-act-2020"
-const paths = {
+const paths: Record<string, string> = {
   [constitution]: `${constitution}.chapter4.section37`,
   [acja]: `${acja}.section9`,
   [police]: `${police}.section49`,
@@ -313,7 +313,7 @@ test("Find uses the picked law for bare numbers and preserves explicit ACJA refe
   await expect(
     page.getByRole("article", { name: "Legal provision" }),
   ).toContainText("Section 9, ACJA 2015")
-  expect(searches.at(-1)).toMatchObject({
+  expect(searches[searches.length - 1]).toMatchObject({
     query: "Section 9",
     instrument: acja,
     release_version: release,
@@ -330,7 +330,7 @@ test("Find uses the picked law for bare numbers and preserves explicit ACJA refe
   await expect(
     page.getByRole("article", { name: "Legal provision" }),
   ).toContainText("Section 49, Police Act 2020")
-  expect(searches.at(-1)).toMatchObject({
+  expect(searches[searches.length - 1]).toMatchObject({
     query: "Section 49",
     instrument: police,
     release_version: release,
@@ -342,7 +342,7 @@ test("Find uses the picked law for bare numbers and preserves explicit ACJA refe
   await expect(
     page.getByRole("article", { name: "Legal provision" }),
   ).toContainText("Section 9, ACJA 2015")
-  expect(searches.at(-1)).toMatchObject({
+  expect(searches[searches.length - 1]).toMatchObject({
     query: "ACJA s.9",
     instrument: police,
   })

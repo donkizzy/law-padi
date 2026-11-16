@@ -1,5 +1,11 @@
 import { readFile } from "node:fs/promises"
 import { expect, type Page, test } from "@playwright/test"
+import type {
+  CitationOutcome,
+  EvidenceItem,
+  MessagePublic,
+} from "../src/client"
+import { type ChatAnswer, chatAnswer } from "./fixtures/chat.ts"
 import { mockSignedIn } from "./utils/session.ts"
 
 const conversationId = "11111111-1111-4111-8111-111111111111"
@@ -7,7 +13,7 @@ const runId = "22222222-2222-4222-8222-222222222222"
 const releaseVersion = "published-historical-test"
 const editionLabel = "Historical/source Constitution compilation (LFN 2004)"
 const question = "What does Section 37 protect?"
-const evidence = {
+const evidence: EvidenceItem = {
   evidence_id: "E1",
   provision_id: "33333333-3333-4333-8333-333333333333",
   provision_version_id: "44444444-4444-4444-8444-444444444444",
@@ -29,14 +35,13 @@ const evidence = {
   source_page_start: 39,
   source_page_end: 39,
 }
-const outcome = {
+const outcome: CitationOutcome = {
   reference: "Section 37",
   status: "resolved",
   evidence_ids: ["E1"],
   message: null,
 }
-const answer = {
-  outcome: "answered",
+const answer = chatAnswer({
   blocks: [
     {
       text: "The Constitution protects privacy in homes and communications.",
@@ -44,11 +49,9 @@ const answer = {
       quotation: null,
     },
   ],
-  missing_facts: [],
   citation_outcomes: [outcome],
   evidence: [evidence],
-  notice: null,
-}
+})
 const conversation = {
   id: conversationId,
   title: question,
@@ -62,7 +65,7 @@ test.use({ storageState: { cookies: [], origins: [] } })
 
 async function mockChat(
   page: Page,
-  deliveredAnswer = answer,
+  deliveredAnswer: ChatAnswer = answer,
   options: {
     acceptance?: Promise<void>
     events?: Promise<void>
@@ -170,7 +173,7 @@ async function mockChat(
       path.endsWith(`/conversations/${conversationId}`) &&
       request.method() === "GET"
     ) {
-      const messages = submitted
+      const messages: MessagePublic[] = submitted
         ? [
             {
               id: "77777777-7777-4777-8777-777777777777",
@@ -188,7 +191,7 @@ async function mockChat(
           id: "88888888-8888-4888-8888-888888888888",
           role: "assistant",
           content: "",
-          answer_status: "answered",
+          answer_status: "completed",
           answer_content: deliveredAnswer,
           evidence_snapshot: [evidence],
           created_at: "2026-10-08T08:00:02Z",
@@ -770,8 +773,8 @@ test("A fallback keeps the edition caveat and a source can be saved inside chat"
   await expect(region).toContainText("Later amendments aren't included yet")
 })
 
-function statuteNoticeSources() {
-  const acja = {
+function statuteNoticeSources(): EvidenceItem[] {
+  const acja: EvidenceItem = {
     ...evidence,
     evidence_id: "E2",
     canonical_path: "acja-2015.section9",
@@ -785,7 +788,7 @@ function statuteNoticeSources() {
     authoritative_text: "Synthetic ACJA provision for notice-display testing.",
     source_title: "Synthetic ACJA fixture",
   }
-  const police = {
+  const police: EvidenceItem = {
     ...acja,
     evidence_id: "E3",
     canonical_path: "police-act-2020.section49",
@@ -917,7 +920,7 @@ test("Exported Act answers retain the law, source caveat and canonical URL", asy
 })
 
 const yorubaBlock = "Òfin-Ìpìlẹ̀ dáàbò bo ìpamọ́ nínú ilé àti ìbánisọ̀rọ̀."
-const translatedAnswer = {
+const translatedAnswer: ChatAnswer = {
   ...answer,
   question_language: "yo",
   answer_language: "yo",
@@ -926,6 +929,9 @@ const translatedAnswer = {
     blocks: [{ text: yorubaBlock, evidence_ids: ["E1"], quotation: null }],
     missing_facts: [],
     follow_up_questions: [],
+    model: "test-translator",
+    prompt_version: "answer-translation-v2",
+    glossary_version: null,
   },
 }
 
