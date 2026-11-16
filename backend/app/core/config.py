@@ -38,7 +38,7 @@ class Settings(BaseSettings):
     BUILD_REVISION: str = "development"
     SERVE_FRONTEND: bool = True
     ORIGIN_PROXY_SECRET: str | None = None
-    APP_RUNTIME_ROLE: Literal["api", "tasks"] | None = None
+    APP_RUNTIME_ROLE: Literal["api"] | None = None
     SENTRY_DSN: HttpUrl | None = None
     SENTRY_TRACES_SAMPLE_RATE: float = Field(default=0.05, ge=0, le=1)
     DATABASE_URL: PostgresDsn
@@ -99,20 +99,7 @@ class Settings(BaseSettings):
     CHAT_DAILY_BUDGET_USD: float = Field(default=100.0, ge=0)
     CHAT_MONTHLY_BUDGET_USD: float = Field(default=4.0, ge=0)
     AI_MONTHLY_BUDGET_USD: float = Field(default=5.0, ge=0)
-    CHAT_DISPATCH_MODE: Literal["poll", "cloud_tasks"] = "poll"
-    GCP_PROJECT_ID: str = ""
-    GCP_TASKS_LOCATION: str = "us-east1"
-    GCP_CHAT_QUEUE: str = "law-padi-chat"
-    CHAT_TASK_HANDLER_URL: str = ""
-    CHAT_TASK_SERVICE_ACCOUNT: str = ""
-    CHAT_TASK_AUDIENCE: str = ""
-    CHAT_TASK_DISPATCH_DEADLINE_SECONDS: int = Field(default=300, ge=150, le=1800)
-    CHAT_TASK_REDISPATCH_SECONDS: int = Field(default=600, ge=300)
-    CHAT_TASK_RECONCILE_LIMIT: int = Field(default=20, ge=1, le=100)
-    GCS_BACKUP_BUCKET: str = ""
-    GCS_BACKUP_PREFIX: str = "database-backups"
-    BACKUP_MAX_BYTES: int = Field(default=100_000_000, ge=1, le=500_000_000)
-    BACKUP_TIMEOUT_SECONDS: int = Field(default=120, ge=1, le=180)
+    CHAT_DISPATCH_MODE: Literal["poll"] = "poll"
     CHAT_EVIDENCE_MAX_CHARS: int = Field(default=36000, ge=1000)
     DEEPSEEK_API_KEY: str | None = None
     DEEPSEEK_BASE_URL: str = "https://api.deepseek.com"
@@ -129,8 +116,6 @@ class Settings(BaseSettings):
     DEEPSEEK_GENERATION_MAX_OUTPUT_TOKENS: int = Field(default=8000, ge=1)
     DEEPSEEK_VERIFIER_MAX_OUTPUT_TOKENS: int = Field(default=4000, ge=1)
     DEEPSEEK_TIMEOUT_SECONDS: float = Field(default=120.0, gt=0)
-    # Stays under CHAT_TASK_DISPATCH_DEADLINE_SECONDS so Cloud Tasks never
-    # redispatches a run that is still thinking.
     CHAT_RUN_TIMEOUT_SECONDS: int = Field(default=270, ge=60)
     # Reader languages whose answers are enabled. English answers are always
     # produced; other languages are translated from the verified English answer.
@@ -230,10 +215,10 @@ class Settings(BaseSettings):
         )
         if self.APP_RUNTIME_ROLE == "api" and len(self.ORIGIN_PROXY_SECRET or "") < 32:
             raise ValueError(
-                "The cloud API requires an ORIGIN_PROXY_SECRET of at least 32 characters"
+                "The hosted API requires an ORIGIN_PROXY_SECRET of at least 32 characters"
             )
         if self.APP_RUNTIME_ROLE is not None and self.FASTAPI_ENV == "development":
-            raise ValueError("Cloud runtimes cannot use FASTAPI_ENV=development")
+            raise ValueError("Hosted runtimes cannot use FASTAPI_ENV=development")
         if (
             self.CHAT_MAX_ACTIVE_GENERATIONS > 500
             and not self.CHAT_PROVIDER_CAPACITY_APPROVED
@@ -241,20 +226,6 @@ class Settings(BaseSettings):
             raise ValueError(
                 "CHAT_PROVIDER_CAPACITY_APPROVED is required above the documented DeepSeek concurrency limit"
             )
-        if self.CHAT_DISPATCH_MODE == "cloud_tasks":
-            required = {
-                "GCP_PROJECT_ID": self.GCP_PROJECT_ID,
-                "CHAT_TASK_HANDLER_URL": self.CHAT_TASK_HANDLER_URL,
-                "CHAT_TASK_SERVICE_ACCOUNT": self.CHAT_TASK_SERVICE_ACCOUNT,
-            }
-            missing = [name for name, value in required.items() if not value]
-            if missing:
-                raise ValueError(
-                    f"Cloud Tasks configuration requires {', '.join(missing)}"
-                )
-            if not self.CHAT_TASK_HANDLER_URL.startswith("https://"):
-                raise ValueError("CHAT_TASK_HANDLER_URL must use HTTPS")
-
         return self
 
 

@@ -38,7 +38,6 @@ from app.chat.schemas import (
 from app.core import rate_limit
 from app.core.config import settings
 from app.core.db import engine
-from app.deployment.chat_dispatch import dispatch_run, stage_dispatch
 from app.ingestion.pgvector_repository import PgVectorRetrievalError, active_target
 from app.languages.codes import DISPLAY_NAMES
 from app.legal.enums import MessageRole, VectorIndexStatus
@@ -414,11 +413,7 @@ def read_conversation(
             for message in messages
         ],
     )
-    # A user returning after a lost enqueue should not wait for the hourly scan.
-    # Release the read transaction before Cloud Tasks publication.
     session.commit()
-    if active_run is not None:
-        dispatch_run(active_run)
     return detail
 
 
@@ -694,7 +689,6 @@ def submit_message(
             status=existing.status,
         )
         session.commit()
-        dispatch_run(accepted.run_id)
         return accepted
     _validate_selected_version(
         session, conversation, question, body.selected_provision_version_id
@@ -777,7 +771,6 @@ def submit_message(
         )
     )
     session.flush()
-    stage_dispatch(session, run)
     emit_event(
         session,
         run,
@@ -793,7 +786,6 @@ def submit_message(
         run_id=run.id, user_message_id=message.id, status=run.status
     )
     session.commit()
-    dispatch_run(accepted.run_id)
     return accepted
 
 
@@ -914,8 +906,6 @@ def _event_access(
             )
         ).first()
     session.commit()
-    if run_id is not None:
-        dispatch_run(run_id)
     return EventAccess(owner=owner, cursor=cursor)
 
 

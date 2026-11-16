@@ -8,7 +8,6 @@ COPY frontend/src /source/frontend/src
 COPY frontend/public /source/frontend/public
 COPY frontend/package.json frontend/vite.config.ts frontend/index.html /source/frontend/
 COPY backend/pyproject.toml backend/Dockerfile /source/backend/
-COPY backend/scripts/start-cloud-run.sh /source/backend/scripts/
 COPY deployment/cloudflare/worker.ts deployment/cloudflare/public-pages.ts deployment/cloudflare/wrangler.json deployment/cloudflare/tsconfig.json /source/deployment/cloudflare/
 COPY deployment/render/Dockerfile deployment/render/start.sh /source/deployment/render/
 COPY bun.lock uv.lock package.json .dockerignore /source/
@@ -16,7 +15,7 @@ COPY docs/plain-language-retrieval-benchmark-v1.json /source/docs/
 COPY scripts/build_revision.py /source/scripts/
 RUN python scripts/build_revision.py > /source-revision
 
-# Keep dependency installation aligned with backend/Dockerfile's cloud target.
+# Keep dependency installation aligned with backend/Dockerfile's dependencies stage.
 FROM python:3.14-slim-trixie AS dependencies
 COPY --from=ghcr.io/astral-sh/uv:0.9.26 /uv /bin/uv
 ENV UV_LINK_MODE=copy UV_PYTHON_DOWNLOADS=0

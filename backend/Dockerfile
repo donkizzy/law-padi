@@ -38,54 +38,6 @@ COPY backend/alembic.ini /app/backend/alembic.ini
 ARG BUILD_REVISION=development
 ENV BUILD_REVISION=$BUILD_REVISION
 
-# Install the PostgreSQL client in a builder. The backup handler only executes
-# pg_dump; psql, Perl, package caches and the other client tools stay here.
-FROM python:3.14-slim-trixie AS postgres-backup-tools
-RUN apt-get update \
-    && apt-get install -y --no-install-recommends ca-certificates curl \
-    && curl --fail --silent --show-error \
-       https://www.postgresql.org/media/keys/ACCC4CF8.asc \
-       --output /usr/share/keyrings/postgresql.asc \
-    && echo 'deb [signed-by=/usr/share/keyrings/postgresql.asc] https://apt.postgresql.org/pub/repos/apt trixie-pgdg main' \
-       > /etc/apt/sources.list.d/postgresql.list \
-    && apt-get update \
-    && apt-get install -y --no-install-recommends postgresql-client-18 \
-    && rm -rf /var/lib/apt/lists/*
-# ldd includes the transitive shared-library dependencies. Resolve directory
-# symlinks while retaining each library's SONAME (e.g. libpq.so.5).
-RUN python - <<'PY'
-from pathlib import Path
-import shutil
-import subprocess
-
-root = Path('/pg-runtime')
-binary = Path('/usr/lib/postgresql/18/bin/pg_dump')
-destination = root / 'usr/local/bin/pg_dump'
-destination.parent.mkdir(parents=True)
-shutil.copy2(binary, destination)
-for line in subprocess.check_output(['ldd', str(binary)], text=True).splitlines():
-    if 'not found' in line:
-        raise RuntimeError(line)
-    if '=>' not in line:
-        continue
-    library = Path(line.split('=>', 1)[1].strip().split()[0])
-    destination = root / library.parent.resolve().relative_to('/') / library.name
-    destination.parent.mkdir(parents=True, exist_ok=True)
-    shutil.copy2(library, destination)
-PY
-
-# The API and task handler share this target. pg_dump 18 is required by the
-# scheduled backup handler; PDF/OCR tools and the frontend belong elsewhere.
-FROM runtime AS cloud-run
-ENV SERVE_FRONTEND=false \
-    APP_RUNTIME_ENV_FILE=/run/secrets/runtime.env
-COPY --from=postgres-backup-tools /pg-runtime/ /
-RUN useradd --system --uid 10001 --create-home app
-COPY backend/scripts/start-cloud-run.sh /app/backend/scripts/start-cloud-run.sh
-USER 10001
-EXPOSE 8080
-CMD ["sh", "/app/backend/scripts/start-cloud-run.sh"]
-
 # Same-origin frontend + API for server deployments. Migrations remain runnable
 # with: docker compose run --rm backend bash scripts/prestart.sh
 FROM runtime AS production

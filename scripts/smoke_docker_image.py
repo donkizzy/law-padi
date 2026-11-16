@@ -1,10 +1,7 @@
 """Run inside a built image; no credentials, providers or live database required.
 
 Example:
-    docker run --rm -i --entrypoint python IMAGE - cloud-run < scripts/smoke_docker_image.py
-
-DOCKER_SMOKE_DATABASE_URL optionally enables an actual pg_dump export against a
-throwaway database whose name ends in _test. Never use a deployment database.
+    docker run --rm -i --entrypoint python IMAGE - render < scripts/smoke_docker_image.py
 """
 
 import argparse
@@ -16,18 +13,14 @@ import subprocess
 import sys
 from io import BytesIO
 from pathlib import Path
-from tempfile import TemporaryDirectory
 from urllib.parse import urlsplit
 
 parser = argparse.ArgumentParser(description=__doc__)
 parser.add_argument(
-    "runtime", choices=("cloud-run", "render", "compose", "ingestion", "development")
+    "runtime", choices=("render", "compose", "ingestion", "development")
 )
 runtime = parser.parse_args().runtime
-backup_database = os.environ.get("DOCKER_SMOKE_DATABASE_URL")
-database = (
-    backup_database or "postgresql+psycopg://smoke:smoke@127.0.0.1:1/docker_smoke_test"
-)
+database = "postgresql+psycopg://smoke:smoke@127.0.0.1:1/docker_smoke_test"
 if not urlsplit(database).path.endswith("_test"):
     raise ValueError("The smoke database name must end in _test")
 os.environ.update(
@@ -107,18 +100,7 @@ else:
     )
     subprocess.run(["uvicorn", "--version"], check=True)
 
-if runtime == "cloud-run":
-    importlib.import_module("app.deployment.worker_app")
-    subprocess.run(["sh", "-n", "scripts/start-cloud-run.sh"], check=True)
-    assert "18." in subprocess.check_output(["pg_dump", "--version"], text=True)
-    if backup_database:
-        from app.cloud_backup import _export_database
-
-        with TemporaryDirectory() as directory:
-            dump = Path(directory) / "database.dump"
-            assert _export_database(dump) > 0
-            assert dump.read_bytes().startswith(b"PGDMP")
-elif runtime == "render":
+if runtime == "render":
     importlib.import_module("app.deployment.render_app")
     subprocess.run(["sh", "-n", "scripts/start-render.sh"], check=True)
 elif runtime == "development":

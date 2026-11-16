@@ -46,7 +46,6 @@ def main() -> None:
             "frontend/vite.config.ts",
             "frontend/index.html",
             "docs/plain-language-retrieval-benchmark-v1.json",
-            "backend/scripts/start-cloud-run.sh",
             "deployment/cloudflare/worker.ts",
             "deployment/cloudflare/public-pages.ts",
             "deployment/cloudflare/wrangler.json",

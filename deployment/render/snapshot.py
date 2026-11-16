@@ -47,7 +47,6 @@ PATHS = (
     "deployment/render",
     "deployment/cloudflare",
     "deployment/.gitignore",
-    "deployment/deploy.py",
     "deployment/tests",
     "render.yaml",
     "scripts/build_revision.py",
