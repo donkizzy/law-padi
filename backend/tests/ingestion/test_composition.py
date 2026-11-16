@@ -75,7 +75,7 @@ from tests.api.routes.test_admin_ingestion import (
     _retire_existing_production_release,
     _source_and_run,
 )
-from tests.ingestion.test_worker import _create_retrieval_benchmark_dataset
+from tests.ingestion.worker.conftest import _create_retrieval_benchmark_dataset
 
 
 @pytest.fixture(autouse=True)

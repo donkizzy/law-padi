@@ -28,9 +28,9 @@ from app.legal.models import (
     SourceUpload,
 )
 from tests.api.routes.test_admin_ingestion import _source_upload_payload
-from tests.ingestion.test_worker import (
+from tests.factories.pdf import pdf_with_pages as _pdf_with_pages
+from tests.ingestion.worker.conftest import (
     _clear_run_tasks,
-    _pdf_with_pages,
     _store_raw_extraction,
     _stored_source_and_run,
 )
