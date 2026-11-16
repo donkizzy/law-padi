@@ -6,7 +6,9 @@
   "scripts": {
     "dev": "vite",
     "build": "tsc -p tsconfig.build.json && vite build",
-    "lint": "biome check --write --unsafe --no-errors-on-unmatched --files-ignore-unknown=true ./",
+    "lint": "biome check --no-errors-on-unmatched --files-ignore-unknown=true ./",
+    "lint:fix": "biome check --write --no-errors-on-unmatched --files-ignore-unknown=true ./",
+    "typecheck": "tsc --noEmit -p tsconfig.json",
     "preview": "vite preview",
     "generate-client": "bunx --bun openapi-ts",
     "test": "bunx playwright test",

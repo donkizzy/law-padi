@@ -26,21 +26,21 @@ repos:
     hooks:
       - id: local-biome-check
         name: biome check
-        entry: npm run lint
+        entry: bun run lint
         language: system
-        types: [text]
+        pass_filenames: false
         files: ^frontend/
 
       - id: local-ruff-check
         name: ruff check
-        entry: uv run ruff check --force-exclude --fix --exit-non-zero-on-fix
+        entry: uv run ruff check --force-exclude
         require_serial: true
         language: unsupported
         types: [python]
 
       - id: local-ruff-format
         name: ruff format
-        entry: uv run ruff format --force-exclude --exit-non-zero-on-format
+        entry: uv run ruff format --force-exclude --check --diff
         require_serial: true
         language: unsupported
         types: [python]
@@ -65,13 +65,6 @@ repos:
         pass_filenames: false
         language: unsupported
         files: ^backend/app/.*\.py$|^backend/pyproject\.toml$|^uv\.lock$|^frontend/openapi-ts\.config\.ts$|^scripts/generate-client\.sh$
-
-      - id: add-release-date
-        language: unsupported
-        name: add date to latest release header
-        entry: uv run python scripts/add_latest_release_date.py
-        files: ^release-notes\.md$
-        pass_filenames: false
 
       - id: zizmor
         name: zizmor
