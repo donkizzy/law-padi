@@ -1,68 +1,49 @@
 # Contributing
 
-Thank you for your interest in contributing to the Full Stack FastAPI Template! 🙇
+constitution.ng lets people ask about Nigerian law in plain language and read the matching sections of the Constitution and other statutes, quoted with exact citations. The backend is FastAPI with PostgreSQL and pgvector retrieval; the frontend is React and TypeScript.
 
-## Discussions First
+Read [AGENTS.md](AGENTS.md) first. It has the repository layout, the setup and run commands, and the coding conventions. [PROJECT_CONTEXT.md](PROJECT_CONTEXT.md) explains the product and the retrieval design, and you should read it before changing schema, retrieval, ingestion or the UI.
 
-For **big changes** (new features, architectural changes, significant refactoring), please start by opening a [GitHub Discussion](https://github.com/fastapi/full-stack-fastapi-template/discussions) first. This allows the community and maintainers to provide feedback on the approach before you invest significant time in implementation.
+## Set up
 
-For small, straightforward changes, you can go directly to a Pull Request without starting a discussion first. This includes:
+Follow the commands under "Build, Test, and Development Commands" in `AGENTS.md`: start the database and mail capture with Docker Compose, run `uv sync` and the prestart script in `backend/`, then `bun install` at the root. Copy `.env.example` to `.env` for local settings and never commit credentials.
 
-- Typos and grammatical fixes
-- Small reproducible bug fixes
-- Fixing lint warnings or type errors
-- Minor code improvements (e.g., removing unused code)
+## Check your work
 
-Note that PRs from non-team members are not allowed to modify `pyproject.toml` or `uv.lock`, to prevent supply chain risk.
-If you would like to add a new dependency, create a new [Discussion](https://github.com/fastapi/full-stack-fastapi-template/discussions) to explain why.
+Run these before you open a pull request.
 
-## Developing
+| What | Command |
+| --- | --- |
+| Frontend lint (check only) | `bun run lint` |
+| Apply safe frontend fixes | `bun run lint:fix` |
+| Frontend type-check and build | `bun run build` |
+| Backend types and style | `cd backend && uv run bash scripts/lint.sh` |
+| Apply backend fixes | `cd backend && uv run ruff check --fix app && uv run ruff format app` |
+| Backend tests with coverage | `cd backend && uv run bash scripts/test.sh` |
+| Browser tests (need the full stack) | `bun run test` |
+| Git hooks, on staged files | `uv run prek run` |
 
-For detailed instructions on setting up your development environment, running the stack, linting, pre-commit hooks, and more, see the [Development Guide](development.md).
+Install the hooks once with `uv run prek install -f`. They only report problems; they do not rewrite your code, apart from trailing whitespace and end-of-file fixes. Fix problems with the commands above.
 
-## Pull Requests
+Do not edit `frontend/src/client/`, `frontend/src/routeTree.gen.ts` or `backend/app/email-templates/` by hand. Regenerate the client with `bash scripts/generate-client.sh`.
 
-When submitting a pull request:
+## What CI runs
 
-1. Make sure all tests pass before submitting.
-2. Keep PRs focused on a single change.
-3. Update tests if you're changing functionality.
-4. Reference any related issues in your PR description.
+Every pull request runs these workflows, and all of them should pass before merge.
 
-## Automated Code and AI
+- **pre-commit**: the hooks above over the files the pull request changes, including Biome, Ruff, mypy, ty, a check that the generated frontend client is current, and zizmor.
+- **Test Backend**: mypy, ty and Ruff on `backend/app`, the Pytest suite against a real PostgreSQL with the 88% coverage floor, and the deployment helper tests. OCR and PDF rendering tests run with `tesseract-ocr` and `poppler-utils` installed.
+- **Render CI**: the Biome check, the same-origin frontend build, the Cloudflare Worker and public page tests, and a build and smoke test of the packaged production image.
+- **Playwright Tests**: the browser suite in four shards against the Compose stack. It runs when backend, frontend, packages, scripts, Compose files, lockfiles or the workflow itself change.
+- **Test Docker Compose**: builds the stack and checks that the backend, frontend and Adminer start.
+- **Zizmor**: static analysis of the workflow files.
+- **Guard Dependencies** and **Conflict detector**: close pull requests from non-maintainers that change dependency files, and label pull requests that have merge conflicts.
 
-You are encouraged to use all the tools you want to do your work and contribute as efficiently as possible, this includes AI (LLM) tools, etc. Nevertheless, contributions should have meaningful human intervention, judgement, context, etc.
+A new push to a branch cancels the previous run of the same workflow on it.
 
-If the **human effort** put in a PR, e.g. writing LLM prompts, is **less** than the **effort we would need to put** to **review it**, please **don't** submit the PR.
+## Commits and pull requests
 
-Think of it this way: we can already write LLM prompts or run automated tools ourselves, and that would be faster than reviewing external PRs.
-
-### Closing Automated and AI PRs
-
-If we see PRs that seem AI generated or automated in similar ways, we'll flag them and close them.
-
-The same applies to comments and descriptions, please don't copy paste the content generated by an LLM.
-
-### Human Effort Denial of Service
-
-Using automated tools and AI to submit PRs or comments that we have to carefully review and handle would be the equivalent of a [Denial-of-service attack](https://en.wikipedia.org/wiki/Denial-of-service_attack) on our human effort.
-
-It would be very little effort from the person submitting the PR (an LLM prompt) that generates a large amount of effort on our side (carefully reviewing code).
-
-Please don't do that.
-
-We'll need to block accounts that spam us with repeated automated PRs or comments.
-
-### Use Tools Wisely
-
-As Uncle Ben said:
-
-> With great ~~power~~ **tools** comes great responsibility.
-
-Avoid inadvertently doing harm.
-
-You have amazing tools at hand, use them wisely to help effectively.
-
-## Questions?
-
-If you have questions about contributing, feel free to open a [GitHub Discussion](https://github.com/fastapi/full-stack-fastapi-template/discussions).
+- Write short, imperative subjects, optionally scoped, for example `backend: validate reset tokens`. Group related changes into focused commits.
+- Keep pull requests focused and say what changes for users. Link related issues and include screenshots for UI changes.
+- Add regression tests for behaviour changes, in the existing `tests/` folders.
+- Discuss architectural changes and new dependencies in an issue before opening a pull request. Only maintainers change dependency manifests and lockfiles; open an issue if you need a dependency.
