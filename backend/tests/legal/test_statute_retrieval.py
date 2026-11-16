@@ -9,7 +9,8 @@ import pytest
 from fastapi.testclient import TestClient
 from sqlmodel import Session, select
 
-from app.chat.worker import _relative_query, _source_crossrefs
+from app.chat.evidence_packet import source_crossrefs
+from app.chat.history import relative_query
 from app.ingestion.pgvector_repository import (
     fuse_rankings,
     topic_search,
@@ -128,10 +129,10 @@ def test_provisional_statute_cases_route_through_synthetic_release(
 
 
 def test_internal_reference_explicit_law_wins_over_source_default() -> None:
-    assert _source_crossrefs(
+    assert source_crossrefs(
         "Subject to section 35 of the Constitution.", "acja-2015"
     ) == [SectionReference("35")]
-    assert _source_crossrefs("See section 49 of the Police Act.", "acja-2015") == [
+    assert source_crossrefs("See section 49 of the Police Act.", "acja-2015") == [
         SectionReference("49", instrument_slug="police-act-2020")
     ]
 
@@ -140,17 +141,17 @@ def test_relative_subsection_retains_act_and_same_number_laws_are_ambiguous(
     db: Session, monkeypatch: pytest.MonkeyPatch
 ) -> None:
     monkeypatch.setattr(
-        "app.chat.worker._prior_citations", lambda *_: ["Section 9, ACJA 2015"]
+        "app.chat.history.prior_citations", lambda *_: ["Section 9, ACJA 2015"]
     )
     assert (
-        _relative_query(db, uuid4(), "What about subsection 2?")
+        relative_query(db, uuid4(), "What about subsection 2?")
         == "Section 9(2), ACJA 2015"
     )
     monkeypatch.setattr(
-        "app.chat.worker._prior_citations",
+        "app.chat.history.prior_citations",
         lambda *_: ["Section 9", "Section 9, ACJA 2015"],
     )
-    assert _relative_query(db, uuid4(), "What does it mean?") is None
+    assert relative_query(db, uuid4(), "What does it mean?") is None
 
 
 def test_act_titles_use_arrangement_headings_beyond_the_partial_catalogue(

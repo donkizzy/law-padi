@@ -12,7 +12,7 @@ import pytest
 from fastapi.testclient import TestClient
 from sqlmodel import Session, select
 
-from app.chat import EXPLANATION_PROMPT_VERSION, worker
+from app.chat import EXPLANATION_PROMPT_VERSION, evidence_packet, worker
 from app.chat.llm.protocol import ProviderResult
 from app.chat.schemas import ExplanationBlock, ExplanationDraft
 from app.chat.validation import EvidenceValidationError, validate_draft
@@ -240,7 +240,7 @@ def test_mixed_current_and_historical_evidence_cannot_mask_currency_claims(
 
 def test_identical_text_in_different_laws_retains_separate_prompt_text() -> None:
     release_id = uuid4()
-    rows = worker._prompt_items(
+    rows = evidence_packet.prompt_items(
         [
             _evidence("acja-2015", "9", release_id),
             _evidence("police-act-2020", "9", release_id, identifier="E2"),
@@ -260,7 +260,7 @@ def test_edition_notices_are_unique_per_cited_law() -> None:
         _evidence("acja-2015", "18", release_id),
         _evidence("police-act-2020", "49", release_id),
     ]
-    notice = worker._edition_notice(evidence)
+    notice = evidence_packet.edition_notice(evidence)
     assert notice and "Constitution as published in 2004" in notice
     assert notice.count("ACJA 2015: As enacted, may have been amended.") == 1
     assert "Police Act 2020: As enacted, may have been amended." in notice

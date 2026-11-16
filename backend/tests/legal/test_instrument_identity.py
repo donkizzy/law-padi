@@ -14,9 +14,9 @@ from sqlalchemy import text, update
 from sqlalchemy.exc import DBAPIError
 from sqlmodel import Session, col, select
 
+from app.chat.evidence_packet import source_crossrefs
 from app.chat.schemas import ExplanationBlock, ExplanationDraft
 from app.chat.validation import EvidenceValidationError, validate_draft
-from app.chat.worker import _source_crossrefs
 from app.ingestion.pgvector_repository import (
     PgVectorRetrievalError,
     topic_search,
@@ -354,11 +354,11 @@ def test_act_evidence_cannot_support_constitution_citations(
 
 
 def test_internal_cross_references_keep_the_source_instrument() -> None:
-    assert _source_crossrefs("See section 9.", "acja-2015") == [
+    assert source_crossrefs("See section 9.", "acja-2015") == [
         SectionReference("9", instrument_slug="acja-2015")
     ]
     assert parse_section_reference("Section 9").reference == SectionReference("9")
-    assert _source_crossrefs("See section 9 and section 9.", "acja-2015") == [
+    assert source_crossrefs("See section 9 and section 9.", "acja-2015") == [
         SectionReference("9", instrument_slug="acja-2015")
     ]
 

@@ -17,6 +17,7 @@ from sqlmodel import Session, col, func, select
 from starlette.types import ASGIApp, Message, Receive, Scope, Send
 
 from app.chat import EXPLANATION_PROMPT_VERSION, worker
+from app.chat.notices import NOTICE
 from app.chat.schemas import ExplanationAnswer
 from app.core.config import settings
 from app.core.db import engine
@@ -117,7 +118,7 @@ class RequestWorker:
                         run_id,
                         self.worker_id,
                         ExplanationAnswer(
-                            outcome="cancelled", notice=worker._NOTICE["disabled"]
+                            outcome="cancelled", notice=NOTICE["disabled"]
                         ),
                     )
                 else:

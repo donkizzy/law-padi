@@ -2,6 +2,7 @@ from uuid import UUID, uuid4
 
 import pytest
 
+from app.chat.evidence_packet import prompt_items, source_crossrefs
 from app.chat.schemas import ExplanationBlock, ExplanationDraft
 from app.chat.validation import (
     EvidenceValidationError,
@@ -10,7 +11,6 @@ from app.chat.validation import (
     validate_draft,
     validate_verifier,
 )
-from app.chat.worker import _prompt_items, _source_crossrefs
 from app.legal.schemas import EvidenceItem
 
 
@@ -44,7 +44,7 @@ def test_cross_references_are_found_in_long_provision_text() -> None:
         "Constitution. This section also refers to section 162 of this "
         "Constitution and section 8 again."
     )
-    assert [reference.section for reference in _source_crossrefs(source)] == [
+    assert [reference.section for reference in source_crossrefs(source)] == [
         "8",
         "162",
     ]
@@ -109,7 +109,7 @@ def test_prompt_evidence_includes_ancestor_citations() -> None:
         edition_label="1999 source edition",
         authoritative_text="A person shall not be regarded as deprived of life.",
     )
-    assert _prompt_items([evidence])[0]["ancestor_citations"] == [
+    assert prompt_items([evidence])[0]["ancestor_citations"] == [
         "Chapter 4",
         "Section 33",
         "Section 33(2)",
@@ -344,7 +344,7 @@ def test_section45_keeps_its_source_cross_references() -> None:
     fixture = json.loads(
         (Path(__file__).parent / "data" / "constitution-section45.json").read_text()
     )
-    references = _source_crossrefs(fixture["text"])
+    references = source_crossrefs(fixture["text"])
     assert {("37", None), ("33", None), ("36", "8"), ("305", None)} <= {
         (reference.section, reference.subsection) for reference in references
     }
@@ -354,11 +354,11 @@ def test_section45_keeps_its_source_cross_references() -> None:
 def test_source_bad_reference_does_not_hide_independent_valid_references() -> None:
     from app.legal.references import SectionReference
 
-    assert _source_crossrefs(
+    assert source_crossrefs(
         "Subject to section 9 of the Evidence Act. Section 37 shall invalidate any law. "
         "See section 35 of this Constitution."
     ) == [SectionReference("37"), SectionReference("35")]
-    assert _source_crossrefs(
+    assert source_crossrefs(
         "Subject to section 9 of this Act. Section 35 of the Constitution also applies. "
         "Section 49 of the Police Act is referred to.",
         "acja-2015",
@@ -373,7 +373,7 @@ def test_source_list_before_a_new_paragraph_remains_available() -> None:
     from app.legal.references import SectionReference
 
     assert set(
-        _source_crossrefs(
+        source_crossrefs(
             "See sections 221, 225(3) and 227 of this Constitution; "
             "(b) restrictions on holding office refer to section 225(3) of this Constitution; "
             "(c) another paragraph follows."

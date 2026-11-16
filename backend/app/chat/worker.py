@@ -3,10 +3,9 @@
 import asyncio
 import json
 import logging
-import re
 import time
 import uuid
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from datetime import timedelta
 
 from sqlmodel import Session, col, delete, select
@@ -14,9 +13,26 @@ from sqlmodel import Session, col, delete, select
 from app.chat import EXPLANATION_PROMPT_VERSION
 from app.chat.budget import BudgetExhausted
 from app.chat.events import emit_event
+from app.chat.evidence_packet import (
+    Prepared,
+    edition_notice,
+    expand_context,
+    fit_prompt,
+    prompt_items,
+    shown_evidence,
+)
+from app.chat.history import (
+    History,
+    is_followup_question,
+    is_relative_reference,
+    prior_citations,
+    prior_section_path,
+    relative_query,
+)
 from app.chat.llm import budgeted
 from app.chat.llm.deepseek import DeepSeekClient
 from app.chat.llm.protocol import ChatModel, JsonObject, ProviderError, ProviderResult
+from app.chat.notices import notice_fields, with_coverage
 from app.chat.prompts import explanation, verifier
 from app.chat.schemas import ExplanationAnswer, ExplanationDraft
 from app.chat.translation import TranslationRejected, translate_answer, understand
@@ -34,9 +50,7 @@ from app.legal.enums import (
     AnswerStatus,
     CorpusReleaseStatus,
     EvidenceRole,
-    InstrumentType,
     MessageRole,
-    ProvisionKind,
 )
 from app.legal.evidence import (
     default_embedding_provider,
@@ -45,575 +59,36 @@ from app.legal.evidence import (
     message_code,
     semantic_lookup,
 )
-from app.legal.instruments import ACJA_SLUG, instrument_label
+from app.legal.instruments import instrument_label
 from app.legal.models import (
     Conversation,
     ConversationMessage,
     CorpusRelease,
-    CorpusReleaseEntry,
     EmbeddingProfile,
     GenerationAdmission,
     GenerationCapacity,
     GenerationReservation,
     GenerationRun,
     MessageEvidence,
-    Provision,
     ProvisionVersion,
     RetrievalIndexBuild,
-    SourceDocument,
     get_datetime_utc,
 )
 from app.legal.public_corpus import (
-    PublicCorpus,
     load_ranked_corpus,
     load_reference_corpus,
 )
 from app.legal.references import (
     CONSTITUTION_SLUG,
-    SectionReference,
-    matches_reference,
     parse_section_reference,
-    source_reference_groups,
 )
 from app.legal.release_scope import release_instruments
-from app.legal.schemas import CitationOutcome, EvidenceItem, LegalSearchResponse
-from app.legal.topics import companion_sections, related_laws, section_target
+from app.legal.schemas import CitationOutcome, LegalSearchResponse
+from app.legal.topics import related_laws
 
 _PROMPT_VERSION = EXPLANATION_PROMPT_VERSION
 _DRAFT_ATTEMPTS = 2
 _logger = logging.getLogger(__name__)
-_RELATIVE = re.compile(r"\b(?:that|this|its|same|it|above)\b", re.I)
-_SUBSECTION = re.compile(r"\bsubsection\s*\(?\s*(\d+)\s*\)?", re.I)
-_PARAGRAPH = re.compile(r"\bparagraph\s*\(?\s*([a-z])\s*\)?", re.I)
-_ELLIPTICAL = re.compile(
-    r"^\s*(?:why\b|how\b|what\s+(?:exceptions?|qualifications?|limitations?)\b|"
-    r"what\s+about\b|and\b)",
-    re.I,
-)
-_NOTICE = {
-    "cancelled": "You stopped this answer.",
-    "disabled": "Explanations are switched off at the moment. You can still search and read the published laws.",
-    "too_large": "That question covers too much to explain at once. Try asking about one law, section or issue.",
-    "no_match": "We couldn't find a published section that answers this. Try rephrasing, or name a law and section.",
-    "not_covered": "The published provisions don't seem to answer this directly. These are the closest sections we found.",
-    "budget": "We've reached the available budget for explanations. You can still read the relevant sections below.",
-    "unverified": "We couldn't confirm that the explanation matches the published provisions, so here are the sections themselves.",
-    "unavailable": "Explanations aren't available right now. Here are the relevant published sections.",
-    "stalled": "This answer took too long. Please try again.",
-}
-_EDITION_YEAR = re.compile(r"\b(?:19|20)\d{2}\b")
-
-
-def _edition_notice(evidence: list[EvidenceItem]) -> str | None:
-    """One caveat per cited historical instrument, preserving legacy copy."""
-    historical = [item for item in evidence if item.legal_status == "historical"]
-    if not historical:
-        return None
-    notices: list[str] = []
-    seen: set[str] = set()
-    for item in historical:
-        if item.instrument_slug in seen:
-            continue
-        seen.add(item.instrument_slug)
-        if item.instrument_slug == CONSTITUTION_SLUG:
-            years = _EDITION_YEAR.findall(item.edition_label)
-            published = (
-                f"as published in {years[-1]}" if years else "from an earlier edition"
-            )
-            notices.append(
-                f"Based on the 1999 Constitution {published}. Later amendments aren't included yet, so check whether a section has changed before relying on it."
-            )
-        else:
-            label = (
-                item.instrument_short_title
-                or item.instrument_title
-                or instrument_label(item.instrument_slug)
-            )
-            notices.append(f"{label}: As enacted, may have been amended.")
-    return "\n\n".join(notices)
-
-
-@dataclass
-class Prepared:
-    run_id: uuid.UUID
-    conversation_id: uuid.UUID
-    release_id: uuid.UUID
-    question: str
-    previous_question: str | None
-    lookup: LegalSearchResponse
-    selected: list[EvidenceItem]
-    all_evidence: list[EvidenceItem]
-    prompt_evidence: list[JsonObject]
-    too_large: bool
-    conversation_context: list[JsonObject] = field(default_factory=list)
-    clarification_choices: list[str] = field(default_factory=list)
-    related_laws: list[str] = field(default_factory=list)
-    covered_laws: list[dict[str, str]] = field(default_factory=list)
-
-
-def _with_coverage(message: str, prepared: Prepared | None) -> str:
-    labels = [law["label"] for law in prepared.covered_laws] if prepared else []
-    if not labels:
-        return message
-    names = (
-        labels[0] if len(labels) == 1 else ", ".join(labels[:-1]) + " and " + labels[-1]
-    )
-    return f"{message} This edition includes {names}."
-
-
-def _notice(key: str, prepared: Prepared | None = None) -> str:
-    return _with_coverage(_NOTICE[key], prepared)
-
-
-def _notice_fields(key: str, prepared: Prepared | None = None) -> JsonObject:
-    """English notice plus the key and values a client needs to translate it."""
-    laws = [law["label"] for law in prepared.covered_laws] if prepared else []
-    return {
-        "notice": _notice(key, prepared),
-        "notice_code": key,
-        "notice_params": {"laws": laws} if laws else {},
-    }
-
-
-def _conversation_context(
-    session: Session, conversation_id: uuid.UUID, message: ConversationMessage
-) -> list[JsonObject]:
-    """Bound prior user facts and cited identities; never reuse old answer claims."""
-    rows = session.exec(
-        select(ConversationMessage)
-        .where(
-            ConversationMessage.conversation_id == conversation_id,
-            ConversationMessage.id != message.id,
-            ConversationMessage.created_at <= message.created_at,
-        )
-        .order_by(
-            col(ConversationMessage.created_at).desc(),
-            col(ConversationMessage.id).desc(),
-        )
-        .limit(6)
-    ).all()
-    context: list[JsonObject] = []
-    for row in reversed(rows):
-        if row.role == MessageRole.USER:
-            context.append(
-                {"role": "user", "question": (row.english_text or row.content)[:2000]}
-            )
-        elif row.evidence_snapshot:
-            cited = {
-                identifier
-                for block in (row.answer_content or {}).get("blocks", [])
-                for identifier in block.get("evidence_ids", [])
-            }
-            provisions = [
-                {
-                    "citation": item.get("citation"),
-                    "canonical_path": item.get("canonical_path"),
-                    "provision_version_id": item.get("provision_version_id"),
-                }
-                for item in row.evidence_snapshot
-                if item.get("evidence_id") in cited
-            ]
-            if provisions:
-                context.append(
-                    {"role": "assistant", "discussed_provisions": provisions[:5]}
-                )
-    return context
-
-
-def _prior_citations(session: Session, conversation_id: uuid.UUID) -> list[str]:
-    prior = session.exec(
-        select(ConversationMessage)
-        .where(
-            ConversationMessage.conversation_id == conversation_id,
-            ConversationMessage.role == MessageRole.ASSISTANT,
-        )
-        .order_by(
-            col(ConversationMessage.created_at).desc(),
-            col(ConversationMessage.id).desc(),
-        )
-    ).first()
-    if prior is None or not prior.evidence_snapshot:
-        return []
-    answer = prior.answer_content or {}
-    outcomes = answer.get("citation_outcomes") or []
-    if any(outcome.get("status") != "resolved" for outcome in outcomes):
-        return []
-    cited = {
-        identifier
-        for block in answer.get("blocks", [])
-        for identifier in block.get("evidence_ids", [])
-    }
-    if not cited:
-        cited = {
-            identifier
-            for outcome in outcomes
-            for identifier in outcome.get("evidence_ids", [])
-        }
-    values: list[str] = []
-    for item in prior.evidence_snapshot:
-        if cited and item.get("evidence_id") not in cited:
-            continue
-        citation = item.get("citation")
-        if isinstance(citation, str) and citation not in values:
-            values.append(citation)
-    return values[:5]
-
-
-def _prior_section_path(session: Session, conversation_id: uuid.UUID) -> str | None:
-    prior = session.exec(
-        select(ConversationMessage)
-        .where(
-            ConversationMessage.conversation_id == conversation_id,
-            ConversationMessage.role == MessageRole.ASSISTANT,
-        )
-        .order_by(
-            col(ConversationMessage.created_at).desc(),
-            col(ConversationMessage.id).desc(),
-        )
-    ).first()
-    if prior is None or not prior.evidence_snapshot:
-        return None
-    answer = prior.answer_content or {}
-    cited = {
-        identifier
-        for block in answer.get("blocks", [])
-        for identifier in block.get("evidence_ids", [])
-    }
-    if not cited:
-        cited = {
-            identifier
-            for outcome in answer.get("citation_outcomes", [])
-            if outcome.get("status") == "resolved"
-            for identifier in outcome.get("evidence_ids", [])
-        }
-    paths = {
-        match.group(1)
-        for item in prior.evidence_snapshot
-        if item.get("evidence_id") in cited
-        and isinstance(item.get("canonical_path"), str)
-        and (
-            match := re.match(r"(.*\.section\d+[a-z]?)(?:\.|$)", item["canonical_path"])
-        )
-    }
-    return next(iter(paths)) if len(paths) == 1 else None
-
-
-def _relative_query(
-    session: Session, conversation_id: uuid.UUID, question: str
-) -> str | None:
-    if not (
-        _RELATIVE.search(question)
-        or _SUBSECTION.search(question)
-        or _PARAGRAPH.search(question)
-        or _ELLIPTICAL.search(question)
-    ):
-        return None
-    citations = _prior_citations(session, conversation_id)
-    if not citations:
-        return None
-    references = [
-        parsed.reference
-        for citation in citations
-        if (parsed := parse_section_reference(citation)).reference is not None
-    ]
-    sections = list(
-        dict.fromkeys(
-            (reference.instrument_slug, reference.section) for reference in references
-        )
-    )
-    if len(sections) > 1:
-        if _ELLIPTICAL.search(question) and not (
-            _RELATIVE.search(question)
-            or _SUBSECTION.search(question)
-            or _PARAGRAPH.search(question)
-        ):
-            return " and ".join(
-                SectionReference(number, instrument_slug=slug).citation
-                for slug, number in sections
-            )
-        return None
-    citation = (
-        citations[0]
-        if len(citations) == 1
-        else SectionReference(sections[0][1], instrument_slug=sections[0][0]).citation
-        if sections
-        else citations[0]
-    )
-    match = re.search(r"Section\s+(\d+[a-z]?)", citation, re.I)
-    if not match:
-        return None
-    parsed = parse_section_reference(citation)
-    if parsed.reference is None:
-        return None
-    instrument_slug = parsed.reference.instrument_slug
-    subsection = _SUBSECTION.search(question)
-    paragraph = _PARAGRAPH.search(question)
-    if subsection:
-        return SectionReference(
-            match.group(1), subsection.group(1), instrument_slug=instrument_slug
-        ).citation
-    if paragraph:
-        parent = re.search(r"Section\s+\d+[a-z]?\((\d+)\)", citation, re.I)
-        if parent:
-            return SectionReference(
-                match.group(1), parent.group(1), paragraph.group(1), instrument_slug
-            ).citation
-    return citation
-
-
-def _previous_question(
-    session: Session, conversation_id: uuid.UUID, current_message_id: uuid.UUID
-) -> str | None:
-    previous = session.exec(
-        select(ConversationMessage)
-        .where(
-            ConversationMessage.conversation_id == conversation_id,
-            ConversationMessage.role == MessageRole.USER,
-            ConversationMessage.id != current_message_id,
-        )
-        .order_by(col(ConversationMessage.created_at).desc())
-    ).first()
-    return (previous.english_text or previous.content) if previous else None
-
-
-def _source_crossrefs(
-    text: str, instrument_slug: str = CONSTITUTION_SLUG
-) -> list[SectionReference]:
-    groups = source_reference_groups(text, instrument_slug=instrument_slug)
-    # Keep each marker's first reference before expanding long lists/ranges.
-    # A list in Section 45 must not crowd out its later s.33, s.36(8), s.305.
-    primary = [group[0] for group in groups]
-    extra = [reference for group in groups for reference in group[1:]]
-    return list(dict.fromkeys([*primary, *extra]))[:5]
-
-
-def _context(
-    session: Session,
-    corpus: PublicCorpus,
-    selected: list[EvidenceItem],
-) -> list[EvidenceItem]:
-    """Load published parents and a few unambiguous cross-references."""
-    result: list[EvidenceItem] = []
-    seen = {item.provision_version_id for item in selected}
-    parent_ids: set[uuid.UUID] = set()
-    for item in selected:
-        provision = corpus.provisions.get(item.provision_id) or session.get(
-            Provision, item.provision_id
-        )
-        while provision and provision.parent_id:
-            provision = corpus.provisions.get(provision.parent_id) or session.get(
-                Provision, provision.parent_id
-            )
-            if provision and provision.kind in (
-                ProvisionKind.SECTION,
-                ProvisionKind.SUBSECTION,
-            ):
-                parent_ids.add(provision.id)
-    if parent_ids:
-        rows = session.exec(
-            select(ProvisionVersion, Provision, SourceDocument)
-            .join(Provision, col(Provision.id) == col(ProvisionVersion.provision_id))
-            .join(
-                SourceDocument,
-                col(SourceDocument.id) == col(ProvisionVersion.source_document_id),
-            )
-            .join(
-                CorpusReleaseEntry,
-                col(CorpusReleaseEntry.provision_version_id)
-                == col(ProvisionVersion.id),
-            )
-            .where(
-                CorpusReleaseEntry.release_id == corpus.release.id,
-                col(Provision.id).in_(parent_ids),
-            )
-        ).all()
-        for version, provision, source in rows:
-            if version.id in seen:
-                continue
-            seen.add(version.id)
-            corpus.provisions[provision.id] = provision
-            corpus.versions[provision.id] = version
-            corpus.sources[source.id] = source
-            public = corpus.result(provision)
-            result.append(
-                evidence_item(corpus, public, f"E{len(selected) + len(result) + 1}")
-            )
-    crossrefs: list[SectionReference] = []
-    # Provisions that limit or pair with the selected ones come first, so
-    # restrictions such as Section 45 reach the explanation.
-    for item in selected:
-        number = section_target(item.canonical_path)
-        for companion in companion_sections(number) if number else ():
-            slug, _, section = companion.partition(":")
-            reference = SectionReference(section, instrument_slug=slug)
-            if reference not in crossrefs:
-                crossrefs.append(reference)
-    available_slugs = {
-        instrument.slug
-        for instrument in release_instruments(
-            session, corpus.release.id, index_kind=corpus.index_kind
-        ).values()
-    }
-    crossrefs = [
-        reference
-        for reference in crossrefs
-        if reference.instrument_slug in available_slugs
-    ]
-    act_slugs = {
-        item.instrument_slug
-        for item in selected
-        if item.instrument_type == InstrumentType.ACT
-    } | {
-        reference.instrument_slug
-        for reference in crossrefs
-        if reference.instrument_slug != CONSTITUTION_SLUG
-    }
-    # Reserve two extra context slots for canonical scope/supremacy text,
-    # including when an Act first enters the answer through a companion.
-    scope_references = [SectionReference("1")] if act_slugs else []
-    if ACJA_SLUG in act_slugs:
-        scope_references.append(SectionReference("2", instrument_slug=ACJA_SLUG))
-    crossrefs = list(dict.fromkeys([*scope_references, *crossrefs]))
-    crossref_limit = 7 if act_slugs else 5
-    for item in selected:
-        for reference in _source_crossrefs(
-            item.authoritative_text, item.instrument_slug
-        ):
-            if reference not in crossrefs:
-                crossrefs.append(reference)
-            if len(crossrefs) >= crossref_limit:
-                break
-        if len(crossrefs) >= crossref_limit:
-            break
-    if crossrefs:
-        focused = load_reference_corpus(
-            session,
-            corpus.release,
-            crossrefs[:crossref_limit],
-            index_kind=corpus.index_kind,
-        )
-        for reference in crossrefs[:crossref_limit]:
-            matches = [
-                provision
-                for provision in focused.provisions.values()
-                if provision.id in focused.versions
-                and matches_reference(provision.canonical_path, reference)
-            ]
-            if len(matches) != 1:
-                continue
-            provision = matches[0]
-            version = focused.versions[provision.id]
-            if version.id in seen:
-                continue
-            seen.add(version.id)
-            result.append(
-                evidence_item(
-                    focused,
-                    focused.result(provision),
-                    f"E{len(selected) + len(result) + 1}",
-                )
-            )
-    return result
-
-
-def _prompt_items(evidence: list[EvidenceItem]) -> list[JsonObject]:
-    """Represent contained text once while keeping each citation ID addressable."""
-    ordered = sorted(
-        evidence, key=lambda item: len(item.authoritative_text), reverse=True
-    )
-    included: list[EvidenceItem] = []
-    values: dict[str, JsonObject] = {}
-    for item in ordered:
-        container = next(
-            (
-                other
-                for other in included
-                if item.instrument_slug == other.instrument_slug
-                and item.authoritative_text in other.authoritative_text
-            ),
-            None,
-        )
-        values[item.evidence_id] = {
-            "id": item.evidence_id,
-            "canonical_path": item.canonical_path,
-            "citation": item.citation,
-            "instrument_slug": item.instrument_slug,
-            "instrument_title": item.instrument_title,
-            "instrument_short_title": item.instrument_short_title,
-            "instrument_type": item.instrument_type,
-            "title": item.title,
-            "ancestor_citations": item.ancestor_citations,
-            "status": item.legal_status,
-            "edition": item.edition_label,
-            "text": item.authoritative_text if container is None else None,
-            "text_in": container.evidence_id if container else None,
-        }
-        if container is None:
-            included.append(item)
-    return [values[item.evidence_id] for item in evidence]
-
-
-def _shown_evidence(prepared: Prepared, cited_ids: set[str]) -> list[EvidenceItem]:
-    """Sources behind a delivered explanation: what it cited or was asked about.
-
-    Retrieval also pulls near matches and context the explanation never used;
-    listing them beside the answer padded it with unrelated sections.
-    """
-    asked = {
-        identifier
-        for row in prepared.lookup.citation_outcomes
-        for identifier in row.evidence_ids
-    }
-    shown = [
-        item
-        for item in prepared.all_evidence
-        if item.evidence_id in cited_ids or item.evidence_id in asked
-    ]
-    return shown or prepared.all_evidence
-
-
-# Best matches kept before any context is trimmed.
-_KEEP_MATCHES = 4
-
-
-def _prompt_bytes(base: JsonObject, prompt_evidence: list[JsonObject]) -> int:
-    return len(
-        json.dumps({**base, "evidence": prompt_evidence}, ensure_ascii=False).encode()
-    )
-
-
-def _fit_prompt(
-    selected: list[EvidenceItem],
-    context: list[EvidenceItem],
-    base: JsonObject,
-    limit: int,
-) -> tuple[list[EvidenceItem], list[EvidenceItem], list[JsonObject], int]:
-    """Shrink the evidence packet to the budget instead of refusing the question.
-
-    Broad questions pull in long sections, and refusing them looked like a
-    failure to understand. The lowest-ranked matches go first, because the
-    context carries the restrictions and scope rules that change an answer.
-    Then context is trimmed from the end; a question is only too large when its
-    single best match is.
-    """
-    selected = list(selected)
-    context = list(context)
-
-    def measure() -> tuple[list[JsonObject], int]:
-        items = _prompt_items([*selected, *context])
-        return items, _prompt_bytes(base, items)
-
-    items, size = measure()
-    while size > limit and len(selected) > _KEEP_MATCHES:
-        selected.pop()
-        items, size = measure()
-    while size > limit and context:
-        context.pop()
-        items, size = measure()
-    while size > limit and len(selected) > 1:
-        selected.pop()
-        items, size = measure()
-    return selected, context, items, size
 
 
 def prepare_run(run_id: uuid.UUID) -> Prepared:
@@ -646,9 +121,8 @@ def prepare_run(run_id: uuid.UUID) -> Prepared:
             raise PgVectorRetrievalError("Pinned conversation evidence is unavailable")
         question = question_message.english_text or question_message.content
         previous_question: str | None = None
-        conversation_context = _conversation_context(
-            session, conversation.id, question_message
-        )
+        history = History(session, conversation.id, question_message)
+        conversation_context = history.context
         clarification_choices: list[str] = []
         if run.selected_provision_version_id is not None:
             corpus = load_ranked_corpus(
@@ -685,21 +159,16 @@ def prepare_run(run_id: uuid.UUID) -> Prepared:
             is_followup = False
             semantic_query = question
             if not parsed.references and not parsed.error:
-                is_followup = bool(
-                    _RELATIVE.search(question)
-                    or _SUBSECTION.search(question)
-                    or _PARAGRAPH.search(question)
-                    or _ELLIPTICAL.search(question)
-                )
+                is_followup = is_followup_question(question)
                 if is_followup:
-                    previous_question = _previous_question(
-                        session, conversation.id, question_message.id
+                    previous_question = history.previous_question
+                    relative = relative_query(
+                        session, conversation.id, question, history
                     )
-                    relative = _relative_query(session, conversation.id, question)
                     if relative:
                         parsed = parse_section_reference(relative)
                     elif previous_question:
-                        references = _prior_citations(session, conversation.id)
+                        references = prior_citations(session, conversation.id, history)
                         sections = {
                             (
                                 parsed_ref.reference.instrument_slug,
@@ -711,11 +180,7 @@ def prepare_run(run_id: uuid.UUID) -> Prepared:
                             ).reference
                             is not None
                         }
-                        if len(sections) > 1 and (
-                            _RELATIVE.search(question)
-                            or _SUBSECTION.search(question)
-                            or _PARAGRAPH.search(question)
-                        ):
+                        if len(sections) > 1 and is_relative_reference(question):
                             clarification_choices = references
                         semantic_query = f"{previous_question} {question}"
             if clarification_choices:
@@ -740,7 +205,7 @@ def prepare_run(run_id: uuid.UUID) -> Prepared:
                 )
                 lookup = exact_lookup(corpus, parsed, question).response
                 if is_followup and lookup.outcome == "ambiguous":
-                    prior_path = _prior_section_path(session, conversation.id)
+                    prior_path = prior_section_path(session, conversation.id, history)
                     matches = [
                         item
                         for item in lookup.data
@@ -798,11 +263,11 @@ def prepare_run(run_id: uuid.UUID) -> Prepared:
                     [item.provision_version_id for item in selected],
                     index_kind=conversation.index_kind,
                 )
-        context = _context(session, corpus, selected) if selected else []
+        context = expand_context(session, corpus, selected) if selected else []
         for index, item in enumerate(context, start=len(lookup.evidence) + 1):
             item.evidence_id = f"E{index}"
         all_evidence = [*lookup.evidence, *context]
-        prompt_evidence = _prompt_items([*selected, *context])
+        prompt_evidence = prompt_items([*selected, *context])
         available_instruments = release_instruments(
             session, release.id, index_kind=corpus.index_kind
         )
@@ -823,7 +288,7 @@ def prepare_run(run_id: uuid.UUID) -> Prepared:
                 key=lambda value: (value.slug != CONSTITUTION_SLUG, value.slug),
             )
         ]
-        selected, context, prompt_evidence, prompt_bytes = _fit_prompt(
+        selected, context, prompt_evidence, prompt_bytes = fit_prompt(
             selected,
             context,
             {
@@ -944,7 +409,7 @@ def _finish(
             return
         if run.cancellation_requested or settings.CHAT_GENERATION_KILL_SWITCH:
             answer = ExplanationAnswer(
-                outcome="cancelled", **_notice_fields("cancelled")
+                outcome="cancelled", **notice_fields("cancelled")
             )
         content = "\n\n".join(block.text for block in answer.blocks)
         message = ConversationMessage(
@@ -1191,7 +656,7 @@ async def process_run(
             await asyncio.to_thread(_emit_sources, prepared)
             if await asyncio.to_thread(_cancelled, run_id):
                 answer = ExplanationAnswer(
-                    outcome="cancelled", **_notice_fields("cancelled")
+                    outcome="cancelled", **notice_fields("cancelled")
                 )
             elif prepared.clarification_choices:
                 answer = ExplanationAnswer(
@@ -1211,7 +676,7 @@ async def process_run(
                     outcome="clarification_required",
                     evidence=prepared.all_evidence,
                     citation_outcomes=prepared.lookup.citation_outcomes,
-                    **_notice_fields("too_large", prepared),
+                    **notice_fields("too_large", prepared),
                 )
             elif not prepared.selected:
                 answer = ExplanationAnswer(
@@ -1221,12 +686,12 @@ async def process_run(
                     related_laws=prepared.related_laws,
                     **(
                         {
-                            **_notice_fields("no_match", prepared),
-                            "notice": _with_coverage(prepared.lookup.message, prepared),
+                            **notice_fields("no_match", prepared),
+                            "notice": with_coverage(prepared.lookup.message, prepared),
                             "notice_code": message_code(prepared.lookup.message),
                         }
                         if prepared.lookup.message
-                        else _notice_fields("no_match", prepared)
+                        else notice_fields("no_match", prepared)
                     ),
                 )
             else:
@@ -1287,7 +752,7 @@ async def process_run(
                                 citation_outcomes=prepared.lookup.citation_outcomes,
                                 evidence=prepared.all_evidence,
                                 related_laws=prepared.related_laws,
-                                **_notice_fields("not_covered", prepared),
+                                **notice_fields("not_covered", prepared),
                             )
                             break
                         validation_stage = "deterministic"
@@ -1370,7 +835,7 @@ async def process_run(
                         for block in kept_blocks
                         for identifier in block.evidence_ids
                     }
-                    edition = _edition_notice(
+                    edition = edition_notice(
                         [
                             item
                             for item in prepared.all_evidence
@@ -1388,7 +853,7 @@ async def process_run(
                         missing_facts=draft.missing_facts[:4],
                         follow_up_questions=follow_ups,
                         citation_outcomes=prepared.lookup.citation_outcomes,
-                        evidence=_shown_evidence(prepared, cited_ids),
+                        evidence=shown_evidence(prepared, cited_ids),
                         related_laws=prepared.related_laws,
                         notice=edition,
                         notice_code="edition" if edition else None,
@@ -1442,7 +907,7 @@ async def process_run(
             ExplanationAnswer(
                 outcome="budget_exhausted",
                 evidence=prepared.all_evidence if prepared else [],
-                **_notice_fields("budget"),
+                **notice_fields("budget"),
             ),
             telemetry=telemetry,
         )
@@ -1455,7 +920,7 @@ async def process_run(
             ExplanationAnswer(
                 outcome="validation_failed",
                 evidence=prepared.all_evidence if prepared else [],
-                **_notice_fields("unverified", prepared),
+                **notice_fields("unverified", prepared),
             ),
             validation={
                 "deterministic_or_verifier": False,
@@ -1474,7 +939,7 @@ async def process_run(
             _finish,
             run_id,
             worker_id,
-            ExplanationAnswer(outcome="cancelled", **_notice_fields("cancelled")),
+            ExplanationAnswer(outcome="cancelled", **notice_fields("cancelled")),
             telemetry=telemetry,
         )
     except ProviderError, TimeoutError, PgVectorRetrievalError:
@@ -1486,7 +951,7 @@ async def process_run(
             ExplanationAnswer(
                 outcome="provider_failure",
                 evidence=prepared.all_evidence if prepared else [],
-                **_notice_fields("unavailable", prepared),
+                **notice_fields("unavailable", prepared),
             ),
             telemetry=telemetry,
         )
@@ -1499,7 +964,7 @@ async def process_run(
             ExplanationAnswer(
                 outcome="provider_failure",
                 evidence=prepared.all_evidence if prepared else [],
-                **_notice_fields("unavailable", prepared),
+                **notice_fields("unavailable", prepared),
             ),
             telemetry=telemetry,
         )
@@ -1534,7 +999,7 @@ def recover_expired() -> None:
             worker_id,
             ExplanationAnswer(
                 outcome="provider_failure",
-                **_notice_fields("stalled"),
+                **notice_fields("stalled"),
             ),
         )
 
@@ -1602,7 +1067,7 @@ async def run_forever() -> None:
                     worker_id,
                     ExplanationAnswer(
                         outcome="cancelled",
-                        **_notice_fields("disabled"),
+                        **notice_fields("disabled"),
                     ),
                 )
             await asyncio.sleep(2)
