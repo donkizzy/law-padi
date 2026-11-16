@@ -101,7 +101,11 @@ def normal_user_token_headers(client: TestClient, db: Session) -> dict[str, str]
     )
 
 
-pytest_plugins = ["tests.fixtures.corpus", "tests.fixtures.statute_corpus"]
+pytest_plugins = [
+    "tests.fixtures.corpus",
+    "tests.fixtures.statute_corpus",
+    "tests.fixtures.conversations",
+]
 
 # Compatibility for test modules that still import the original reset name.
 _cleanup_db = reset_database
