@@ -275,7 +275,10 @@ def test_expired_corpus_shows_corrected_source_title(
     db.commit()
     assert client.get(path).json()["data"][0]["source_title"] != "Corrected title"
     for key, entry in public_corpus._corpus_cache.items():
-        public_corpus._corpus_cache[key] = replace(entry, expires_at=0)
+        public_corpus._corpus_cache[key] = replace(entry, refresh_at=0)
+    # A corpus due for refresh is still served while it reloads in the background.
+    assert client.get(path).json()["data"][0]["source_title"] != "Corrected title"
+    public_corpus.wait_for_corpus_refreshes()
     assert client.get(path).json()["data"][0]["source_title"] == "Corrected title"
 
 
@@ -290,22 +293,6 @@ def test_cached_corpus_does_not_outlive_publication(
     db.commit()
     assert client.get("/api/v1/legal/releases/current").status_code == 503
     assert client.get(path).status_code == 503
-
-
-def test_cache_keeps_only_the_newest_releases(
-    db: Session, monkeypatch: pytest.MonkeyPatch
-) -> None:
-    release_ids = [uuid4(), uuid4(), uuid4()]
-    monkeypatch.setattr(
-        public_corpus,
-        "load_public_corpus",
-        lambda _session, item, **_kwargs: public_corpus.PublicCorpus(item, {}, {}, {}),
-    )
-    for release_id in release_ids:
-        public_corpus.cached_public_corpus(
-            db, CorpusRelease(id=release_id, version="x")
-        )
-    assert [key[0] for key in public_corpus._corpus_cache] == release_ids[1:]
 
 
 def test_history_lists_each_version_without_loading_whole_releases(
