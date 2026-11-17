@@ -38,6 +38,11 @@ class Settings(BaseSettings):
     BUILD_REVISION: str = "development"
     SERVE_FRONTEND: bool = True
     ORIGIN_PROXY_SECRET: str | None = None
+    # A hosting platform's deploy health check cannot send the origin
+    # credential. Requests whose Host header is this name may read the health
+    # probes without it; every other path still needs the credential. Unset,
+    # no request is exempt.
+    PLATFORM_HEALTHCHECK_HOST: str | None = None
     APP_RUNTIME_ROLE: Literal["api"] | None = None
     SENTRY_DSN: HttpUrl | None = None
     SENTRY_TRACES_SAMPLE_RATE: float = Field(default=0.05, ge=0, le=1)

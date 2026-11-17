@@ -19,6 +19,25 @@ from app.core.sentry import init_sentry
 from app.ingestion.embedding import close_embedding_providers
 
 FRONTEND_DIR = Path(__file__).parent / "frontend"
+PROBE_PATHS = frozenset({"/livez", "/healthz", "/readyz"})
+
+
+def _platform_probe(scope: Scope, headers: dict[bytes, bytes]) -> bool:
+    """A GET of a health probe from the platform's deploy health check.
+
+    The platform's edge routes public requests by their Host header, so a
+    request carrying the platform's own health check name cannot arrive
+    through the service's public domain or through the Worker.
+    """
+    expected = settings.PLATFORM_HEALTHCHECK_HOST
+    if (
+        not expected
+        or scope.get("method") != "GET"
+        or scope.get("path") not in PROBE_PATHS
+    ):
+        return False
+    host = headers.get(b"host", b"").decode("latin-1").partition(":")[0]
+    return host.lower() == expected.lower()
 
 
 class OriginProxyMiddleware:
@@ -31,6 +50,9 @@ class OriginProxyMiddleware:
         secret = settings.ORIGIN_PROXY_SECRET
         if scope["type"] == "http" and secret:
             headers = dict(scope.get("headers", []))
+            if _platform_probe(scope, headers):
+                await self.app(scope, receive, send)
+                return
             supplied = headers.get(b"x-origin-proxy-secret", b"")
             if not compare_digest(supplied, secret.encode()):
                 await send(

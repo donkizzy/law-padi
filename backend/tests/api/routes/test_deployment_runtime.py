@@ -102,3 +102,44 @@ def test_ingestion_publisher_does_not_consume_chat_dispatch(db: Session) -> None
     assert "chat_generation.dispatch" not in published
     db.delete(row)
     db.commit()
+
+
+@pytest.mark.parametrize("path", ["/livez", "/healthz", "/readyz"])
+def test_platform_health_check_reads_probes_without_the_credential(
+    client: TestClient, monkeypatch: pytest.MonkeyPatch, path: str
+) -> None:
+    monkeypatch.setattr(settings, "ORIGIN_PROXY_SECRET", "a" * 32)
+    monkeypatch.setattr(settings, "PLATFORM_HEALTHCHECK_HOST", "healthcheck.example")
+    response = client.get(path, headers={"host": "healthcheck.example:8080"})
+    # /readyz may report the test database's migration state; it is not a 403.
+    assert response.status_code in {200, 503}
+    assert response.json()["status"] in {"ok", "unavailable"}
+    assert client.get(path, headers={"host": "HealthCheck.Example"}).status_code != 403
+
+
+def test_platform_health_check_host_opens_nothing_else(
+    client: TestClient, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    monkeypatch.setattr(settings, "ORIGIN_PROXY_SECRET", "a" * 32)
+    monkeypatch.setattr(settings, "PLATFORM_HEALTHCHECK_HOST", "healthcheck.example")
+    probe_host = {"host": "healthcheck.example"}
+    assert (
+        client.get(
+            f"{settings.API_V1_STR}/utils/health-check/", headers=probe_host
+        ).status_code
+        == 403
+    )
+    assert client.post("/readyz", headers=probe_host).status_code == 403
+    assert client.get("/readyz/", headers=probe_host).status_code == 403
+    for host in ("attacker.example", "healthcheck.example.attacker.example"):
+        assert client.get("/readyz", headers={"host": host}).status_code == 403
+
+
+def test_probes_need_the_credential_when_no_platform_host_is_set(
+    client: TestClient, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    monkeypatch.setattr(settings, "ORIGIN_PROXY_SECRET", "a" * 32)
+    monkeypatch.setattr(settings, "PLATFORM_HEALTHCHECK_HOST", None)
+    assert (
+        client.get("/livez", headers={"host": "healthcheck.example"}).status_code == 403
+    )
