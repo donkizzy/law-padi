@@ -35,6 +35,8 @@
 !deployment/render/
 !deployment/render/Dockerfile
 !deployment/render/start.sh
+!deployment/railway/
+!deployment/railway/run.sh
 !deployment/cloudflare/
 !deployment/cloudflare/worker.ts
 !deployment/cloudflare/public-pages.ts

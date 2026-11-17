@@ -1,12 +1,15 @@
 # syntax=docker/dockerfile:1
+# No RUN --mount=type=cache here: Railway rejects cache mounts whose id is not
+# prefixed with one service's id, and this file builds several services.
 FROM oven/bun:1@sha256:1d22548f177f4ff38e0c15baa3c2c46c6c2060ba2d1bc573bb4720b407548f1d AS frontend-build
 WORKDIR /app
 COPY package.json bun.lock /app/
 COPY frontend/package.json /app/frontend/
 WORKDIR /app/frontend
-RUN --mount=type=cache,target=/root/.bun/install/cache \
-    bun install --frozen-lockfile
+RUN bun install --frozen-lockfile
 COPY frontend/index.html frontend/vite.config.ts frontend/tsconfig*.json frontend/playwright.config.ts /app/frontend/
+# tsconfig.json type-checks playwright.config.ts, which imports this list.
+COPY frontend/tests/backend-specs.ts /app/frontend/tests/
 COPY frontend/src /app/frontend/src
 COPY frontend/public /app/frontend/public
 COPY eval/datasets/plain-language-retrieval-benchmark-v1.json /app/eval/datasets/
@@ -23,8 +26,15 @@ ENV UV_LINK_MODE=copy UV_PYTHON_DOWNLOADS=0
 WORKDIR /app
 COPY pyproject.toml uv.lock /app/
 COPY backend/pyproject.toml /app/backend/pyproject.toml
-RUN --mount=type=cache,target=/root/.cache/uv \
-    uv sync --frozen --no-dev --no-install-workspace --package app
+RUN uv sync --frozen --no-dev --no-install-workspace --no-cache --package app
+
+# The packaged source revision (scripts/build_revision.py), computed from the
+# same filtered build context that every image is built from. run.sh exports
+# it as BUILD_REVISION, so a platform build needs no build argument.
+FROM python:3.14-slim-trixie@sha256:9aaa474097d094040649f2162a627c0049b408f52138d980916788d80f04802f AS revision
+WORKDIR /source
+COPY . /source
+RUN python scripts/build_revision.py > /source-revision
 
 FROM python:3.14-slim-trixie@sha256:9aaa474097d094040649f2162a627c0049b408f52138d980916788d80f04802f AS runtime
 ENV PYTHONUNBUFFERED=1 \
@@ -47,8 +57,12 @@ USER 10001
 FROM runtime AS production
 COPY backend/scripts/prestart.sh /app/backend/scripts/prestart.sh
 COPY --from=frontend-build /app/backend/app/frontend /app/backend/app/frontend
+# Railway starts its services through run.sh (deployment/railway/railway.ts).
+COPY deployment/railway/run.sh /app/deployment/railway/run.sh
+COPY --from=revision /source-revision /app/source-revision
 EXPOSE 8000
-CMD ["sh", "-c", "exec uvicorn app.main:app --host 0.0.0.0 --port 8000 --workers ${WEB_CONCURRENCY:-2}"]
+# Platforms that route to a port of their choosing set PORT; Compose does not.
+CMD ["sh", "-c", "exec uvicorn app.main:app --host 0.0.0.0 --port ${PORT:-8000} --workers ${WEB_CONCURRENCY:-2}"]
 
 # Local Compose explicitly selects this target for fastapi dev / live reload.
 FROM production AS development
@@ -58,8 +72,7 @@ ENV UV_LINK_MODE=copy UV_PYTHON_DOWNLOADS=0
 COPY pyproject.toml uv.lock /app/
 COPY backend/pyproject.toml /app/backend/pyproject.toml
 COPY backend/scripts /app/backend/scripts
-RUN --mount=type=cache,target=/root/.cache/uv \
-    uv sync --frozen --no-install-workspace --package app
+RUN uv sync --frozen --no-install-workspace --no-cache --package app
 RUN apt-get update \
     && apt-get install -y --no-install-recommends poppler-utils \
     && rm -rf /var/lib/apt/lists/*
