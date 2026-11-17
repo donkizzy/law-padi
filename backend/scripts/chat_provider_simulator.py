@@ -12,7 +12,7 @@ from typing import Any
 
 from fastapi import FastAPI, HTTPException, Request
 
-app = FastAPI(title="Law Padi chat provider simulator")
+app = FastAPI(title="constitution.ng chat provider simulator")
 
 
 def simulated_answer(system: str, payload: dict[str, Any]) -> dict[str, Any]:

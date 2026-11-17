@@ -1,1 +1,1 @@
-"""Legal-domain models and services for Law Padi."""
+"""Legal-domain models and services for constitution.ng."""
