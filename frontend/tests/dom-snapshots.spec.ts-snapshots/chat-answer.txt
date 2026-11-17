@@ -1,0 +1,443 @@
+
+    <div id="root">
+<div data-slot="sidebar-wrapper" class="group/sidebar-wrapper has-data-[variant=inset]:bg-sidebar flex min-h-svh w-full" style="--sidebar-width: 16rem; --sidebar-width-icon: 3rem;">
+<div class="group peer text-sidebar-foreground hidden md:block" data-state="expanded" data-collapsible="" data-variant="sidebar" data-side="left" data-slot="sidebar">
+<div data-slot="sidebar-gap" class="relative w-(--sidebar-width) bg-transparent transition-[width] duration-200 ease-linear group-data-[collapsible=offcanvas]:w-0 group-data-[side=right]:rotate-180 group-data-[collapsible=icon]:w-(--sidebar-width-icon)">
+</div>
+<div data-slot="sidebar-container" class="fixed inset-y-0 z-10 hidden h-svh w-(--sidebar-width) transition-[left,right,width] duration-200 ease-linear md:flex left-0 group-data-[collapsible=offcanvas]:left-[calc(var(--sidebar-width)*-1)] group-data-[collapsible=icon]:w-(--sidebar-width-icon) group-data-[side=left]:border-r group-data-[side=right]:border-l">
+<div data-sidebar="sidebar" data-slot="sidebar-inner" class="bg-sidebar group-data-[variant=floating]:border-sidebar-border flex h-full w-full flex-col group-data-[variant=floating]:rounded-lg group-data-[variant=floating]:border group-data-[variant=floating]:shadow-sm">
+<div data-slot="sidebar-header" data-sidebar="header" class="flex flex-col gap-2 p-2 px-2 py-3">
+<div class="flex h-9 items-center justify-between gap-2 pl-2 group-data-[collapsible=icon]:justify-start group-data-[collapsible=icon]:pl-0">
+<div class="min-w-0 group-data-[collapsible=icon]:hidden">
+<a aria-label="constitution.ng home" class="sq-md inline-flex min-w-0 items-center focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-ring/25 active" href="/" data-status="active" aria-current="page">
+<span class="flex min-w-0 items-center">
+<svg viewBox="0 0 1594 197" aria-hidden="true" class="h-[1.375rem] w-auto shrink-0 group-data-[collapsible=icon]:hidden">
+<path class="fill-brand" d="M87.31 40.21C76.13 21.64 52.04 10.5 22.28 10.5L14.88 10.5A14.86 14.86 0 0 0 0.02 25.36L0.02 125.64A14.86 14.86 0 0 0 14.88 140.5L22.31 140.5L14.34 170.21L49.76 140.5L34.93 140.5C61.12 140.5 73.34 143.1 87.31 153.5ZM105.88 40.21C117.05 21.64 141.14 10.5 170.91 10.5L178.31 10.5A14.86 14.86 0 0 1 193.16 25.36L193.16 125.64A14.86 14.86 0 0 1 178.31 140.5L158.25 140.5C132.06 140.5 119.84 143.1 105.88 153.5Z">
+</path>
+<path class="fill-foreground" d="M342.44 53.45A51.5 51.5 0 1 0 342.44 127.55L328.37 112.98A30.5 32 0 1 1 328.37 68.02ZM456.44 90.5A51.5 51.5 0 0 0 353.44 90.5A51.5 51.5 0 0 0 456.44 90.5ZM435.44 90.5A30.5 32 0 0 1 374.44 90.5A30.5 32 0 0 1 435.44 90.5ZM478.44 140.5L498.44 140.5L498.44 40.5L478.44 40.5ZM566.44 83A44 44 0 0 0 478.44 83L498.44 83A24 25.5 0 0 1 546.44 83ZM546.44 140.5L566.44 140.5L566.44 83L546.44 83ZM652.26 53.58A35.28 29.16 0 1 0 607.36 94.8L627.45 102.19A14.11 11.66 0 1 1 609.49 118.67L591.15 127.42A35.28 29.16 0 1 0 636.06 86.2L615.97 78.81A14.11 11.66 0 1 1 633.93 62.33ZM682.98 102L702.98 102L702.98 12.5L682.98 12.5ZM682.98 102A40 40 0 0 0 722.98 142L722.98 123.5A20 21.5 0 0 1 702.98 102ZM722.98 142L732.98 142L736.98 123.5L722.98 123.5ZM667.98 57.5L728.98 57.5L728.98 40.5L667.98 40.5ZM753.48 140.5L773.48 140.5L773.48 40.5L753.48 40.5ZM775.98 12.5A12.5 12.5 0 0 0 750.98 12.5A12.5 12.5 0 0 0 775.98 12.5ZM806.98 102L826.98 102L826.98 12.5L806.98 12.5ZM806.98 102A40 40 0 0 0 846.98 142L846.98 123.5A20 21.5 0 0 1 826.98 102ZM846.98 142L856.98 142L860.98 123.5L846.98 123.5ZM791.98 57.5L852.98 57.5L852.98 40.5L791.98 40.5ZM961.98 40.5L941.98 40.5L941.98 140.5L961.98 140.5ZM873.98 98A44 44 0 0 0 961.98 98L941.98 98A24 25.5 0 0 1 893.98 98ZM893.98 40.5L873.98 40.5L873.98 98L893.98 98ZM992.98 102L1012.98 102L1012.98 12.5L992.98 12.5ZM992.98 102A40 40 0 0 0 1032.98 142L1032.98 123.5A20 21.5 0 0 1 1012.98 102ZM1032.98 142L1042.98 142L1046.98 123.5L1032.98 123.5ZM977.98 57.5L1038.98 57.5L1038.98 40.5L977.98 40.5ZM1063.48 140.5L1083.48 140.5L1083.48 40.5L1063.48 40.5ZM1085.98 12.5A12.5 12.5 0 0 0 1060.98 12.5A12.5 12.5 0 0 0 1085.98 12.5ZM1210.98 90.5A51.5 51.5 0 0 0 1107.98 90.5A51.5 51.5 0 0 0 1210.98 90.5ZM1189.98 90.5A30.5 32 0 0 1 1128.98 90.5A30.5 32 0 0 1 1189.98 90.5ZM1232.98 140.5L1252.98 140.5L1252.98 40.5L1232.98 40.5ZM1320.98 83A44 44 0 0 0 1232.98 83L1252.98 83A24 25.5 0 0 1 1300.98 83ZM1300.98 140.5L1320.98 140.5L1320.98 83L1300.98 83ZM1362.98 129.5A12.5 12.5 0 0 0 1337.98 129.5A12.5 12.5 0 0 0 1362.98 129.5ZM1381.98 140.5L1401.98 140.5L1401.98 40.5L1381.98 40.5ZM1469.98 83A44 44 0 0 0 1381.98 83L1401.98 83A24 25.5 0 0 1 1449.98 83ZM1449.98 140.5L1469.98 140.5L1469.98 83L1449.98 83ZM1593.98 90.5A51.5 51.5 0 0 0 1490.98 90.5A51.5 51.5 0 0 0 1593.98 90.5ZM1572.98 90.5A30.5 32 0 0 1 1511.98 90.5A30.5 32 0 0 1 1572.98 90.5ZM1573.98 157L1593.98 157L1593.98 40.5L1573.98 40.5ZM1517.73 173.91A40 40 0 0 0 1593.98 157L1573.98 157A20 21.5 0 0 1 1535.63 165.56Z">
+</path>
+</svg>
+<svg viewBox="0 0 256 256" aria-hidden="true" class="shrink-0 text-brand hidden size-7 group-data-[collapsible=icon]:block">
+<path fill="currentColor" d="M108 48C95.2 34.25 67.6 26 33.5 26L28 26A20 20 0 0 0 8 46L8 164A20 20 0 0 0 28 184L30 184L18.75 226L68.8 184L48 184C78 184 92 186 108 194ZM148 48C160.8 34.25 188.4 26 222.5 26L228 26A20 20 0 0 1 248 46L248 164A20 20 0 0 1 228 184L208 184C178 184 164 186 148 194Z">
+</path>
+</svg>
+</span>
+</a>
+</div>
+<button data-slot="sidebar-trigger" class="inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium transition-all disabled:pointer-events-none disabled:opacity-50 [&amp;_svg]:pointer-events-none [&amp;_svg:not([class*='size-'])]:size-4 [&amp;_svg]:shrink-0 outline-none focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive hover:bg-accent hover:text-accent-foreground dark:hover:bg-accent/50 size-8 shrink-0 text-muted-foreground max-md:hidden" data-sidebar="trigger">
+<svg stroke="currentColor" fill="none" stroke-width="2" viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round" height="1em" width="1em" xmlns="http://www.w3.org/2000/svg">
+<rect x="3" y="3" width="18" height="18" rx="2" ry="2">
+</rect>
+<line x1="9" y1="3" x2="9" y2="21">
+</line>
+</svg>
+<span class="sr-only">Collapse Sidebar</span>
+</button>
+</div>
+</div>
+<div data-slot="sidebar-content" data-sidebar="content" class="flex min-h-0 flex-1 flex-col overflow-auto group-data-[collapsible=icon]:overflow-hidden gap-0 px-2">
+<div class="mb-3">
+<button class="sq-sm inline-flex items-center justify-center gap-2 font-semibold transition duration-200 focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-ring/25 disabled:pointer-events-none disabled:opacity-50 border border-primary bg-primary text-primary-foreground shadow-[var(--shadow-subtle)] hover:bg-[color:var(--legal-emerald-ink)] min-h-11 px-4 py-2.5 text-sm w-full group-data-[collapsible=icon]:size-8 group-data-[collapsible=icon]:min-h-8 group-data-[collapsible=icon]:p-2" aria-label="New conversation" type="button">
+<svg stroke="currentColor" fill="none" stroke-width="2" viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round" class="size-4" aria-hidden="true" height="1em" width="1em" xmlns="http://www.w3.org/2000/svg">
+<path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z">
+</path>
+</svg>
+<span class="group-data-[collapsible=icon]:sr-only">New conversation</span>
+</button>
+</div>
+<div data-slot="sidebar-group" data-sidebar="group" class="relative flex w-full min-w-0 flex-col px-0">
+<div data-slot="sidebar-group-content" data-sidebar="group-content" class="w-full text-sm">
+<ul data-slot="sidebar-menu" data-sidebar="menu" class="flex w-full min-w-0 flex-col gap-1">
+<li data-slot="sidebar-menu-item" data-sidebar="menu-item" class="group/menu-item relative">
+<a data-slot="sidebar-menu-button" data-sidebar="menu-button" data-size="default" data-active="true" data-state="closed" href="/?intent=ask" class="peer/menu-button flex w-full items-center overflow-hidden p-2 text-left outline-hidden ring-sidebar-ring focus-visible:ring-2 active:bg-sidebar-accent active:text-sidebar-accent-foreground disabled:pointer-events-none disabled:opacity-50 group-has-data-[sidebar=menu-action]/menu-item:pr-8 aria-disabled:pointer-events-none aria-disabled:opacity-50 data-[active=true]:bg-sidebar-accent data-[active=true]:font-medium data-[active=true]:text-sidebar-accent-foreground data-[state=open]:hover:bg-sidebar-accent data-[state=open]:hover:text-sidebar-accent-foreground group-data-[collapsible=icon]:size-8! group-data-[collapsible=icon]:p-2! [&amp;&gt;span:last-child]:truncate [&amp;&gt;svg]:shrink-0 data-[state=open]:bg-sidebar-accent hover:bg-sidebar-accent hover:text-sidebar-accent-foreground text-sm rounded-lg sq-xs h-9 gap-2 px-2 font-medium text-sidebar-foreground/80 transition-colors [&amp;&gt;svg]:size-4">
+<svg stroke="currentColor" fill="none" stroke-width="2" viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" height="1em" width="1em" xmlns="http://www.w3.org/2000/svg">
+<path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z">
+</path>
+</svg>
+<span class="min-w-0 flex-1 truncate">Ask a question</span>
+</a>
+</li>
+<li data-slot="sidebar-menu-item" data-sidebar="menu-item" class="group/menu-item relative">
+<a data-slot="sidebar-menu-button" data-sidebar="menu-button" data-size="default" data-active="false" data-state="closed" href="/?intent=find" class="peer/menu-button flex w-full items-center overflow-hidden p-2 text-left outline-hidden ring-sidebar-ring focus-visible:ring-2 active:bg-sidebar-accent active:text-sidebar-accent-foreground disabled:pointer-events-none disabled:opacity-50 group-has-data-[sidebar=menu-action]/menu-item:pr-8 aria-disabled:pointer-events-none aria-disabled:opacity-50 data-[active=true]:bg-sidebar-accent data-[active=true]:font-medium data-[active=true]:text-sidebar-accent-foreground data-[state=open]:hover:bg-sidebar-accent data-[state=open]:hover:text-sidebar-accent-foreground group-data-[collapsible=icon]:size-8! group-data-[collapsible=icon]:p-2! [&amp;&gt;span:last-child]:truncate [&amp;&gt;svg]:shrink-0 data-[state=open]:bg-sidebar-accent hover:bg-sidebar-accent hover:text-sidebar-accent-foreground text-sm rounded-lg sq-xs h-9 gap-2 px-2 font-medium text-sidebar-foreground/80 transition-colors [&amp;&gt;svg]:size-4">
+<svg stroke="currentColor" fill="none" stroke-width="2" viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" height="1em" width="1em" xmlns="http://www.w3.org/2000/svg">
+<circle cx="11" cy="11" r="8">
+</circle>
+<line x1="21" y1="21" x2="16.65" y2="16.65">
+</line>
+</svg>
+<span class="min-w-0 flex-1 truncate">Find a section</span>
+</a>
+</li>
+<li data-slot="sidebar-menu-item" data-sidebar="menu-item" class="group/menu-item relative">
+<a data-slot="sidebar-menu-button" data-sidebar="menu-button" data-size="default" data-active="false" data-state="closed" href="/laws" class="peer/menu-button flex w-full items-center overflow-hidden p-2 text-left outline-hidden ring-sidebar-ring focus-visible:ring-2 active:bg-sidebar-accent active:text-sidebar-accent-foreground disabled:pointer-events-none disabled:opacity-50 group-has-data-[sidebar=menu-action]/menu-item:pr-8 aria-disabled:pointer-events-none aria-disabled:opacity-50 data-[active=true]:bg-sidebar-accent data-[active=true]:font-medium data-[active=true]:text-sidebar-accent-foreground data-[state=open]:hover:bg-sidebar-accent data-[state=open]:hover:text-sidebar-accent-foreground group-data-[collapsible=icon]:size-8! group-data-[collapsible=icon]:p-2! [&amp;&gt;span:last-child]:truncate [&amp;&gt;svg]:shrink-0 data-[state=open]:bg-sidebar-accent hover:bg-sidebar-accent hover:text-sidebar-accent-foreground text-sm rounded-lg sq-xs h-9 gap-2 px-2 font-medium text-sidebar-foreground/80 transition-colors [&amp;&gt;svg]:size-4">
+<svg stroke="currentColor" fill="none" stroke-width="2" viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" height="1em" width="1em" xmlns="http://www.w3.org/2000/svg">
+<path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z">
+</path>
+<path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z">
+</path>
+</svg>
+<span class="min-w-0 flex-1 truncate">Browse laws</span>
+</a>
+</li>
+<li data-slot="sidebar-menu-item" data-sidebar="menu-item" class="group/menu-item relative">
+<a data-slot="sidebar-menu-button" data-sidebar="menu-button" data-size="default" data-active="false" data-state="closed" href="/saved" class="peer/menu-button flex w-full items-center overflow-hidden p-2 text-left outline-hidden ring-sidebar-ring focus-visible:ring-2 active:bg-sidebar-accent active:text-sidebar-accent-foreground disabled:pointer-events-none disabled:opacity-50 group-has-data-[sidebar=menu-action]/menu-item:pr-8 aria-disabled:pointer-events-none aria-disabled:opacity-50 data-[active=true]:bg-sidebar-accent data-[active=true]:font-medium data-[active=true]:text-sidebar-accent-foreground data-[state=open]:hover:bg-sidebar-accent data-[state=open]:hover:text-sidebar-accent-foreground group-data-[collapsible=icon]:size-8! group-data-[collapsible=icon]:p-2! [&amp;&gt;span:last-child]:truncate [&amp;&gt;svg]:shrink-0 data-[state=open]:bg-sidebar-accent hover:bg-sidebar-accent hover:text-sidebar-accent-foreground text-sm rounded-lg sq-xs h-9 gap-2 px-2 font-medium text-sidebar-foreground/80 transition-colors [&amp;&gt;svg]:size-4">
+<svg stroke="currentColor" fill="none" stroke-width="2" viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" height="1em" width="1em" xmlns="http://www.w3.org/2000/svg">
+<path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z">
+</path>
+</svg>
+<span class="min-w-0 flex-1 truncate">Saved provisions</span>
+</a>
+</li>
+</ul>
+</div>
+</div>
+<div data-slot="sidebar-group" data-sidebar="group" class="relative flex w-full min-w-0 flex-col mt-4 px-0 group-data-[collapsible=icon]:hidden">
+<div class="relative mb-1 h-9">
+<div data-slot="sidebar-group-label" data-sidebar="group-label" class="ring-sidebar-ring flex shrink-0 items-center rounded-md px-2 text-xs font-medium outline-hidden transition-[margin,opacity] duration-200 ease-linear focus-visible:ring-2 [&amp;&gt;svg]:size-4 [&amp;&gt;svg]:shrink-0 group-data-[collapsible=icon]:-mt-8 group-data-[collapsible=icon]:opacity-0 h-9 pr-10 text-muted-foreground">Conversations</div>
+<button type="button" aria-label="Search conversations" aria-expanded="false" aria-controls="id-1" class="sq-xs absolute right-0 top-0 grid size-9 place-items-center text-muted-foreground transition-colors hover:bg-sidebar-accent hover:text-sidebar-accent-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring ">
+<svg stroke="currentColor" fill="none" stroke-width="2" viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round" class="size-4" aria-hidden="true" height="1em" width="1em" xmlns="http://www.w3.org/2000/svg">
+<circle cx="11" cy="11" r="8">
+</circle>
+<line x1="21" y1="21" x2="16.65" y2="16.65">
+</line>
+</svg>
+</button>
+<div id="id-1" inert="" class="sq-xs absolute right-0 top-0 flex h-9 items-center overflow-hidden border border-sidebar-border bg-background transition-[width,opacity] duration-200 focus-within:border-ring focus-within:ring-2 focus-within:ring-ring/25 invisible pointer-events-none w-9 opacity-0">
+<svg stroke="currentColor" fill="none" stroke-width="2" viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round" class="ml-2 size-4 shrink-0 text-muted-foreground" aria-hidden="true" height="1em" width="1em" xmlns="http://www.w3.org/2000/svg">
+<circle cx="11" cy="11" r="8">
+</circle>
+<line x1="21" y1="21" x2="16.65" y2="16.65">
+</line>
+</svg>
+<input aria-label="Search conversations" class="min-w-0 flex-1 bg-transparent px-2 text-label font-normal outline-none placeholder:text-muted-foreground" placeholder="Search your chats" maxlength="200" value="">
+<button type="button" aria-label="Close" class="sq-xs grid size-8 shrink-0 place-items-center text-muted-foreground hover:bg-sidebar-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ring">
+<svg stroke="currentColor" fill="none" stroke-width="2" viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round" class="size-4" aria-hidden="true" height="1em" width="1em" xmlns="http://www.w3.org/2000/svg">
+<line x1="18" y1="6" x2="6" y2="18">
+</line>
+<line x1="6" y1="6" x2="18" y2="18">
+</line>
+</svg>
+</button>
+</div>
+</div>
+<div data-slot="sidebar-group-content" data-sidebar="group-content" class="w-full text-sm">
+<ul data-slot="sidebar-menu" data-sidebar="menu" class="flex w-full min-w-0 flex-col gap-1">
+<li class="px-2 pb-1 pt-3 text-label font-medium text-muted-foreground">Earlier</li>
+<li data-slot="sidebar-menu-item" data-sidebar="menu-item" class="group/menu-item relative">
+<a aria-current="page" data-slot="sidebar-menu-button" data-sidebar="menu-button" data-size="default" data-active="true" data-state="closed" href="/?c=11111111-1111-4111-8111-111111111111&amp;mode=auto&amp;intent=ask" class="peer/menu-button flex w-full items-center gap-2 overflow-hidden p-2 text-left outline-hidden ring-sidebar-ring focus-visible:ring-2 active:bg-sidebar-accent active:text-sidebar-accent-foreground disabled:pointer-events-none disabled:opacity-50 group-has-data-[sidebar=menu-action]/menu-item:pr-8 aria-disabled:pointer-events-none aria-disabled:opacity-50 data-[active=true]:bg-sidebar-accent data-[active=true]:font-medium data-[active=true]:text-sidebar-accent-foreground data-[state=open]:hover:bg-sidebar-accent data-[state=open]:hover:text-sidebar-accent-foreground group-data-[collapsible=icon]:size-8! group-data-[collapsible=icon]:p-2! [&amp;&gt;span:last-child]:truncate [&amp;&gt;svg]:size-4 [&amp;&gt;svg]:shrink-0 data-[state=open]:bg-sidebar-accent hover:bg-sidebar-accent hover:text-sidebar-accent-foreground text-sm rounded-lg sq-xs h-9 px-2 font-medium text-sidebar-foreground/80 transition-colors">
+<span class="min-w-0 flex-1 truncate leading-5">What does Section 37 protect?</span>
+</a>
+</li>
+</ul>
+</div>
+</div>
+</div>
+<div data-slot="sidebar-footer" data-sidebar="footer" class="flex flex-col p-2 mx-2 gap-2 border-t border-sidebar-border/80 px-0 py-3">
+<div class="grid gap-2 px-2 text-xs group-data-[collapsible=icon]:hidden">
+<p class="text-muted-foreground">Guest · bookmarks stay on this browser.</p>
+<div class="flex gap-2">
+<a href="/login?redirect=%2F%3Fc%3D11111111-1111-4111-8111-111111111111" class="sq-sm min-h-9 px-2 py-2 font-semibold text-primary hover:underline">Sign in</a>
+<a href="/signup?redirect=%2F%3Fc%3D11111111-1111-4111-8111-111111111111" class="sq-sm min-h-9 px-2 py-2 font-semibold text-primary hover:underline">Create account</a>
+</div>
+</div>
+<ul data-slot="sidebar-menu" data-sidebar="menu" class="flex w-full min-w-0 flex-col gap-1">
+<li data-slot="sidebar-menu-item" data-sidebar="menu-item" class="group/menu-item relative">
+<button data-slot="dropdown-menu-trigger" data-sidebar="menu-button" data-size="default" data-active="false" class="peer/menu-button flex w-full items-center gap-2 overflow-hidden p-2 text-left outline-hidden ring-sidebar-ring transition-[width,height,padding] focus-visible:ring-2 active:bg-sidebar-accent active:text-sidebar-accent-foreground disabled:pointer-events-none disabled:opacity-50 group-has-data-[sidebar=menu-action]/menu-item:pr-8 aria-disabled:pointer-events-none aria-disabled:opacity-50 data-[active=true]:bg-sidebar-accent data-[active=true]:font-medium data-[active=true]:text-sidebar-accent-foreground data-[state=open]:hover:bg-sidebar-accent data-[state=open]:hover:text-sidebar-accent-foreground group-data-[collapsible=icon]:size-8! group-data-[collapsible=icon]:p-2! [&amp;&gt;span:last-child]:truncate [&amp;&gt;svg]:size-4 [&amp;&gt;svg]:shrink-0 data-[state=open]:bg-sidebar-accent hover:bg-sidebar-accent hover:text-sidebar-accent-foreground h-8 text-sm rounded-lg" data-testid="theme-button" type="button" id="radix-id-2" aria-haspopup="menu" aria-expanded="false" data-state="closed">
+<svg stroke="currentColor" fill="none" stroke-width="2" viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round" class="size-4 text-muted-foreground" height="1em" width="1em" xmlns="http://www.w3.org/2000/svg">
+<circle cx="12" cy="12" r="5">
+</circle>
+<line x1="12" y1="1" x2="12" y2="3">
+</line>
+<line x1="12" y1="21" x2="12" y2="23">
+</line>
+<line x1="4.22" y1="4.22" x2="5.64" y2="5.64">
+</line>
+<line x1="18.36" y1="18.36" x2="19.78" y2="19.78">
+</line>
+<line x1="1" y1="12" x2="3" y2="12">
+</line>
+<line x1="21" y1="12" x2="23" y2="12">
+</line>
+<line x1="4.22" y1="19.78" x2="5.64" y2="18.36">
+</line>
+<line x1="18.36" y1="5.64" x2="19.78" y2="4.22">
+</line>
+</svg>
+<span>Appearance</span>
+<span class="sr-only">Toggle theme</span>
+</button>
+</li>
+</ul>
+</div>
+</div>
+</div>
+</div>
+<main data-slot="sidebar-inset" class="relative flex w-full flex-1 flex-col md:peer-data-[variant=inset]:m-2 md:peer-data-[variant=inset]:ml-0 md:peer-data-[variant=inset]:rounded-xl md:peer-data-[variant=inset]:shadow-sm md:peer-data-[variant=inset]:peer-data-[state=collapsed]:ml-2 min-h-svh bg-background">
+<header class="sticky top-0 z-30 flex h-16 shrink-0 items-center gap-3 border-b border-border/80 bg-background/85 px-4 backdrop-blur-xl sm:px-6">
+<button data-slot="sidebar-trigger" class="inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium transition-all disabled:pointer-events-none disabled:opacity-50 [&amp;_svg]:pointer-events-none [&amp;_svg:not([class*='size-'])]:size-4 shrink-0 [&amp;_svg]:shrink-0 outline-none focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive hover:bg-accent hover:text-accent-foreground dark:hover:bg-accent/50 size-7 -ml-1 text-muted-foreground" data-sidebar="trigger">
+<svg stroke="currentColor" fill="none" stroke-width="2" viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round" height="1em" width="1em" xmlns="http://www.w3.org/2000/svg">
+<rect x="3" y="3" width="18" height="18" rx="2" ry="2">
+</rect>
+<line x1="9" y1="3" x2="9" y2="21">
+</line>
+</svg>
+<span class="sr-only">Collapse Sidebar</span>
+</button>
+<div class="min-w-0 flex-1 md:hidden [&amp;&gt;a]:flex">
+<a aria-label="constitution.ng home" class="sq-md inline-flex min-w-0 items-center focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-ring/25 active" href="/" data-status="active" aria-current="page">
+<span class="flex min-w-0 items-center">
+<svg viewBox="0 0 1594 197" aria-hidden="true" class="h-[1.375rem] w-auto shrink-0 max-w-full">
+<path class="fill-brand" d="M87.31 40.21C76.13 21.64 52.04 10.5 22.28 10.5L14.88 10.5A14.86 14.86 0 0 0 0.02 25.36L0.02 125.64A14.86 14.86 0 0 0 14.88 140.5L22.31 140.5L14.34 170.21L49.76 140.5L34.93 140.5C61.12 140.5 73.34 143.1 87.31 153.5ZM105.88 40.21C117.05 21.64 141.14 10.5 170.91 10.5L178.31 10.5A14.86 14.86 0 0 1 193.16 25.36L193.16 125.64A14.86 14.86 0 0 1 178.31 140.5L158.25 140.5C132.06 140.5 119.84 143.1 105.88 153.5Z">
+</path>
+<path class="fill-foreground" d="M342.44 53.45A51.5 51.5 0 1 0 342.44 127.55L328.37 112.98A30.5 32 0 1 1 328.37 68.02ZM456.44 90.5A51.5 51.5 0 0 0 353.44 90.5A51.5 51.5 0 0 0 456.44 90.5ZM435.44 90.5A30.5 32 0 0 1 374.44 90.5A30.5 32 0 0 1 435.44 90.5ZM478.44 140.5L498.44 140.5L498.44 40.5L478.44 40.5ZM566.44 83A44 44 0 0 0 478.44 83L498.44 83A24 25.5 0 0 1 546.44 83ZM546.44 140.5L566.44 140.5L566.44 83L546.44 83ZM652.26 53.58A35.28 29.16 0 1 0 607.36 94.8L627.45 102.19A14.11 11.66 0 1 1 609.49 118.67L591.15 127.42A35.28 29.16 0 1 0 636.06 86.2L615.97 78.81A14.11 11.66 0 1 1 633.93 62.33ZM682.98 102L702.98 102L702.98 12.5L682.98 12.5ZM682.98 102A40 40 0 0 0 722.98 142L722.98 123.5A20 21.5 0 0 1 702.98 102ZM722.98 142L732.98 142L736.98 123.5L722.98 123.5ZM667.98 57.5L728.98 57.5L728.98 40.5L667.98 40.5ZM753.48 140.5L773.48 140.5L773.48 40.5L753.48 40.5ZM775.98 12.5A12.5 12.5 0 0 0 750.98 12.5A12.5 12.5 0 0 0 775.98 12.5ZM806.98 102L826.98 102L826.98 12.5L806.98 12.5ZM806.98 102A40 40 0 0 0 846.98 142L846.98 123.5A20 21.5 0 0 1 826.98 102ZM846.98 142L856.98 142L860.98 123.5L846.98 123.5ZM791.98 57.5L852.98 57.5L852.98 40.5L791.98 40.5ZM961.98 40.5L941.98 40.5L941.98 140.5L961.98 140.5ZM873.98 98A44 44 0 0 0 961.98 98L941.98 98A24 25.5 0 0 1 893.98 98ZM893.98 40.5L873.98 40.5L873.98 98L893.98 98ZM992.98 102L1012.98 102L1012.98 12.5L992.98 12.5ZM992.98 102A40 40 0 0 0 1032.98 142L1032.98 123.5A20 21.5 0 0 1 1012.98 102ZM1032.98 142L1042.98 142L1046.98 123.5L1032.98 123.5ZM977.98 57.5L1038.98 57.5L1038.98 40.5L977.98 40.5ZM1063.48 140.5L1083.48 140.5L1083.48 40.5L1063.48 40.5ZM1085.98 12.5A12.5 12.5 0 0 0 1060.98 12.5A12.5 12.5 0 0 0 1085.98 12.5ZM1210.98 90.5A51.5 51.5 0 0 0 1107.98 90.5A51.5 51.5 0 0 0 1210.98 90.5ZM1189.98 90.5A30.5 32 0 0 1 1128.98 90.5A30.5 32 0 0 1 1189.98 90.5ZM1232.98 140.5L1252.98 140.5L1252.98 40.5L1232.98 40.5ZM1320.98 83A44 44 0 0 0 1232.98 83L1252.98 83A24 25.5 0 0 1 1300.98 83ZM1300.98 140.5L1320.98 140.5L1320.98 83L1300.98 83ZM1362.98 129.5A12.5 12.5 0 0 0 1337.98 129.5A12.5 12.5 0 0 0 1362.98 129.5ZM1381.98 140.5L1401.98 140.5L1401.98 40.5L1381.98 40.5ZM1469.98 83A44 44 0 0 0 1381.98 83L1401.98 83A24 25.5 0 0 1 1449.98 83ZM1449.98 140.5L1469.98 140.5L1469.98 83L1449.98 83ZM1593.98 90.5A51.5 51.5 0 0 0 1490.98 90.5A51.5 51.5 0 0 0 1593.98 90.5ZM1572.98 90.5A30.5 32 0 0 1 1511.98 90.5A30.5 32 0 0 1 1572.98 90.5ZM1573.98 157L1593.98 157L1593.98 40.5L1573.98 40.5ZM1517.73 173.91A40 40 0 0 0 1593.98 157L1573.98 157A20 21.5 0 0 1 1535.63 165.56Z">
+</path>
+</svg>
+</span>
+</a>
+</div>
+<div class="hidden min-w-0 items-center gap-2 text-xs font-semibold text-muted-foreground lg:flex">
+<span>Explore published laws</span>
+<span aria-hidden="true" class="sq-xs size-1.5 bg-primary">
+</span>
+<span>Every answer shows its source</span>
+</div>
+<div class="ml-auto flex shrink-0 items-center gap-1.5">
+<button class="sq-sm items-center justify-center gap-2 font-semibold transition duration-200 focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-ring/25 disabled:pointer-events-none disabled:opacity-50 border border-transparent bg-transparent text-muted-foreground hover:bg-secondary hover:text-foreground min-h-9 px-3 py-2 text-xs hidden sm:inline-flex" aria-label="New conversation" type="button">
+<svg stroke="currentColor" fill="none" stroke-width="2" viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round" class="size-4" aria-hidden="true" height="1em" width="1em" xmlns="http://www.w3.org/2000/svg">
+<path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z">
+</path>
+</svg>
+<span>New</span>
+</button>
+<a href="/?intent=find" class="sq-sm items-center justify-center gap-2 font-semibold transition duration-200 focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-ring/25 disabled:pointer-events-none disabled:opacity-50 border border-transparent bg-transparent text-muted-foreground hover:bg-secondary hover:text-foreground min-h-9 py-2 text-xs hidden px-3 md:inline-flex">
+<svg stroke="currentColor" fill="none" stroke-width="2" viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round" class="size-4" aria-hidden="true" height="1em" width="1em" xmlns="http://www.w3.org/2000/svg">
+<circle cx="11" cy="11" r="8">
+</circle>
+<line x1="21" y1="21" x2="16.65" y2="16.65">
+</line>
+</svg>Find a section</a>
+<button class="sq-sm inline-flex items-center justify-center font-semibold transition duration-200 focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-ring/25 disabled:pointer-events-none disabled:opacity-50 border border-transparent bg-transparent text-muted-foreground hover:bg-secondary hover:text-foreground min-h-9 py-2 text-xs min-w-10 gap-1.5 px-2" aria-label="Language: English" data-testid="language-menu" type="button" id="radix-id-3" aria-haspopup="menu" aria-expanded="false" data-state="closed" data-slot="dropdown-menu-trigger">
+<svg stroke="currentColor" fill="none" stroke-width="2" viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" class="size-4" height="1em" width="1em" xmlns="http://www.w3.org/2000/svg">
+<circle cx="12" cy="12" r="10">
+</circle>
+<line x1="2" y1="12" x2="22" y2="12">
+</line>
+<path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z">
+</path>
+</svg>
+<span aria-hidden="true" class="hidden text-label uppercase sm:inline">en</span>
+</button>
+<div class="hidden sm:block">
+<div class="flex items-center justify-center">
+<button data-slot="dropdown-menu-trigger" class="inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium transition-all disabled:pointer-events-none disabled:opacity-50 [&amp;_svg]:pointer-events-none [&amp;_svg:not([class*='size-'])]:size-4 shrink-0 [&amp;_svg]:shrink-0 outline-none focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive border bg-background shadow-xs hover:bg-accent hover:text-accent-foreground dark:bg-input/30 dark:border-input dark:hover:bg-input/50 size-9" data-testid="theme-button" type="button" id="radix-id-4" aria-haspopup="menu" aria-expanded="false" data-state="closed">
+<svg stroke="currentColor" fill="none" stroke-width="2" viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round" class="h-[1.2rem] w-[1.2rem] rotate-0 scale-100 transition-all dark:-rotate-90 dark:scale-0" height="1em" width="1em" xmlns="http://www.w3.org/2000/svg">
+<circle cx="12" cy="12" r="5">
+</circle>
+<line x1="12" y1="1" x2="12" y2="3">
+</line>
+<line x1="12" y1="21" x2="12" y2="23">
+</line>
+<line x1="4.22" y1="4.22" x2="5.64" y2="5.64">
+</line>
+<line x1="18.36" y1="18.36" x2="19.78" y2="19.78">
+</line>
+<line x1="1" y1="12" x2="3" y2="12">
+</line>
+<line x1="21" y1="12" x2="23" y2="12">
+</line>
+<line x1="4.22" y1="19.78" x2="5.64" y2="18.36">
+</line>
+<line x1="18.36" y1="5.64" x2="19.78" y2="4.22">
+</line>
+</svg>
+<svg stroke="currentColor" fill="none" stroke-width="2" viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round" class="absolute h-[1.2rem] w-[1.2rem] rotate-90 scale-0 transition-all dark:rotate-0 dark:scale-100" height="1em" width="1em" xmlns="http://www.w3.org/2000/svg">
+<path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z">
+</path>
+</svg>
+<span class="sr-only">Toggle theme</span>
+</button>
+</div>
+</div>
+<a aria-label="Open settings" href="/settings" class="sq-sm inline-flex items-center justify-center gap-2 font-semibold transition duration-200 focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-ring/25 disabled:pointer-events-none disabled:opacity-50 border border-transparent bg-transparent text-muted-foreground hover:bg-secondary hover:text-foreground min-h-9 py-2 text-xs size-10 px-0">
+<svg stroke="currentColor" fill="none" stroke-width="2" viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round" class="size-4" aria-hidden="true" height="1em" width="1em" xmlns="http://www.w3.org/2000/svg">
+<circle cx="12" cy="12" r="3">
+</circle>
+<path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z">
+</path>
+</svg>
+<span class="sr-only">Settings</span>
+</a>
+</div>
+</header>
+<main class="min-h-0 flex-1 overflow-hidden">
+<div>
+<div dir="ltr" data-orientation="horizontal" data-slot="tabs" class="flex-col gap-2 block">
+<div class="mx-auto w-full max-w-4xl px-4 pt-5 sm:px-8 lg:px-12">
+<div role="tablist" aria-orientation="horizontal" data-slot="tabs-list" class="bg-muted text-muted-foreground inline-flex w-fit items-center justify-center rounded-lg p-[3px] sq-md h-11" aria-label="Choose a task" tabindex="0" data-orientation="horizontal" style="outline: none;">
+<button type="button" role="tab" aria-selected="true" aria-controls="radix-id-5-content-ask" data-state="active" id="radix-id-5-trigger-ask" data-slot="tabs-trigger" class="data-[state=active]:bg-background dark:data-[state=active]:text-foreground focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:outline-ring dark:data-[state=active]:border-input dark:data-[state=active]:bg-input/30 text-foreground dark:text-muted-foreground inline-flex h-[calc(100%-1px)] flex-1 items-center justify-center gap-1.5 rounded-md border border-transparent py-1 text-sm font-medium whitespace-nowrap transition-[color,box-shadow] focus-visible:ring-[3px] focus-visible:outline-1 disabled:pointer-events-none disabled:opacity-50 data-[state=active]:shadow-sm [&amp;_svg]:pointer-events-none [&amp;_svg]:shrink-0 [&amp;_svg:not([class*='size-'])]:size-4 sq-sm min-h-9 px-4" tabindex="-1" data-orientation="horizontal" data-radix-collection-item="">Ask a question</button>
+<button type="button" role="tab" aria-selected="false" aria-controls="radix-id-5-content-find" data-state="inactive" id="radix-id-5-trigger-find" data-slot="tabs-trigger" class="data-[state=active]:bg-background dark:data-[state=active]:text-foreground focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:outline-ring dark:data-[state=active]:border-input dark:data-[state=active]:bg-input/30 text-foreground dark:text-muted-foreground inline-flex h-[calc(100%-1px)] flex-1 items-center justify-center gap-1.5 rounded-md border border-transparent py-1 text-sm font-medium whitespace-nowrap transition-[color,box-shadow] focus-visible:ring-[3px] focus-visible:outline-1 disabled:pointer-events-none disabled:opacity-50 data-[state=active]:shadow-sm [&amp;_svg]:pointer-events-none [&amp;_svg]:shrink-0 [&amp;_svg:not([class*='size-'])]:size-4 sq-sm min-h-9 px-4" tabindex="-1" data-orientation="horizontal" data-radix-collection-item="">Find a section</button>
+</div>
+</div>
+<div data-state="active" data-orientation="horizontal" role="tabpanel" aria-labelledby="radix-id-5-trigger-ask" id="radix-id-5-content-ask" tabindex="0" data-slot="tabs-content" class="flex-1 outline-none" style="">
+<div class="grid">
+<section class="mx-auto flex min-h-[calc(100svh-4rem)] w-full max-w-4xl flex-col px-4 py-7 sm:px-8 lg:px-12">
+<div class="mb-6 flex flex-wrap items-center justify-between gap-3 border-b border-border pb-4">
+<div>
+<h1 class="font-display text-title-3">What does Section 37 protect?</h1>
+<p class="mt-1 text-label font-normal text-muted-foreground">1999 Constitution (2004 edition)</p>
+</div>
+<div class="flex gap-1">
+<button class="sq-sm inline-flex items-center justify-center gap-2 font-semibold transition duration-200 focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-ring/25 disabled:pointer-events-none disabled:opacity-50 border border-transparent bg-transparent text-muted-foreground hover:bg-secondary hover:text-foreground min-h-9 px-3 py-2 text-xs" type="button">Export chat</button>
+<button class="sq-sm inline-flex items-center justify-center gap-2 font-semibold transition duration-200 focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-ring/25 disabled:pointer-events-none disabled:opacity-50 border border-transparent bg-transparent text-muted-foreground hover:bg-secondary hover:text-foreground min-h-9 px-3 py-2 text-xs" type="button">Rename</button>
+<button class="sq-sm inline-flex items-center justify-center gap-2 font-semibold transition duration-200 focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-ring/25 disabled:pointer-events-none disabled:opacity-50 border border-transparent bg-transparent text-muted-foreground hover:bg-secondary hover:text-foreground min-h-9 px-3 py-2 text-xs" type="button">Delete</button>
+</div>
+</div>
+<div class="grid flex-1 content-start gap-6">
+<div class="ml-auto max-w-[90%] sq-lg bg-secondary px-4 py-3 text-body">What does Section 37 protect?</div>
+<div data-answer-start="" class="scroll-mt-24">
+<section aria-label="Answer" class="grid gap-5">
+<div class="sq-lg border border-border bg-card p-5 sm:p-6">
+<div class="grid gap-5" lang="en">
+<div>
+<div class="grid gap-2">
+<p class="text-body-lg text-foreground">The Constitution protects privacy in homes and communications.</p>
+</div>
+<div class="mt-2 flex flex-wrap gap-2 empty:hidden">
+<button class="sq-sm min-h-11 border border-primary/25 px-3 py-2 text-label text-primary hover:bg-primary/5 focus-visible:ring-2 focus-visible:ring-ring" aria-label="Section 37" type="button">Section 37</button>
+</div>
+</div>
+<div>
+<div class="grid gap-2">
+<ul class="ml-5 grid list-disc gap-1 text-body">
+<li>Homes</li>
+<li>Correspondence</li>
+<li>Telephone conversations</li>
+</ul>
+</div>
+<div class="mt-2 flex flex-wrap gap-2 empty:hidden">
+</div>
+</div>
+</div>
+<div class="mt-6 border-t border-border pt-4">
+<h3 class="text-body font-semibold">The answer may depend on</h3>
+<ul class="mt-2 ml-5 grid list-disc gap-1 text-body">
+<li>Whether a court order was obtained.</li>
+</ul>
+</div>
+<p class="flex gap-2 text-label font-normal text-muted-foreground mt-5 border-t border-border pt-4">
+<svg stroke="currentColor" fill="none" stroke-width="2" viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" class="mt-0.5 size-4 shrink-0" height="1em" width="1em" xmlns="http://www.w3.org/2000/svg">
+<circle cx="12" cy="12" r="10">
+</circle>
+<line x1="12" y1="16" x2="12" y2="12">
+</line>
+<line x1="12" y1="8" x2="12.01" y2="8">
+</line>
+</svg>
+<span class="whitespace-pre-line">This is the 1999 Constitution as published in 2004. Later amendments aren't included yet, so a section may have changed since.</span>
+</p>
+</div>
+<fieldset class="flex flex-wrap gap-2" aria-label="Answer actions">
+<button class="sq-sm inline-flex min-h-10 items-center gap-2 border border-primary/20 bg-accent px-3 py-2 text-xs font-semibold text-accent-foreground transition hover:border-primary/40 hover:bg-primary hover:text-primary-foreground focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-ring/25" type="button">Copy answer with citations<svg stroke="currentColor" fill="none" stroke-width="2" viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round" class="size-3.5" aria-hidden="true" height="1em" width="1em" xmlns="http://www.w3.org/2000/svg">
+<line x1="5" y1="12" x2="19" y2="12">
+</line>
+<polyline points="12 5 19 12 12 19">
+</polyline>
+</svg>
+</button>
+<button class="sq-sm inline-flex min-h-10 items-center gap-2 border border-primary/20 bg-accent px-3 py-2 text-xs font-semibold text-accent-foreground transition hover:border-primary/40 hover:bg-primary hover:text-primary-foreground focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-ring/25" type="button">Save sources<svg stroke="currentColor" fill="none" stroke-width="2" viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round" class="size-3.5" aria-hidden="true" height="1em" width="1em" xmlns="http://www.w3.org/2000/svg">
+<line x1="5" y1="12" x2="19" y2="12">
+</line>
+<polyline points="12 5 19 12 12 19">
+</polyline>
+</svg>
+</button>
+<button class="sq-sm inline-flex min-h-10 items-center gap-2 border border-primary/20 bg-accent px-3 py-2 text-xs font-semibold text-accent-foreground transition hover:border-primary/40 hover:bg-primary hover:text-primary-foreground focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-ring/25" type="button">Export answer<svg stroke="currentColor" fill="none" stroke-width="2" viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round" class="size-3.5" aria-hidden="true" height="1em" width="1em" xmlns="http://www.w3.org/2000/svg">
+<line x1="5" y1="12" x2="19" y2="12">
+</line>
+<polyline points="12 5 19 12 12 19">
+</polyline>
+</svg>
+</button>
+</fieldset>
+<section aria-label="Sections used" class="grid gap-3">
+<h3 class="text-overline uppercase text-muted-foreground">Sections used</h3>
+<div class="grid gap-3">
+<button aria-label="Open Section 37 source" class="sq-md grid gap-1 border border-border bg-card p-4 text-left hover:border-primary focus-visible:ring-2 focus-visible:ring-ring" type="button">
+<span class="text-label text-primary">Section 37</span>
+<span lang="en" class="hidden font-legal text-statute-sm text-muted-foreground sm:line-clamp-2">The privacy of citizens, their homes, correspondence, telephone conversations and telegraphic communications is hereby guaranteed and protected.</span>
+</button>
+</div>
+</section>
+<section aria-label="Suggested questions" class="grid gap-3">
+<h3 class="text-overline uppercase text-muted-foreground">You might also ask</h3>
+<div class="flex flex-wrap gap-2">
+<button class="sq-sm border border-border bg-card/60 px-3 py-2 text-left text-xs font-medium text-muted-foreground transition hover:border-primary/30 hover:bg-accent hover:text-accent-foreground focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-ring/25" type="button">Can the police search my phone?</button>
+</div>
+</section>
+</section>
+<fieldset aria-label="Answer feedback" class="mt-3 flex flex-wrap items-center gap-2 text-sm text-muted-foreground">
+<span>Was this useful?</span>
+<button class="sq-sm inline-flex min-h-10 items-center gap-2 border border-primary/20 bg-accent px-3 py-2 text-xs font-semibold text-accent-foreground transition hover:border-primary/40 hover:bg-primary hover:text-primary-foreground focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-ring/25" type="button" aria-pressed="false">Helpful<svg stroke="currentColor" fill="none" stroke-width="2" viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round" class="size-3.5" aria-hidden="true" height="1em" width="1em" xmlns="http://www.w3.org/2000/svg">
+<line x1="5" y1="12" x2="19" y2="12">
+</line>
+<polyline points="12 5 19 12 12 19">
+</polyline>
+</svg>
+</button>
+<button class="sq-sm inline-flex min-h-10 items-center gap-2 border border-primary/20 bg-accent px-3 py-2 text-xs font-semibold text-accent-foreground transition hover:border-primary/40 hover:bg-primary hover:text-primary-foreground focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-ring/25" type="button" aria-pressed="false">Not helpful<svg stroke="currentColor" fill="none" stroke-width="2" viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round" class="size-3.5" aria-hidden="true" height="1em" width="1em" xmlns="http://www.w3.org/2000/svg">
+<line x1="5" y1="12" x2="19" y2="12">
+</line>
+<polyline points="12 5 19 12 12 19">
+</polyline>
+</svg>
+</button>
+</fieldset>
+</div>
+</div>
+<div class="sticky bottom-0 mt-8 bg-background/95 pb-5 pt-3 backdrop-blur">
+<div class="sq-lg border border-border bg-card p-3 shadow-[var(--shadow-subtle)] transition-[border-color,box-shadow] duration-200 sm:p-3.5 focus-within:border-primary/35 focus-within:ring-[3px] focus-within:ring-ring/10">
+<textarea data-chat-composer="true" aria-label="Your question" aria-describedby="id-6" class="block w-full resize-none bg-transparent px-2 py-2 text-body-lg text-foreground outline-none [overflow-wrap:anywhere] placeholder:text-muted-foreground min-h-11" maxlength="2000" placeholder="Ask about Nigeria's Constitution and published laws…" style="height: 72px;">
+</textarea>
+<div class="mt-2 flex items-end justify-between gap-3">
+<div class="flex min-w-0 flex-wrap items-center gap-x-3 gap-y-1 self-center px-2">
+<span class="inline-flex max-w-full items-center gap-2 py-1 text-label font-medium text-muted-foreground [overflow-wrap:anywhere]">
+<svg stroke="currentColor" fill="none" stroke-width="2" viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round" class="size-4 shrink-0" aria-hidden="true" height="1em" width="1em" xmlns="http://www.w3.org/2000/svg">
+<path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z">
+</path>
+<path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z">
+</path>
+</svg>
+<span>Answers in plain English</span>
+</span>
+<span class="text-label font-normal text-muted-foreground [overflow-wrap:anywhere]">1999 Constitution (2004 edition)</span>
+</div>
+<button class="sq-sm inline-flex items-center justify-center gap-2 font-semibold transition duration-200 focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-ring/25 disabled:pointer-events-none border border-primary bg-primary text-primary-foreground shadow-[var(--shadow-subtle)] hover:bg-[color:var(--legal-emerald-ink)] min-h-11 py-2.5 text-sm sq-sm size-11 shrink-0 px-0 shadow-none enabled:active:scale-95 disabled:border-border disabled:bg-secondary disabled:text-muted-foreground disabled:opacity-100" disabled="" aria-label="Send question" type="button">
+<svg stroke="currentColor" fill="none" stroke-width="2.4" viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round" class="size-5" aria-hidden="true" height="1em" width="1em" xmlns="http://www.w3.org/2000/svg">
+<line x1="12" y1="19" x2="12" y2="5">
+</line>
+<polyline points="5 12 12 5 19 12">
+</polyline>
+</svg>
+</button>
+</div>
+<div id="id-6" class="mt-2 flex justify-between gap-3 px-2 text-label font-normal text-muted-foreground">
+<span>Enter to send · Shift+Enter for a new line</span>
+<span class="shrink-0 tabular-nums" aria-live="off">0/2,000</span>
+</div>
+</div>
+<p class="mt-3 text-label font-normal text-muted-foreground">Answers explain published laws in plain language and can miss details. Check the sections they link to, and talk to a lawyer about your own situation.</p>
+</div>
+</section>
+</div>
+</div>
+</div>
+</div>
+</main>
+</main>
+</div>
+<section aria-label="Notifications alt+T" tabindex="-1" aria-live="polite" aria-relevant="additions text" aria-atomic="false">
+</section>
+</div>
+    
+  
+
