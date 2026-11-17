@@ -191,14 +191,20 @@ def evidence_item(
 def _missing_reference_message(
     corpus: PublicCorpus, reference: SectionReference
 ) -> str:
-    if reference.instrument_slug not in {
-        instrument.slug for instrument in corpus.instruments.values()
-    }:
+    instrument = next(
+        (
+            item
+            for item in corpus.instruments.values()
+            if item.slug == reference.instrument_slug
+        ),
+        None,
+    )
+    if instrument is None:
         return f"{instrument_label(reference.instrument_slug)} isn't included in this published edition."
     label = (
         "the Constitution"
         if reference.instrument_slug == CONSTITUTION_SLUG
-        else instrument_label(reference.instrument_slug)
+        else instrument.short_title or instrument.title
     )
     return f"This section isn't in this edition of {label}."
 

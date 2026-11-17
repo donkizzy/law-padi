@@ -1,0 +1,174 @@
+{
+  "source": {
+    "note": "Names by which readers, answers and source text cite each instrument. Recognising a name never grants access: a citation resolves only when the selected published release includes the instrument. Each instrument is recognised by its title and label with any trailing year removed, and by its aliases. Punctuation, apostrophes and brackets in a name are optional when matching, and whitespace may vary.",
+    "label": "The label is how a citation names the instrument, as in 'Section 84, Evidence Act 2011'. It matches the instrument's published short title, so qualified citations agree with the corpus.",
+    "years": "A year written after a name must be one of these, otherwise the citation is reported as unrecognised or conflicting. Laws consolidated in the Laws of the Federation 2004 also accept 2004."
+  },
+  "instruments": {
+    "constitution-1999": {
+      "title": "Constitution of the Federal Republic of Nigeria 1999",
+      "label": "Constitution",
+      "years": ["1999"],
+      "aliases": [
+        "1999 Constitution of the Federal Republic of Nigeria",
+        "1999 Constitution"
+      ]
+    },
+    "acja-2015": {
+      "title": "Administration of Criminal Justice Act 2015",
+      "label": "ACJA 2015",
+      "years": ["2015"],
+      "aliases": ["ACJ Act"]
+    },
+    "banks-and-other-financial-institutions-act-2020": {
+      "title": "Banks and Other Financial Institutions Act 2020",
+      "label": "BOFIA 2020",
+      "years": ["2020"],
+      "aliases": []
+    },
+    "childs-rights-act-2003": {
+      "title": "Child's Rights Act 2003",
+      "label": "Child's Rights Act 2003",
+      "years": ["2003"],
+      "aliases": ["Child Rights Act"]
+    },
+    "copyright-act-2022": {
+      "title": "Copyright Act 2022",
+      "label": "Copyright Act 2022",
+      "years": ["2022"],
+      "aliases": []
+    },
+    "criminal-code-act": {
+      "title": "Criminal Code Act",
+      "label": "Criminal Code Act",
+      "years": ["1916", "2004"],
+      "aliases": ["Criminal Code"]
+    },
+    "cybercrimes-prohibition-prevention-etc-act-2015": {
+      "title": "Cybercrimes (Prohibition, Prevention, etc.) Act 2015",
+      "label": "Cybercrimes Act 2015",
+      "years": ["2015"],
+      "aliases": []
+    },
+    "cybercrimes-prohibition-prevention-etc-amendment-act-2024": {
+      "title": "Cybercrimes (Prohibition, Prevention, etc.) (Amendment) Act 2024",
+      "label": "Cybercrimes (Amendment) Act 2024",
+      "years": ["2024"],
+      "aliases": []
+    },
+    "employees-compensation-act-2010": {
+      "title": "Employees' Compensation Act 2010",
+      "label": "Employees' Compensation Act 2010",
+      "years": ["2010"],
+      "aliases": []
+    },
+    "evidence-act-2011": {
+      "title": "Evidence Act 2011",
+      "label": "Evidence Act 2011",
+      "years": ["2011"],
+      "aliases": []
+    },
+    "federal-competition-and-consumer-protection-act-2018": {
+      "title": "Federal Competition and Consumer Protection Act 2018",
+      "label": "Federal Competition and Consumer Protection Act 2018",
+      "years": ["2018"],
+      "aliases": ["FCCPA"]
+    },
+    "fundamental-rights-enforcement-procedure-rules-2009": {
+      "title": "Fundamental Rights (Enforcement Procedure) Rules 2009",
+      "label": "FREP Rules 2009",
+      "years": ["2009"],
+      "aliases": []
+    },
+    "investments-and-securities-act-2025": {
+      "title": "Investments and Securities Act 2025",
+      "label": "Investments and Securities Act 2025",
+      "years": ["2025"],
+      "aliases": []
+    },
+    "joint-revenue-board-of-nigeria-establishment-act-2025": {
+      "title": "Joint Revenue Board of Nigeria (Establishment) Act 2025",
+      "label": "Joint Revenue Board Act 2025",
+      "years": ["2025"],
+      "aliases": ["JRB Act"]
+    },
+    "labour-act": {
+      "title": "Labour Act",
+      "label": "Labour Act",
+      "years": ["1974", "2004"],
+      "aliases": []
+    },
+    "land-use-act-1978": {
+      "title": "Land Use Act 1978",
+      "label": "Land Use Act",
+      "years": ["1978", "2004"],
+      "aliases": []
+    },
+    "marriage-act": {
+      "title": "Marriage Act",
+      "label": "Marriage Act",
+      "years": ["1914", "2004"],
+      "aliases": []
+    },
+    "money-laundering-prevention-and-prohibition-act-2022": {
+      "title": "Money Laundering (Prevention and Prohibition) Act 2022",
+      "label": "Money Laundering (Prevention and Prohibition) Act 2022",
+      "years": ["2022"],
+      "aliases": ["Money Laundering Act"]
+    },
+    "national-minimum-wage-act-2019": {
+      "title": "National Minimum Wage Act 2019",
+      "label": "National Minimum Wage Act 2019",
+      "years": ["2019"],
+      "aliases": []
+    },
+    "national-minimum-wage-amendment-act-2024": {
+      "title": "National Minimum Wage (Amendment) Act 2024",
+      "label": "National Minimum Wage (Amendment) Act 2024",
+      "years": ["2024"],
+      "aliases": []
+    },
+    "nigeria-data-protection-act-2023": {
+      "title": "Nigeria Data Protection Act 2023",
+      "label": "NDPA 2023",
+      "years": ["2023"],
+      "aliases": []
+    },
+    "nigeria-revenue-service-establishment-act-2025": {
+      "title": "Nigeria Revenue Service (Establishment) Act 2025",
+      "label": "NRS Act 2025",
+      "years": ["2025"],
+      "aliases": ["Nigeria Revenue Service Act"]
+    },
+    "nigeria-tax-act-2025": {
+      "title": "Nigeria Tax Act 2025",
+      "label": "Nigeria Tax Act 2025",
+      "years": ["2025"],
+      "aliases": []
+    },
+    "penal-code-act-abuja": {
+      "title": "Penal Code Act (Federal Capital Territory, Abuja)",
+      "label": "Penal Code (FCT)",
+      "years": ["1960"],
+      "aliases": ["Penal Code Act", "Penal Code"]
+    },
+    "police-act-2020": {
+      "title": "Nigeria Police Act 2020",
+      "label": "Police Act 2020",
+      "years": ["2020"],
+      "aliases": ["Nigerian Police Act"]
+    },
+    "terrorism-prevention-and-prohibition-act-2022": {
+      "title": "Terrorism (Prevention and Prohibition) Act 2022",
+      "label": "Terrorism (Prevention and Prohibition) Act 2022",
+      "years": ["2022"],
+      "aliases": ["Terrorism Act"]
+    },
+    "violence-against-persons-prohibition-act-2015": {
+      "title": "Violence Against Persons (Prohibition) Act 2015",
+      "label": "Violence Against Persons (Prohibition) Act 2015",
+      "years": ["2015"],
+      "aliases": ["VAPP Act"]
+    }
+  }
+}

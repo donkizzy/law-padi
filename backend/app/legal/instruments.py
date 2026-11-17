@@ -1,52 +1,93 @@
-"""Recognised citation names, independent of publication or source verification."""
+"""Recognised citation names, independent of publication or source verification.
 
+The names live in ``data/instrument-names.json``. Recognition never grants
+access: canonical lookups still require release entries.
+"""
+
+import json
 import re
 from dataclasses import dataclass
+from functools import cache
+from pathlib import Path
 
 CONSTITUTION_SLUG = "constitution-1999"
 ACJA_SLUG = "acja-2015"
 POLICE_SLUG = "police-act-2020"
 
-# Recognition never grants access: canonical lookups still require release entries.
-INSTRUMENT_NAMES = {
-    CONSTITUTION_SLUG: (
-        "Constitution",
-        "1999",
+NAMES_PATH = Path(__file__).parent / "data" / "instrument-names.json"
+_TRAILING_YEAR = re.compile(r"[\s,]*\b\d{4}$")
+
+
+@dataclass(frozen=True)
+class InstrumentNames:
+    slug: str
+    label: str
+    years: frozenset[str]
+    names: tuple[str, ...]
+
+
+def _strip_year(name: str) -> str:
+    return _TRAILING_YEAR.sub("", " ".join(name.split()))
+
+
+@cache
+def instrument_names() -> dict[str, InstrumentNames]:
+    data = json.loads(NAMES_PATH.read_text(encoding="utf-8"))["instruments"]
+    registry: dict[str, InstrumentNames] = {}
+    for slug, entry in data.items():
+        candidates = [entry["title"], entry["label"], *entry["aliases"]]
+        names = dict.fromkeys(_strip_year(name) for name in candidates)
+        registry[slug] = InstrumentNames(
+            slug=slug,
+            label=entry["label"],
+            years=frozenset(entry["years"]),
+            names=tuple(name for name in names if name),
+        )
+    return registry
+
+
+def _name_pattern(name: str) -> str:
+    """Match a written name with optional punctuation and flexible spacing."""
+    parts: list[str] = []
+    for char in name:
+        if char.isspace():
+            parts.append(r"\s+")
+        elif char in ".,":
+            parts.append(re.escape(char) + "?")
+        elif char in "'’":
+            parts.append("['’]?")
+        elif char == "(":
+            parts.append(r"\(?\s*")
+        elif char == ")":
+            parts.append(r"\s*\)?")
+        else:
+            parts.append(re.escape(char))
+    return "".join(parts).replace(r"\s+\(?", r"\s*\(?")
+
+
+@cache
+def _aliases() -> tuple[tuple[str, re.Pattern[str]], ...]:
+    # Longer names come first, so "Penal Code Act" is never read as
+    # "Penal Code" followed by a stray word.
+    named = sorted(
         (
-            r"(?:1999\s+)?Constitution(?:\s+of\s+the\s+Federal\s+Republic\s+of\s+Nigeria)?",
+            (slug, name)
+            for slug, entry in instrument_names().items()
+            for name in entry.names
         ),
-    ),
-    ACJA_SLUG: (
-        "ACJA 2015",
-        "2015",
-        (
-            r"Administration\s+of\s+Criminal\s+Justice\s+Act",
-            r"ACJ\s+Act",
-            r"ACJA",
-        ),
-    ),
-    POLICE_SLUG: ("Police Act 2020", "2020", (r"(?:Nigerian?\s+)?Police\s+Act",)),
-    "joint-revenue-board-of-nigeria-establishment-act-2025": (
-        "Joint Revenue Board Act 2025",
-        "2025",
-        (
-            r"Joint\s+Revenue\s+Board\s+of\s+Nigeria\s*\(Establishment\)\s+Act",
-            r"Joint\s+Revenue\s+Board\s+Act",
-            r"JRB\s+Act",
-        ),
-    ),
-}
-_ALIASES = [
-    (slug, re.compile(pattern, re.I))
-    for slug, (_, _, aliases) in INSTRUMENT_NAMES.items()
-    for pattern in aliases
-]
-LAW_NAME = re.compile(
-    r"(?<!\w)(?:"
-    + "|".join(pattern.pattern for _, pattern in _ALIASES)
-    + r")(?!\w)(?:\s*,?\s*(?P<year>\d{4})(?!\w))?",
-    re.I,
-)
+        key=lambda item: -len(item[1]),
+    )
+    return tuple((slug, re.compile(_name_pattern(name), re.I)) for slug, name in named)
+
+
+@cache
+def _law_name() -> re.Pattern[str]:
+    return re.compile(
+        r"(?<!\w)(?:"
+        + "|".join(pattern.pattern for _, pattern in _aliases())
+        + r")(?!\w)(?:\s*,?\s*(?P<year>\d{4})(?!\w))?",
+        re.I,
+    )
 
 
 @dataclass(frozen=True)
@@ -58,24 +99,27 @@ class LawMention:
 
 
 def law_mentions(text: str) -> list[LawMention]:
+    registry = instrument_names()
     result = []
-    for match in LAW_NAME.finditer(text):
+    for match in _law_name().finditer(text):
         name = (
             text[match.start() : match.start("year")].rstrip(" ,\t\r\n")
             if match.group("year")
             else match.group()
         )
-        slug = next(slug for slug, alias in _ALIASES if alias.fullmatch(name))
+        slug = next(slug for slug, alias in _aliases() if alias.fullmatch(name))
+        year = match.group("year")
         result.append(
             LawMention(
                 match.start(),
                 match.end(),
                 slug,
-                match.group("year") in (None, INSTRUMENT_NAMES[slug][1]),
+                year is None or year in registry[slug].years,
             )
         )
     return result
 
 
 def instrument_label(slug: str) -> str:
-    return INSTRUMENT_NAMES[slug][0] if slug in INSTRUMENT_NAMES else slug
+    entry = instrument_names().get(slug)
+    return entry.label if entry else slug

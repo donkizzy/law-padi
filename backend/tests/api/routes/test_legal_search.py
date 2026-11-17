@@ -126,9 +126,18 @@ def test_citation_lookup_preserves_outcomes_and_deduplicates_evidence(
     assert (
         client.get(
             "/api/v1/legal/provisions/by-citation",
-            params={"citation": "Section 33 of Evidence Act"},
+            params={"citation": "Section 33 of Trade Disputes Act"},
         ).json()["citation_outcomes"][0]["status"]
         == "unsupported"
+    )
+    # A recognised law outside the edition is named, not called unrecognised.
+    outside = client.get(
+        "/api/v1/legal/provisions/by-citation",
+        params={"citation": "Section 84 of the Evidence Act 2011"},
+    ).json()["citation_outcomes"][0]
+    assert outside["status"] == "missing"
+    assert outside["message"] == (
+        "Evidence Act 2011 isn't included in this published edition."
     )
 
 

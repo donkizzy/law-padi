@@ -355,7 +355,7 @@ def test_source_bad_reference_does_not_hide_independent_valid_references() -> No
     from app.legal.references import SectionReference
 
     assert source_crossrefs(
-        "Subject to section 9 of the Evidence Act. Section 37 shall invalidate any law. "
+        "Subject to section 9 of the Trade Disputes Act. Section 37 shall invalidate any law. "
         "See section 35 of this Constitution."
     ) == [SectionReference("37"), SectionReference("35")]
     assert source_crossrefs(

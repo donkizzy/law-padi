@@ -52,7 +52,7 @@ def test_reference_requires_exact_instrument_and_hierarchy(slug: str) -> None:
         "Sections 40-33",
         "Sections 1-21",
         "Section 33(2)-34(2)",
-        "Section 33 of the Evidence Act",
+        "Section 33 of the Trade Disputes Act",
     ],
 )
 def test_unsupported_reference_is_never_silently_truncated(query: str) -> None:
@@ -91,7 +91,7 @@ def test_other_instrument_check_is_scoped_to_citation() -> None:
         "A state law governs the councils, subject to section 8 of this Constitution."
     )
     assert parsed.reference == SectionReference("8")
-    assert parse_section_reference("Section 8 of the Evidence Act").error
+    assert parse_section_reference("Section 8 of the Trade Disputes Act").error
 
 
 def test_prose_mode_ignores_unnumbered_section_mentions() -> None:
@@ -112,7 +112,9 @@ def test_prose_mode_keeps_numeric_citations_without_treating_prose_as_a_list() -
     )
     assert [reference.section for reference in parsed.references] == ["7", "8"]
     assert parsed.error is None
-    assert parse_section_reference("Section 33 of the Evidence Act", prose=True).error
+    assert parse_section_reference(
+        "Section 33 of the Trade Disputes Act", prose=True
+    ).error
     assert parse_section_reference("Section 33(2", prose=True).error
 
 
@@ -183,9 +185,9 @@ def test_jrb_reference_cannot_match_the_constitution(query: str) -> None:
 @pytest.mark.parametrize(
     "query",
     [
-        "Evidence Act s.9",
-        "Section 9, Evidence Act",
-        "s.9 of the Evidence Act",
+        "Trade Disputes Act s.9",
+        "Section 9, Trade Disputes Act",
+        "s.9 of the Trade Disputes Act",
         "Police Act 2015 s.9",
         "s.9 ACJA 2020",
         "ACJA s.9 of Police Act",
