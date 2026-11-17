@@ -109,7 +109,10 @@ minutes without outbound traffic, and a database poll is outbound traffic, so
 app sleeping would never apply. Corpus runs are occasional, so the worker is
 off between them: `WORKER_ENABLED=false` makes `run.sh` exit 0 at once, and
 the `ON_FAILURE` policy leaves it stopped, using no CPU or memory, even when a
-push redeploys it. For a corpus run:
+push redeploys it. Releases are normally built and reviewed locally and copied
+to production ([`ingestion.md`](../../docs/runbooks/ingestion.md),
+[`release.md`](../../docs/runbooks/release.md)); the Railway worker is for a
+run done in production instead. For such a run:
 
 1. In the dashboard, set `WORKER_ENABLED=true` on `ingestion-worker` and deploy
    the staged change. Check its logs for `ingestion worker started`.

@@ -13,14 +13,14 @@ alternatives that were considered are recorded in [`adr/`](adr/README.md).
 
 | Component | Code | Runs as |
 | --- | --- | --- |
-| API | `backend/app/api/`, `backend/app/main.py` | FastAPI. On Render, `backend/app/deployment/render_app.py` wraps it with the chat worker in one process. |
+| API | `backend/app/api/`, `backend/app/main.py` | FastAPI, one Uvicorn process on Railway. Until the Render service is retired, `backend/app/deployment/render_app.py` wraps it with the chat worker in one process there. |
 | Legal domain | `backend/app/legal/` | Library: references, parsers, evidence assembly, public corpus reads, topic guide. |
-| Chat | `backend/app/chat/` | Generation worker, validation, translation, spend ledger, SSE events. |
-| Ingestion | `backend/app/ingestion/`, `services/ingestion-worker/` | Separate worker process with Poppler and Tesseract for PDF rendering and OCR. Not part of the public runtime. |
+| Chat | `backend/app/chat/` | Generation worker (its own Railway service), validation, translation, spend ledger, SSE events. |
+| Ingestion | `backend/app/ingestion/`, `services/ingestion-worker/` | Separate worker process with Poppler and Tesseract for PDF rendering and OCR. Not part of the public runtime; on Railway it runs only during a corpus run. |
 | Reader languages | `backend/app/languages/` | Language detection, normalisation and per-language glossaries. |
 | Frontend | `frontend/src/` | React, TypeScript, Vite, TanStack Router and Query, typed i18n catalogues. |
 | Edge | `deployment/cloudflare/` | Cloudflare Worker: static assets, server-rendered public pages, API proxy, edge cache for public reads. |
-| Database | PostgreSQL 18 with `pgvector` and `btree_gist` | Corpus, retrieval index, conversations, runs, events, spend ledger, accounts. |
+| Database | PostgreSQL 18 with `pgvector` and `btree_gist` | Corpus, retrieval index, conversations, runs, events, spend ledger, accounts. On a Railway volume. |
 | Object storage | `backend/app/ingestion/r2_blob_store.py` | Cloudflare R2 (or a local directory) for source PDFs and ingestion artifacts. |
 
 The backend is a modular monolith: one Python package, one database, several
@@ -334,35 +334,64 @@ open items are in [`plans/accounts.md`](plans/accounts.md).
 ```mermaid
 flowchart LR
   reader([Reader]) --> worker[Cloudflare Worker<br/>assets, public HTML,<br/>edge cache, API proxy]
-  worker -->|/api/v1 with proxy secret| api[Render web service<br/>FastAPI + in-process chat worker]
-  api --> neon[(Neon PostgreSQL<br/>pgvector)]
-  api --> r2[(Cloudflare R2<br/>source PDFs)]
-  api --> llm[DeepSeek<br/>draft, verify, translate]
+  worker -->|/api/v1 with proxy secret| api
+  subgraph railway[Railway project, one region]
+    api[api<br/>FastAPI]
+    chat[chat-worker]
+    ingest[ingestion-worker<br/>on demand]
+    pg[(postgres<br/>PostgreSQL 18 + pgvector<br/>on a volume)]
+    api --> pg
+    chat --> pg
+    ingest --> pg
+  end
+  api --> r2[(Cloudflare R2<br/>source PDFs, backups)]
+  ingest --> r2
+  chat --> llm[DeepSeek<br/>draft, verify, translate]
+  api --> llm
   api --> emb[Hugging Face inference<br/>bge-m3 query embeddings]
+  chat --> emb
 ```
 
 - **Cloudflare Worker** (`deployment/cloudflare/worker.ts`). Serves the built
   frontend, renders public landing, law and provision pages as HTML
   (`public-pages.ts`), and forwards `/api/v1/` to the API with a shared secret.
   It forwards only to an allow-listed HTTPS origin, rejects encoded path
-  separators, strips client forwarding headers, keeps SSE unbuffered, and
-  caches only allow-listed public `GET` reads with cookies and authorisation
-  removed.
-- **Render** (`render.yaml`, `deployment/render/Dockerfile`). One free-plan web
-  service running one ASGI process (`deployment/render/start.sh`). Incoming
-  conversation requests wake the in-process worker; runs, leases, events and
-  reservations survive restarts in PostgreSQL. The API rejects requests without
-  the proxy secret (`backend/app/main.py`).
-- **Neon** holds the database; **R2** holds source PDFs and backups.
-- **Backups.** `deployment/render/backup-*.sh` take a `pg_dump` in a read-only,
-  resource-capped container, compare inventories before and after, upload,
-  read back and verify, and can restore into an isolated container. See
+  separators, replaces client forwarding headers (sending the client address
+  in `X-Origin-Client-IP`), keeps SSE unbuffered, and caches only allow-listed
+  public `GET` reads with cookies and authorisation removed.
+- **Railway** (`deployment/railway/railway.ts`). Four services in one project
+  and region, communicating over the private network:
+  - `api` runs one Uvicorn process. Each deploy first runs
+    `alembic upgrade head` as a pre-deploy command, and traffic moves to the
+    new version only when `/readyz` passes. The API rejects requests without
+    the proxy secret (`backend/app/main.py`), except the health probes read
+    by Railway's deploy health check.
+  - `chat-worker` claims and generates answers; `ingestion-worker` runs
+    ingestion tasks and is switched on only for a corpus run. A watchdog in
+    `deployment/railway/run.sh` restarts either when its heartbeat stops.
+  - `postgres` is PostgreSQL 18 with pgvector on a volume, reachable from
+    outside only through a TLS TCP proxy.
+
+  Runs, leases, events and reservations live in PostgreSQL, so restarting any
+  process loses no work. See [`deployment/railway/README.md`](../deployment/railway/README.md).
+- **R2** holds source PDFs and database backups.
+- **Backups.** `deployment/backup/backup-*.sh` take a `pg_dump` in a
+  read-only, resource-capped container, compare inventories before and after,
+  upload, read back and verify, and can restore into an isolated container.
+  Railway volume backups add daily and weekly snapshots. See
   [`runbooks/backup-restore.md`](runbooks/backup-restore.md).
+
+Production reaches this topology with the migration runbook; until then the
+previous one serves it: one Render free web service with an in-process chat
+worker, and Neon. The move is described in
+[ADR 0007](adr/0007-railway-api-and-database-hosting.md) and
+[`runbooks/railway-migration.md`](runbooks/railway-migration.md). Until its
+rollback window ends, `render.yaml` and `deployment/render/` stay in the
+repository.
 
 `compose.yml` describes a self-hosted alternative with Traefik, the API, a
 separate chat worker and the ingestion worker; it is used for local development
-and browser tests. Production values are in `render.yaml`; the operating
-procedures are in [`runbooks/render.md`](runbooks/render.md).
+and browser tests.
 
 ## Known gaps
 

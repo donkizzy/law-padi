@@ -29,8 +29,10 @@ name.
 ```mermaid
 flowchart LR
   reader([Reader]) --> edge["Cloudflare Worker<br/>assets, public HTML,<br/>edge cache, API proxy"]
-  edge -->|"/api/v1 + proxy secret"| api["FastAPI on Render<br/>in-process chat worker"]
+  edge -->|"/api/v1 + proxy secret"| api["FastAPI<br/>(Railway)"]
   api --> db[("PostgreSQL + pgvector<br/>corpus, index, runs,<br/>events, spend ledger")]
+  chat["Chat worker<br/>(Railway)"] --> db
+  chat --> llm
   api --> r2[("Cloudflare R2<br/>source PDFs")]
   api --> llm["DeepSeek<br/>draft, verify, translate"]
   api --> emb["bge-m3 query<br/>embeddings"]
@@ -77,6 +79,10 @@ The full design, including the data model and the ingestion pipeline, is in
 - [Render, Cloudflare Worker and Neon instead of Cloud Run](docs/adr/0005-render-cloudflare-neon-hosting.md):
   no hosting cost within free allowances; cold starts and one generation at a
   time.
+- [API, workers and PostgreSQL on Railway](docs/adr/0007-railway-api-and-database-hosting.md):
+  always-on workers and migrations on every deploy within a $20 monthly usage
+  credit; a self-managed database without point-in-time recovery, in one
+  region.
 - [Reserve-then-settle spend ledger](docs/adr/0006-reserve-then-settle-spend-ledger.md):
   budgets hold under concurrency and provider timeouts; uncertain charges stay
   counted.
@@ -179,23 +185,31 @@ bun run test                                  # Playwright against the Compose s
 | `frontend/` | React and TypeScript client |
 | `services/ingestion-worker/` | Worker image with Poppler and Tesseract for PDF rendering and OCR |
 | `packages/react-email/` | Email template sources |
-| `deployment/` | Render image and backups, Cloudflare Worker, release copy script |
+| `deployment/` | Railway project, backups, Cloudflare Worker, release copy script; the Render files until cutover |
 | `eval/datasets/` | Retrieval and answer evaluation datasets ([`eval/README.md`](eval/README.md)) |
 | `docs/` | Architecture, decision records, evaluation, runbooks, plans ([`docs/README.md`](docs/README.md)) |
 | `brand/` | Logo and icons with usage guidelines |
 | `scripts/` | Build revision, client generation, image smoke test |
-| `compose*.yml`, `render.yaml` | Local and self-hosted stack; production service settings |
+| `compose*.yml`, `render.yaml` | Local and self-hosted stack; the Render service being retired |
 
 ## Deployment
 
-Production is one Render free web service (API and chat worker in one process),
-a Cloudflare Worker in front of it, Neon PostgreSQL and private R2.
-`render.yaml` holds every production setting and deploys each commit on
-`master`. Corpus releases are built and reviewed locally, then copied and
-activated with `deployment/publish_release.py`. Runbooks:
-[Render](docs/runbooks/render.md), [releases](docs/runbooks/release.md),
+Production is moving from one Render free web service and Neon to a Railway
+project: the API, the chat worker, an on-demand ingestion worker and
+PostgreSQL 18 with pgvector on a volume. A Cloudflare Worker stays in front as
+the public site and API proxy, and private R2 stores source PDFs and backups.
+`deployment/railway/railway.ts` holds every Railway setting; each service
+deploys commits on `master` that pass CI and rebuilds only when its own inputs
+change, and the API migrates the database before each deploy goes live. Corpus
+releases are built and reviewed locally, then copied and activated with
+`deployment/publish_release.py`. Runbooks:
+[Railway services and variables](deployment/railway/README.md),
+[migration from Render and Neon](docs/runbooks/railway-migration.md),
+[releases](docs/runbooks/release.md),
 [backups](docs/runbooks/backup-restore.md),
-[Cloudflare](deployment/cloudflare/README.md).
+[Cloudflare](deployment/cloudflare/README.md). Until the migration's rollback
+window ends, [`render.yaml`](render.yaml) and the
+[Render runbook](docs/runbooks/render.md) describe the service still serving.
 
 ## What was inherited and what was built
 
@@ -211,7 +225,7 @@ review pipeline, pgvector retrieval with the topic guide and fusion, releases
 and composition, the chat pipeline with validation, verification, translation,
 the spend ledger and durable SSE, rotating refresh-token sessions, the
 evaluation datasets and scripts, the frontend product screens, the Cloudflare
-Worker and the Render deployment.
+Worker and the Render and Railway deployments.
 
 ## Legal texts and sources
 

@@ -12,7 +12,8 @@ Start with [`architecture.md`](architecture.md).
 
 **Operating**
 
-- [`runbooks/render.md`](runbooks/render.md): the production service.
+- [`runbooks/railway-migration.md`](runbooks/railway-migration.md): moving the API and database to Railway, with the cost estimate; the services themselves are in [`deployment/railway/README.md`](../deployment/railway/README.md).
+- [`runbooks/render.md`](runbooks/render.md): the Render service, until the Railway cutover retires it.
 - [`runbooks/release.md`](runbooks/release.md): code and corpus releases.
 - [`runbooks/backup-restore.md`](runbooks/backup-restore.md): backups and restore checks.
 - [`runbooks/ingestion.md`](runbooks/ingestion.md): turning a source PDF into a release.

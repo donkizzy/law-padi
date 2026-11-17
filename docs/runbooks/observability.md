@@ -63,7 +63,10 @@ Error reporting is off unless `SENTRY_DSN` is set, and is always off with
 - `release` is `BUILD_REVISION` and `environment` is `SENTRY_ENVIRONMENT`
   (default `production`);
 - the API, the standalone chat worker and the Render runtime report; the
-  ingestion worker image does not include the Sentry SDK;
+  ingestion worker image does not include the Sentry SDK. On Railway, `release`
+  is the packaged source revision the image computed, so the `api` and the
+  `chat-worker` report the same release whenever both were rebuilt from the
+  same commit;
 - request bodies and cookies are never sent, frame local variables are not
   collected, and fields named like `email`, `question`, `password`, `token` or
   `secret` are replaced by `[Filtered]` anywhere in an event. Email addresses
@@ -75,7 +78,7 @@ Error reporting is off unless `SENTRY_DSN` is set, and is always off with
 | --- | --- | --- |
 | `/livez` | Nothing beyond the process answering; on Render also that the in-process chat worker is running. No I/O. | Restart decisions. |
 | `/healthz` | Same as `/livez`. | Render's `healthCheckPath`. |
-| `/readyz` | The database answers within 3 seconds, and its Alembic revision is this build's head (cached once seen). | Routing decisions; the Compose `backend` health check, which Traefik follows. |
+| `/readyz` | The database answers within 3 seconds, and its Alembic revision is this build's head (cached once seen). | Routing decisions: Railway's deploy health check for `api`, and the Compose `backend` health check, which Traefik follows. |
 | `/api/v1/utils/health-check/` | Unchanged: database and the `vector` extension. | Existing scripts and CI. |
 
 `/healthz` deliberately does not touch the database. Render restarts a service
@@ -83,6 +86,15 @@ or holds back a deploy when its health check fails; a restart cannot fix a
 database outage or a pending migration, and a database probe on every check
 would keep a suspended Neon database awake. On Render, `/readyz` sits behind
 the origin credential like the rest of the API.
+
+Railway calls its health check only while a deploy starts, to decide when
+traffic moves to the new version, and never restarts because of it. That is a
+readiness decision, so the `api` service uses `/readyz`: a new version goes
+live only once the pre-deploy migration has brought the schema to its head and
+the database answers. The check comes from `healthcheck.railway.app` and cannot
+send the origin credential. With `PLATFORM_HEALTHCHECK_HOST` set to that name,
+a `GET` of `/livez`, `/healthz` or `/readyz` carrying it as its Host is
+answered without the credential; every other path and host still needs it.
 
 `/readyz` answers `503` with a `reason` of `database_unavailable`,
 `database_timeout` or `migrations_pending`. After a deploy, `migrations_pending`
@@ -116,3 +128,22 @@ to the queue.
 
 On Render the chat worker runs inside the API process; `/livez` covers it and no
 heartbeat file is written.
+
+## Worker heartbeats (Railway)
+
+Railway has no command health checks, so `deployment/railway/run.sh` runs the
+same `python -m app.core.heartbeat` check inside each worker's container every
+30 seconds, after a start-up grace period of one stale threshold. When the
+heartbeat is stale it logs `worker_heartbeat_stale`, stops the worker (with
+`WORKER_STOP_SIGNAL`, then `SIGKILL` after `WORKER_STOP_TIMEOUT`) and exits 70;
+the restart policy starts a new container. A worker that exits on its own logs
+`worker_exited`.
+
+| Service | Poll interval × intervals | Stale after |
+| --- | --- | --- |
+| `chat-worker` | 2 s × 30 | 60 s |
+| `ingestion-worker` | 5 s × 180 | 15 min, the task lease |
+
+The ingestion threshold equals the lease, so a stage step long enough to trip
+it would also have lost its lease. Search the logs for `worker_heartbeat_stale`
+and repeated restarts; leases return interrupted tasks and runs to the queue.

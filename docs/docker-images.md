@@ -1,7 +1,18 @@
 # Deployment Docker images
 
-Render uses `deployment/render/Dockerfile`. Build from the repository root so
-the shared dependency lockfile and application sources are available:
+Railway builds `backend/Dockerfile` (default target) for the `api` and
+`chat-worker` services, `services/ingestion-worker/Dockerfile` for the
+ingestion worker and `deployment/railway/postgres/Dockerfile` for the
+database. Build from the repository root so the shared dependency lockfile and
+application sources are available:
+
+```bash
+docker build -f backend/Dockerfile -t constitution-ng-backend .
+docker build -f services/ingestion-worker/Dockerfile -t constitution-ng-ingestion .
+docker build -t constitution-ng-postgres deployment/railway/postgres
+```
+
+The Render service, until it is retired, uses `deployment/render/Dockerfile`:
 
 ```bash
 docker build --platform linux/amd64 \
@@ -10,17 +21,20 @@ docker run --rm -i --platform linux/amd64 --entrypoint python \
   constitution-ng-api:render - render < scripts/smoke_docker_image.py
 ```
 
-Use the [Render deployment runbook](../deployment/render/README.md) for runtime
-settings, secrets and deployment. Building an image does not deploy a service.
+Runtime settings, secrets and deployment are in
+[`deployment/railway/README.md`](../deployment/railway/README.md) (and the
+[Render deployment files](../deployment/render/README.md) until cutover).
+Building an image does not deploy a service.
 
 ## Image contents
 
 | Build | Included runtime files and tools |
 | --- | --- |
-| `backend/Dockerfile` (default / `production`) | Same Python application dependencies, migrations, compiled frontend, and `scripts/prestart.sh`. Serves the API and frontend with Uvicorn. Also used by the standalone chat worker. |
+| `backend/Dockerfile` (default / `production`) | Same Python application dependencies, migrations, compiled frontend, `scripts/prestart.sh`, `deployment/railway/run.sh` and the computed source revision (`/app/source-revision`). Serves the API and frontend with Uvicorn on `$PORT` (default 8000). Also used by the standalone chat worker. |
 | `backend/Dockerfile --target development` | Production image plus development dependencies, FastAPI CLI, uv, maintenance scripts and Poppler. Local Compose selects this target and tags it `backend:development` to avoid overwriting the production/chat-worker image. |
 | `deployment/render/Dockerfile` | Python 3.14 slim, production dependencies, backend, migrations, Render startup script and computed source revision. Runs as UID 10001. |
-| `services/ingestion-worker/Dockerfile` | Python 3.14 slim, worker dependencies/source, backend source/data, Poppler and Tesseract. No frontend or FastAPI deployment CLI. |
+| `services/ingestion-worker/Dockerfile` | Python 3.14 slim, worker dependencies/source, backend source/data, `deployment/railway/run.sh`, Poppler and Tesseract. No frontend or FastAPI deployment CLI. |
+| `deployment/railway/postgres/Dockerfile` | `pgvector/pgvector:0.8.6-pg18` plus a start script that generates a TLS certificate on the data volume. |
 
 `frontend/Dockerfile.playwright` is a test-only image and retains its browser
 tooling. It copies Bun directly from the Bun image and installs locked workspace
@@ -39,7 +53,12 @@ via `PYTHONPATH`, so Alembic and direct maintenance commands can resolve it
 without an editable install or a second copy of the source.
 
 Database backups use the separate PostgreSQL 18 image invoked by
-`deployment/render/backup-nightly.sh`; the API image contains no `pg_dump`.
+`deployment/backup/backup-nightly.sh`; the API image contains no `pg_dump`.
+
+Neither Dockerfile uses `RUN --mount=type=cache`: Railway rejects a cache
+mount whose id is not prefixed with one service's id, and `backend/Dockerfile`
+builds two services. Docker's layer cache still reuses the dependency layers
+while the lockfiles are unchanged.
 
 The worker now matches the backend's Python 3.14 requirement. Its previous Python
 3.12 runtime could not parse the shared backend's unparenthesized multiple
@@ -73,4 +92,4 @@ PDF and runs Tesseract against the resulting PNG. The development mode checks
 the FastAPI development CLI. Render CI builds and smoke-tests the Render image.
 
 Backup and restore verification run separately through the scripts under
-`deployment/render/`, using a PostgreSQL 18 container and private R2 storage.
+`deployment/backup/`, using a PostgreSQL 18 container and private R2 storage.

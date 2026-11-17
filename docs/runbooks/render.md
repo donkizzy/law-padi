@@ -1,5 +1,10 @@
 # Render runbook
 
+> **Being retired.** The API and database are moving to Railway
+> ([ADR 0007](../adr/0007-railway-api-and-database-hosting.md), [migration runbook](railway-migration.md)). This stays in
+> place until the migration's rollback window ends, then is removed as the
+> runbook's last step lists.
+
 Production runs on one Render free web service (API plus the in-process chat
 worker), a Cloudflare Worker for the frontend and API proxy, Neon PostgreSQL 18
 and private Cloudflare R2. Why this topology was chosen is in
@@ -59,7 +64,7 @@ Each identifier is set where it is used:
 | Public site origin | `PUBLIC_SITE_URL` (Cloudflare build variable) and `FRONTEND_HOST` (Render environment); keep them equal. |
 | API origin the Worker proxies to | `API_ORIGIN` (Cloudflare build variable), a bare HTTPS `.onrender.com` origin. `prepare.py` rejects anything else. Details in [`deployment/cloudflare/README.md`](../../deployment/cloudflare/README.md#build-variables). |
 | Source-document bucket | `R2_BUCKET_NAME` (Render environment). |
-| Database host and backup bucket | `EXPECTED_NEON_HOST` ([`release.md`](release.md)) and `R2_BACKUP_BUCKET` ([`deployment/render/README.md`](../../deployment/render/README.md)), set privately. |
+| Database host and backup bucket | `EXPECTED_NEON_HOST` (the corpus copy's target env file) and `R2_BACKUP_BUCKET` ([`backup-restore.md`](backup-restore.md)), set privately. |
 
 ## Deploying
 

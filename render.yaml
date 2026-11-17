@@ -1,3 +1,7 @@
+# Being retired: the API and database are moving to Railway
+# (deployment/railway/, docs/adr/0007-railway-api-and-database-hosting.md).
+# This Blueprint keeps serving until the rollback window in
+# docs/runbooks/railway-migration.md ends; deleting it is that runbook's last step.
 # Explicit free compute; no Render database, disk, paid worker or cron service.
 services:
   - type: web

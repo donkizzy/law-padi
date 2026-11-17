@@ -4,9 +4,11 @@ Settings the repository owner applies in GitHub to protect `master`. They are
 not stored in the repository, so nothing here takes effect until the owner
 applies it under Settings, Rules, Rulesets (or Settings, Branches).
 
-Render deploys `master` with `autoDeployTrigger: checksPass`
-(`render.yaml`), so a change that reaches `master` is in production once its
-checks pass. The rules below keep unreviewed or unchecked changes out.
+Railway deploys `master` once its workflows pass (Wait for CI, see
+[Railway deploys](#railway-deploys)), as Render does with
+`autoDeployTrigger: checksPass` until the cutover, so a change that reaches
+`master` is in production once its checks pass. The rules below keep
+unreviewed or unchecked changes out.
 
 ## Required status checks
 
@@ -46,6 +48,34 @@ part of the rule.
 Keep this table in step with `.github/workflows/`. If a job is renamed or a new
 workflow is added, update the required list in the same change, or the pull
 request waits forever on a check name that no longer exists.
+
+## Railway deploys
+
+Every Railway service in `deployment/railway/railway.ts` sets
+`checkSuites: true`, Railway's **Wait for CI**. Confirm the toggle shows as on
+in each service's settings, after accepting the Railway GitHub app's updated
+permissions. With it, Railway deploys a commit on `master` only after
+the GitHub Actions workflows that run on that commit have finished:
+
+- It judges whole workflow runs, not jobs, and ignores checks from other
+  GitHub apps. Branch protection's required checks do not change which runs it
+  waits for.
+- One failed workflow skips the deploy at once; skipped and neutral runs never
+  block; a cancelled run blocks only if no other run on the commit succeeded;
+  runs that have not finished within two hours skip the deploy.
+- Only workflows with a `push` trigger on `master` run on the commit. Today
+  these are `Test Backend`, `Render CI`, `Playwright Tests`,
+  `Test Docker Compose`, `Zizmor` and `Conflict detector`. `pre-commit` runs on
+  pull requests only, so it gates merging but not deploying.
+- `Conflict detector` labels other pull requests; a failure there (for
+  example a GitHub API error) also skips the deploy. Re-run it, or use
+  Deploy Latest Commit in Railway.
+- Every workflow uses `cancel-in-progress` per branch, so when two commits
+  land close together the older commit's runs are cancelled and its deploy is
+  skipped; the newer commit deploys once its runs pass.
+
+Migrations do not depend on Wait for CI: they run as the `api` service's
+pre-deploy command for each deploy.
 
 ## Rule settings for `master`
 
