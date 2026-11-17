@@ -59,7 +59,9 @@ def claim_run(worker_id: str, *, run_id: uuid.UUID | None = None) -> uuid.UUID |
         if run_id is not None:
             statement = statement.where(GenerationRun.id == run_id)
         else:
-            statement = statement.order_by(col(GenerationRun.created_at))
+            statement = statement.order_by(
+                col(GenerationRun.created_at), col(GenerationRun.id)
+            )
         run = session.exec(statement.limit(1)).first()
         if run is None:
             return None

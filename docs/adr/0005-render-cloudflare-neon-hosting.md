@@ -29,9 +29,10 @@ allowances, with paid spend limited to model calls.
 - No hosting cost within the free allowances; model and embedding calls are
   bounded by the spend ledger ([0006](0006-reserve-then-settle-spend-ledger.md)).
 - Free services sleep when idle, so the first request after a pause is slow.
-- `render.yaml` allows one active generation at a time
-  (`CHAT_MAX_ACTIVE_GENERATIONS=1`); while an answer is generating, the API
-  refuses another reader's question with HTTP 429 rather than queueing it.
+- `render.yaml` generates one answer at a time (`CHAT_WORKER_CONCURRENCY=1`)
+  and admits up to five questions (`CHAT_MAX_ACTIVE_GENERATIONS=5`). Questions
+  beyond the first wait in order and the event stream reports their place in
+  the queue; a sixth is refused with HTTP 429.
 - Render Free has no shell or pre-deploy job, so migrations and release copies
   run from an operator machine ([runbooks/release.md](../runbooks/release.md)).
 - The self-hosted Docker Compose stack remains for local development and browser

@@ -36,8 +36,12 @@ services:
         value: "false"
       - key: CHAT_DISPATCH_MODE
         value: poll
+      # One answer is generated at a time. Up to five questions are admitted,
+      # so the others wait in order and see their place in the queue instead
+      # of being refused. An answer takes tens of seconds, so the last one
+      # admitted waits a few minutes at most.
       - key: CHAT_MAX_ACTIVE_GENERATIONS
-        value: "1"
+        value: "5"
       - key: CHAT_WORKER_CONCURRENCY
         value: "1"
       - key: CHAT_DAILY_BUDGET_USD

@@ -50,7 +50,7 @@ def main():
         DEEPSEEK_MODEL="deepseek-flash",
         CHAT_PROVIDER_CAPACITY_APPROVED="false",
         CHAT_DISPATCH_MODE="poll",
-        CHAT_MAX_ACTIVE_GENERATIONS="1",
+        CHAT_MAX_ACTIVE_GENERATIONS="5",
         CHAT_WORKER_CONCURRENCY="1",
         CHAT_DAILY_BUDGET_USD="5",
         CHAT_MONTHLY_BUDGET_USD="155",

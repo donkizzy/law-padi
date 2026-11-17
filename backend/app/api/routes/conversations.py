@@ -831,12 +831,43 @@ def cancel_run(
     return result
 
 
+@dataclass(frozen=True)
+class EventBatch:
+    events: list[GenerationEvent]
+    active_run_id: uuid.UUID | None = None
+    # Place among waiting questions, 1 for the next to start; None once running.
+    queue_position: int | None = None
+
+    @property
+    def active(self) -> bool:
+        return self.active_run_id is not None
+
+
+def _queue_position(session: Session, run: GenerationRun) -> int:
+    """Waiting runs ahead of this one, in the order the worker claims them."""
+    ahead = session.exec(
+        select(func.count())
+        .select_from(GenerationRun)
+        .where(
+            GenerationRun.status == "pending",
+            or_(
+                col(GenerationRun.created_at) < run.created_at,
+                and_(
+                    col(GenerationRun.created_at) == run.created_at,
+                    col(GenerationRun.id) < run.id,
+                ),
+            ),
+        )
+    ).one()
+    return ahead + 1
+
+
 def _read_events(
     conversation_id: uuid.UUID,
     owner: Owner,
     after_id: int,
     run_id: uuid.UUID | None = None,
-) -> tuple[list[GenerationEvent], bool]:
+) -> EventBatch:
     with Session(engine) as session:
         if owner.user_id is not None:
             user = session.get(User, owner.user_id)
@@ -845,11 +876,11 @@ def _read_events(
                 or not user.is_active
                 or user.auth_version != owner.auth_version
             ):
-                return [], False
+                return EventBatch([])
         try:
             _owned_conversation(session, conversation_id, owner)
         except HTTPException:
-            return [], False
+            return EventBatch([])
         event_query = select(GenerationEvent).where(
             GenerationEvent.conversation_id == conversation_id,
             col(GenerationEvent.id) > after_id,
@@ -859,14 +890,20 @@ def _read_events(
         events = session.exec(
             event_query.order_by(col(GenerationEvent.id)).limit(100)
         ).all()
-        active_query = select(GenerationRun.id).where(
+        active_query = select(GenerationRun).where(
             GenerationRun.conversation_id == conversation_id,
             col(GenerationRun.status).in_(["pending", "running"]),
         )
         if run_id is not None:
             active_query = active_query.where(GenerationRun.id == run_id)
-        active = session.exec(active_query).first() is not None
-        return list(events), active
+        active = session.exec(active_query).first()
+        if active is None:
+            return EventBatch(list(events))
+        return EventBatch(
+            list(events),
+            active.id,
+            _queue_position(session, active) if active.status == "pending" else None,
+        )
 
 
 @dataclass(frozen=True)
@@ -909,6 +946,12 @@ def _event_access(
     return EventAccess(owner=owner, cursor=cursor)
 
 
+# Another conversation's run starting moves this one up the queue without
+# notifying this stream, so a waiting run is re-read more often.
+_QUEUED_POLL_SECONDS = 5.0
+_ACTIVE_POLL_SECONDS = 15.0
+
+
 @router.get("/{conversation_id}/events", response_class=EventSourceResponse)
 async def conversation_events(
     conversation_id: uuid.UUID,
@@ -917,24 +960,43 @@ async def conversation_events(
     run_id: Annotated[uuid.UUID | None, Query()] = None,
 ) -> AsyncIterator[ServerSentEvent]:
     cursor = access.cursor
+    shown_position: int | None = None
     wake = subscribe(conversation_id)
     try:
         while not await request.is_disconnected():
             wake.clear()
-            events, active = await asyncio.to_thread(
+            batch = await asyncio.to_thread(
                 _read_events, conversation_id, access.owner, cursor, run_id
             )
-            for event in events:
+            for event in batch.events:
                 if event.id is None:
                     continue
                 cursor = event.id
                 yield ServerSentEvent(
                     data=event.payload, event=event.event_type, id=str(event.id)
                 )
-            if not active:
+            if not batch.active:
                 break
+            if (
+                batch.queue_position is not None
+                and batch.queue_position != shown_position
+            ):
+                # Derived, not stored: it has no ID and is never replayed.
+                shown_position = batch.queue_position
+                yield ServerSentEvent(
+                    data={
+                        "run_id": str(batch.active_run_id),
+                        "position": batch.queue_position,
+                    },
+                    event="run.queued",
+                )
             try:
-                await asyncio.wait_for(wake.wait(), timeout=15)
+                await asyncio.wait_for(
+                    wake.wait(),
+                    timeout=_ACTIVE_POLL_SECONDS
+                    if batch.queue_position is None
+                    else _QUEUED_POLL_SECONDS,
+                )
             except TimeoutError:
                 pass
     finally:

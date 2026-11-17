@@ -1,4 +1,7 @@
+import json
+import re
 from datetime import UTC, datetime, timedelta
+from pathlib import Path
 from uuid import UUID, uuid4
 
 import pytest
@@ -7,6 +10,7 @@ from sqlmodel import Session, select
 
 from app.api.routes import conversations
 from app.chat.budget import reserve, settle
+from app.chat.events import emit_event
 from app.chat.runs import claim_run, expire_guest_conversations
 from app.core import security, sessions
 from app.core.config import settings
@@ -23,6 +27,26 @@ from app.legal.models import (
 )
 from app.main import app
 from app.models import User
+
+ROOT = Path(__file__).resolve().parents[4]
+
+
+def _render_setting(name: str) -> int:
+    match = re.search(
+        rf'- key: {name}\n\s+value: "?(\d+)"?', (ROOT / "render.yaml").read_text()
+    )
+    assert match is not None, name
+    return int(match.group(1))
+
+
+def _submit(client: TestClient, key: str) -> tuple[str, UUID]:
+    conversation_id = client.post("/api/v1/conversations", json={}).json()["id"]
+    accepted = client.post(
+        f"/api/v1/conversations/{conversation_id}/messages",
+        json={"question": "Section 37", "idempotency_key": key},
+    )
+    assert accepted.status_code == 202, accepted.text
+    return conversation_id, UUID(accepted.json()["run_id"])
 
 
 def test_pinned_release_and_no_generation_when_disabled(
@@ -229,17 +253,16 @@ def test_open_event_stream_stops_reading_after_credentials_change(
         )
         assert accepted.status_code == 202
         run_id = UUID(accepted.json()["run_id"])
-        assert conversations._read_events(conversation_id, owner, 0, run_id)[0]
+        assert conversations._read_events(conversation_id, owner, 0, run_id).events
 
         user = db.get(User, user.id, with_for_update=True)
         assert user is not None
         sessions.invalidate_credentials(db, user)
         db.commit()
 
-        assert conversations._read_events(conversation_id, owner, 0, run_id) == (
-            [],
-            False,
-        )
+        assert conversations._read_events(
+            conversation_id, owner, 0, run_id
+        ) == conversations.EventBatch([])
         db.delete(user)
         db.commit()
 
@@ -523,3 +546,90 @@ def test_unconfirmed_accounts_get_the_guest_allowance(
         ) as reader:
             statuses = [_ask(reader, f"tier-{user.id}-{index}") for index in range(2)]
         assert statuses == expected
+
+
+@pytest.mark.usefixtures("corpus")
+def test_production_capacity_queues_a_reader_while_another_answer_is_generated(
+    db: Session, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    monkeypatch.setattr(settings, "CHAT_ENABLED", True)
+    monkeypatch.setattr(settings, "CHAT_GENERATION_ENABLED", True)
+    concurrency = _render_setting("CHAT_WORKER_CONCURRENCY")
+    depth = _render_setting("CHAT_MAX_ACTIVE_GENERATIONS")
+    monkeypatch.setattr(settings, "CHAT_WORKER_CONCURRENCY", concurrency)
+    monkeypatch.setattr(settings, "CHAT_MAX_ACTIVE_GENERATIONS", depth)
+    # One answer is generated at a time; the rest of the admitted runs wait.
+    assert concurrency == 1 < depth
+    with TestClient(app) as first, TestClient(app) as second:
+        _conversation, running = _submit(first, "generating")
+        assert claim_run("capacity-test") == running
+        _conversation, waiting = _submit(second, "queued")
+    run = db.get(GenerationRun, waiting)
+    assert run is not None and run.status == "pending"
+
+
+@pytest.mark.usefixtures("corpus")
+def test_a_waiting_run_streams_its_place_in_the_queue(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    monkeypatch.setattr(settings, "CHAT_ENABLED", True)
+    monkeypatch.setattr(settings, "CHAT_GENERATION_ENABLED", True)
+    monkeypatch.setattr(settings, "CHAT_MAX_ACTIVE_GENERATIONS", 5)
+    monkeypatch.setattr(conversations, "_QUEUED_POLL_SECONDS", 0.01)
+    read_events = conversations._read_events
+    reads = 0
+
+    with TestClient(app) as first, TestClient(app) as second:
+        _conversation, ahead = _submit(first, "ahead")
+        conversation_id, waiting = _submit(second, "waiting")
+
+        def read(
+            conversation: UUID,
+            owner: conversations.Owner,
+            after_id: int,
+            run_id: UUID | None = None,
+        ) -> conversations.EventBatch:
+            nonlocal reads
+            reads += 1
+            if reads == 2:
+                # The run ahead starts, so this one is next.
+                assert claim_run("queue-test", run_id=ahead) == ahead
+            if reads == 3:
+                with Session(conversations.engine) as session:
+                    run = session.get(GenerationRun, waiting)
+                    assert run is not None
+                    run.status = "cancelled"
+                    run.outcome = "cancelled"
+                    emit_event(
+                        session, run, "answer.complete", {"outcome": "cancelled"}
+                    )
+                    session.add(run)
+                    session.commit()
+            return read_events(conversation, owner, after_id, run_id)
+
+        monkeypatch.setattr(conversations, "_read_events", read)
+        with second.stream(
+            "GET",
+            f"/api/v1/conversations/{conversation_id}/events",
+            params={"run_id": str(waiting)},
+        ) as response:
+            assert response.status_code == 200
+            body = response.read().decode()
+    frames = [
+        dict(line.split(": ", 1) for line in frame.splitlines() if ": " in line)
+        for frame in body.split("\n\n")
+        if "event: " in frame
+    ]
+    assert [frame["event"] for frame in frames] == [
+        "message.started",
+        "run.queued",
+        "run.queued",
+        "answer.complete",
+    ]
+    queued = [frame for frame in frames if frame["event"] == "run.queued"]
+    assert [json.loads(frame["data"]) for frame in queued] == [
+        {"run_id": str(waiting), "position": 2},
+        {"run_id": str(waiting), "position": 1},
+    ]
+    # Positions are derived, so they carry no ID and are never replayed.
+    assert all("id" not in frame for frame in queued)
