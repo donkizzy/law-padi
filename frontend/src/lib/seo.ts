@@ -2,10 +2,9 @@ import edition from "../locales/en/edition.json"
 import pages from "../locales/en/pages.json"
 
 /** Public identity shared by the browser and the Worker; no invented credentials. */
-export const DEFAULT_SITE_URL =
-  "https://constitition-ng.amosgodwin500.workers.dev"
 export const REPOSITORY_URL = "https://github.com/donkizzy/law-padi"
 export const CORRECTIONS_URL = `${REPOSITORY_URL}/issues`
+export const CORRECTIONS_LABEL = pages.links.corrections
 export const SITE_DESCRIPTION =
   "Explore Nigeria's Constitution and published laws with precise citations, source-edition notices and original documents. Free and independent."
 export const EDITION_CAVEAT = edition.constitutionNote.replace(
@@ -45,7 +44,8 @@ export type SeoMetadata = {
   schema?: Record<string, unknown>[]
 }
 
-export function siteOrigin(value = DEFAULT_SITE_URL): string {
+/** Validates the configured canonical origin: a bare HTTPS origin or an error. */
+export function siteOrigin(value: string): string {
   const url = new URL(value)
   if (
     url.protocol !== "https:" ||

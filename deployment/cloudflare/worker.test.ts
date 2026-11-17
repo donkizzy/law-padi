@@ -6,6 +6,7 @@ function env(overrides = {}) {
 		ASSETS: { fetch: async () => new Response("SPA") },
 		API_ORIGIN: "https://law-padi-123.us-east1.run.app",
 		ORIGIN_PROXY_SECRET: "secret-in-worker",
+		PUBLIC_SITE_URL: "https://constitution.workers.dev",
 		...overrides,
 	};
 }

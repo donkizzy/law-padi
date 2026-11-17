@@ -1,4 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router"
+import { amendmentsMetadata } from "@/lib/public-pages"
 import { seoHead } from "@/lib/seo"
 export const Route = createFileRoute("/_layout/amendments")({
   component: () => (
@@ -18,11 +19,5 @@ export const Route = createFileRoute("/_layout/amendments")({
       </Link>
     </section>
   ),
-  head: () =>
-    seoHead({
-      title: "Amendments unavailable | constitution.ng",
-      description:
-        "Reviewed amendment records are not published here yet. Browse the historical source edition instead.",
-      index: false,
-    }),
+  head: () => seoHead(amendmentsMetadata),
 })

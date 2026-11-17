@@ -48,6 +48,8 @@ def main() -> None:
             "eval/datasets/plain-language-retrieval-benchmark-v1.json",
             "deployment/cloudflare/worker.ts",
             "deployment/cloudflare/public-pages.ts",
+            "deployment/cloudflare/pages.ts",
+            "deployment/cloudflare/html.ts",
             "deployment/cloudflare/wrangler.json",
             "deployment/cloudflare/tsconfig.json",
             "deployment/render/Dockerfile",

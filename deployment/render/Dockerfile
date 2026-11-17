@@ -8,7 +8,7 @@ COPY frontend/src /source/frontend/src
 COPY frontend/public /source/frontend/public
 COPY frontend/package.json frontend/vite.config.ts frontend/index.html /source/frontend/
 COPY backend/pyproject.toml backend/Dockerfile /source/backend/
-COPY deployment/cloudflare/worker.ts deployment/cloudflare/public-pages.ts deployment/cloudflare/wrangler.json deployment/cloudflare/tsconfig.json /source/deployment/cloudflare/
+COPY deployment/cloudflare/worker.ts deployment/cloudflare/public-pages.ts deployment/cloudflare/pages.ts deployment/cloudflare/html.ts deployment/cloudflare/wrangler.json deployment/cloudflare/tsconfig.json /source/deployment/cloudflare/
 COPY deployment/render/Dockerfile deployment/render/start.sh /source/deployment/render/
 COPY bun.lock uv.lock package.json .dockerignore /source/
 COPY eval/datasets/plain-language-retrieval-benchmark-v1.json /source/eval/datasets/
