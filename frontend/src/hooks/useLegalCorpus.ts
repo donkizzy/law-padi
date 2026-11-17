@@ -3,6 +3,13 @@ import { AxiosError } from "axios"
 import { LegalService } from "@/client"
 import i18n from "@/lib/i18n"
 
+// Text published under a named release never changes, so it is cached for the
+// life of the page. Without one the server answers from the current release,
+// which a publication can replace, so that is re-read every few minutes.
+const currentReleaseStaleTime = 5 * 60_000
+const releaseStaleTime = (release?: string) =>
+  release ? Number.POSITIVE_INFINITY : currentReleaseStaleTime
+
 export function useLegalRelease() {
   return useQuery({
     queryKey: ["legal", "release"],
@@ -24,7 +31,7 @@ export function useLegalInstruments(releaseVersion?: string) {
         })
       ).data,
     retry: false,
-    staleTime: 30_000,
+    staleTime: releaseStaleTime(releaseVersion),
   })
 }
 
@@ -61,6 +68,10 @@ export function useLegalSearch(
       ).data,
     enabled: Boolean(query),
     retry: false,
+    // A search costs an embedding and sometimes a translation, so a result is
+    // never refreshed by itself. A deliberate retry calls refetch().
+    staleTime: Number.POSITIVE_INFINITY,
+    refetchOnWindowFocus: false,
   })
 }
 
@@ -75,7 +86,7 @@ export function provisionQueryOptions(path: string, release?: string) {
           signal,
         })
       ).data.data[0],
-    staleTime: 30_000,
+    staleTime: releaseStaleTime(release),
     retry: false as const,
   }
 }
@@ -101,7 +112,7 @@ export function treeQueryOptions(
           signal,
         })
       ).data,
-    staleTime: 30_000,
+    staleTime: releaseStaleTime(release),
     retry: false as const,
   }
 }
@@ -130,6 +141,7 @@ export function useProvisionHistory(
       ).data,
     enabled,
     retry: false,
+    staleTime: Number.POSITIVE_INFINITY,
   })
 }
 
