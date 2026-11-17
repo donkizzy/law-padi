@@ -1,8 +1,10 @@
 # 0005. Host on Render, a Cloudflare Worker and Neon instead of Cloud Run
 
-Status: accepted. `render.yaml` was added on 16 October 2026. The Cloud Run
-code was removed on 16 November 2026; it is preserved at git tag
-`archive/pre-public-cleanup`.
+Status: superseded in part by [0007](0007-railway-api-and-database-hosting.md)
+on 17 November 2026: the API and the database move to Railway, and the
+Cloudflare Worker and R2 parts of this decision stand. `render.yaml` was added
+on 16 October 2026. The Cloud Run code was removed on 16 November 2026; it is
+preserved at git tag `archive/pre-public-cleanup`.
 
 ## Context
 
