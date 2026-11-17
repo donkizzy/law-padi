@@ -11,6 +11,7 @@ from app.chat.llm.protocol import JsonObject
 from app.legal.enums import (
     MessageRole,
 )
+from app.legal.instruments import INSTRUMENT_NAMES
 from app.legal.models import (
     ConversationMessage,
 )
@@ -18,6 +19,7 @@ from app.legal.references import (
     SectionReference,
     parse_section_reference,
 )
+from app.legal.topics import tokens, topic_sections
 
 _RELATIVE = re.compile(r"\b(?:that|this|its|same|it|above)\b", re.I)
 
@@ -30,6 +32,30 @@ _ELLIPTICAL = re.compile(
     r"what\s+about\b|and\b)",
     re.I,
 )
+
+_WORD = re.compile(r"[\w']+")
+
+# Words that ask about whatever was just discussed without naming a subject of
+# their own: "Explain that more simply", "What about the next section?",
+# "What qualifications or exceptions does that section contain?".
+_FOLLOWUP_WORDS = frozenset(
+    tokens(
+        "same above below previous earlier last next following preceding "
+        "section sections subsection subsections paragraph paragraphs "
+        "provision provisions part parts clause "
+        "explain explanation simply simple simpler simplify plain plainly "
+        "english again more detail details detailed example examples "
+        "elaborate clarify further else exception exceptions qualification "
+        "qualifications limitation limitations condition conditions apply "
+        "applies word words term terms understand meant happen happens give "
+        "show contain contains"
+    )
+)
+
+# Pronouns and openings such as "why" and "how" are ordinary in new questions
+# ("How long can police detain me?"), so they mark a follow-up only when the
+# question has fewer subject words than this.
+_STANDALONE_SUBJECT_WORDS = 3
 
 
 @dataclass
@@ -86,8 +112,46 @@ def cited_ids(prior: ConversationMessage, *, resolved_only: bool = False) -> set
     return cited
 
 
+def subject_words(question: str) -> list[str]:
+    """Content words that could name a subject of the question's own."""
+    return [token for token in tokens(question) if token not in _FOLLOWUP_WORDS]
+
+
+def _names_topic(question: str) -> bool:
+    # Follow-up words such as "limitations" also occur in topic phrases, so
+    # only the question's remaining words may name a topic.
+    remaining = " ".join(
+        word
+        for word in _WORD.findall(question)
+        if not _FOLLOWUP_WORDS.intersection(tokens(word))
+    )
+    return bool(topic_sections(remaining, instrument_slugs=INSTRUMENT_NAMES))
+
+
 def is_followup_question(question: str) -> bool:
-    return bool(is_relative_reference(question) or _ELLIPTICAL.search(question))
+    """Read a question as a follow-up only when it has no subject of its own.
+
+    A subsection or paragraph without a section can only mean the section just
+    discussed. Any other question that names a topic the guide recognises, or
+    has at least three subject words, is retrieved as written even when it
+    contains "it", "this" or "that" or opens with "why" or "how". A question
+    with no subject words at all ("Tell me more") is a follow-up even without
+    those markers.
+    """
+    if _SUBSECTION.search(question) or _PARAGRAPH.search(question):
+        return True
+    if _names_topic(question):
+        return False
+    subject = subject_words(question)
+    if not subject:
+        return True
+    return len(subject) < _STANDALONE_SUBJECT_WORDS and bool(
+        _RELATIVE.search(question) or _ELLIPTICAL.search(question)
+    )
+
+
+def _elliptical(question: str) -> bool:
+    return bool(_ELLIPTICAL.search(question)) or not subject_words(question)
 
 
 def is_relative_reference(question: str) -> bool:
@@ -197,12 +261,7 @@ def relative_query(
     question: str,
     history: History | None = None,
 ) -> str | None:
-    if not (
-        _RELATIVE.search(question)
-        or _SUBSECTION.search(question)
-        or _PARAGRAPH.search(question)
-        or _ELLIPTICAL.search(question)
-    ):
+    if not (is_relative_reference(question) or _elliptical(question)):
         return None
     citations = prior_citations(session, conversation_id, history)
     if not citations:
@@ -218,11 +277,7 @@ def relative_query(
         )
     )
     if len(sections) > 1:
-        if _ELLIPTICAL.search(question) and not (
-            _RELATIVE.search(question)
-            or _SUBSECTION.search(question)
-            or _PARAGRAPH.search(question)
-        ):
+        if _elliptical(question) and not is_relative_reference(question):
             return " and ".join(
                 SectionReference(number, instrument_slug=slug).citation
                 for slug, number in sections

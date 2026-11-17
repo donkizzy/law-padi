@@ -100,3 +100,59 @@ def test_prior_citation_and_path_fallback_rules_remain_distinct(
     assert history.prior_section_path(db, message.conversation_id) == (
         "constitution-1999.chapter4.section37" if resolved else None
     )
+
+
+@pytest.mark.parametrize(
+    "question",
+    [
+        "Why?",
+        "What does it mean?",
+        "What exceptions apply?",
+        "What limitations apply?",
+        "What about subsection 2?",
+        "And paragraph (b)?",
+        "What about the next section?",
+        "Explain that more simply",
+        "What qualifications or exceptions does that section contain?",
+        "Does it apply to foreigners?",
+        "Is it legal?",
+        "Tell me more",
+        "Give me an example",
+    ],
+)
+def test_a_question_without_a_subject_of_its_own_is_a_followup(question: str) -> None:
+    assert history.is_followup_question(question)
+
+
+@pytest.mark.parametrize(
+    "question",
+    [
+        "How long can police detain me?",
+        "Is it legal to record a police officer?",
+        "How do I apply for bail?",
+        "Why was I arrested?",
+        "What about freedom of religion?",
+        "How can I enforce this right?",
+        "Why do police need a warrant to search my house?",
+        "Is it true that police can detain me for 48 hours?",
+        "Can police search my phone?",
+    ],
+)
+def test_pronouns_and_why_or_how_do_not_make_a_new_question_a_followup(
+    question: str,
+) -> None:
+    assert not history.is_followup_question(question)
+
+
+@pytest.mark.parametrize("question", ["Tell me more", "Give me an example"])
+def test_a_question_with_no_subject_words_reuses_the_discussed_sections(
+    db: Session, monkeypatch: pytest.MonkeyPatch, question: str
+) -> None:
+    monkeypatch.setattr(history, "prior_citations", lambda *_: ["Section 37"])
+    assert history.relative_query(db, uuid4(), question) == "Section 37"
+    monkeypatch.setattr(
+        history, "prior_citations", lambda *_: ["Section 37", "Section 33"]
+    )
+    assert history.relative_query(db, uuid4(), question) == (
+        "Section 37 and Section 33"
+    )

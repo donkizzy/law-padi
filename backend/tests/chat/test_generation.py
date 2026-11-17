@@ -359,6 +359,116 @@ def test_elliptical_followup_reuses_one_resolved_identity(
         assert provider.payloads[2]["previous_question"] == "Section 37"
 
 
+def _ask_in_turn(
+    db: Session,
+    monkeypatch: pytest.MonkeyPatch,
+    provider: FakeProvider,
+    questions: list[str],
+) -> list[tuple[GenerationRun, ConversationMessage]]:
+    monkeypatch.setattr(settings, "CHAT_ENABLED", True)
+    monkeypatch.setattr(settings, "CHAT_GENERATION_ENABLED", True)
+    monkeypatch.setattr(settings, "EMBEDDING_QUERY_ENABLED", False)
+    answered: list[tuple[GenerationRun, ConversationMessage]] = []
+    with TestClient(app) as client:
+        conversation_id = client.post("/api/v1/conversations", json={}).json()["id"]
+        for index, question in enumerate(questions):
+            accepted = client.post(
+                f"/api/v1/conversations/{conversation_id}/messages",
+                json={"question": question, "idempotency_key": f"turn-{index}"},
+            )
+            assert accepted.status_code == 202
+            run_id = UUID(accepted.json()["run_id"])
+            assert runs.claim_run("turn-test") == run_id
+            asyncio.run(pipeline.process_run(run_id, "turn-test", provider))
+            db.expire_all()
+            run = db.get(GenerationRun, run_id)
+            assert run is not None and run.assistant_message_id is not None
+            message = db.get(ConversationMessage, run.assistant_message_id)
+            assert message is not None and message.answer_content is not None
+            answered.append((run, message))
+    return answered
+
+
+def _record_semantic_queries(monkeypatch: pytest.MonkeyPatch) -> list[str]:
+    queries: list[str] = []
+    lookup = preparation.semantic_lookup
+
+    def recorded(*args: Any, query: str, **kwargs: Any) -> Any:
+        queries.append(query)
+        return lookup(*args, query=query, **kwargs)
+
+    monkeypatch.setattr(preparation, "semantic_lookup", recorded)
+    return queries
+
+
+@pytest.mark.usefixtures("corpus")
+@pytest.mark.parametrize(
+    ("first", "question"),
+    [
+        ("Section 37", "How long can police detain me?"),
+        ("Sections 37 and 33", "Is it legal to record a police officer?"),
+    ],
+)
+def test_a_new_question_after_an_answer_is_retrieved_as_written(
+    db: Session, monkeypatch: pytest.MonkeyPatch, first: str, question: str
+) -> None:
+    queries = _record_semantic_queries(monkeypatch)
+    provider = FakeProvider(
+        blocks=[
+            {"text": "The Constitution protects privacy.", "evidence_ids": ["E1"]},
+            {
+                "text": "The Constitution protects the right to life.",
+                "evidence_ids": ["E2"],
+            },
+        ]
+        if first.startswith("Sections")
+        else None
+    )
+    _first, (run, message) = _ask_in_turn(db, monkeypatch, provider, [first, question])
+    assert queries == [question]
+    assert run.outcome != "clarification_required"
+    assert message.answer_content is not None
+    # An exact lookup of the earlier section would report it as resolved here.
+    assert message.answer_content["citation_outcomes"] == []
+
+
+@pytest.mark.usefixtures("corpus")
+def test_a_new_question_sharing_words_with_the_last_turn_keeps_only_its_context(
+    db: Session, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    queries = _record_semantic_queries(monkeypatch)
+    provider = FakeProvider()
+    first = "Can police search my phone?"
+    question = "How can police search my house lawfully?"
+    answered = _ask_in_turn(db, monkeypatch, provider, [first, question])
+    assert [run.outcome for run, _message in answered] == ["completed", "completed"]
+    assert queries == [first, question]
+    payload = provider.payloads[2]
+    assert payload["question"] == question
+    assert payload["previous_question"] is None
+    assert payload["conversation_context"][0] == {"role": "user", "question": first}
+
+
+@pytest.mark.usefixtures("corpus")
+@pytest.mark.parametrize(
+    "question", ["Explain that more simply", "Tell me more", "What about subsection 2?"]
+)
+def test_a_real_followup_reuses_the_section_just_discussed(
+    db: Session, monkeypatch: pytest.MonkeyPatch, question: str
+) -> None:
+    queries = _record_semantic_queries(monkeypatch)
+    provider = FakeProvider()
+    first = "Section 33" if "subsection" in question else "Section 37"
+    _first, (run, message) = _ask_in_turn(db, monkeypatch, provider, [first, question])
+    assert queries == []
+    assert run.outcome == "completed"
+    assert message.answer_content is not None
+    assert message.answer_content["evidence"][0]["citation"] == (
+        "Section 33(2)" if "subsection" in question else "Section 37"
+    )
+    assert provider.payloads[2]["previous_question"] == first
+
+
 @pytest.mark.usefixtures("corpus")
 def test_unsupported_later_blocks_are_removed_from_a_verified_answer(
     db: Session, monkeypatch: pytest.MonkeyPatch
