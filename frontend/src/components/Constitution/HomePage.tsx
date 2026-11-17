@@ -2,7 +2,7 @@ import { useNavigate, useSearch } from "@tanstack/react-router"
 import { useEffect, useRef, useState } from "react"
 import { useTranslation } from "react-i18next"
 import { ChatComposer } from "@/components/Constitution/ChatComposer"
-import { ChatHome } from "@/components/Constitution/ChatHome"
+import { ChatHome } from "@/components/Constitution/chat/ChatHome"
 import { LawPicker } from "@/components/Constitution/LawPicker"
 import { ProvisionView } from "@/components/Constitution/ProvisionView"
 import {
