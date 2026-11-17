@@ -326,8 +326,7 @@ family revocation on reuse and an `auth_version` counter that revokes access
 tokens (`core/sessions.py`, `core/security.py`). In the browser, refreshes are
 serialised across tabs with the Web Locks API and sign-out is broadcast over a
 `BroadcastChannel` (`frontend/src/lib/session.ts`). Signup and recovery return
-the same response whether or not an address is registered. The plan and its
-open items are in [`plans/accounts.md`](plans/accounts.md).
+the same response whether or not an address is registered.
 
 ## Deployment topology
 

@@ -97,9 +97,6 @@ topic guide; held-out sets were not. Sources and caveats are in
 | --- | --- | --- | --- |
 | Constitution development set, 57 questions | Fused hit@1 before and after the topic guide | 0.82 to 0.98 | `eval/datasets/plain-language-retrieval-benchmark-v1.json`, `baseline_2026_10_12` |
 | Constitution held-out set, 40 questions | Fused hit@1 (hit@5) before and after section-title scoring | 0.82 (0.95) to 0.95 (1.00) | `eval/datasets/plain-language-retrieval-heldout-v1.json`, `results_2026_10_17` |
-| Three-law held-out set, 40 questions | Expected section first, before and after fixes | 21 to 21 of 40 | [`docs/search-quality-comparison-2026-10-29.md`](docs/search-quality-comparison-2026-10-29.md) |
-| Three-law held-out set, 40 questions | Expected section in top 5 | 35 to 36 of 40 | same |
-| 100 questions, deployed prompt and model, model-graded | Returned an explanation; mean accuracy 0 to 2 | 87 of 100; 1.76 | same |
 | 200-case answer set, human review | At least 95% supported answers | Not met: human review not done | [`docs/evidence-chat-rollout.md`](docs/evidence-chat-rollout.md) |
 
 What the numbers mean:

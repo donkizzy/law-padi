@@ -88,8 +88,7 @@ in-flight call can still settle.
   now carry the served-text hash and reject a version whose stored hash matches
   neither.
 - **29 October 2026, prompt `constitution-english-v11` on `deepseek-flash`.**
-  A 100-question comparison graded by models, not people
-  ([`search-quality-comparison-2026-10-29.md`](search-quality-comparison-2026-10-29.md)):
+  A 100-question comparison graded by models, not people:
   87 of 100 questions returned an explanation after fixes, 74 were judged a
   direct answer, and mean accuracy was 1.76 out of 2. It is not the 200-case
   human gate.

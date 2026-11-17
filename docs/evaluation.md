@@ -69,25 +69,6 @@ How to read these:
   held-out file on the same day, so the held-out numbers were visible when the
   change was adopted. Treat 0.95 as an optimistic estimate.
 
-### Whole corpus, comparison questions
-
-[`search-quality-comparison-2026-10-29.md`](search-quality-comparison-2026-10-29.md)
-ran 100 questions over a release containing the Constitution, ACJA 2015 and the
-Police Act 2020 (`claude-comparison-queries-v2.json`, development) and then a
-40-question held-out set written after the fixes (`claude-comparison-heldout-v3.json`).
-
-| Set | Measure | Before fixes | After fixes |
-| --- | --- | ---: | ---: |
-| Development (95 with an expected section) | Expected section in top 5 | 81 | 91 |
-| Held-out (40) | Expected section in top 5 | 35 | 36 |
-| Held-out (40) | Expected section first | 21 | 21 |
-
-The document's own conclusion is that the topic additions did not generalise and
-that the development-set gain is partly tuning. Later topic work (`_PART_TOPICS`)
-was written after this held-out set was seen, so it no longer measures
-generalisation either; a new held-out set is needed before the next claim about
-unseen phrasing.
-
 ### Other retrieval sets
 
 - **Per-law benchmarks**, `<law>-retrieval-benchmark.json`: 19 files, 578
@@ -135,26 +116,6 @@ The deployed prompt is `constitution-english-v11` (`backend/app/chat/__init__.py
 on `deepseek-flash` (`render.yaml`). It has not been through the 200-case run or
 human review.
 
-### Comparison with a general-purpose model
-
-The October comparison is the only recorded live evaluation of prompt v11 on
-`deepseek-flash`. Five graders scored the app's answers and the blind answers
-of a general-purpose model (Claude, with no corpus or tools) against the stored
-provision text for accuracy, helpfulness and citation, each 0 to 2. After the
-fixes described in the document:
-
-| Measure | App | General-purpose model |
-| --- | ---: | ---: |
-| Questions that returned an explanation | 87 of 100 | not applicable |
-| Directly answered (helpfulness 2) | 74 | 90 |
-| Mean accuracy (0 to 2) | 1.76 | 1.76 |
-| Preferred by graders (rest tied) | 31 | 30 |
-
-Caveats from the document: the graders were Claude models, the same family as
-the baseline; cases that had completed before the fixes were not re-run; and the
-ground truth is the stored as-enacted text, so the baseline was marked down for
-stating later amendments that the corpus does not contain.
-
 ## Known weaknesses of the method
 
 - **Tuning on the development set.** The topic guide is hand-written against the
@@ -169,8 +130,6 @@ stating later amendments that the corpus does not contain.
 - **Dense results recorded by hand.** `retrieval_benchmark.py` needs the live
   query embedding endpoint, and its output is pasted into the dataset files;
   only the offline ranking check is recomputed on a change.
-- **Model graders.** The answer comparison used model graders, with possible
-  self-preference.
 - **No human grounding review** of the deployed prompt and model.
 - **Unreviewed translations.** Reader-language datasets and glossaries are
   drafts.

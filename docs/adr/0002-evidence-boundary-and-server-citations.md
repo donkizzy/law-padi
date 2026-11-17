@@ -31,9 +31,7 @@ enacted), so "this is the law today" is itself a claim to guard against.
 ## Consequences
 
 - A reader never sees an explanation that failed either check; the cost is a
-  higher rate of withheld answers. In the October 2026 comparison, 13 of 100
-  questions still ended without an explanation after fixes
-  ([search-quality comparison](../search-quality-comparison-2026-10-29.md)).
+  higher rate of withheld answers.
 - Retrieval quality bounds answer quality: if a needed companion section is not
   retrieved, a correct answer cannot pass validation.
 - The verifier is a model and is a risk reduction, not legal certification.

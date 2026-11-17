@@ -13,8 +13,6 @@ are in [`docs/evaluation.md`](../docs/evaluation.md).
 | `<law>-retrieval-benchmark.json` | One file per statute: queries with the one provision that best answers each, used for the Recall@10 gate on embedding runs | Model selection |
 | `constitution-source-edition-benchmark.json` | 50 queries for the Constitution source edition | Review of the source edition |
 | `constitution-explanation-evaluation-v1.json` | 203 English answer-evaluation cases with expected outcomes and paths; all pending human review | Answer gate |
-| `claude-comparison-queries-v2.json` | 100 questions over the Constitution, ACJA and Police Act with acceptable sections and an expected outcome; the `truth` notes are unverified | Development |
-| `claude-comparison-heldout-v3.json` | 40 questions written after the comparison fixes | Held-out (since used during later topic work) |
 
 Rules for these files:
 

@@ -29,13 +29,6 @@ Start with [`architecture.md`](architecture.md).
 - [`multilingual-evaluation-plan.md`](multilingual-evaluation-plan.md) and
   [`reader-language-review-checklist.md`](reader-language-review-checklist.md):
   gates for the reader languages.
-- [`plans/accounts.md`](plans/accounts.md): accounts and sign-in.
-- [`plans/statute-coverage.md`](plans/statute-coverage.md): which laws to add next.
-
-**Evidence**
-
-- [`search-quality-comparison-2026-10-29.md`](search-quality-comparison-2026-10-29.md):
-  a dated comparison of answers and retrieval, cited by the evaluation.
 
 **Contributing**
 
