@@ -1,5 +1,5 @@
 # Run from the private backup repository on its default branch.
-name: Private Neon backup
+name: Private database backup
 
 on:
   schedule:
@@ -25,7 +25,8 @@ concurrency:
 
 env:
   R2_BACKUP_BUCKET: ${{ vars.R2_BACKUP_BUCKET }}
-  EXPECTED_NEON_HOST: ${{ vars.EXPECTED_NEON_HOST }}
+  # The Railway TCP proxy host of the postgres service.
+  EXPECTED_DATABASE_HOST: ${{ vars.EXPECTED_DATABASE_HOST }}
   R2_BACKUP_ENDPOINT_URL: ${{ secrets.R2_BACKUP_ENDPOINT_URL }}
   R2_BACKUP_ACCESS_KEY_ID: ${{ secrets.R2_BACKUP_ACCESS_KEY_ID }}
   R2_BACKUP_SECRET_ACCESS_KEY: ${{ secrets.R2_BACKUP_SECRET_ACCESS_KEY }}
@@ -36,7 +37,9 @@ jobs:
     runs-on: ubuntu-24.04
     timeout-minutes: 10
     env:
-      NEON_BACKUP_DATABASE_URL: ${{ secrets.NEON_BACKUP_DATABASE_URL }}
+      # DATABASE_PUBLIC_URL of the postgres service, and its pinned certificate.
+      BACKUP_DATABASE_URL: ${{ secrets.BACKUP_DATABASE_URL }}
+      BACKUP_DATABASE_CA: ${{ vars.BACKUP_DATABASE_CA }}
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:

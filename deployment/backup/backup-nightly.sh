@@ -2,8 +2,20 @@
 set -euo pipefail
 source "$(dirname -- "${BASH_SOURCE[0]}")/backup-common.sh"
 
-: "${NEON_BACKUP_DATABASE_URL:?Set the private Neon connection secret}"
+# NEON_BACKUP_DATABASE_URL is the name used before the move to Railway.
+BACKUP_DATABASE_URL="${BACKUP_DATABASE_URL:-${NEON_BACKUP_DATABASE_URL:-}}"
+: "${BACKUP_DATABASE_URL:?Set the private database connection secret}"
+export BACKUP_DATABASE_URL
 python3 "$tools_py" pg-env "$backup_work/postgres.env"
+# The server certificate is verified against BACKUP_DATABASE_CA when it is set
+# (Railway's per-volume certificate, see deployment/railway/README.md), or
+# against the runner's public CA bundle (a provider with a public certificate).
+if [[ -n "${BACKUP_DATABASE_CA:-}" ]]; then
+  printf '%s\n' "$BACKUP_DATABASE_CA" >"$backup_work/database-ca.crt"
+  database_ca="$backup_work/database-ca.crt"
+else
+  database_ca=/etc/ssl/certs/ca-certificates.crt
+fi
 docker pull postgres:18 >/dev/null
 
 source_inventory() {
@@ -11,7 +23,7 @@ source_inventory() {
     --cpus=1 --memory=512m --tmpfs /tmp:rw,nosuid,size=16m \
     --env-file "$backup_work/postgres.env" \
     --mount "type=bind,source=$backup_work,target=/backup,readonly" \
-    --mount type=bind,source=/etc/ssl/certs/ca-certificates.crt,target=/run/neon-ca.crt,readonly \
+    --mount "type=bind,source=$database_ca,target=/run/database-ca.crt,readonly" \
     postgres:18 psql -X -t -A --file=/backup/inventory.sql
 }
 
@@ -21,7 +33,7 @@ docker run --rm --name "$backup_container" --read-only \
   --ulimit fsize=104857600:104857600 --tmpfs /tmp:rw,nosuid,size=16m \
   --env-file "$backup_work/postgres.env" \
   --mount "type=bind,source=$backup_work,target=/backup" \
-  --mount type=bind,source=/etc/ssl/certs/ca-certificates.crt,target=/run/neon-ca.crt,readonly \
+  --mount "type=bind,source=$database_ca,target=/run/database-ca.crt,readonly" \
   --entrypoint sh postgres:18 -c \
   'umask 077; exec pg_dump --format=custom --compress=gzip:6 --no-owner --no-acl --lock-wait-timeout=30s --file=/backup/app.dump' \
   >"$backup_work/dump-output.log" 2>"$backup_work/dump-errors.log"

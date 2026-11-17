@@ -61,7 +61,7 @@ def database_url(env_file: Path) -> str:
 
 
 def check_identities(source_url: str, target_url: str, expected_host: str) -> bool:
-    """Return whether the target is production Neon; refuse anything else."""
+    """Return whether the target is the production database; refuse anything else."""
     source = urlparse(source_url)
     target = urlparse(target_url)
     if source.hostname not in LOCAL_HOSTS or source.path != "/app":
@@ -73,18 +73,24 @@ def check_identities(source_url: str, target_url: str, expected_host: str) -> bo
     ):
         return False
     raise ValueError(
-        f"Target must be production Neon or a local {REHEARSAL_PREFIX}* copy"
+        f"Target must be the production database or a local {REHEARSAL_PREFIX}* copy"
     )
 
 
 def verified_tls(url: str) -> str:
-    """Neon requires verify-full; macOS Python has no system CA bundle."""
+    """Require verify-full against the URL's pinned certificate, or certifi's.
+
+    Railway Postgres presents a certificate generated for its volume, which the
+    target URL pins with `sslrootcert`. Without one, the server must present a
+    publicly trusted certificate; macOS Python has no system CA bundle, so the
+    certifi bundle stands in for it.
+    """
     import certifi
 
     parts = urlparse(url)
     query = dict(parse_qsl(parts.query))
     query["sslmode"] = "verify-full"
-    query["sslrootcert"] = certifi.where()
+    query.setdefault("sslrootcert", certifi.where())
     return urlunparse(parts._replace(query=urlencode(query)))
 
 
@@ -435,13 +441,24 @@ def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("command", choices=("copy", "activate"))
     parser.add_argument("--release-version", required=True)
-    parser.add_argument("--target-env", type=Path, default=ROOT / "deployment/neon.env")
+    parser.add_argument(
+        "--target-env",
+        type=Path,
+        default=ROOT / "deployment/neon.env",
+        help="private env file with the target DATABASE_URL and EXPECTED_DATABASE_HOST",
+    )
     parser.add_argument("--source-bucket", default=None)
     parser.add_argument("--apply", action="store_true")
     args = parser.parse_args()
     source_url = database_url(ROOT / ".env")
     target_url = database_url(args.target_env)
-    expected_host = dotenv_values(args.target_env).get("EXPECTED_NEON_HOST") or ""
+    target_env = dotenv_values(args.target_env)
+    # EXPECTED_NEON_HOST is the name used before the move to Railway.
+    expected_host = (
+        target_env.get("EXPECTED_DATABASE_HOST")
+        or target_env.get("EXPECTED_NEON_HOST")
+        or ""
+    )
     production = check_identities(source_url, target_url, expected_host)
     if args.command == "copy" and not args.source_bucket:
         parser.error("--source-bucket is required for copy")
@@ -464,7 +481,7 @@ def main() -> int:
         else:
             target.rollback()
     label = "Applied" if args.apply else "Dry run (rolled back)"
-    where = "Neon" if production else urlparse(target_url).path.lstrip("/")
+    where = "production" if production else urlparse(target_url).path.lstrip("/")
     print(f"{label}: {args.command} {args.release_version} on {where}")
     print(json.dumps(report, indent=2, sort_keys=True))
     return 0

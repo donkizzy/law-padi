@@ -17,7 +17,10 @@ trap cleanup_backup EXIT
 : "${R2_BACKUP_ACCESS_KEY_ID:?Set the bucket-scoped access key}"
 : "${R2_BACKUP_SECRET_ACCESS_KEY:?Set the bucket-scoped secret key}"
 : "${R2_BACKUP_BUCKET:?Set the backup bucket name}"
-: "${EXPECTED_NEON_HOST:?Set the authorized Neon hostname}"
+# EXPECTED_NEON_HOST is the name used before the move to Railway.
+EXPECTED_DATABASE_HOST="${EXPECTED_DATABASE_HOST:-${EXPECTED_NEON_HOST:-}}"
+: "${EXPECTED_DATABASE_HOST:?Set the authorized database hostname}"
+export EXPECTED_DATABASE_HOST
 export AWS_ACCESS_KEY_ID="$R2_BACKUP_ACCESS_KEY_ID"
 export AWS_SECRET_ACCESS_KEY="$R2_BACKUP_SECRET_ACCESS_KEY"
 export AWS_DEFAULT_REGION=auto AWS_EC2_METADATA_DISABLED=true AWS_PAGER=""

@@ -42,6 +42,18 @@ class PublishReleaseTests(unittest.TestCase):
         self.assertIn("sslrootcert=", url)
         self.assertNotIn("sslmode=require", url)
 
+    def test_a_pinned_certificate_is_kept_and_still_fully_verified(self):
+        railway = (
+            "postgresql://postgres:x@example.proxy.rlwy.net:41234/app"
+            "?sslmode=require&sslrootcert=/private/railway-postgres.crt"
+        )
+        url = publish.verified_tls(railway)
+        self.assertIn("sslmode=verify-full", url)
+        self.assertIn("sslrootcert=%2Fprivate%2Frailway-postgres.crt", url)
+        self.assertTrue(
+            publish.check_identities(LOCAL, railway, "example.proxy.rlwy.net")
+        )
+
     def test_copied_rows_drop_local_references_and_stay_inactive(self):
         def rendered(table, names):
             return [

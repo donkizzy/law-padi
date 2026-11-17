@@ -13,7 +13,6 @@ from urllib.parse import parse_qs, unquote, urlparse
 MAX_BYTES = 100 * 1024 * 1024
 
 
-
 def digest(path):
     value = hashlib.sha256()
     with Path(path).open("rb") as handle:
@@ -44,15 +43,22 @@ def main():
         ):
             raise ValueError("Expected one HTTPS Cloudflare R2 endpoint")
     elif operation == "pg-env":
-        parsed = urlparse(os.environ["NEON_BACKUP_DATABASE_URL"])
+        # The NEON_* names are those used before the move to Railway.
+        parsed = urlparse(
+            os.environ.get("BACKUP_DATABASE_URL")
+            or os.environ["NEON_BACKUP_DATABASE_URL"]
+        )
+        expected_host = (
+            os.environ.get("EXPECTED_DATABASE_HOST") or os.environ["EXPECTED_NEON_HOST"]
+        )
         if (
             parsed.scheme not in {"postgres", "postgresql", "postgresql+psycopg"}
-            or parsed.hostname != os.environ["EXPECTED_NEON_HOST"]
+            or parsed.hostname != expected_host
             or parsed.path != "/app"
             or not parsed.username
             or not parsed.password
         ):
-            raise ValueError("Expected the explicitly authorized Neon app database")
+            raise ValueError("Expected the explicitly authorized app database")
         query = parse_qs(parsed.query)
         values = {
             "PGHOST": parsed.hostname,
@@ -61,7 +67,7 @@ def main():
             "PGPASSWORD": unquote(parsed.password),
             "PGDATABASE": "app",
             "PGSSLMODE": "verify-full",
-            "PGSSLROOTCERT": "/run/neon-ca.crt",
+            "PGSSLROOTCERT": "/run/database-ca.crt",
             "PGCONNECT_TIMEOUT": "20",
             "PGAPPNAME": "constitution-private-backup",
             "PGOPTIONS": "-c default_transaction_read_only=on",
