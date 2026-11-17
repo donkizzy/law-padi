@@ -10,9 +10,5 @@
     "not_found_handling": "none",
     "run_worker_first": true
   },
-  "observability": { "enabled": false },
-  "vars": {
-    "API_ORIGIN": "https://constitution-ng-api.onrender.com",
-    "PUBLIC_SITE_URL": "https://constitution.ng"
-  }
+  "observability": { "enabled": false }
 }

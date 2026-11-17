@@ -3,6 +3,5 @@
   "main": "redirect.ts",
   "compatibility_date": "2026-10-14",
   "workers_dev": true,
-  "preview_urls": false,
-  "vars": { "PUBLIC_SITE_URL": "https://constitution.ng" }
+  "preview_urls": false
 }

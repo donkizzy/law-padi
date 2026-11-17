@@ -5,7 +5,7 @@ services:
     runtime: docker
     plan: free
     region: virginia
-    repo: https://github.com/donkizzy/law-padi
+    # `repo` is omitted: Render deploys the repository that holds this Blueprint.
     branch: master
     dockerfilePath: ./deployment/render/Dockerfile
     dockerContext: .

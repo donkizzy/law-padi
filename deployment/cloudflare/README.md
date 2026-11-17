@@ -4,7 +4,7 @@ The existing Worker uses the legacy name `constitition-ng`. Set
 `PUBLIC_SITE_URL` to its existing bare HTTPS origin and leave
 `CLOUDFLARE_WORKER_NAME` unset to retain it. The generated configuration defaults
 to the existing name; set `CLOUDFLARE_WORKER_NAME=constitution-ng` only during
-the migration below. The API origin remains the configured Render service.
+the migration below. `API_ORIGIN` names the Render service the Worker proxies to.
 
 The main hostname and version URLs stay disabled while the AI launch evaluation
 and human review are pending. Cloudflare can still build and deploy the assets
@@ -17,7 +17,7 @@ Use the repository root, production branch `master`, and these commands:
 - Build: `bash deployment/cloudflare/build.sh`
 - Deploy: `bunx wrangler@4.151.0 deploy --config deployment/wrangler.generated.json`
 
-Set `BUN_VERSION=1.3.12` in Cloudflare's build variables and leave
+Set the build variables in the table below and leave
 `CLOUDFLARE_PUBLIC_LAUNCH=false`. Keep non-production branch builds disabled until
 an isolated preview backend is configured. These builds run on Cloudflare, not
 GitHub Actions. Dependencies use the committed Bun lockfile.
@@ -32,6 +32,25 @@ For a local build, install locked dependencies with `bun install --frozen-lockfi
 then run `bash deployment/cloudflare/build.sh`. An operator can supply the secret
 privately for the initial upload through Wrangler's `--secrets-file` option.
 Subsequent deploys retain existing Worker secrets.
+
+## Build variables
+
+No deployment hostname is tracked in this repository. `wrangler.json` is a
+template; `prepare.py` writes `PUBLIC_SITE_URL` and `API_ORIGIN` into the
+generated, ignored configuration and refuses any value that is not a bare HTTPS
+origin (no credentials, port, path, query or fragment). `API_ORIGIN` must also
+be a `.onrender.com` host, the same rule `worker.ts` applies when it proxies.
+
+| Variable | Required | Meaning |
+| --- | --- | --- |
+| `PUBLIC_SITE_URL` | yes | The canonical public origin. Passed to Vite as `VITE_PUBLIC_SITE_URL` and to the Worker. |
+| `API_ORIGIN` | yes | The Render API origin, for example `https://<service>.onrender.com`. `build.sh` stops if it is unset; `prepare.py` also accepts `--api-origin`. |
+| `CLOUDFLARE_WORKER_NAME` | no | `constitition-ng` (the legacy name, the default) or `constitution-ng`. |
+| `CLOUDFLARE_PUBLIC_LAUNCH` | no | `false` (default) or `true`; see "Launch and verification". |
+| `BUN_VERSION` | yes | `1.3.12`. |
+
+Render's `FRONTEND_HOST` must equal `PUBLIC_SITE_URL`; see
+[`docs/runbooks/render.md`](../../docs/runbooks/render.md).
 
 ## Public read cache
 
@@ -73,10 +92,18 @@ now runs before static assets and serves real public HTML, robots, sitemap and
 LLM directory responses. Deploy the backend's release-scoped full-tree support
 before this Worker; the sitemap intentionally rejects an incomplete old response.
 `PUBLIC_SITE_URL` is a required build variable for the bare canonical HTTPS origin;
-it is passed to both Vite and the Worker configuration. Changing it does not configure DNS, TLS or public routing.
+it is passed to both Vite and the Worker configuration. The Worker has no
+fallback: without it, public routes answer 503. Changing it does not configure
+DNS, TLS or public routing.
 
-Before enabling this configuration, set `PUBLIC_SITE_URL` on the existing
-Cloudflare build to its current origin. In Render, retain the existing values
+The Worker's public pages are built from three layers:
+`frontend/src/lib/public-pages.ts` and `seo.ts` hold the metadata and copy that the
+React routes also use, `pages.ts` holds the page bodies and `html.ts` the escaping
+template. `seo-output.test.ts` pins the rendered output (`bun test
+deployment/cloudflare/`; update its snapshots only for an intended change).
+
+Before enabling this configuration, set `PUBLIC_SITE_URL` and `API_ORIGIN` on the
+existing Cloudflare build to their current values. In Render, retain the existing values
 for the now-unsynced `FRONTEND_HOST` and `R2_BUCKET_NAME` environment variables.
 
 ## Rename the Worker
@@ -94,8 +121,9 @@ Worker and its URL throughout setup.
 3. In Render, set `FRONTEND_HOST` to the new origin and deploy; verify login and
    CORS through the new origin. Ensure the Blueprint's unsynced values, including
    `R2_BUCKET_NAME`, retain their existing values.
-4. Set `PUBLIC_SITE_URL` in `wrangler.redirect.json` to the verified new origin,
-   then deploy `bunx wrangler@4.151.0 deploy --config deployment/cloudflare/wrangler.redirect.json`
-   to the legacy Worker. Verify an old URL redirects with its path and query to
+4. Deploy the redirect to the legacy Worker, passing the verified new origin as
+   a variable (`wrangler.redirect.json` carries none, and the redirect answers
+   500 until one is set):
+   `bunx wrangler@4.151.0 deploy --config deployment/cloudflare/wrangler.redirect.json --var PUBLIC_SITE_URL:<new origin>`. Verify an old URL redirects with its path and query to
    the new origin, and verify sitemap and canonical URLs. Keep the legacy Worker
    and its workers.dev route active for existing links.

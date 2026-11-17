@@ -41,15 +41,27 @@ for import; never commit, print or paste that file.
 - `ORIGIN_PROXY_SECRET` must match the Worker's secret. The API refuses to
   start without a secret of at least 32 characters and returns 403 to requests
   that do not carry it.
-- `FRONTEND_HOST` must match the Worker's public origin
-  (`PUBLIC_SITE_URL` in `deployment/cloudflare/wrangler.json`).
+- `FRONTEND_HOST` must match the Worker's public origin (the Cloudflare build
+  variable `PUBLIC_SITE_URL`).
+- `R2_BUCKET_NAME` names the private source-document bucket.
+
+## Hosting identifiers
+
+Nothing that names the production deployment is tracked in the repository.
+Each identifier is set where it is used:
+
+| Identifier | Where it is set |
+| --- | --- |
+| Git repository Render deploys | Not in `render.yaml`: `repo` is omitted, so Render uses the repository that holds the Blueprint. |
+| Public site origin | `PUBLIC_SITE_URL` (Cloudflare build variable) and `FRONTEND_HOST` (Render environment); keep them equal. |
+| API origin the Worker proxies to | `API_ORIGIN` (Cloudflare build variable), a bare HTTPS `.onrender.com` origin. `prepare.py` rejects anything else. Details in [`deployment/cloudflare/README.md`](../../deployment/cloudflare/README.md#build-variables). |
+| Source-document bucket | `R2_BUCKET_NAME` (Render environment). |
+| Database host and backup bucket | `EXPECTED_NEON_HOST` ([`release.md`](release.md)) and `R2_BACKUP_BUCKET` ([`deployment/render/README.md`](../../deployment/render/README.md)), set privately. |
 
 ## Deploying
 
-`render.yaml` deploys every commit on `master` (`autoDeployTrigger: commit`)
-without waiting for GitHub Actions; the comment beside that setting says it was
-chosen while Actions was unavailable on the account. Run the checks locally
-before pushing. The full procedure, including migrations, which must run from an
+`render.yaml` deploys `master` once its GitHub checks pass
+(`autoDeployTrigger: checksPass`). The full procedure, including migrations, which must run from an
 operator machine because Render Free has no pre-deploy step, is in
 [`release.md`](release.md). The frontend and Worker are released through
 Cloudflare's native build ([`deployment/cloudflare/README.md`](../../deployment/cloudflare/README.md)).

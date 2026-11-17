@@ -63,8 +63,8 @@ References: [OpenAI crawler controls](https://developers.openai.com/api/docs/bot
    and check that `GET /api/v1/legal/provisions/tree?all_nodes=true` returns the
    full tree for the published edition and rejects private releases.
 2. Build and deploy the Worker. `PUBLIC_SITE_URL` (a bare HTTPS origin) is the
-   canonical origin passed to both Vite and the Worker; its default is in
-   `deployment/cloudflare/wrangler.json`. Changing it does not configure DNS,
+   canonical origin passed to both Vite and the Worker; there is no default, and
+   the Worker answers 503 without it. Changing it does not configure DNS,
    TLS or routing, so attach and verify the domain before switching it.
 3. On the deployed origin, check raw and rendered metadata, edition labels,
    source links, status codes, `robots.txt`, the sitemap and SSE.
@@ -76,8 +76,8 @@ References: [OpenAI crawler controls](https://developers.openai.com/api/docs/bot
 
 ## Open items
 
-- The canonical origin is still the Workers address configured in
-  `wrangler.json`; moving to the project's own domain needs DNS, TLS, redirects
+- The canonical origin is still the Workers address configured in the
+  `PUBLIC_SITE_URL` build variable; moving to the project's own domain needs DNS, TLS, redirects
   from the old origin (it is the canonical URL in the current sitemap) and a
   single `PUBLIC_SITE_URL` change.
 - The corrections link points at the GitHub repository's issues
