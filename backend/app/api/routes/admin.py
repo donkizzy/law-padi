@@ -1,12 +1,13 @@
 import asyncio
 import tempfile
 import uuid
-from collections.abc import AsyncIterable, Iterator
+from collections.abc import AsyncIterable, Iterator, Sequence
 from typing import Annotated
 
-from fastapi import APIRouter, Header, HTTPException, Request, Response
+from fastapi import APIRouter, Header, HTTPException, Query, Request, Response
 from fastapi.responses import RedirectResponse, StreamingResponse
 from fastapi.sse import EventSourceResponse, ServerSentEvent
+from sqlalchemy import select as sa_select
 from sqlmodel import Session, col, func, select
 
 from app.api.deps import CurrentUser, SessionDep
@@ -15,7 +16,6 @@ from app.ingestion.admin.alerts import read_admin_operational_alerts
 from app.ingestion.admin.pages import update_page_selection
 from app.ingestion.admin.release_compose import compose_corpus_release
 from app.ingestion.admin.release_publish import publish_corpus_release
-from app.ingestion.admin.release_queries import release_entry_count
 from app.ingestion.admin.release_read import (
     read_corpus_release_manifest,
     read_corpus_release_publication_evidence,
@@ -24,7 +24,6 @@ from app.ingestion.admin.release_validate import validate_corpus_release
 from app.ingestion.admin.review import (
     decide_review_candidate,
     derive_review_candidate,
-    latest_revision_text,
     update_review_candidate,
     update_review_issue,
 )
@@ -180,7 +179,7 @@ def read_audit_events(
     current_user: CurrentUser,
     entity_id: uuid.UUID | None = None,
     entity_type: str | None = None,
-    limit: int = 100,
+    limit: int = Query(default=100, ge=1, le=200),
 ) -> AuditEventsPublic:
     from app.legal.models import AuditEvent
 
@@ -200,73 +199,87 @@ def read_audit_events(
 @router.get("/metrics")
 def read_admin_metrics(session: SessionDep, current_user: CurrentUser) -> AdminMetrics:
     _require_any_admin(session, current_user)
-    active_runs = session.exec(
-        select(func.count())
-        .select_from(IngestionRun)
-        .where(
-            col(IngestionRun.status).in_(
-                [
-                    IngestionRunStatus.QUEUED,
-                    IngestionRunStatus.RUNNING,
-                    IngestionRunStatus.READY_TO_EMBED,
-                    IngestionRunStatus.INDEXING,
-                    IngestionRunStatus.READY_TO_PUBLISH,
-                    IngestionRunStatus.PUBLISHING,
-                ]
+    (
+        active_runs,
+        blocked_runs,
+        failed_runs,
+        queue_depth,
+        worker_heartbeat,
+        pages_processed,
+        ocr_steps,
+        review_issues,
+        total_candidates,
+        auto_approved,
+        embedding_total,
+        embedding_done,
+        production_release,
+    ) = (
+        session.connection()
+        .execute(
+            sa_select(
+                select(func.count())
+                .select_from(IngestionRun)
+                .where(
+                    col(IngestionRun.status).in_(
+                        [
+                            IngestionRunStatus.QUEUED,
+                            IngestionRunStatus.RUNNING,
+                            IngestionRunStatus.READY_TO_EMBED,
+                            IngestionRunStatus.INDEXING,
+                            IngestionRunStatus.READY_TO_PUBLISH,
+                            IngestionRunStatus.PUBLISHING,
+                        ]
+                    )
+                )
+                .scalar_subquery(),
+                select(func.count())
+                .select_from(IngestionStep)
+                .where(IngestionStep.status == IngestionStepStatus.BLOCKED)
+                .scalar_subquery(),
+                select(func.count())
+                .select_from(IngestionRun)
+                .where(IngestionRun.status == IngestionRunStatus.FAILED)
+                .scalar_subquery(),
+                select(func.count())
+                .select_from(IngestionTask)
+                .where(IngestionTask.status == IngestionTaskStatus.PENDING)
+                .scalar_subquery(),
+                select(func.max(IngestionTask.heartbeat_at)).scalar_subquery(),
+                select(func.count()).select_from(SourcePage).scalar_subquery(),
+                select(func.count())
+                .select_from(IngestionStep)
+                .where(
+                    col(IngestionStep.stage).in_(
+                        [IngestionStage.LOCAL_OCR, IngestionStage.MANAGED_OCR]
+                    ),
+                    IngestionStep.status == IngestionStepStatus.SUCCEEDED,
+                )
+                .scalar_subquery(),
+                select(func.count())
+                .select_from(ReviewIssue)
+                .where(ReviewIssue.status == ReviewIssueStatus.OPEN)
+                .scalar_subquery(),
+                select(func.count()).select_from(ExtractionCandidate).scalar_subquery(),
+                select(func.count())
+                .select_from(ExtractionCandidate)
+                .where(
+                    ExtractionCandidate.status
+                    == ExtractionCandidateStatus.AUTO_APPROVED
+                )
+                .scalar_subquery(),
+                select(func.count()).select_from(EmbeddingRun).scalar_subquery(),
+                select(func.count())
+                .select_from(EmbeddingRun)
+                .where(EmbeddingRun.status == EmbeddingRunStatus.SUCCEEDED)
+                .scalar_subquery(),
+                select(CorpusRelease.version)
+                .where(CorpusRelease.status == CorpusReleaseStatus.PRODUCTION)
+                .limit(1)
+                .scalar_subquery(),
             )
         )
-    ).one()
-    blocked_runs = session.exec(
-        select(func.count())
-        .select_from(IngestionStep)
-        .where(IngestionStep.status == IngestionStepStatus.BLOCKED)
-    ).one()
-    failed_runs = session.exec(
-        select(func.count())
-        .select_from(IngestionRun)
-        .where(IngestionRun.status == IngestionRunStatus.FAILED)
-    ).one()
-    queue_depth = session.exec(
-        select(func.count())
-        .select_from(IngestionTask)
-        .where(IngestionTask.status == IngestionTaskStatus.PENDING)
-    ).one()
-    worker_heartbeat = session.exec(select(func.max(IngestionTask.heartbeat_at))).one()
-    pages_processed = session.exec(select(func.count()).select_from(SourcePage)).one()
-    ocr_steps = session.exec(
-        select(func.count())
-        .select_from(IngestionStep)
-        .where(
-            col(IngestionStep.stage).in_(
-                [IngestionStage.LOCAL_OCR, IngestionStage.MANAGED_OCR]
-            ),
-            IngestionStep.status == IngestionStepStatus.SUCCEEDED,
-        )
-    ).one()
-    review_issues = session.exec(
-        select(func.count())
-        .select_from(ReviewIssue)
-        .where(ReviewIssue.status == ReviewIssueStatus.OPEN)
-    ).one()
-    total_candidates = session.exec(
-        select(func.count()).select_from(ExtractionCandidate)
-    ).one()
-    auto_approved = session.exec(
-        select(func.count())
-        .select_from(ExtractionCandidate)
-        .where(ExtractionCandidate.status == ExtractionCandidateStatus.AUTO_APPROVED)
-    ).one()
-    embedding_total = session.exec(select(func.count()).select_from(EmbeddingRun)).one()
-    embedding_done = session.exec(
-        select(func.count())
-        .select_from(EmbeddingRun)
-        .where(EmbeddingRun.status == EmbeddingRunStatus.SUCCEEDED)
-    ).one()
-    production_release = session.exec(
-        select(CorpusRelease).where(
-            CorpusRelease.status == CorpusReleaseStatus.PRODUCTION
-        )
-    ).first()
+        .one()
+    )
     return AdminMetrics(
         active_runs=active_runs,
         blocked_runs=blocked_runs,
@@ -280,9 +293,7 @@ def read_admin_metrics(session: SessionDep, current_user: CurrentUser) -> AdminM
         if total_candidates
         else 0,
         embedding_progress=(embedding_done / embedding_total) if embedding_total else 0,
-        current_production_release=production_release.version
-        if production_release
-        else None,
+        current_production_release=production_release if production_release else None,
     )
 
 
@@ -411,8 +422,8 @@ def read_ingestion_runs(
     current_user: CurrentUser,
     status: IngestionRunStatus | None = None,
     stage: IngestionStage | None = None,
-    skip: int = 0,
-    limit: int = 100,
+    skip: int = Query(default=0, ge=0),
+    limit: int = Query(default=100, ge=1, le=200),
 ) -> IngestionRunsPublic:
     _require_any_admin(session, current_user)
     statement = select(IngestionRun)
@@ -574,9 +585,7 @@ def read_ingestion_run_pages(
         .where(SourcePage.run_id == run_id)
         .order_by(col(SourcePage.page_number))
     ).all()
-    return SourcePagesPublic(
-        data=[_page_public(session, page) for page in pages], count=len(pages)
-    )
+    return SourcePagesPublic(data=_pages_public(session, pages), count=len(pages))
 
 
 @router.patch("/ingestion-runs/{run_id}/page-selection")
@@ -588,9 +597,7 @@ def patch_page_selection(
 ) -> SourcePagesPublic:
     require_admin_role(session, current_user, AdminRole.INGESTION_UPLOADER)
     pages = update_page_selection(session, run_id, body, current_user)
-    return SourcePagesPublic(
-        data=[_page_public(session, page) for page in pages], count=len(pages)
-    )
+    return SourcePagesPublic(data=_pages_public(session, pages), count=len(pages))
 
 
 @router.post("/ingestion-runs/{run_id}/retry")
@@ -676,8 +683,8 @@ def read_review_items(
     page: int | None = None,
     path: str | None = None,
     status: ExtractionCandidateStatus | None = None,
-    skip: int = 0,
-    limit: int = 100,
+    skip: int = Query(default=0, ge=0),
+    limit: int = Query(default=100, ge=1, le=200),
 ) -> ReviewItemsPublic:
     require_admin_role(session, current_user, AdminRole.LEGAL_REVIEWER)
     statement = select(ExtractionCandidate)
@@ -720,9 +727,9 @@ def read_review_items(
             col(ExtractionCandidate.status) == status
         )
     if issue:
-        issue_candidate_ids = session.exec(
-            select(ReviewIssue.candidate_id).where(ReviewIssue.issue_type == issue)
-        ).all()
+        issue_candidate_ids = select(ReviewIssue.candidate_id).where(
+            ReviewIssue.issue_type == issue
+        )
         statement = statement.where(
             col(ExtractionCandidate.id).in_(issue_candidate_ids)
         )
@@ -735,7 +742,7 @@ def read_review_items(
         .limit(limit)
     ).all()
     return ReviewItemsPublic(
-        data=[_review_public(session, candidate) for candidate in candidates],
+        data=_reviews_public(session, candidates),
         count=session.exec(count_statement).one(),
     )
 
@@ -812,26 +819,28 @@ def read_embedding_benchmark(
 ) -> EmbeddingBenchmarkPublic:
     _require_any_admin(session, current_user)
     runs = session.exec(
-        select(EmbeddingRun).where(EmbeddingRun.release_id == release_id)
+        select(EmbeddingRun, EmbeddingProfile)
+        .join(
+            EmbeddingProfile, col(EmbeddingProfile.id) == col(EmbeddingRun.profile_id)
+        )
+        .where(EmbeddingRun.release_id == release_id)
     ).all()
     results: list[EmbeddingBenchmarkResult] = []
-    for run in runs:
-        profile = session.get(EmbeddingProfile, run.profile_id)
-        if profile:
-            results.append(
-                EmbeddingBenchmarkResult(
-                    profile_id=profile.id,
-                    provider=profile.provider,
-                    model_name=profile.model_name,
-                    status=run.status,
-                    recall_at_10=run.recall_at_10,
-                    ndcg_at_10=run.ndcg_at_10,
-                    cost_usd=run.cost_usd,
-                    p95_latency_ms=run.p95_latency_ms,
-                    selected_for_release=run.selected_for_release,
-                    metrics=run.metrics,
-                )
+    for run, profile in runs:
+        results.append(
+            EmbeddingBenchmarkResult(
+                profile_id=profile.id,
+                provider=profile.provider,
+                model_name=profile.model_name,
+                status=run.status,
+                recall_at_10=run.recall_at_10,
+                ndcg_at_10=run.ndcg_at_10,
+                cost_usd=run.cost_usd,
+                p95_latency_ms=run.p95_latency_ms,
+                selected_for_release=run.selected_for_release,
+                metrics=run.metrics,
             )
+        )
     return EmbeddingBenchmarkPublic(release_id=release_id, results=results)
 
 
@@ -1041,8 +1050,8 @@ def evaluate_ocr_benchmark_route(
 def read_corpus_releases(
     session: SessionDep,
     current_user: CurrentUser,
-    skip: int = 0,
-    limit: int = 100,
+    skip: int = Query(default=0, ge=0),
+    limit: int = Query(default=100, ge=1, le=200),
 ) -> CorpusReleasesPublic:
     _require_any_admin(session, current_user)
     releases = session.exec(
@@ -1053,7 +1062,7 @@ def read_corpus_releases(
     ).all()
     count = session.exec(select(func.count()).select_from(CorpusRelease)).one()
     return CorpusReleasesPublic(
-        data=[_release_public(session, release) for release in releases],
+        data=_releases_public(session, releases),
         count=count,
     )
 
@@ -1196,7 +1205,10 @@ def publish_release(
 
 @router.get("/corpus-releases/production/provision-versions")
 def read_production_provision_versions(
-    session: SessionDep, current_user: CurrentUser
+    session: SessionDep,
+    current_user: CurrentUser,
+    skip: int = Query(default=0, ge=0),
+    limit: int = Query(default=100, ge=1, le=200),
 ) -> PublicProvisionVersions:
     _require_any_admin(session, current_user)
     production_release = session.exec(
@@ -1207,29 +1219,34 @@ def read_production_provision_versions(
     if not production_release:
         return PublicProvisionVersions(data=[], count=0)
     entries = session.exec(
-        select(CorpusReleaseEntry).where(
-            CorpusReleaseEntry.release_id == production_release.id
+        select(ProvisionVersion, Provision)
+        .join(Provision, col(Provision.id) == col(ProvisionVersion.provision_id))
+        .join(
+            CorpusReleaseEntry,
+            col(CorpusReleaseEntry.provision_version_id) == col(ProvisionVersion.id),
         )
+        .where(CorpusReleaseEntry.release_id == production_release.id)
+        .order_by(Provision.sort_key, col(Provision.id))
+        .offset(skip)
+        .limit(limit)
     ).all()
-    data: list[PublicProvisionVersion] = []
-    for entry in entries:
-        version = session.get(ProvisionVersion, entry.provision_version_id)
-        if not version:
-            continue
-        provision = session.get(Provision, version.provision_id)
-        if not provision:
-            continue
-        data.append(
-            PublicProvisionVersion(
-                id=version.id,
-                provision_id=version.provision_id,
-                text=version.text,
-                canonical_path=provision.canonical_path,
-                release_version=production_release.version,
-                status=production_release.status,
-            )
+    count = session.exec(
+        select(func.count())
+        .select_from(CorpusReleaseEntry)
+        .where(CorpusReleaseEntry.release_id == production_release.id)
+    ).one()
+    data = [
+        PublicProvisionVersion(
+            id=version.id,
+            provision_id=version.provision_id,
+            text=version.text,
+            canonical_path=provision.canonical_path,
+            release_version=production_release.version,
+            status=production_release.status,
         )
-    return PublicProvisionVersions(data=data, count=len(data))
+        for version, provision in entries
+    ]
+    return PublicProvisionVersions(data=data, count=count)
 
 
 def _require_any_admin(session: Session, current_user: CurrentUser) -> None:
@@ -1356,65 +1373,124 @@ def _task_public(task: IngestionTask) -> IngestionTaskPublic:
     return IngestionTaskPublic.model_validate(task)
 
 
-def _page_public(session: Session, page: SourcePage) -> SourcePagePublic:
-    artifact = session.exec(
+def _pages_public(
+    session: Session, pages: Sequence[SourcePage]
+) -> list[SourcePagePublic]:
+    page_ids = [page.id for page in pages]
+    artifacts = session.exec(
         select(IngestionArtifact).where(
-            IngestionArtifact.run_id == page.run_id,
-            IngestionArtifact.source_page_id == page.id,
+            col(IngestionArtifact.source_page_id).in_(page_ids),
             IngestionArtifact.artifact_type == IngestionArtifactType.PAGE_THUMBNAIL,
         )
-    ).first()
-    public = SourcePagePublic.model_validate(page)
-    public.thumbnail_url = (
-        f"{settings.API_V1_STR}/admin/ingestion-artifacts/{artifact.id}/content"
-        if artifact
-        else None
-    )
-    return public
+    ).all()
+    thumbnails: dict[tuple[uuid.UUID, uuid.UUID | None], uuid.UUID] = {}
+    for artifact in artifacts:
+        thumbnails.setdefault((artifact.run_id, artifact.source_page_id), artifact.id)
+    data = []
+    for page in pages:
+        public = SourcePagePublic.model_validate(page)
+        artifact_id = thumbnails.get((page.run_id, page.id))
+        public.thumbnail_url = (
+            f"{settings.API_V1_STR}/admin/ingestion-artifacts/{artifact_id}/content"
+            if artifact_id
+            else None
+        )
+        data.append(public)
+    return data
 
 
 def _review_public(
     session: Session, candidate: ExtractionCandidate
 ) -> ReviewItemPublic:
-    issues = session.exec(
+    return _reviews_public(session, [candidate])[0]
+
+
+def _reviews_public(
+    session: Session, candidates: Sequence[ExtractionCandidate]
+) -> list[ReviewItemPublic]:
+    candidate_ids = [candidate.id for candidate in candidates]
+    issues_by_candidate: dict[uuid.UUID, list[ReviewIssue]] = {}
+    for issue in session.exec(
         select(ReviewIssue)
-        .where(ReviewIssue.candidate_id == candidate.id)
+        .where(col(ReviewIssue.candidate_id).in_(candidate_ids))
         .order_by(col(ReviewIssue.created_at))
-    ).all()
-    revisions = session.exec(
+    ).all():
+        issues_by_candidate.setdefault(issue.candidate_id, []).append(issue)
+    revisions_by_candidate: dict[uuid.UUID, list[CandidateRevision]] = {}
+    for revision in session.exec(
         select(CandidateRevision)
-        .where(CandidateRevision.candidate_id == candidate.id)
+        .where(col(CandidateRevision.candidate_id).in_(candidate_ids))
         .order_by(col(CandidateRevision.revision_number))
-    ).all()
-    decisions = session.exec(
+    ).all():
+        revisions_by_candidate.setdefault(revision.candidate_id, []).append(revision)
+    decisions_by_candidate: dict[uuid.UUID, list[ReviewDecisionRecord]] = {}
+    for decision in session.exec(
         select(ReviewDecisionRecord)
-        .where(ReviewDecisionRecord.candidate_id == candidate.id)
+        .where(col(ReviewDecisionRecord.candidate_id).in_(candidate_ids))
         .order_by(col(ReviewDecisionRecord.created_at))
-    ).all()
-    source = session.get(SourceDocument, candidate.source_document_id)
-    source_page_thumbnail_url = None
-    if candidate.source_page_start is not None:
-        source_page = session.exec(
-            select(SourcePage).where(
-                SourcePage.run_id == candidate.run_id,
-                SourcePage.source_document_id == candidate.source_document_id,
-                SourcePage.page_number == candidate.source_page_start,
+    ).all():
+        decisions_by_candidate.setdefault(decision.candidate_id, []).append(decision)
+    sources = {
+        source.id: source
+        for source in session.exec(
+            select(SourceDocument).where(
+                col(SourceDocument.id).in_(
+                    {candidate.source_document_id for candidate in candidates}
+                )
             )
-        ).first()
-        if source_page:
-            thumbnail = session.exec(
-                select(IngestionArtifact).where(
-                    IngestionArtifact.run_id == candidate.run_id,
-                    IngestionArtifact.source_page_id == source_page.id,
-                    IngestionArtifact.artifact_type
-                    == IngestionArtifactType.PAGE_THUMBNAIL,
-                )
-            ).first()
-            if thumbnail:
-                source_page_thumbnail_url = (
-                    f"{settings.API_V1_STR}/admin/ingestion-artifacts/"
-                    f"{thumbnail.id}/content"
-                )
+        ).all()
+    }
+    # Join only the first source page for each candidate, including all three
+    # identity fields so runs of the same source cannot borrow thumbnails.
+    pages = session.exec(
+        select(ExtractionCandidate.id, SourcePage)
+        .join(
+            SourcePage,
+            (col(SourcePage.run_id) == col(ExtractionCandidate.run_id))
+            & (
+                col(SourcePage.source_document_id)
+                == col(ExtractionCandidate.source_document_id)
+            )
+            & (
+                col(SourcePage.page_number)
+                == col(ExtractionCandidate.source_page_start)
+            ),
+        )
+        .where(col(ExtractionCandidate.id).in_(candidate_ids))
+    ).all()
+    page_public = _pages_public(session, [page for _, page in pages])
+    thumbnails = {
+        candidate_id: public.thumbnail_url
+        for (candidate_id, _), public in zip(pages, page_public, strict=True)
+    }
+    data = []
+    for candidate in candidates:
+        issues = issues_by_candidate.get(candidate.id, [])
+        revisions = revisions_by_candidate.get(candidate.id, [])
+        decisions = decisions_by_candidate.get(candidate.id, [])
+        source = sources.get(candidate.source_document_id)
+        source_page_thumbnail_url = thumbnails.get(candidate.id)
+        data.append(
+            _present_review(
+                candidate,
+                issues,
+                revisions,
+                decisions,
+                source,
+                source_page_thumbnail_url,
+            )
+        )
+    return data
+
+
+def _present_review(
+    candidate: ExtractionCandidate,
+    issues: Sequence[ReviewIssue],
+    revisions: Sequence[CandidateRevision],
+    decisions: Sequence[ReviewDecisionRecord],
+    source: SourceDocument | None,
+    source_page_thumbnail_url: str | None,
+) -> ReviewItemPublic:
     return ReviewItemPublic(
         id=candidate.id,
         run_id=candidate.run_id,
@@ -1429,7 +1505,7 @@ def _review_public(
         canonical_path=candidate.canonical_path,
         sort_key=candidate.sort_key,
         raw_text=candidate.raw_text,
-        latest_revision_text=latest_revision_text(session, candidate),
+        latest_revision_text=revisions[-1].revised_text if revisions else None,
         normalized_text=candidate.normalized_text,
         source_page_start=candidate.source_page_start,
         source_page_end=candidate.source_page_end,
@@ -1457,34 +1533,57 @@ def _review_public(
 
 
 def _release_public(session: Session, release: CorpusRelease) -> CorpusReleasePublic:
-    instruments = session.exec(
-        select(LegalInstrument)
-        .join(Provision, col(Provision.instrument_id) == col(LegalInstrument.id))
-        .join(ProvisionVersion, col(ProvisionVersion.provision_id) == col(Provision.id))
+    return _releases_public(session, [release])[0]
+
+
+def _releases_public(
+    session: Session, releases: Sequence[CorpusRelease]
+) -> list[CorpusReleasePublic]:
+    release_ids = [release.id for release in releases]
+    rows = session.exec(
+        select(CorpusReleaseEntry.release_id, LegalInstrument)
         .join(
-            CorpusReleaseEntry,
-            col(CorpusReleaseEntry.provision_version_id) == col(ProvisionVersion.id),
+            ProvisionVersion,
+            col(ProvisionVersion.id) == col(CorpusReleaseEntry.provision_version_id),
         )
-        .where(CorpusReleaseEntry.release_id == release.id)
+        .join(Provision, col(Provision.id) == col(ProvisionVersion.provision_id))
+        .join(LegalInstrument, col(LegalInstrument.id) == col(Provision.instrument_id))
+        .where(col(CorpusReleaseEntry.release_id).in_(release_ids))
         .distinct()
         .order_by(LegalInstrument.slug)
     ).all()
-    return CorpusReleasePublic(
-        id=release.id,
-        version=release.version,
-        status=release.status,
-        source_manifest_hash=release.source_manifest_hash,
-        embedding_model=release.embedding_model,
-        embedding_model_version=release.embedding_model_version,
-        parser_version=release.parser_version,
-        validation_report=release.validation_report,
-        approved_by=release.approved_by,
-        approved_at=release.approved_at,
-        lock_version=release.lock_version,
-        created_at=release.created_at,
-        evidence_count=release_entry_count(session, release.id),
-        instrument_slugs=[instrument.slug for instrument in instruments],
-        instrument_types=sorted(
-            {instrument.instrument_type for instrument in instruments}
-        ),
+    instruments_by_release: dict[uuid.UUID, list[LegalInstrument]] = {}
+    for release_id, instrument in rows:
+        instruments_by_release.setdefault(release_id, []).append(instrument)
+    counts = dict(
+        session.exec(
+            select(CorpusReleaseEntry.release_id, func.count())
+            .where(col(CorpusReleaseEntry.release_id).in_(release_ids))
+            .group_by(col(CorpusReleaseEntry.release_id))
+        ).all()
     )
+    data = []
+    for release in releases:
+        instruments = instruments_by_release.get(release.id, [])
+        data.append(
+            CorpusReleasePublic(
+                id=release.id,
+                version=release.version,
+                status=release.status,
+                source_manifest_hash=release.source_manifest_hash,
+                embedding_model=release.embedding_model,
+                embedding_model_version=release.embedding_model_version,
+                parser_version=release.parser_version,
+                validation_report=release.validation_report,
+                approved_by=release.approved_by,
+                approved_at=release.approved_at,
+                lock_version=release.lock_version,
+                created_at=release.created_at,
+                evidence_count=counts.get(release.id, 0),
+                instrument_slugs=[instrument.slug for instrument in instruments],
+                instrument_types=sorted(
+                    {instrument.instrument_type for instrument in instruments}
+                ),
+            )
+        )
+    return data
