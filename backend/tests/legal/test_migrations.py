@@ -332,10 +332,8 @@ def test_email_uniqueness_migration_aborts_without_deleting_duplicates(
                 )
         with pytest.raises(subprocess.CalledProcessError) as failure:
             _migrate(migration_database, "head")
-        assert (
-            "duplicate addresses: duplicate@example.test (2 accounts)"
-            in failure.value.stderr
-        )
+        assert "1 address(es) belong to more than one account" in failure.value.stderr
+        assert "duplicate@example.test" not in failure.value.stderr.lower()
         assert "no data was deleted" in failure.value.stderr
         with engine.connect() as connection:
             assert (
