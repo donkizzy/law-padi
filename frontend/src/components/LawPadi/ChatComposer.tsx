@@ -122,7 +122,7 @@ export function ChatComposer({
             </span>
           </span>
           {contextLabel ? (
-            <span className="text-label font-normal text-muted-foreground/80 [overflow-wrap:anywhere]">
+            <span className="text-label font-normal text-muted-foreground [overflow-wrap:anywhere]">
               {contextLabel}
             </span>
           ) : null}
@@ -145,7 +145,7 @@ export function ChatComposer({
       </div>
       <div
         id={hintId}
-        className="mt-2 flex justify-between gap-3 px-2 text-label font-normal text-muted-foreground/80"
+        className="mt-2 flex justify-between gap-3 px-2 text-label font-normal text-muted-foreground"
       >
         <span>
           {preferences.enterToSend
