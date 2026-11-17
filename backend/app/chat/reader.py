@@ -37,7 +37,7 @@ def reader_question(run_id: uuid.UUID) -> ReaderQuestion:
         run = session.get(GenerationRun, run_id)
         message = session.get(ConversationMessage, run.user_message_id) if run else None
         if run is None or message is None:
-            raise ValueError("Generation run was not found")
+            raise runs.RunNotFound("Generation run was not found")
         return ReaderQuestion(
             message_id=message.id,
             question=message.content,

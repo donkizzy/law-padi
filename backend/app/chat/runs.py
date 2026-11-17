@@ -37,6 +37,10 @@ from app.legal.models import (
 _logger = logging.getLogger("app.chat.worker")
 
 
+class RunNotFound(LookupError):
+    """The run was deleted, with its conversation, after it was claimed."""
+
+
 def claim_run(worker_id: str, *, run_id: uuid.UUID | None = None) -> uuid.UUID | None:
     with Session(engine) as session:
         statement = (

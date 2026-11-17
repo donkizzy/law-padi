@@ -1,6 +1,7 @@
 """Typed understanding, retrieval, grounding and translation stages for a run."""
 
 import asyncio
+import logging
 import time
 import uuid
 from typing import Literal
@@ -9,7 +10,7 @@ from sqlmodel import Session
 
 from app.chat import runs
 from app.chat.budget import BudgetExhausted
-from app.chat.drafting import generate_answer
+from app.chat.drafting import GroundingFailed, generate_answer
 from app.chat.evidence_packet import Prepared
 from app.chat.history import History
 from app.chat.llm.deepseek import DeepSeekClient
@@ -26,12 +27,13 @@ from app.chat.preparation import (
 )
 from app.chat.reader import reader_languages, reader_question, translate
 from app.chat.schemas import ExplanationAnswer
-from app.chat.validation import EvidenceValidationError
 from app.core.config import settings
 from app.core.db import engine
 from app.ingestion.pgvector_repository import PgVectorRetrievalError
 from app.languages.codes import Language
 from app.legal.evidence import message_code
+
+_logger = logging.getLogger(__name__)
 
 
 def prepare_run(run_id: uuid.UUID) -> Prepared:
@@ -212,11 +214,14 @@ async def process_run(
                 provider, run_id, answer, understood, state
             )
             await persist_answer(run_id, worker_id, translated.answer, result, state)
+    except runs.RunNotFound:
+        # The conversation was deleted mid-answer; there is nothing to finish.
+        _logger.info("chat_run_missing run_id=%s", run_id)
     except BudgetExhausted:
         await finish_failure(
             run_id, worker_id, state, outcome="budget_exhausted", notice="budget"
         )
-    except (EvidenceValidationError, ValueError) as exc:
+    except GroundingFailed as exc:
         await finish_failure(
             run_id,
             worker_id,
@@ -226,9 +231,7 @@ async def process_run(
             validation={
                 "deterministic_or_verifier": False,
                 "failure_stage": state.validation_stage.value,
-                "failure_reason": str(exc)
-                if isinstance(exc, EvidenceValidationError)
-                else type(exc).__name__,
+                "failure_reason": exc.reason,
                 "expected_verdict_count": state.expected_verdict_count,
                 "verifier_verdict_count": state.verifier_verdict_count,
             },
@@ -237,11 +240,25 @@ async def process_run(
         await finish_failure(
             run_id, worker_id, state, outcome="cancelled", notice="cancelled"
         )
-    except ProviderError, TimeoutError, PgVectorRetrievalError:
+    except (ProviderError, TimeoutError, PgVectorRetrievalError) as exc:
+        _logger.warning(
+            "chat_run_unavailable run_id=%s error_type=%s",
+            run_id,
+            type(exc).__name__,
+        )
         await finish_failure(
             run_id, worker_id, state, outcome="provider_failure", notice="unavailable"
         )
-    except Exception:
+    except Exception as exc:
+        # A defect, not a provider outage: keep the trace and tell the two apart.
+        _logger.exception(
+            "chat_run_failed run_id=%s stage=%s", run_id, state.validation_stage.value
+        )
         await finish_failure(
-            run_id, worker_id, state, outcome="provider_failure", notice="unavailable"
+            run_id,
+            worker_id,
+            state,
+            outcome="provider_failure",
+            notice="unavailable",
+            validation={"failure_stage": "internal", "error_type": type(exc).__name__},
         )

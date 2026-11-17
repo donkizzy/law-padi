@@ -5,6 +5,8 @@ import time
 import uuid
 from dataclasses import dataclass
 
+from pydantic import ValidationError
+
 from app.chat import runs
 from app.chat.evidence_packet import Prepared, edition_notice, shown_evidence
 from app.chat.llm import budgeted
@@ -22,6 +24,20 @@ from app.core.config import settings
 from app.legal.schemas import EvidenceItem
 
 _DRAFT_ATTEMPTS = 2
+
+
+class GroundingFailed(Exception):
+    """Every draft failed its schema, deterministic or verifier checks."""
+
+    def __init__(self, cause: EvidenceValidationError | ValidationError):
+        super().__init__(str(cause))
+        self.cause = cause
+
+    @property
+    def reason(self) -> str:
+        if isinstance(self.cause, EvidenceValidationError):
+            return str(self.cause)
+        return type(self.cause).__name__
 
 
 @dataclass(frozen=True)
@@ -212,18 +228,19 @@ async def generate_answer(
     answer: ExplanationAnswer | None = None
     # A rejected draft gets one rewrite with the reason; a second rejection fails closed.
     for attempt in range(_DRAFT_ATTEMPTS):
+        verified: Verified | None = None
         try:
             drafted = await draft_answer(provider, run_id, payload, state, started)
-            if not drafted.draft.blocks:
-                answer = unsupported_answer(prepared, drafted)
-                break
-            checked = await check_draft(
-                run_id, drafted, prepared, allowed_evidence, state
-            )
-            verified = await verify_answer(provider, run_id, checked, prepared, state)
-        except (EvidenceValidationError, ValueError) as exc:
+            if drafted.draft.blocks:
+                checked = await check_draft(
+                    run_id, drafted, prepared, allowed_evidence, state
+                )
+                verified = await verify_answer(
+                    provider, run_id, checked, prepared, state
+                )
+        except (EvidenceValidationError, ValidationError) as exc:
             if attempt + 1 >= _DRAFT_ATTEMPTS:
-                raise
+                raise GroundingFailed(exc) from exc
             reason = (
                 str(exc)
                 if isinstance(exc, EvidenceValidationError)
@@ -232,7 +249,11 @@ async def generate_answer(
             state.telemetry["revision_reason"] = reason
             payload = {**payload, "revision_reason": reason}
             continue
-        answer = verified_answer(prepared, verified, state, attempt)
+        answer = (
+            unsupported_answer(prepared, drafted)
+            if verified is None
+            else verified_answer(prepared, verified, state, attempt)
+        )
         break
     assert answer is not None
     result = ProviderResult(

@@ -5,6 +5,7 @@ from dataclasses import dataclass, field
 
 from sqlmodel import Session
 
+from app.chat import runs
 from app.chat.evidence_packet import Prepared, expand_context, fit_prompt, prompt_items
 from app.chat.history import (
     History,
@@ -76,7 +77,7 @@ class EvidenceSelection:
 def load_pinned_run(session: Session, run_id: uuid.UUID) -> PinnedRun:
     run = session.get(GenerationRun, run_id)
     if run is None:
-        raise ValueError("Generation run was not found")
+        raise runs.RunNotFound("Generation run was not found")
     conversation = session.get(Conversation, run.conversation_id)
     question_message = session.get(ConversationMessage, run.user_message_id)
     release = (
