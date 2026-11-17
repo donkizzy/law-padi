@@ -7,9 +7,8 @@ COPY package.json bun.lock /app/
 COPY frontend/package.json /app/frontend/
 WORKDIR /app/frontend
 RUN bun install --frozen-lockfile
-COPY frontend/index.html frontend/vite.config.ts frontend/tsconfig*.json frontend/playwright.config.ts /app/frontend/
-# tsconfig.json type-checks playwright.config.ts, which imports this list.
-COPY frontend/tests/backend-specs.ts /app/frontend/tests/
+# tsconfig.build.json leaves browser tests and Playwright configs out of the build.
+COPY frontend/index.html frontend/vite.config.ts frontend/tsconfig*.json /app/frontend/
 COPY frontend/src /app/frontend/src
 COPY frontend/public /app/frontend/public
 COPY eval/datasets/plain-language-retrieval-benchmark-v1.json /app/eval/datasets/
