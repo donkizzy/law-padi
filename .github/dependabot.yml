@@ -1,77 +1,98 @@
+# Dependency updates, one monthly batch per ecosystem.
+#
+# Minor and patch releases of an ecosystem arrive as a single pull request so
+# that routine bumps are reviewed together. A major release gets its own pull
+# request, because it is the one that may need code changes.
+#
+# Every label used here must exist in the repository; the list and the command
+# that creates them are in docs/runbooks/branch-protection.md.
+#
+# Ecosystems and what they cover:
+#   github-actions  .github/workflows (actions are pinned to full commit SHAs)
+#   uv              pyproject.toml and uv.lock at the root, which includes the
+#                   backend workspace member
+#   bun             package.json and bun.lock at the root, which includes the
+#                   frontend and packages/* workspaces
+#   docker          every Dockerfile, with base images pinned by digest
+#   docker-compose  the compose*.yml files at the root
+#
+# services/ingestion-worker/requirements.txt holds version ranges only, with no
+# pinned versions, so there is nothing for a pip update to change.
 version: 2
+
 updates:
-  # GitHub Actions
   - package-ecosystem: github-actions
     directory: /
     schedule:
-      interval: "monthly"
+      interval: monthly
     cooldown:
       default-days: 7
     commit-message:
-      prefix: ⬆
-    labels:
-      - "internal"
-      - "dependencies"
-      - "github_actions"
+      prefix: "deps(actions)"
+    labels: [dependencies, github_actions]
     groups:
-      github-actions:
-        patterns:
-          - "*"
-  # Python uv
+      github-actions-minor-and-patch:
+        update-types: [minor, patch]
+
   - package-ecosystem: uv
     directory: /
     schedule:
-      interval: "monthly"
+      interval: monthly
     cooldown:
       default-days: 7
     commit-message:
-      prefix: ⬆
-    labels: [dependencies, internal]
+      prefix: "deps(python)"
+    labels: [dependencies, python]
     groups:
-      python-packages:
-        patterns:
-          - "*"
-  # bun
+      python-minor-and-patch:
+        update-types: [minor, patch]
+
   - package-ecosystem: bun
     directory: /
     schedule:
-      interval: "monthly"
+      interval: monthly
     cooldown:
       default-days: 7
     commit-message:
-      prefix: ⬆
-    labels: [dependencies, internal]
+      prefix: "deps(js)"
+    labels: [dependencies, javascript]
     ignore:
+      # The generated API client is regenerated with a pinned generator version.
       - dependency-name: "@hey-api/openapi-ts"
     groups:
-      npm-packages:
-        patterns:
-          - "*"
-  # Docker
+      javascript-minor-and-patch:
+        update-types: [minor, patch]
+
   - package-ecosystem: docker
     directories:
       - /backend
+      - /deployment/render
       - /frontend
+      - /services/ingestion-worker
     schedule:
-      interval: "monthly"
+      interval: monthly
     cooldown:
       default-days: 7
     commit-message:
-      prefix: ⬆
+      prefix: "deps(docker)"
+    labels: [dependencies, docker]
+    ignore:
+      # The Playwright image must match the @playwright/test version in
+      # frontend/package.json, so the two are bumped together by hand.
+      - dependency-name: "mcr.microsoft.com/playwright"
     groups:
-      docker:
-        patterns:
-          - "*"
-  # Docker Compose
+      docker-minor-and-patch:
+        update-types: [minor, patch]
+
   - package-ecosystem: docker-compose
     directory: /
     schedule:
-      interval: "monthly"
+      interval: monthly
     cooldown:
       default-days: 7
     commit-message:
-      prefix: ⬆
+      prefix: "deps(compose)"
+    labels: [dependencies, docker]
     groups:
-      docker-compose:
-        patterns:
-          - "*"
+      compose-minor-and-patch:
+        update-types: [minor, patch]
