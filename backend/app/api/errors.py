@@ -1,6 +1,7 @@
 """Translate application failures into the public error contract."""
 
 import json
+import logging
 from typing import Any
 
 from fastapi import FastAPI, Request
@@ -11,6 +12,10 @@ from starlette.exceptions import HTTPException
 from starlette.responses import JSONResponse
 
 from app.core.errors import DomainError, ErrorCode
+from app.core.logs import log_context
+from app.core.request_id import REQUEST_ID_HEADER, scope_request_id
+
+_logger = logging.getLogger(__name__)
 
 
 class ErrorResponse(BaseModel):
@@ -93,6 +98,42 @@ async def error_response(request: Request, exc: Exception) -> JSONResponse:
     )
 
 
+async def unhandled_error_response(request: Request, exc: Exception) -> JSONResponse:
+    """Log an unexpected failure with its request and return a generic 500.
+
+    Starlette runs this outside the middleware stack and re-raises afterwards,
+    so the server and error reporting still see the exception.
+    """
+    request_id = scope_request_id(request.scope)
+    with log_context(request_id=request_id):
+        _logger.error(
+            "unhandled_exception",
+            exc_info=exc,
+            extra={
+                "method": request.method,
+                "route": _route_template(request),
+                "error_type": type(exc).__name__,
+            },
+        )
+    content: dict[str, Any] = {
+        "detail": "Internal Server Error",
+        "code": "internal_error",
+    }
+    headers: dict[str, str] = {"Cache-Control": "no-store"}
+    if request_id is not None:
+        content["request_id"] = request_id
+        headers[REQUEST_ID_HEADER] = request_id
+    return JSONResponse(content, status_code=500, headers=headers)
+
+
+def _route_template(request: Request) -> str | None:
+    # The template, not the URL: paths can carry identifiers or an email.
+    route = request.scope.get("route")
+    path = getattr(route, "path", None)
+    return path if isinstance(path, str) else None
+
+
 def register_error_handlers(app: FastAPI) -> None:
     for exception in (DomainError, HTTPException, RequestValidationError):
         app.add_exception_handler(exception, error_response)
+    app.add_exception_handler(Exception, unhandled_error_response)

@@ -3,7 +3,6 @@ from contextlib import asynccontextmanager
 from pathlib import Path
 from secrets import compare_digest
 
-import sentry_sdk
 from fastapi import FastAPI
 from fastapi.routing import APIRoute
 from starlette.middleware.cors import CORSMiddleware
@@ -15,6 +14,8 @@ from app.api.main import api_router
 from app.core.config import settings
 from app.core.logs import configure_logging
 from app.core.request_gate import RequestGateMiddleware
+from app.core.request_id import RequestIdMiddleware
+from app.core.sentry import init_sentry
 
 FRONTEND_DIR = Path(__file__).parent / "frontend"
 
@@ -55,17 +56,13 @@ def custom_generate_unique_id(route: APIRoute) -> str:
     return f"{route.tags[0]}-{route.name}"
 
 
-if settings.SENTRY_DSN and settings.FASTAPI_ENV != "development":
-    sentry_sdk.init(
-        dsn=str(settings.SENTRY_DSN),
-        traces_sample_rate=settings.SENTRY_TRACES_SAMPLE_RATE,
-    )
-
 @asynccontextmanager
 async def lifespan(_app: FastAPI) -> AsyncIterator[None]:
     configure_logging()
     yield
 
+
+init_sentry("api")
 
 app = FastAPI(
     lifespan=lifespan,
@@ -89,6 +86,8 @@ app.add_middleware(
     allow_headers=["*"],
 )
 app.add_middleware(OriginProxyMiddleware)
+# Outermost, so every response, including origin rejections, carries the id.
+app.add_middleware(RequestIdMiddleware)
 
 app.include_router(health.router)
 app.include_router(api_router, prefix=settings.API_V1_STR)
