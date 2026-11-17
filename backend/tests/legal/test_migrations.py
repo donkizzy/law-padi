@@ -224,6 +224,47 @@ def test_email_uniqueness_migration_aborts_without_deleting_duplicates(
         engine.dispose()
 
 
+def test_remote_vector_storage_removal_stops_when_history_exists(
+    migration_database: URL,
+) -> None:
+    import os
+    import uuid
+
+    _migrate(migration_database, "c7d8e9f0a1b2")
+    engine = create_engine(migration_database)
+    try:
+        with engine.begin() as connection:
+            # Skip foreign-key triggers: only the presence of a row matters here.
+            connection.execute(text("SET session_replication_role = replica"))
+            connection.execute(
+                text(
+                    "INSERT INTO vector_index (id, release_id, embedding_run_id, "
+                    "profile_id, collection_name, alias_name, index_kind, status, "
+                    "point_count, vector_dimensions, created_at, updated_at) VALUES "
+                    "(:id, :id, :id, :id, 'legacy', 'legacy', 'enacted', 'ready', "
+                    "0, 1024, now(), now())"
+                ),
+                {"id": uuid.uuid4()},
+            )
+        with pytest.raises(subprocess.CalledProcessError) as failure:
+            _migrate(migration_database, "head")
+        assert "ALLOW_DROP_VECTOR_HISTORY=1" in failure.value.stderr
+        with engine.connect() as connection:
+            assert (
+                connection.execute(
+                    text("SELECT count(*) FROM vector_index")
+                ).scalar_one()
+                == 1
+            )
+        os.environ["ALLOW_DROP_VECTOR_HISTORY"] = "1"
+        try:
+            _migrate(migration_database, "head")
+        finally:
+            del os.environ["ALLOW_DROP_VECTOR_HISTORY"]
+    finally:
+        engine.dispose()
+
+
 def test_remote_vector_storage_removal_is_reversible(migration_database: URL) -> None:
     from sqlalchemy import inspect
 

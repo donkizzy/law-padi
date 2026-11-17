@@ -4,6 +4,8 @@ Revision ID: d8e9f0a1b2c3
 Revises: c7d8e9f0a1b2
 """
 
+import os
+
 import sqlalchemy as sa
 from alembic import op
 from sqlalchemy.dialects.postgresql import JSONB
@@ -14,7 +16,30 @@ branch_labels = None
 depends_on = None
 
 
+def _legacy_rows() -> int:
+    bind = op.get_bind()
+    return int(
+        bind.execute(sa.text("SELECT count(*) FROM vector_index")).scalar_one()
+        + bind.execute(
+            sa.text(
+                "SELECT count(*) FROM release_promotion_attempt "
+                "WHERE vector_index_id IS NOT NULL "
+                "OR previous_collection_name IS NOT NULL "
+                "OR target_collection_name IS NOT NULL"
+            )
+        ).scalar_one()
+    )
+
+
 def upgrade() -> None:
+    # Dropping these columns discards history; stop instead if any exists so
+    # the owner can export it first.
+    if _legacy_rows() and os.environ.get("ALLOW_DROP_VECTOR_HISTORY") != "1":
+        raise RuntimeError(
+            "Remote-vector history exists in vector_index or the "
+            "release_promotion_attempt collection columns. Export it, then rerun "
+            "with ALLOW_DROP_VECTOR_HISTORY=1; nothing was changed."
+        )
     op.drop_constraint(
         "release_promotion_attempt_vector_index_id_fkey",
         "release_promotion_attempt",
