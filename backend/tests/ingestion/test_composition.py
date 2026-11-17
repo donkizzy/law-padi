@@ -75,6 +75,7 @@ from tests.api.routes.admin.conftest import (
     _source_and_run,
 )
 from tests.ingestion.worker.conftest import _create_retrieval_benchmark_dataset
+from tests.utils.legal import register_fixture_citation_names
 
 
 @pytest.fixture(autouse=True)
@@ -123,6 +124,7 @@ def members(
         )
         if index:
             instrument.slug = f"fixture-act-{uuid.uuid4().hex}"
+        register_fixture_citation_names(instrument.slug)
         source.verification_status = "verified"
         run.status = "ready_to_embed"
         run.current_stage = "embedding"

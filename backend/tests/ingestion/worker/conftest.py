@@ -45,6 +45,7 @@ from app.legal.models import (
 )
 from app.legal.parser import PARSER_VERSION, legal_text_sha256, normalize_legal_text
 from tests.factories.pdf import pdf_with_pages as _pdf_with_pages
+from tests.utils.legal import register_fixture_citation_names
 
 
 @pytest.fixture(autouse=True)
@@ -92,6 +93,7 @@ def _stored_source_and_run(
         db.add(instrument)
         db.commit()
         db.refresh(instrument)
+    register_fixture_citation_names(instrument.slug)
     source = SourceDocument(
         legal_instrument_id=instrument.id,
         authority="Official Gazette",

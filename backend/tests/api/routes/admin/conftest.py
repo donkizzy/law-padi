@@ -46,6 +46,7 @@ from app.legal.models import (
 from app.models import User
 from tests.factories.pdf import sha256 as _sha256
 from tests.factories.pdf import sha256_text as _sha256_text
+from tests.utils.legal import register_fixture_citation_names
 
 
 def _complete_pdf_upload(
@@ -261,6 +262,7 @@ def _release_bundle(
     db.commit()
     instrument = db.get(LegalInstrument, source.legal_instrument_id)
     assert instrument
+    register_fixture_citation_names(instrument.slug)
     provision = Provision(
         instrument_id=instrument.id,
         kind=ProvisionKind.SECTION,

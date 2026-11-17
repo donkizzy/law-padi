@@ -109,3 +109,13 @@ pytest_plugins = [
 
 # Compatibility for test modules that still import the original reset name.
 _cleanup_db = reset_database
+
+
+@pytest.fixture(autouse=True)
+def isolated_release_citation_names() -> Generator[None]:
+    """Synthetic release factories declare names without changing the real registry."""
+    from app.ingestion.admin import release_gates
+
+    registry = dict(release_gates.instrument_names())
+    with patch.object(release_gates, "instrument_names", return_value=registry):
+        yield

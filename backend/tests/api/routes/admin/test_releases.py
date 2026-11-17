@@ -396,3 +396,63 @@ def test_release_validation_requires_active_retrieval_benchmark_dataset(
     assert payload["validation_report"]["unresolved_gates"] == [
         "benchmark_dataset_missing_or_empty"
     ]
+
+
+def test_release_validation_blocks_instruments_without_citation_names(
+    client: TestClient,
+    superuser_token_headers: dict[str, str],
+    db: Session,
+) -> None:
+    from app.legal.models import LegalInstrument, Provision, ProvisionVersion
+
+    release, _build = _release_bundle(db, uploader=_superuser(db))
+    instrument = db.exec(
+        select(LegalInstrument)
+        .join(Provision)
+        .join(ProvisionVersion)
+        .join(CorpusReleaseEntry)
+        .where(CorpusReleaseEntry.release_id == release.id)
+    ).one()
+    instrument.slug = f"law-without-citation-names-{uuid.uuid4().hex}"
+    db.add(instrument)
+    db.commit()
+    response = client.post(
+        f"{settings.API_V1_STR}/admin/corpus-releases/{release.id}/validate",
+        headers=superuser_token_headers,
+        json={
+            "idempotency_key": f"validate-{uuid.uuid4().hex}",
+            "expected_version": release.lock_version,
+        },
+    )
+    assert response.status_code == 200
+    body = response.json()
+    assert body["status"] == CorpusReleaseStatus.VALIDATING
+    assert body["validation_report"]["unresolved_gates"] == [
+        f"Instrument {instrument.slug} has no citation names; add an entry to legal/data/instrument-names.json"
+    ]
+    blocked = client.post(
+        f"{settings.API_V1_STR}/admin/corpus-releases/{release.id}/publish",
+        headers=superuser_token_headers,
+        json={
+            "idempotency_key": f"publish-{uuid.uuid4().hex}",
+            "expected_version": body["lock_version"],
+        },
+    )
+    assert blocked.status_code == 409
+
+    # A previously approved release must also fail the publication recheck.
+    db.refresh(release)
+    release.status = CorpusReleaseStatus.APPROVED
+    db.add(release)
+    db.commit()
+    rechecked = client.post(
+        f"{settings.API_V1_STR}/admin/corpus-releases/{release.id}/publish",
+        headers=superuser_token_headers,
+        json={
+            "idempotency_key": f"publish-{uuid.uuid4().hex}",
+            "expected_version": release.lock_version,
+        },
+    )
+    assert rechecked.status_code == 409
+    assert instrument.slug in rechecked.json()["detail"]["gates"][0]
+    assert "instrument-names.json" in rechecked.json()["detail"]["gates"][0]

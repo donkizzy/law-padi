@@ -36,6 +36,7 @@ from app.legal.models import (
 from tests.factories.pdf import pdf_with_pages as _pdf_with_pages
 from tests.factories.pdf import sha256 as _sha256
 from tests.ingestion.worker.conftest import _create_retrieval_benchmark_dataset
+from tests.utils.legal import register_fixture_citation_names
 
 
 def test_api_upload_worker_publish_and_production_search_end_to_end(
@@ -62,6 +63,7 @@ def test_api_upload_worker_publish_and_production_search_end_to_end(
         ]
     )
     slug = f"constitution-e2e-{uuid.uuid4().hex}"
+    register_fixture_citation_names(slug)
     upload_response = client.post(
         f"{settings.API_V1_STR}/admin/source-uploads",
         headers=superuser_token_headers,

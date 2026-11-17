@@ -13,10 +13,14 @@ from app.legal.enums import (
     VectorIndexStatus,
     VerificationStatus,
 )
+from app.legal.instruments import instrument_names
 from app.legal.models import (
     CorpusRelease,
     CorpusReleaseEntry,
     ExtractionCandidate,
+    LegalInstrument,
+    Provision,
+    ProvisionVersion,
     RetrievalIndexBuild,
     ReviewIssue,
     SourceDocument,
@@ -31,6 +35,24 @@ def release_source_and_review_gates(
 ) -> list[str]:
     """Recheck mutable source/review state immediately before approval/publication."""
     gates: list[str] = composition_gates(session, release, entries) if release else []
+    version_ids = {entry.provision_version_id for entry in entries}
+    if version_ids:
+        slugs = session.exec(
+            select(LegalInstrument.slug)
+            .join(Provision, col(Provision.instrument_id) == col(LegalInstrument.id))
+            .join(
+                ProvisionVersion,
+                col(ProvisionVersion.provision_id) == col(Provision.id),
+            )
+            .where(col(ProvisionVersion.id).in_(version_ids))
+            .distinct()
+        ).all()
+        registry = instrument_names()
+        gates.extend(
+            f"Instrument {slug} has no citation names; add an entry to legal/data/instrument-names.json"
+            for slug in sorted(slugs)
+            if slug not in registry
+        )
     source_ids = {
         entry.source_document_id for entry in entries if entry.source_document_id
     }
