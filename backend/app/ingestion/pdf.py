@@ -1,8 +1,11 @@
 import hashlib
 import re
 from collections import Counter
+from collections.abc import Iterator
+from contextlib import contextmanager
 from dataclasses import dataclass
 from io import BytesIO
+from pathlib import Path
 from typing import Any, BinaryIO
 
 from pypdf import PdfReader
@@ -116,10 +119,31 @@ def scan_pdf_bytes(content: bytes) -> dict[str, Any]:
     return StaticPdfSafetyScanner().scan(content).to_metrics()
 
 
-def profile_pdf_pages(content: bytes, *, max_pages: int) -> list[PageProfile]:
-    inspect_pdf_bytes(content, max_pages=max_pages)
-    reader = _reader_for(content)
-    page_texts = [_extract_text(page) for page in reader.pages]
+@contextmanager
+def pdf_stream(content: bytes | Path) -> Iterator[BinaryIO]:
+    with (
+        content.open("rb") if isinstance(content, Path) else BytesIO(content)
+    ) as stream:
+        yield stream
+
+
+def profile_pdf_pages(
+    content: bytes | Path, *, max_pages: int, page_texts: list[str] | None = None
+) -> list[PageProfile]:
+    with pdf_stream(content) as stream:
+        inspect_pdf_file(stream, max_pages=max_pages)
+        stream.seek(0)
+        return _profile_reader(_reader_for_stream(stream), page_texts=page_texts)
+
+
+def _profile_reader(
+    reader: PdfReader, *, page_texts: list[str] | None = None
+) -> list[PageProfile]:
+    page_texts = (
+        page_texts
+        if page_texts is not None
+        else [_extract_text(page) for page in reader.pages]
+    )
     repeated_headers = _repeated_edge_lines(page_texts, first=True)
     repeated_footers = _repeated_edge_lines(page_texts, first=False)
     page_count = len(reader.pages)

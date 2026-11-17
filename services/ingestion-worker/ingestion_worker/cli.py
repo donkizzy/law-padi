@@ -5,7 +5,7 @@ import signal
 import socket
 import time
 from collections.abc import Callable, Iterator
-from contextlib import contextmanager
+from contextlib import contextmanager, nullcontext
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any
@@ -16,6 +16,7 @@ from app.core.db import engine
 from app.ingestion.common import enum_value
 from app.ingestion.runtime.queue import drain_outbox_batch
 from app.ingestion.runtime.runner import run_once
+from app.ingestion.runtime.source_files import source_file_cache, source_files
 from app.legal.models import TransactionalOutbox
 
 logger = logging.getLogger(__name__)
@@ -32,7 +33,7 @@ class WorkerSettings:
     outbox_sink_path: str = "/app/backend/storage/source-documents/outbox-events.jsonl"
 
     @classmethod
-    def from_env(cls) -> "WorkerSettings":
+    def from_env(cls) -> WorkerSettings:
         return cls(
             worker_id=os.getenv("INGESTION_WORKER_ID") or socket.gethostname(),
             poll_interval_seconds=_env_float(
@@ -92,68 +93,76 @@ def run_worker(
                 f"INGESTION_STAGE_CONCURRENCY_LIMITS for {stage} must be at least 1"
             )
 
-    iterations = 0
-    tasks_processed = 0
-    idle_polls = 0
+    with source_file_cache() as source_cache:
+        iterations = 0
+        tasks_processed = 0
+        idle_polls = 0
 
-    while True:
-        if stop_requested and stop_requested():
-            break
-        if max_iterations is not None and iterations >= max_iterations:
-            break
-
-        iterations += 1
-        processed_this_poll = 0
-        for _ in range(worker_settings.max_tasks_per_poll):
+        while True:
             if stop_requested and stop_requested():
                 break
-            with session_factory() as session:
-                if isinstance(session, Session):
-                    published = drain_outbox_batch(
-                        session,
-                        publisher=JsonLinesOutboxPublisher(
-                            Path(worker_settings.outbox_sink_path)
-                        ).publish,
-                    )
-                    if published:
-                        logger.info(
-                            "published ingestion outbox events",
-                            extra={"count": len(published)},
-                        )
-                if isinstance(session, Session):
-                    session.info["ingestion_stop_requested"] = stop_requested
-                result = run_once_fn(
-                    session,
-                    worker_id=worker_settings.worker_id,
-                    task_type=worker_settings.task_type,
-                    lease_seconds=worker_settings.lease_seconds,
-                    stage_concurrency_limits=(worker_settings.stage_concurrency_limits),
-                )
-            if result is None:
+            if max_iterations is not None and iterations >= max_iterations:
                 break
-            processed_this_poll += 1
-            tasks_processed += 1
-            logger.info(
-                "processed ingestion task",
-                extra={
-                    "task_id": str(result.task_id),
-                    "run_id": str(result.run_id),
-                    "stage": enum_value(result.stage),
-                    "task_status": enum_value(result.task_status),
-                    "run_status": enum_value(result.run_status),
-                },
-            )
 
-        if processed_this_poll == 0:
-            idle_polls += 1
-            if worker_settings.poll_interval_seconds:
-                sleep(worker_settings.poll_interval_seconds)
+            iterations += 1
+            processed_this_poll = 0
+            for _ in range(worker_settings.max_tasks_per_poll):
+                if stop_requested and stop_requested():
+                    break
+                with session_factory() as session:
+                    if isinstance(session, Session):
+                        published = drain_outbox_batch(
+                            session,
+                            publisher=JsonLinesOutboxPublisher(
+                                Path(worker_settings.outbox_sink_path)
+                            ).publish,
+                        )
+                        if published:
+                            logger.info(
+                                "published ingestion outbox events",
+                                extra={"count": len(published)},
+                            )
+                    if isinstance(session, Session):
+                        session.info["ingestion_stop_requested"] = stop_requested
+                    with (
+                        source_files(session, source_cache)
+                        if isinstance(session, Session)
+                        else nullcontext()
+                    ):
+                        result = run_once_fn(
+                            session,
+                            worker_id=worker_settings.worker_id,
+                            task_type=worker_settings.task_type,
+                            lease_seconds=worker_settings.lease_seconds,
+                            stage_concurrency_limits=(
+                                worker_settings.stage_concurrency_limits
+                            ),
+                        )
+                if result is None:
+                    break
+                processed_this_poll += 1
+                tasks_processed += 1
+                logger.info(
+                    "processed ingestion task",
+                    extra={
+                        "task_id": str(result.task_id),
+                        "run_id": str(result.run_id),
+                        "stage": enum_value(result.stage),
+                        "task_status": enum_value(result.task_status),
+                        "run_status": enum_value(result.run_status),
+                    },
+                )
 
-    return WorkerLoopStats(
-        iterations=iterations,
-        tasks_processed=tasks_processed,
-        idle_polls=idle_polls,
-    )
+            if processed_this_poll == 0:
+                idle_polls += 1
+                if worker_settings.poll_interval_seconds:
+                    sleep(worker_settings.poll_interval_seconds)
+
+        return WorkerLoopStats(
+            iterations=iterations,
+            tasks_processed=tasks_processed,
+            idle_polls=idle_polls,
+        )
 
 
 class JsonLinesOutboxPublisher:

@@ -26,6 +26,7 @@ from app.ingestion.runtime.queue import (
     release_task,
     renew_task_lease,
 )
+from app.ingestion.runtime.source_files import source_files
 from app.ingestion.runtime.types import StageOutcome, WorkerResult
 from app.legal.enums import (
     IngestionRunStatus,
@@ -74,13 +75,14 @@ def run_until_idle(
     worker_id: str,
     max_tasks: int = 100,
 ) -> list[WorkerResult]:
-    results: list[WorkerResult] = []
-    for _ in range(max_tasks):
-        result = run_once(session, worker_id=worker_id)
-        if result is None:
-            break
-        results.append(result)
-    return results
+    with source_files(session):
+        results: list[WorkerResult] = []
+        for _ in range(max_tasks):
+            result = run_once(session, worker_id=worker_id)
+            if result is None:
+                break
+            results.append(result)
+        return results
 
 
 def run_leased_task(

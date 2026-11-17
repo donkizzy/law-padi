@@ -1,10 +1,12 @@
 from collections.abc import Callable, Iterator
 from dataclasses import dataclass
-from io import BytesIO
+from pathlib import Path
 from time import perf_counter
-from typing import Any, Protocol
+from typing import Any, BinaryIO, Protocol
 
 from pypdf import PdfReader
+
+from app.ingestion.pdf import pdf_stream
 
 NATIVE_PDF_EXTRACTOR_VERSION = "pypdf-native-layout-v2"
 
@@ -36,26 +38,38 @@ class PageExtraction:
 
 class PdfExtractor(Protocol):
     def extract(
-        self, content: bytes, *, included_pages: set[int] | None = None
+        self, content: bytes | Path, *, included_pages: set[int] | None = None
     ) -> list[PageExtraction]:
         """Extract page text and coordinate spans from a PDF."""
 
 
 class NativePdfExtractor:
     def extract(
-        self, content: bytes, *, included_pages: set[int] | None = None
+        self, content: bytes | Path, *, included_pages: set[int] | None = None
     ) -> list[PageExtraction]:
         return list(self.iter_extract(content, included_pages=included_pages))
 
     def iter_extract(
         self,
-        content: bytes,
+        content: bytes | Path,
         *,
         included_pages: set[int] | None = None,
         should_continue: Callable[[], None] | None = None,
     ) -> Iterator[PageExtraction]:
+        with pdf_stream(content) as stream:
+            yield from self._extract_pages(
+                stream, included_pages=included_pages, should_continue=should_continue
+            )
+
+    def _extract_pages(
+        self,
+        stream: BinaryIO,
+        *,
+        included_pages: set[int] | None,
+        should_continue: Callable[[], None] | None,
+    ) -> Iterator[PageExtraction]:
         try:
-            reader = PdfReader(BytesIO(content))
+            reader = PdfReader(stream)
             if reader.is_encrypted:
                 raise NativeExtractionError("Password-protected PDFs are not supported")
         except NativeExtractionError:

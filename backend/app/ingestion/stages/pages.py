@@ -18,6 +18,7 @@ from app.ingestion.pdf import (
 from app.ingestion.rendering import render_page_thumbnail
 from app.ingestion.runtime.control import check_stage_continue
 from app.ingestion.runtime.errors import IngestionWorkerError
+from app.ingestion.runtime.source_files import source_path, with_source_files
 from app.ingestion.runtime.types import StageOutcome
 from app.ingestion.stages.artifacts import ensure_artifact
 from app.ingestion.stages.page_checkpoints import completed_pages, page_checkpoint_key
@@ -26,10 +27,13 @@ from app.ingestion.stages.page_payloads import (
     ocr_output_payloads,
     raw_extraction_payloads,
 )
+from app.ingestion.stages.profile_extractions import (
+    profile_extractions,
+    retain_profile_extractions,
+)
 from app.ingestion.stages.sources import (
     get_source_for_run,
     pages_for_run,
-    read_source_bytes,
     upsert_source_page,
 )
 from app.ingestion.storage import get_blob_store
@@ -47,13 +51,29 @@ from app.legal.models import (
 )
 
 
+@with_source_files
 def handle_profiling(
     session: Session, run: IngestionRun, task: IngestionTask
 ) -> StageOutcome:
     source = get_source_for_run(session, run, task)
     session.commit()
     check_stage_continue(session)
-    profiles = profile_pdf_pages(read_source_bytes(source), max_pages=MAX_SOURCE_PAGES)
+    path = source_path(session, source)
+    key = page_checkpoint_key(source, IngestionStage.NATIVE_EXTRACTION)
+    extractions = profile_extractions(session, run, key)
+    if extractions is None:
+        extractions = list(
+            NativePdfExtractor().iter_extract(
+                path,
+                should_continue=lambda: check_stage_continue(session),
+            )
+        )
+        retain_profile_extractions(session, run, key, extractions)
+    profiles = profile_pdf_pages(
+        path,
+        max_pages=MAX_SOURCE_PAGES,
+        page_texts=[page.plain_text for page in extractions],
+    )
     included_pages = 0
     requires_ocr = 0
     for profile in profiles:
@@ -74,6 +94,7 @@ def handle_profiling(
     )
 
 
+@with_source_files
 def handle_rendering(
     session: Session, run: IngestionRun, task: IngestionTask
 ) -> StageOutcome:
@@ -85,7 +106,7 @@ def handle_rendering(
     key = page_checkpoint_key(source, IngestionStage.RENDERING)
     cached = completed_pages(session, run, IngestionArtifactType.PAGE_THUMBNAIL, key)
     session.commit()
-    content = read_source_bytes(source)
+    content = source_path(session, source)
     rendered_count = 0
     for page in pages:
         check_stage_continue(session)
@@ -138,6 +159,7 @@ def handle_rendering(
     )
 
 
+@with_source_files
 def handle_native_extraction(
     session: Session, run: IngestionRun, task: IngestionTask
 ) -> StageOutcome:
@@ -155,10 +177,15 @@ def handle_native_extraction(
     key = page_checkpoint_key(source, IngestionStage.NATIVE_EXTRACTION)
     cached = completed_pages(session, run, IngestionArtifactType.RAW_EXTRACTION, key)
     session.commit()
-    extractions = extractor.iter_extract(
-        read_source_bytes(source),
-        included_pages=included_pages - set(cached),
-        should_continue=lambda: check_stage_continue(session),
+    profiled = profile_extractions(session, run, key)
+    extractions = (
+        (page for page in profiled if page.page_number in included_pages - set(cached))
+        if profiled is not None
+        else extractor.iter_extract(
+            source_path(session, source),
+            included_pages=included_pages - set(cached),
+            should_continue=lambda: check_stage_continue(session),
+        )
     )
     needs_ocr = sum(
         bool(item.get("quality_flags", {}).get("needs_ocr"))
@@ -166,6 +193,7 @@ def handle_native_extraction(
         if number in included_pages
     )
     for extraction in extractions:
+        check_stage_continue(session)
         page = pages_by_number[extraction.page_number]
         raw_payload = {
             "page_number": extraction.page_number,
@@ -244,6 +272,7 @@ def handle_native_extraction(
     )
 
 
+@with_source_files
 def handle_local_ocr(
     session: Session, run: IngestionRun, task: IngestionTask
 ) -> StageOutcome:
@@ -267,7 +296,7 @@ def handle_local_ocr(
     key = page_checkpoint_key(source, IngestionStage.LOCAL_OCR, provider)
     cached = completed_pages(session, run, IngestionArtifactType.OCR_OUTPUT, key)
     session.commit()
-    source_content = read_source_bytes(source)
+    source_content = source_path(session, source)
     managed_required_pages: list[int] = []
     for page_number in page_numbers:
         check_stage_continue(session)
@@ -377,6 +406,7 @@ def handle_local_ocr(
     )
 
 
+@with_source_files
 def handle_managed_ocr(
     session: Session, run: IngestionRun, task: IngestionTask
 ) -> StageOutcome:
@@ -394,7 +424,7 @@ def handle_managed_ocr(
     key = page_checkpoint_key(source, IngestionStage.MANAGED_OCR, provider)
     cached = completed_pages(session, run, IngestionArtifactType.OCR_OUTPUT, key)
     session.commit()
-    source_content = read_source_bytes(source)
+    source_content = source_path(session, source)
     for page_number in page_numbers:
         check_stage_continue(session)
         if page_number in cached:

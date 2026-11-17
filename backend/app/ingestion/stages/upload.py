@@ -14,16 +14,15 @@ from app.ingestion.contracts import BlobStore
 from app.ingestion.malware import malware_scanner_from_settings
 from app.ingestion.pdf import (
     PdfInspectionError,
-    inspect_pdf_bytes,
     inspect_pdf_file,
 )
 from app.ingestion.runtime.errors import IngestionWorkerError
+from app.ingestion.runtime.source_files import source_path, with_source_files
 from app.ingestion.runtime.types import StageOutcome
 from app.ingestion.stages.artifacts import ensure_artifact
 from app.ingestion.stages.sources import (
     get_source_for_run,
     get_upload_for_run,
-    read_source_bytes,
     require_storage_key,
 )
 from app.ingestion.storage import get_blob_store
@@ -39,17 +38,20 @@ from app.legal.models import (
 )
 
 
+@with_source_files
 def handle_verifying_upload(
     session: Session, run: IngestionRun, task: IngestionTask
 ) -> StageOutcome:
     if run.source_document_id or task.payload.get("source_document_id"):
         source = get_source_for_run(session, run, task)
-        inspection = inspect_pdf_bytes(
-            read_source_bytes(source),
-            expected_sha256=source.sha256,
-            expected_size=source.file_size,
-            max_pages=MAX_SOURCE_PAGES,
-        )
+        session.commit()
+        with source_path(session, source).open("rb") as stream:
+            inspection = inspect_pdf_file(
+                stream,
+                expected_sha256=source.sha256,
+                expected_size=source.file_size,
+                max_pages=MAX_SOURCE_PAGES,
+            )
         source.page_count = inspection.page_count
         source.verification_status = VerificationStatus.NEEDS_REVIEW
         session.add(source)
@@ -131,6 +133,7 @@ def handle_verifying_upload(
     )
 
 
+@with_source_files
 def handle_malware_scan(
     session: Session, run: IngestionRun, task: IngestionTask
 ) -> StageOutcome:
@@ -138,7 +141,8 @@ def handle_malware_scan(
         source = get_source_for_run(session, run, task)
         store = get_blob_store()
         try:
-            with store.open_read(require_storage_key(source)) as stream:
+            session.commit()
+            with source_path(session, source).open("rb") as stream:
                 scan_report = malware_scanner_from_settings(settings).scan_stream(
                     stream
                 )

@@ -1,3 +1,4 @@
+from concurrent.futures import ThreadPoolExecutor
 from typing import Any
 
 from sqlmodel import Session, col, select
@@ -22,13 +23,24 @@ def raw_extraction_payloads(
         .where(
             IngestionArtifact.run_id == run.id,
             IngestionArtifact.artifact_type == IngestionArtifactType.RAW_EXTRACTION,
+            ~col(IngestionArtifact.artifact_metadata).contains(
+                {"kind": "profile_native_pages"}
+            ),
         )
         .order_by(col(IngestionArtifact.created_at), col(IngestionArtifact.id))
     ).all()
     keys = [artifact.storage_key for artifact in artifacts]
     session.commit()
     store = get_blob_store()
-    payloads = [json_object(store.read_bytes(key)) for key in keys]
+    payloads: list[dict[str, Any]] = []
+    with ThreadPoolExecutor(max_workers=4) as executor:
+        for offset in range(0, len(keys), 32):
+            payloads.extend(
+                executor.map(
+                    lambda key: json_object(store.read_bytes(key)),
+                    keys[offset : offset + 32],
+                )
+            )
     latest = {int(payload["page_number"]): payload for payload in payloads}
     return [latest[number] for number in sorted(latest)]
 
@@ -45,7 +57,15 @@ def ocr_output_payloads(session: Session, run: IngestionRun) -> list[dict[str, A
     keys = [artifact.storage_key for artifact in artifacts]
     session.commit()
     store = get_blob_store()
-    payloads = [json_object(store.read_bytes(key)) for key in keys]
+    payloads: list[dict[str, Any]] = []
+    with ThreadPoolExecutor(max_workers=4) as executor:
+        for offset in range(0, len(keys), 32):
+            payloads.extend(
+                executor.map(
+                    lambda key: json_object(store.read_bytes(key)),
+                    keys[offset : offset + 32],
+                )
+            )
     latest = {
         (int(payload["page_number"]), str(payload.get("method", ""))): payload
         for payload in payloads

@@ -116,6 +116,22 @@ Ingestion is an administrative workflow. Its stages are the values of
     (`ingestion/admin/release_publish.py`). A release needs a separate publisher
     and uploader.
 
+The runtime (`ingestion/runtime/`) fences writes by worker ID and task claim
+version, including intermediate stage commits. Admin commands commit state,
+tasks, events, outbox rows and idempotency receipts in one transaction. Run
+configuration retains pipeline identities and successor inputs so API recovery
+can restore operator gates or requeue an executable stage. Transient failures
+use exponential backoff with jitter; deterministic failures stop immediately.
+
+Rendering, extraction and OCR checkpoint each completed page, with database
+transactions closed during provider calls. Workers check shutdown between pages
+and embedding batches and release interrupted tasks for immediate recovery.
+Sources stream into a checksum-verified temporary file; a worker-local 512 MiB
+disk cache reuses immutable source files across stages. Renderers reuse that
+path, and native extraction reuses the text and spans retained during profiling.
+Page artifacts are fetched in batches of 32 with four concurrent reads through
+one store per batch operation. The cache is deleted when the worker exits.
+
 The procedures, including formatting repair and the R2 lifecycle policy, are in
 [`runbooks/ingestion.md`](runbooks/ingestion.md).
 

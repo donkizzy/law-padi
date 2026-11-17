@@ -252,3 +252,18 @@ Set `GOOGLE_DOCUMENT_AI_COST_PER_PAGE_USD` or
 record the configured unit price on each OCR page artifact. These are estimates
 from the configured price, not provider billing receipts; an unset price stays
 unknown rather than being recorded as zero.
+
+### Source files and large documents
+
+Workers stream each immutable source into a bounded, checksum-verified local
+file. A 512 MiB worker-local disk cache reuses it across stages and evicts older
+files as necessary; the cache is removed on worker exit. Single-task invocations
+use a temporary cache, while the worker loop and `run_until_idle` share it across
+successive tasks. Poppler renders from the existing path, without rewriting the
+PDF for each page. Profiling retains native text and coordinate spans in one
+checksummed artifact, which native extraction reuses after page confirmation.
+
+R2 seekable reads spool to a temporary file instead of buffering the object in
+Python memory. Static marker scans use a file mapping for image-data exclusion.
+Per-page artifact reads use four concurrent requests, scheduled in batches of
+32 with a shared store. Page order and managed-OCR precedence are preserved.

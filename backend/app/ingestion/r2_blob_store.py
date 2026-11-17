@@ -1,11 +1,11 @@
 import hashlib
 import hmac
 import re
+import tempfile
 from collections.abc import Callable, Generator, Iterator, Mapping
-from contextlib import contextmanager
+from contextlib import closing, contextmanager
 from datetime import UTC, datetime
 from email.utils import parsedate_to_datetime
-from io import BytesIO
 from typing import BinaryIO
 from urllib.parse import quote, urlsplit
 from xml.etree import ElementTree
@@ -159,7 +159,12 @@ class R2BlobStore:
 
     @contextmanager
     def open_read(self, key: str) -> Iterator[BinaryIO]:
-        yield BytesIO(self.read_bytes(key))
+        with tempfile.TemporaryFile(mode="w+b") as temporary:
+            with closing(self.iter_read(key)) as chunks:
+                for chunk in chunks:
+                    temporary.write(chunk)
+            temporary.seek(0)
+            yield temporary
 
     def read_bytes(self, key: str) -> bytes:
         response = self._request("GET", key)

@@ -17,7 +17,7 @@ class RenderedPageThumbnail:
 
 
 def render_page_thumbnail(
-    content: bytes,
+    content: bytes | Path,
     *,
     page_number: int,
     scale_to: int = 320,
@@ -32,9 +32,10 @@ def render_page_thumbnail(
 
     with tempfile.TemporaryDirectory() as tmpdir:
         tmp_path = Path(tmpdir)
-        input_path = tmp_path / "source.pdf"
+        input_path = content if isinstance(content, Path) else tmp_path / "source.pdf"
         output_prefix = tmp_path / "page"
-        input_path.write_bytes(content)
+        if isinstance(content, bytes):
+            input_path.write_bytes(content)
         command = [
             pdftoppm,
             "-f",
