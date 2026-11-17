@@ -213,6 +213,7 @@ def lease_next_task(
     *,
     worker_id: str,
     task_type: str | None = None,
+    run_id: UUID | None = None,
     lease_seconds: int = 900,
     stage_concurrency_limits: dict[str, int] | None = None,
 ) -> IngestionTask | None:
@@ -241,6 +242,8 @@ def lease_next_task(
         .order_by(col(IngestionTask.priority), col(IngestionTask.created_at))
         .with_for_update(skip_locked=True)
     )
+    if run_id is not None:
+        statement = statement.where(IngestionTask.run_id == run_id)
     if task_type:
         statement = statement.where(col(IngestionTask.task_type) == task_type)
     candidates = session.exec(statement.limit(100)).all()

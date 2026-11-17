@@ -106,12 +106,6 @@ class ReleasePromotionAttempt(SQLModel, table=True):
         index=True,
         ondelete="CASCADE",
     )
-    vector_index_id: uuid.UUID | None = Field(
-        default=None,
-        foreign_key="vector_index.id",
-        index=True,
-        ondelete="SET NULL",
-    )
     retrieval_index_build_id: uuid.UUID | None = Field(
         default=None,
         foreign_key="retrieval_index_build.id",
@@ -134,8 +128,6 @@ class ReleasePromotionAttempt(SQLModel, table=True):
         index=True,
         ondelete="SET NULL",
     )
-    previous_collection_name: str | None = Field(default=None, max_length=255)
-    target_collection_name: str | None = Field(default=None, max_length=255)
     rollback_completed: bool = Field(default=False, index=True)
     error_details: dict[str, Any] | None = Field(
         default=None,

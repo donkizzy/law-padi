@@ -41,7 +41,6 @@ class EmbeddingProfile(SQLModel, table=True):
     model_name: str = Field(max_length=255, index=True)
     model_revision: str | None = Field(default=None, max_length=128)
     vector_dimensions: int = Field(index=True)
-    supports_sparse: bool = Field(default=False, index=True)
     configuration: dict[str, Any] = Field(
         default_factory=dict,
         sa_column=Column(JSONB, nullable=False),
@@ -105,51 +104,6 @@ class EmbeddingRun(SQLModel, table=True):
         sa_type=DateTime(timezone=True),  # type: ignore
     )
     created_at: datetime = Field(
-        default_factory=get_datetime_utc,
-        sa_type=DateTime(timezone=True),  # type: ignore
-    )
-
-
-class VectorIndex(SQLModel, table=True):
-    __tablename__ = "vector_index"
-
-    id: uuid.UUID = Field(default_factory=uuid.uuid4, primary_key=True)
-    release_id: uuid.UUID = Field(
-        foreign_key="corpus_release.id",
-        index=True,
-        ondelete="CASCADE",
-    )
-    embedding_run_id: uuid.UUID = Field(
-        foreign_key="embedding_run.id",
-        index=True,
-        ondelete="CASCADE",
-    )
-    profile_id: uuid.UUID = Field(
-        foreign_key="embedding_profile.id",
-        index=True,
-        ondelete="CASCADE",
-    )
-    collection_name: str = Field(unique=True, index=True, max_length=255)
-    alias_name: str = Field(default="constitution_enacted", max_length=255, index=True)
-    index_kind: str = Field(default="enacted", max_length=32, index=True)
-    profile_hash: str | None = Field(default=None, max_length=64, index=True)
-    status: VectorIndexStatus = Field(
-        default=VectorIndexStatus.BUILDING,
-        sa_column=Column(String(length=32), nullable=False, index=True),
-    )
-    point_count: int = Field(default=0)
-    vector_dimensions: int
-    payload_schema_hash: str | None = Field(default=None, max_length=64, index=True)
-    checksum: str | None = Field(default=None, max_length=64, index=True)
-    validation_report: dict[str, Any] | None = Field(
-        default=None,
-        sa_column=Column(JSONB, nullable=True),
-    )
-    created_at: datetime = Field(
-        default_factory=get_datetime_utc,
-        sa_type=DateTime(timezone=True),  # type: ignore
-    )
-    updated_at: datetime = Field(
         default_factory=get_datetime_utc,
         sa_type=DateTime(timezone=True),  # type: ignore
     )

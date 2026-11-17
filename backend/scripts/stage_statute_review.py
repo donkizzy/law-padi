@@ -9,7 +9,6 @@ import argparse
 import hashlib
 import json
 import uuid
-from datetime import UTC, datetime, timedelta
 from pathlib import Path
 from typing import Any
 
@@ -19,7 +18,7 @@ from sqlmodel import Session, col, select
 from app.core.config import settings
 from app.core.db import engine
 from app.ingestion.runtime.queue import append_run_event, create_run_steps, enqueue_task
-from app.ingestion.runtime.runner import run_leased_task
+from app.ingestion.runtime.runner import run_once
 from app.ingestion.stages.artifacts import ensure_artifact
 from app.ingestion.storage import get_blob_store
 from app.legal.act_parser import ACT_PARSER_VERSION
@@ -37,7 +36,6 @@ from app.legal.enums import (
 from app.legal.models import (
     ExtractionCandidate,
     IngestionRun,
-    IngestionTask,
     LegalInstrument,
     ReviewIssue,
     SourceDocument,
@@ -249,26 +247,20 @@ def stage_source(
 
 def run_to_review(session: Session, run: IngestionRun) -> None:
     for _index in range(3):
-        task = session.exec(
-            select(IngestionTask)
-            .where(
-                IngestionTask.run_id == run.id,
-                IngestionTask.status == IngestionTaskStatus.PENDING,
-                col(IngestionTask.task_type).in_(
-                    ["normalizing", "parsing_structure", "validating_document"]
-                ),
-            )
-            .with_for_update()
-        ).first()
-        if task is None:
+        if run.current_stage not in {
+            IngestionStage.NORMALIZING,
+            IngestionStage.PARSING_STRUCTURE,
+            IngestionStage.VALIDATING_DOCUMENT,
+        }:
             break
-        task.status = IngestionTaskStatus.LEASED
-        task.lease_owner = "statute-review-import"
-        task.leased_until = datetime.now(UTC) + timedelta(seconds=900)
-        task.attempt_count += 1
-        session.add(task)
-        session.commit()
-        outcome = run_leased_task(session, task, worker_id="statute-review-import")
+        outcome = run_once(
+            session,
+            worker_id="statute-review-import",
+            run_id=run.id,
+            task_type=str(run.current_stage),
+        )
+        if outcome is None:
+            break
         if outcome.task_status != IngestionTaskStatus.SUCCEEDED:
             raise RuntimeError(f"Review task failed: {outcome}")
     candidates = session.exec(

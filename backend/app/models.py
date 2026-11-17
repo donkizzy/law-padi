@@ -264,5 +264,4 @@ from app.legal.models import (  # noqa: E402,F401
     SourcePage,
     SourceUpload,
     TransactionalOutbox,
-    VectorIndex,
 )

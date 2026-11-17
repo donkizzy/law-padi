@@ -47,7 +47,6 @@ from app.legal.models import (
     SourcePage,
     SourceUpload,
     TransactionalOutbox,
-    VectorIndex,
 )
 from app.models import RateLimitCounter, User
 
@@ -76,7 +75,6 @@ def reset_database(session: Session) -> None:
         RetrievalEmbedding,
         RetrievalIndexBuild,
         RetrievalSegment,
-        VectorIndex,
         EmbeddingRun,
         EmbeddingProfile,
         EvaluationItem,

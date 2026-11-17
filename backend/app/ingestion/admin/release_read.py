@@ -22,7 +22,6 @@ from app.legal.models import (
     ReleasePromotionAttempt,
     RetrievalIndexBuild,
     SourceDocument,
-    VectorIndex,
 )
 
 
@@ -64,7 +63,6 @@ def read_corpus_release_publication_evidence(
     session: Session, release_id: uuid.UUID
 ) -> tuple[
     CorpusRelease,
-    list[VectorIndex],
     list[RetrievalIndexBuild],
     list[ReleasePromotionAttempt],
     list[uuid.UUID],
@@ -72,13 +70,6 @@ def read_corpus_release_publication_evidence(
     list[ActiveRetrievalTarget],
 ]:
     release = get_release(session, release_id)
-    vector_indexes = list(
-        session.exec(
-            select(VectorIndex)
-            .where(VectorIndex.release_id == release.id)
-            .order_by(col(VectorIndex.updated_at).desc())
-        ).all()
-    )
     retrieval_index_builds = list(
         session.exec(
             select(RetrievalIndexBuild)
@@ -137,7 +128,6 @@ def read_corpus_release_publication_evidence(
     )
     return (
         release,
-        vector_indexes,
         retrieval_index_builds,
         promotion_attempts,
         source_uploader_ids,

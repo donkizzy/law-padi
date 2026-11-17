@@ -238,13 +238,12 @@ def read_admin_operational_alerts(
                 release_id=promotion.release_id,
                 promotion_attempt_id=promotion.id,
                 evidence={
-                    "vector_index_id": str(promotion.vector_index_id)
-                    if promotion.vector_index_id
+                    "retrieval_index_build_id": str(promotion.retrieval_index_build_id)
+                    if promotion.retrieval_index_build_id
                     else None,
                     "previous_release_id": str(promotion.previous_release_id)
                     if promotion.previous_release_id
                     else None,
-                    "target_collection_name": promotion.target_collection_name,
                     "rollback_completed": promotion.rollback_completed,
                     "error_details": promotion.error_details,
                 },

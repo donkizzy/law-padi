@@ -23,7 +23,6 @@ from app.legal.models import (
     IdempotencyRecord,
     IngestionArtifact,
     ReleasePromotionAttempt,
-    VectorIndex,
 )
 from tests.api.routes.admin.conftest import _release_bundle, _superuser
 
@@ -247,29 +246,13 @@ def test_read_release_publication_evidence_returns_index_actor_and_promotion_his
 ) -> None:
     uploader = _superuser(db)
     release, build = _release_bundle(db, uploader=uploader)
-    vector_index = VectorIndex(
-        release_id=release.id,
-        embedding_run_id=build.embedding_run_id,
-        profile_id=build.profile_id,
-        collection_name=f"ng_constitution_enacted_test_{uuid.uuid4().hex}",
-        alias_name="constitution_enacted",
-        status=VectorIndexStatus.READY,
-        point_count=1,
-        vector_dimensions=1024,
-        validation_report={"backend": "qdrant", "remote_point_count": 1},
-    )
-    db.add(vector_index)
-    db.commit()
-    db.refresh(vector_index)
     release.approved_by = uploader.id
     promotion = ReleasePromotionAttempt(
         release_id=release.id,
-        vector_index_id=vector_index.id,
+        retrieval_index_build_id=build.id,
         requested_by=uploader.id,
         status=ReleasePromotionStatus.ROLLED_BACK,
         previous_release_id=None,
-        previous_collection_name="law_padi_old",
-        target_collection_name=vector_index.collection_name,
         rollback_completed=True,
         error_details={"phase": "database_promotion"},
         started_at=datetime.now(UTC),
@@ -294,12 +277,10 @@ def test_read_release_publication_evidence_returns_index_actor_and_promotion_his
     assert response.status_code == 200
     payload = response.json()
     assert payload["release_id"] == str(release.id)
-    assert payload["vector_indexes"][0]["id"] == str(vector_index.id)
-    assert payload["vector_indexes"][0]["validation_report"] == {
-        "backend": "qdrant",
-        "remote_point_count": 1,
-    }
-    assert payload["vector_indexes"][0]["alias_name"] == "constitution_enacted"
+    assert payload["vector_indexes"] == []
+    assert payload["promotion_attempts"][0]["vector_index_id"] is None
+    assert payload["promotion_attempts"][0]["previous_collection_name"] is None
+    assert payload["promotion_attempts"][0]["target_collection_name"] is None
     assert payload["retrieval_index_builds"][0]["id"] == str(build.id)
     assert payload["promotion_attempts"][0]["id"] == str(promotion.id)
     assert payload["promotion_attempts"][0]["status"] == (

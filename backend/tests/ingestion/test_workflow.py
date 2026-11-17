@@ -540,3 +540,46 @@ def test_retryable_failure_defers_next_claim_with_backoff(db: Session) -> None:
     assert task.available_at > before
     assert 24 <= (task.available_at - before).total_seconds() <= 37
     assert lease_next_task(db, worker_id="retry-test", task_type="profiling") is None
+
+
+def test_lease_scoped_to_one_run_leaves_other_pending_work_untouched(
+    db: Session,
+) -> None:
+    other = _create_run(db)
+    selected = _create_run(db)
+    tasks = []
+    for run, priority in ((other, 1), (selected, 10)):
+        step = create_run_steps(db, run, (IngestionStage.NORMALIZING,))[0]
+        tasks.append(
+            enqueue_task(
+                db,
+                run=run,
+                step=step,
+                task_type="normalizing",
+                idempotency_key=f"{run.id}:scope",
+                priority=priority,
+            )
+        )
+    leased = lease_next_task(
+        db,
+        worker_id="review-import",
+        task_type="normalizing",
+        run_id=selected.id,
+    )
+    assert leased is not None
+    assert leased.id == tasks[1].id
+    assert leased.attempt_count == 1
+    assert leased.lock_version == 2
+    assert leased.heartbeat_at is not None
+    db.refresh(tasks[0])
+    assert tasks[0].status == IngestionTaskStatus.PENDING
+    assert tasks[0].attempt_count == 0
+    assert (
+        lease_next_task(
+            db,
+            worker_id="review-import",
+            task_type="normalizing",
+            run_id=selected.id,
+        )
+        is None
+    )

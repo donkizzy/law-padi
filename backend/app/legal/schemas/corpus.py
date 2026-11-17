@@ -73,6 +73,8 @@ class CorpusReleaseManifestPublic(SQLModel):
 
 
 class CorpusReleaseVectorIndexPublic(SQLModel):
+    """Legacy response shape retained for clients; no new indexes use it."""
+
     id: uuid.UUID
     release_id: uuid.UUID
     embedding_run_id: uuid.UUID
@@ -114,6 +116,7 @@ class CorpusReleaseRetrievalIndexBuildPublic(SQLModel):
 class CorpusReleasePromotionAttemptPublic(SQLModel):
     id: uuid.UUID
     release_id: uuid.UUID
+    # Legacy response fields stay null for pgvector promotions.
     vector_index_id: uuid.UUID | None = None
     retrieval_index_build_id: uuid.UUID | None = None
     index_kind: str | None = None

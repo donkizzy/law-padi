@@ -222,3 +222,46 @@ def test_email_uniqueness_migration_aborts_without_deleting_duplicates(
             )
     finally:
         engine.dispose()
+
+
+def test_remote_vector_storage_removal_is_reversible(migration_database: URL) -> None:
+    from sqlalchemy import inspect
+
+    _migrate(migration_database, "head")
+    engine = create_engine(migration_database)
+    try:
+        with engine.connect() as connection:
+            schema = inspect(connection)
+            assert "vector_index" not in schema.get_table_names()
+            assert "supports_sparse" not in {
+                column["name"] for column in schema.get_columns("embedding_profile")
+            }
+            assert not {
+                "vector_index_id",
+                "previous_collection_name",
+                "target_collection_name",
+            } & {
+                column["name"]
+                for column in schema.get_columns("release_promotion_attempt")
+            }
+        _migrate(migration_database, "c7d8e9f0a1b2", direction="downgrade")
+        with engine.connect() as connection:
+            schema = inspect(connection)
+            assert "vector_index" in schema.get_table_names()
+            assert "supports_sparse" in {
+                column["name"] for column in schema.get_columns("embedding_profile")
+            }
+            assert {
+                "vector_index_id",
+                "previous_collection_name",
+                "target_collection_name",
+            } <= {
+                column["name"]
+                for column in schema.get_columns("release_promotion_attempt")
+            }
+            foreign_keys = schema.get_foreign_keys("release_promotion_attempt")
+            assert any(key["referred_table"] == "vector_index" for key in foreign_keys)
+        _migrate(migration_database, "head")
+        assert _schema_differences(migration_database) == []
+    finally:
+        engine.dispose()

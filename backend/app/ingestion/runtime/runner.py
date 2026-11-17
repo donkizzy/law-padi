@@ -49,6 +49,7 @@ def run_once(
     *,
     worker_id: str,
     task_type: str | None = None,
+    run_id: uuid.UUID | None = None,
     lease_seconds: int = 900,
     stage_concurrency_limits: dict[str, int] | None = None,
 ) -> WorkerResult | None:
@@ -56,6 +57,7 @@ def run_once(
         session,
         worker_id=worker_id,
         task_type=task_type,
+        run_id=run_id,
         lease_seconds=lease_seconds,
         stage_concurrency_limits=(
             stage_concurrency_limits

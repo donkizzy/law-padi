@@ -44,7 +44,6 @@ from app.legal.models.retrieval import EmbeddingRun as EmbeddingRun
 from app.legal.models.retrieval import RetrievalEmbedding as RetrievalEmbedding
 from app.legal.models.retrieval import RetrievalIndexBuild as RetrievalIndexBuild
 from app.legal.models.retrieval import RetrievalSegment as RetrievalSegment
-from app.legal.models.retrieval import VectorIndex as VectorIndex
 from app.legal.models.review import CandidateRevision as CandidateRevision
 from app.legal.models.review import ExtractionCandidate as ExtractionCandidate
 from app.legal.models.review import ReviewDecisionRecord as ReviewDecisionRecord

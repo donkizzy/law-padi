@@ -82,7 +82,6 @@ from app.legal.models import (
     SourceDocument,
     SourcePage,
     SourceUpload,
-    VectorIndex,
 )
 from app.legal.schemas import (
     ActiveRetrievalTargetPublic,
@@ -102,7 +101,6 @@ from app.legal.schemas import (
     CorpusReleaseRetrievalIndexBuildPublic,
     CorpusReleasesPublic,
     CorpusReleaseValidationRequest,
-    CorpusReleaseVectorIndexPublic,
     EmbeddingBenchmarkPublic,
     EmbeddingBenchmarkResult,
     EmbeddingProfileCreate,
@@ -1120,7 +1118,6 @@ def read_release_publication_evidence(
     _require_any_admin(session, current_user)
     (
         release,
-        vector_indexes,
         retrieval_index_builds,
         promotion_attempts,
         source_uploader_ids,
@@ -1135,10 +1132,7 @@ def read_release_publication_evidence(
     return CorpusReleasePublicationEvidencePublic(
         release_id=release.id,
         release_version=release.version,
-        vector_indexes=[
-            CorpusReleaseVectorIndexPublic.model_validate(vector_index)
-            for vector_index in vector_indexes
-        ],
+        vector_indexes=[],
         retrieval_index_builds=[
             CorpusReleaseRetrievalIndexBuildPublic.model_validate(build)
             for build in retrieval_index_builds
@@ -1181,11 +1175,6 @@ def publish_release(
         current_user=current_user,
         superuser_override_reason=body.superuser_override_reason,
     )
-    vector_index = (
-        session.get(VectorIndex, promotion.vector_index_id)
-        if promotion.vector_index_id is not None
-        else None
-    )
     retrieval_build = (
         session.get(RetrievalIndexBuild, promotion.retrieval_index_build_id)
         if promotion.retrieval_index_build_id is not None
@@ -1195,11 +1184,7 @@ def publish_release(
         release=_release_public(session, release),
         promotion_status=promotion.status,
         vector_index_status=(
-            retrieval_build.status
-            if retrieval_build is not None
-            else vector_index.status
-            if vector_index is not None
-            else None
+            retrieval_build.status if retrieval_build is not None else None
         ),
     )
 

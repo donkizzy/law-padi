@@ -68,13 +68,13 @@ from app.legal.models import (
     Provision,
     ProvisionVersion,
     ReleasePromotionAttempt,
+    RetrievalIndexBuild,
     ReviewDecisionRecord,
     ReviewIssue,
     SourceDocument,
     SourcePage,
     SourceUpload,
     TransactionalOutbox,
-    VectorIndex,
 )
 from app.models import User
 
@@ -582,7 +582,7 @@ def test_release_embedding_and_vector_records_are_cumulative_by_run(
         version=f"corpus-test-{uuid4().hex}",
         status=CorpusReleaseStatus.APPROVED,
         source_manifest_hash="5" * 64,
-        validation_report={"qdrant_points": 2, "unresolved_gates": []},
+        validation_report={"stored_embedding_count": 2, "unresolved_gates": []},
     )
     db.add(release)
     db.commit()
@@ -607,7 +607,6 @@ def test_release_embedding_and_vector_records_are_cumulative_by_run(
         provider=EmbeddingProviderKind.OPENAI,
         model_name="text-embedding-3-large",
         vector_dimensions=1024,
-        supports_sparse=False,
         configuration={"batch_size": 128},
         is_active=False,
     )
@@ -631,30 +630,27 @@ def test_release_embedding_and_vector_records_are_cumulative_by_run(
     db.commit()
     db.refresh(embedding_run)
 
-    vector_index = VectorIndex(
+    build = RetrievalIndexBuild(
         release_id=release.id,
         embedding_run_id=embedding_run.id,
         profile_id=profile.id,
-        collection_name=f"ng_constitution_enacted_{uuid4().hex}",
-        alias_name="constitution_enacted",
         index_kind="enacted",
         profile_hash="8" * 64,
         status=VectorIndexStatus.READY,
-        point_count=2,
+        stored_embedding_count=2,
         vector_dimensions=1024,
         payload_schema_hash="6" * 64,
         checksum="7" * 64,
         validation_report={"dimensions_ok": True, "checksums_ok": True},
     )
-    db.add(vector_index)
+    db.add(build)
     db.commit()
-    db.refresh(vector_index)
+    db.refresh(build)
 
     promotion = ReleasePromotionAttempt(
         release_id=release.id,
-        vector_index_id=vector_index.id,
+        retrieval_index_build_id=build.id,
         status=ReleasePromotionStatus.SUCCEEDED,
-        target_collection_name=vector_index.collection_name,
         rollback_completed=False,
     )
     db.add(promotion)
@@ -665,9 +661,12 @@ def test_release_embedding_and_vector_records_are_cumulative_by_run(
         first_run.id,
         second_run.id,
     }
-    assert release.validation_report == {"qdrant_points": 2, "unresolved_gates": []}
+    assert release.validation_report == {
+        "stored_embedding_count": 2,
+        "unresolved_gates": [],
+    }
     assert embedding_run.recall_at_10 == 0.97
-    assert vector_index.validation_report == {
+    assert build.validation_report == {
         "dimensions_ok": True,
         "checksums_ok": True,
     }

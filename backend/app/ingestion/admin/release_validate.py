@@ -125,7 +125,6 @@ def validate_corpus_release(
             embedding_run.benchmark_dataset_version if embedding_run else None
         ),
         "benchmark_query_count": benchmark_item_count,
-        "ready_vector_index_id": None,
         "ready_retrieval_index_build_id": (
             str(retrieval_index_build.id) if retrieval_index_build else None
         ),
