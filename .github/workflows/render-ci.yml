@@ -29,7 +29,8 @@ jobs:
         run: bun run lint
       - name: Build the same-origin frontend
         run: |
-          export VITE_BUILD_REVISION="$(python scripts/build_revision.py)"
+          VITE_BUILD_REVISION="$(python scripts/build_revision.py)"
+          export VITE_BUILD_REVISION
           bun run --filter frontend build
         env:
           VITE_API_URL: ""
