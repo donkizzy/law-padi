@@ -19,6 +19,7 @@ from app.legal.enums import (
     LegalStatus,
     ProvisionKind,
 )
+from app.legal.evidence import exact_lookup
 from app.legal.models import (
     CorpusReleaseEntry,
     Provision,
@@ -26,7 +27,7 @@ from app.legal.models import (
 )
 from app.legal.parser import legal_text_sha256
 from app.legal.public_corpus import load_public_corpus
-from app.legal.references import SectionReference
+from app.legal.references import SectionReference, parse_section_reference
 from app.legal.release_scope import release_instruments
 from app.legal.topics import demoted_sections, rights_question, section_target
 
@@ -230,3 +231,21 @@ def test_nested_act_paragraphs_load_into_the_public_corpus(
     response = client.get("/api/v1/legal/instruments")
     assert response.status_code == 200
     assert "acja-2015" in {item["slug"] for item in response.json()["data"]}
+
+
+@pytest.mark.usefixtures("corpus")
+@pytest.mark.parametrize("prose", [False, True])
+def test_unknown_named_law_returns_unavailable_without_constitution_evidence(
+    db: Session, corpus, prose: bool
+) -> None:
+    query = "Section 37, Freedom of Information Act"
+    public_corpus = load_public_corpus(db, release=corpus[0])
+    result = exact_lookup(
+        public_corpus, parse_section_reference(query, prose=prose), query
+    )
+    assert result.response.data == []
+    assert not result.has_resolved_evidence
+    assert (
+        "not included in this published edition"
+        in result.response.citation_outcomes[0].message
+    )

@@ -171,6 +171,8 @@ def test_citation_uses_the_published_short_title() -> None:
     "query",
     [
         "Section 33 of the Freedom of Information Act",
+        "Section 9, Freedom of Information Act",
+        "Section 9, Health and Safety at Work Act",
         "Lagos State Land Use Act section 1",
         "Section 84 of the Evidence (Amendment) Act",
     ],
@@ -189,3 +191,9 @@ def test_source_cross_references_keep_the_named_law() -> None:
         SectionReference("84", instrument_slug="evidence-act-2011"),
         SectionReference("35"),
     )
+
+
+def test_unknown_source_law_never_expands_to_the_constitution() -> None:
+    assert source_references(
+        "See Section 9, Freedom of Information Act; and Section 37 of this Constitution."
+    ) == (SectionReference("37"),)

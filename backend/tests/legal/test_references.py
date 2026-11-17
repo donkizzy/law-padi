@@ -187,6 +187,12 @@ def test_jrb_reference_cannot_match_the_constitution(query: str) -> None:
     [
         "Trade Disputes Act s.9",
         "Section 9, Trade Disputes Act",
+        "Section 9, Freedom of Information Act",
+        "Section 9 Freedom of Information Act",
+        "Section 9 of the Freedom of Information Act",
+        "Freedom of Information Act section 9",
+        "Section 9, Health and Safety at Work Act",
+        "Section 9, Protection of the Rights of Workers Act",
         "s.9 of the Trade Disputes Act",
         "Police Act 2015 s.9",
         "s.9 ACJA 2020",

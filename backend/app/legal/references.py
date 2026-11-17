@@ -197,7 +197,7 @@ def _expand(
 
 
 REFERENCE_FORMAT_MESSAGE = "Try a reference like Section 35, Section 35(1) or Section 35(1)(c). Lists and ranges can include up to 20 sections."
-UNKNOWN_LAW_MESSAGE = "The law name or year in this reference is unrecognised or conflicting. Sections are available for laws included in the selected published edition."
+UNKNOWN_LAW_MESSAGE = "The named law or year is not included in this published edition, or conflicts with another law in this reference."
 
 
 def _unsupported() -> ReferenceParse:
@@ -343,7 +343,8 @@ def parse_section_reference(
                 or re.match(
                     # Ordinary prose such as "shall invalidate any law"
                     # does not name another instrument.
-                    r"\s*,?\s*(?:[A-Z][\w-]*\s+){0,8}(?:Act|Code|Bill|Regulations?|Law|Decree|ACJL)\b"
+                    r"\s*,?\s*(?:[A-Z][\w-]*\s+(?:(?:of|the|and|for|to|in|on|at|by|with|without|under|as)\s+)*?){0,8}"
+                    r"(?:Act|Code|Bill|Regulations?|Law|Decree|ACJL)\b"
                     if prose
                     else r"\s*,?\s*(?:[\w-]+\s+){0,8}(?:act|code|bill|regulations?|law|decree|acjl)\b",
                     remaining,
