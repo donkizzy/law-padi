@@ -145,7 +145,8 @@ listed above.
   afterwards; uncertain charges stay reserved (`backend/app/chat/budget.py`).
   `render.yaml` sets a US$5 Lagos-day cap and US$155 monthly caps.
 - Admission limits in `render.yaml`: 3 explanations per guest and 10 per account
-  per day, 1 and 2 per minute, and one active generation across the service.
+  per day, 1 and 2 per minute, and one answer generated at a time across the
+  service, with up to five questions admitted and waiting in order.
 - `CHAT_GENERATION_KILL_SWITCH` stops new explanations without a code change.
 
 **Risk accepted.** Readers can receive explanations whose grounding has passed
