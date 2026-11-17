@@ -1,7 +1,7 @@
 import { useId, useState } from "react"
 
 import type { CompositeReleaseCreate, CorpusReleasePublic } from "@/client"
-import { SquircleButton } from "@/components/LawPadi/primitives"
+import { SquircleButton } from "@/components/Constitution/primitives"
 import { Checkbox } from "@/components/ui/checkbox"
 import { Input } from "@/components/ui/input"
 

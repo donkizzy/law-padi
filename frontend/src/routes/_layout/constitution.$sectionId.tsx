@@ -1,6 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router"
 import { z } from "zod"
-import { ProvisionDetail } from "@/components/LawPadi/ProvisionDetail"
+import { ProvisionDetail } from "@/components/Constitution/ProvisionDetail"
 import { provisionQueryOptions } from "@/hooks/useLegalCorpus"
 import { publicOrigin } from "@/lib/public-origin"
 import { queryClient } from "@/lib/query-client"

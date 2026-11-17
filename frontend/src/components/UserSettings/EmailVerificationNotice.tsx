@@ -2,7 +2,7 @@ import { useMutation } from "@tanstack/react-query"
 import { useTranslation } from "react-i18next"
 
 import { UsersService } from "@/client"
-import { SquircleButton } from "@/components/LawPadi/primitives"
+import { SquircleButton } from "@/components/Constitution/primitives"
 import useAuth from "@/hooks/useAuth"
 import useCustomToast from "@/hooks/useCustomToast"
 import { handleError } from "@/utils"

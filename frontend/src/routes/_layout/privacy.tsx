@@ -1,6 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router"
 
-import { PrivacyNotice } from "@/components/LawPadi/PrivacyNotice"
+import { PrivacyNotice } from "@/components/Constitution/PrivacyNotice"
 
 export const Route = createFileRoute("/_layout/privacy")({
   component: PrivacyNotice,

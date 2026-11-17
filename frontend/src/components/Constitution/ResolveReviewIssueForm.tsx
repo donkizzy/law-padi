@@ -2,7 +2,7 @@ import { useMutation, useQueryClient } from "@tanstack/react-query"
 import { useState } from "react"
 
 import { AdminService, type ReviewIssuePublic } from "@/client"
-import { SquircleButton } from "@/components/LawPadi/primitives"
+import { SquircleButton } from "@/components/Constitution/primitives"
 import {
   Dialog,
   DialogContent,

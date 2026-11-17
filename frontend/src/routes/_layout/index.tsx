@@ -1,7 +1,7 @@
 import { createFileRoute, redirect } from "@tanstack/react-router"
 import { z } from "zod"
 
-import { LawPadiHome } from "@/components/LawPadi/LawPadiHome"
+import { HomePage } from "@/components/Constitution/HomePage"
 import { isLoggedIn } from "@/hooks/useAuth"
 import { isLandingNavigation } from "@/lib/landing"
 
@@ -27,7 +27,7 @@ export const Route = createFileRoute("/_layout/")({
       throw redirect({ to: "/welcome", replace: true })
     }
   },
-  component: LawPadiHome,
+  component: HomePage,
   head: () => ({
     meta: [
       {

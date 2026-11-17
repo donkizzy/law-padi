@@ -16,7 +16,7 @@ import {
 
 import { SidebarAppearance } from "@/components/Common/Appearance"
 import { Logo } from "@/components/Common/Logo"
-import { NewConversationButton } from "@/components/LawPadi/NewConversationButton"
+import { NewConversationButton } from "@/components/Constitution/NewConversationButton"
 import {
   Sidebar,
   SidebarContent,

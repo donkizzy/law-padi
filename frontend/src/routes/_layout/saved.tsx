@@ -1,6 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router"
 
-import { SavedProvisions } from "@/components/LawPadi/SavedProvisions"
+import { SavedProvisions } from "@/components/Constitution/SavedProvisions"
 
 export const Route = createFileRoute("/_layout/saved")({
   component: SavedProvisions,

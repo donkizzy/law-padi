@@ -9,7 +9,7 @@ import {
   InlineAction,
   SectionHeading,
   StatusBadge,
-} from "@/components/LawPadi/primitives"
+} from "@/components/Constitution/primitives"
 import useAuth from "@/hooks/useAuth"
 import { legalError, type useProvision } from "@/hooks/useLegalCorpus"
 import { type Bookmark, useSavedProvisions } from "@/hooks/useSavedProvisions"

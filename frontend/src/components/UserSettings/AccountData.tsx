@@ -4,7 +4,7 @@ import { useTranslation } from "react-i18next"
 import { toast } from "sonner"
 
 import { AccountService, UsersService } from "@/client"
-import { SquircleButton } from "@/components/LawPadi/primitives"
+import { SquircleButton } from "@/components/Constitution/primitives"
 import {
   Dialog,
   DialogClose,

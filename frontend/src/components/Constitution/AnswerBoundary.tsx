@@ -1,7 +1,7 @@
 import type { ReactNode } from "react"
 import { ErrorBoundary } from "react-error-boundary"
 import { useTranslation } from "react-i18next"
-import { InlineAction } from "@/components/LawPadi/primitives"
+import { InlineAction } from "@/components/Constitution/primitives"
 
 function AnswerFailed({ retry }: { retry: () => void }) {
   const { t } = useTranslation(["chat", "common"])

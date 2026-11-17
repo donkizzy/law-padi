@@ -2,7 +2,7 @@ import { useId } from "react"
 import { useTranslation } from "react-i18next"
 import { FiGlobe } from "react-icons/fi"
 
-import { SquircleButton } from "@/components/LawPadi/primitives"
+import { SquircleButton } from "@/components/Constitution/primitives"
 import {
   DropdownMenu,
   DropdownMenuContent,

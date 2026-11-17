@@ -9,8 +9,8 @@ import { FiSearch, FiSettings } from "react-icons/fi"
 import { Appearance } from "@/components/Common/Appearance"
 import { LanguageMenu } from "@/components/Common/LanguagePicker"
 import { Logo } from "@/components/Common/Logo"
-import { NewConversationButton } from "@/components/LawPadi/NewConversationButton"
-import { SquircleButton } from "@/components/LawPadi/primitives"
+import { NewConversationButton } from "@/components/Constitution/NewConversationButton"
+import { SquircleButton } from "@/components/Constitution/primitives"
 import AppSidebar from "@/components/Sidebar/AppSidebar"
 import {
   SidebarInset,

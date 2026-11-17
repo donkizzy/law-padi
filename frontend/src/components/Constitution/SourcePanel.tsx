@@ -5,7 +5,7 @@ import {
   CloseButton,
   InlineAction,
   StatusBadge,
-} from "@/components/LawPadi/primitives"
+} from "@/components/Constitution/primitives"
 import {
   Sheet,
   SheetContent,

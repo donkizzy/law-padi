@@ -5,7 +5,7 @@ import { z } from "zod"
 
 import { UsersService } from "@/client"
 import { AuthLayout } from "@/components/Common/AuthLayout"
-import { SquircleButton } from "@/components/LawPadi/primitives"
+import { SquircleButton } from "@/components/Constitution/primitives"
 import { useSessionStatus } from "@/lib/session"
 
 export const Route = createFileRoute("/verify-email")({

@@ -1,17 +1,17 @@
 import { useNavigate, useSearch } from "@tanstack/react-router"
 import { useEffect, useRef, useState } from "react"
 import { useTranslation } from "react-i18next"
-import { ChatComposer } from "@/components/LawPadi/ChatComposer"
-import { ChatHome } from "@/components/LawPadi/ChatHome"
-import { LawPicker } from "@/components/LawPadi/LawPicker"
-import { ProvisionView } from "@/components/LawPadi/ProvisionView"
+import { ChatComposer } from "@/components/Constitution/ChatComposer"
+import { ChatHome } from "@/components/Constitution/ChatHome"
+import { LawPicker } from "@/components/Constitution/LawPicker"
+import { ProvisionView } from "@/components/Constitution/ProvisionView"
 import {
   ErrorState,
   InlineAction,
   PromptSuggestion,
   SkeletonBlock,
-} from "@/components/LawPadi/primitives"
-import { SourcePanel } from "@/components/LawPadi/SourcePanel"
+} from "@/components/Constitution/primitives"
+import { SourcePanel } from "@/components/Constitution/SourcePanel"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { useChatCapabilities } from "@/hooks/useChatCapabilities"
 import { useChatDraft } from "@/hooks/useChatDraft"
@@ -27,7 +27,7 @@ import { serverMessage } from "@/lib/server-messages"
 import { bestContainingSource } from "@/lib/source-ranking"
 import { EditionNotice } from "./EditionNotice"
 
-export function LawPadiHome() {
+export function HomePage() {
   const { t } = useTranslation(["chat", "common"])
   const search = useSearch({ from: "/_layout/" })
   const navigate = useNavigate({ from: "/" })

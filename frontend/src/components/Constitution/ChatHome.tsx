@@ -13,17 +13,17 @@ import type {
   MessagePublic,
 } from "@/client"
 import { ConversationsService } from "@/client"
-import { AnswerBoundary } from "@/components/LawPadi/AnswerBoundary"
-import { AnswerLoading } from "@/components/LawPadi/AnswerLoading"
-import { ChatComposer } from "@/components/LawPadi/ChatComposer"
-import { ChatEvidencePanel } from "@/components/LawPadi/ChatEvidencePanel"
+import { AnswerBoundary } from "@/components/Constitution/AnswerBoundary"
+import { AnswerLoading } from "@/components/Constitution/AnswerLoading"
+import { ChatComposer } from "@/components/Constitution/ChatComposer"
+import { ChatEvidencePanel } from "@/components/Constitution/ChatEvidencePanel"
 import {
   ErrorState,
   InlineAction,
   PromptSuggestion,
   SkeletonBlock,
   SquircleButton,
-} from "@/components/LawPadi/primitives"
+} from "@/components/Constitution/primitives"
 import { useChatCapabilities } from "@/hooks/useChatCapabilities"
 import { useChatDraft } from "@/hooks/useChatDraft"
 import { useChatRequestScope } from "@/hooks/useChatRequestScope"

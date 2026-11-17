@@ -2,7 +2,7 @@ import { type RefObject, useEffect, useId, useRef } from "react"
 import { useTranslation } from "react-i18next"
 import { FiArrowUp, FiBookOpen, FiSearch } from "react-icons/fi"
 
-import { SquircleButton } from "@/components/LawPadi/primitives"
+import { SquircleButton } from "@/components/Constitution/primitives"
 import { useWorkspacePreferences } from "@/hooks/useWorkspacePreferences"
 import { intlLocales } from "@/lib/i18n"
 import { cn } from "@/lib/utils"

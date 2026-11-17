@@ -6,7 +6,7 @@ Router and Query, Tailwind CSS and typed i18next catalogues.
 | Path | What it holds |
 | --- | --- |
 | `src/routes/` | File-based routes; `src/routeTree.gen.ts` is generated. |
-| `src/components/` | UI components. `LawPadi/` carries the product's former name. |
+| `src/components/` | UI components; `Constitution/` holds the reader, chat and legal-admin screens. |
 | `src/lib/` | Session handling, SEO metadata, public content and shared helpers. |
 | `src/locales/` | Interface catalogues per reader language. |
 | `src/client/` | API client generated from the backend's OpenAPI schema. |

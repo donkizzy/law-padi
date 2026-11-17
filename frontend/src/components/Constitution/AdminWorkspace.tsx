@@ -55,15 +55,15 @@ import {
   type SourceUploadPublic,
 } from "@/client"
 import { client } from "@/client/client.gen"
-import { CandidateStructureEditor } from "@/components/LawPadi/CandidateStructureEditor"
-import { ComposeReleaseForm } from "@/components/LawPadi/ComposeReleaseForm"
-import { DeriveProvisionForm } from "@/components/LawPadi/DeriveProvisionForm"
+import { CandidateStructureEditor } from "@/components/Constitution/CandidateStructureEditor"
+import { ComposeReleaseForm } from "@/components/Constitution/ComposeReleaseForm"
+import { DeriveProvisionForm } from "@/components/Constitution/DeriveProvisionForm"
 import {
   SectionHeading,
   SegmentedControl,
   SquircleButton,
-} from "@/components/LawPadi/primitives"
-import { ResolveReviewIssueForm } from "@/components/LawPadi/ResolveReviewIssueForm"
+} from "@/components/Constitution/primitives"
+import { ResolveReviewIssueForm } from "@/components/Constitution/ResolveReviewIssueForm"
 import { Checkbox } from "@/components/ui/checkbox"
 import {
   Dialog,

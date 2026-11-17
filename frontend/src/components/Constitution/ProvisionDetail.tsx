@@ -1,13 +1,13 @@
 import { Link, useNavigate } from "@tanstack/react-router"
 import { useState } from "react"
 import { useTranslation } from "react-i18next"
-import { ProvisionView } from "@/components/LawPadi/ProvisionView"
+import { ProvisionView } from "@/components/Constitution/ProvisionView"
 import {
   ErrorState,
   InlineAction,
   SkeletonBlock,
-} from "@/components/LawPadi/primitives"
-import { SourcePanel } from "@/components/LawPadi/SourcePanel"
+} from "@/components/Constitution/primitives"
+import { SourcePanel } from "@/components/Constitution/SourcePanel"
 import { legalError, useProvision } from "@/hooks/useLegalCorpus"
 import { instrumentSlug } from "@/lib/legal-provisions"
 

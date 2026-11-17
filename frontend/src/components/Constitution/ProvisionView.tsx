@@ -10,7 +10,7 @@ import {
   InlineAction,
   OfficialTextBlock,
   StatusBadge,
-} from "@/components/LawPadi/primitives"
+} from "@/components/Constitution/primitives"
 import { useChatCapabilities } from "@/hooks/useChatCapabilities"
 import { legalError, useProvisionHistory } from "@/hooks/useLegalCorpus"
 import { useSavedProvisions } from "@/hooks/useSavedProvisions"

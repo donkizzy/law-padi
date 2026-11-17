@@ -2,14 +2,14 @@ import { Link, useNavigate } from "@tanstack/react-router"
 import { useState } from "react"
 import { useTranslation } from "react-i18next"
 import type { ProvisionReference } from "@/client"
-import { LawPicker } from "@/components/LawPadi/LawPicker"
+import { LawPicker } from "@/components/Constitution/LawPicker"
 import {
   ErrorState,
   InlineAction,
   SectionHeading,
   SkeletonBlock,
   SquircleButton,
-} from "@/components/LawPadi/primitives"
+} from "@/components/Constitution/primitives"
 import {
   legalError,
   useLegalInstruments,
