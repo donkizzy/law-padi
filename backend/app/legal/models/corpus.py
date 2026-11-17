@@ -93,6 +93,12 @@ class CorpusReleaseEntry(SQLModel, table=True):
 
 class ReleasePromotionAttempt(SQLModel, table=True):
     __tablename__ = "release_promotion_attempt"
+    __table_args__ = (
+        Index("ix_release_promotion_index_kind", "index_kind"),
+        Index(
+            "ix_release_promotion_retrieval_index_build_id", "retrieval_index_build_id"
+        ),
+    )
 
     id: uuid.UUID = Field(default_factory=uuid.uuid4, primary_key=True)
     release_id: uuid.UUID = Field(
@@ -109,10 +115,9 @@ class ReleasePromotionAttempt(SQLModel, table=True):
     retrieval_index_build_id: uuid.UUID | None = Field(
         default=None,
         foreign_key="retrieval_index_build.id",
-        index=True,
         ondelete="SET NULL",
     )
-    index_kind: str | None = Field(default=None, max_length=32, index=True)
+    index_kind: str | None = Field(default=None, max_length=32)
     requested_by: uuid.UUID | None = Field(
         default=None,
         foreign_key="user.id",

@@ -185,6 +185,11 @@ class RetrievalSegment(SQLModel, table=True):
         Index("ix_retrieval_segment_release_kind", "release_id", "index_kind"),
         Index("ix_retrieval_segment_release_instrument", "release_id", "instrument_id"),
         Index("ix_retrieval_segment_provision_version", "provision_version_id"),
+        Index(
+            "ix_retrieval_segment_search_vector",
+            "search_vector",
+            postgresql_using="gin",
+        ),
     )
 
     id: uuid.UUID = Field(default_factory=uuid.uuid4, primary_key=True)
@@ -192,21 +197,19 @@ class RetrievalSegment(SQLModel, table=True):
         foreign_key="corpus_release.id", index=True, ondelete="CASCADE"
     )
     release_entry_id: uuid.UUID = Field(
-        foreign_key="corpus_release_entry.id", index=True, ondelete="CASCADE"
+        foreign_key="corpus_release_entry.id", ondelete="CASCADE"
     )
     instrument_id: uuid.UUID = Field(
         foreign_key="legal_instrument.id", index=True, ondelete="CASCADE"
     )
-    provision_id: uuid.UUID = Field(
-        foreign_key="provision.id", index=True, ondelete="CASCADE"
-    )
+    provision_id: uuid.UUID = Field(foreign_key="provision.id", ondelete="CASCADE")
     provision_version_id: uuid.UUID = Field(
-        foreign_key="provision_version.id", index=True, ondelete="CASCADE"
+        foreign_key="provision_version.id", ondelete="CASCADE"
     )
     source_document_id: uuid.UUID = Field(
-        foreign_key="source_document.id", index=True, ondelete="CASCADE"
+        foreign_key="source_document.id", ondelete="CASCADE"
     )
-    index_kind: str = Field(default="enacted", max_length=32, index=True)
+    index_kind: str = Field(default="enacted", max_length=32)
     segment_index: int
     segment_count: int
     language: str = Field(default="en", max_length=16)
@@ -246,6 +249,7 @@ class RetrievalEmbedding(SQLModel, table=True):
 
     __tablename__ = "retrieval_embedding"
     __table_args__ = (
+        Index("ix_retrieval_embedding_release_profile", "release_id", "profile_id"),
         UniqueConstraint(
             "embedding_run_id",
             "segment_id",
@@ -269,14 +273,12 @@ class RetrievalEmbedding(SQLModel, table=True):
     segment_id: uuid.UUID = Field(
         foreign_key="retrieval_segment.id", index=True, ondelete="CASCADE"
     )
-    release_id: uuid.UUID = Field(
-        foreign_key="corpus_release.id", index=True, ondelete="CASCADE"
-    )
+    release_id: uuid.UUID = Field(foreign_key="corpus_release.id", ondelete="CASCADE")
     embedding_run_id: uuid.UUID = Field(
         foreign_key="embedding_run.id", index=True, ondelete="CASCADE"
     )
     profile_id: uuid.UUID = Field(
-        foreign_key="embedding_profile.id", index=True, ondelete="CASCADE"
+        foreign_key="embedding_profile.id", ondelete="CASCADE"
     )
     vector_dimensions: int = Field(default=1024)
     embedding: list[float] = Field(sa_column=Column(Vector(1024), nullable=False))
@@ -349,15 +351,21 @@ class ActiveRetrievalTarget(SQLModel, table=True):
     __tablename__ = "active_retrieval_target"
 
     index_kind: str = Field(primary_key=True, max_length=32)
-    release_id: uuid.UUID = Field(foreign_key="corpus_release.id", index=True)
-    embedding_run_id: uuid.UUID = Field(foreign_key="embedding_run.id", index=True)
-    retrieval_index_build_id: uuid.UUID = Field(
-        foreign_key="retrieval_index_build.id", index=True
+    release_id: uuid.UUID = Field(
+        foreign_key="corpus_release.id", ondelete="RESTRICT", index=True
     )
-    profile_id: uuid.UUID = Field(foreign_key="embedding_profile.id", index=True)
+    embedding_run_id: uuid.UUID = Field(
+        foreign_key="embedding_run.id", ondelete="RESTRICT"
+    )
+    retrieval_index_build_id: uuid.UUID = Field(
+        foreign_key="retrieval_index_build.id", ondelete="RESTRICT"
+    )
+    profile_id: uuid.UUID = Field(
+        foreign_key="embedding_profile.id", ondelete="RESTRICT"
+    )
     lock_version: int = Field(default=1)
     activated_by: uuid.UUID | None = Field(
-        default=None, foreign_key="user.id", index=True, ondelete="SET NULL"
+        default=None, foreign_key="user.id", ondelete="SET NULL"
     )
     activated_at: datetime = Field(
         default_factory=get_datetime_utc,
