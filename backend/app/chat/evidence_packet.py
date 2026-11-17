@@ -95,14 +95,13 @@ def source_crossrefs(
     return list(dict.fromkeys([*primary, *extra]))[:5]
 
 
-def expand_context(
+def parent_context(
     session: Session,
     corpus: PublicCorpus,
     selected: list[EvidenceItem],
+    seen: set[uuid.UUID],
 ) -> list[EvidenceItem]:
-    """Load published parents and a few unambiguous cross-references."""
     result: list[EvidenceItem] = []
-    seen = {item.provision_version_id for item in selected}
     parent_ids: set[uuid.UUID] = set()
     for item in selected:
         provision = corpus.provisions.get(item.provision_id) or session.get(
@@ -146,6 +145,12 @@ def expand_context(
             result.append(
                 evidence_item(corpus, public, f"E{len(selected) + len(result) + 1}")
             )
+    return result
+
+
+def context_references(
+    session: Session, corpus: PublicCorpus, selected: list[EvidenceItem]
+) -> tuple[list[SectionReference], int]:
     crossrefs: list[SectionReference] = []
     # Provisions that limit or pair with the selected ones come first, so
     # restrictions such as Section 45 reach the explanation.
@@ -193,6 +198,16 @@ def expand_context(
                 break
         if len(crossrefs) >= crossref_limit:
             break
+    return crossrefs, crossref_limit
+
+
+def expand_context(
+    session: Session, corpus: PublicCorpus, selected: list[EvidenceItem]
+) -> list[EvidenceItem]:
+    """Load published parents and a few unambiguous cross-references."""
+    seen = {item.provision_version_id for item in selected}
+    result = parent_context(session, corpus, selected, seen)
+    crossrefs, crossref_limit = context_references(session, corpus, selected)
     if crossrefs:
         focused = load_reference_corpus(
             session,

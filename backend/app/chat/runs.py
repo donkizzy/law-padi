@@ -106,6 +106,40 @@ def emit_progress(run_id: uuid.UUID, event_type: str) -> None:
             session.commit()
 
 
+def answer_message(
+    run: GenerationRun,
+    answer: ExplanationAnswer,
+    provider_result: ProviderResult | None,
+    validation: JsonObject | None,
+    telemetry: JsonObject | None,
+) -> ConversationMessage:
+    content = "\n\n".join(block.text for block in answer.blocks)
+    return ConversationMessage(
+        conversation_id=run.conversation_id,
+        role=MessageRole.ASSISTANT,
+        content=content,
+        answer_status=AnswerStatus.COMPLETED
+        if answer.outcome in ("completed", "partial_evidence")
+        else AnswerStatus.INSUFFICIENT_EVIDENCE
+        if answer.outcome in ("insufficient_evidence", "clarification_required")
+        else AnswerStatus.FAILED,
+        model_provider="deepseek" if provider_result else None,
+        model_name=provider_result.model if provider_result else None,
+        answer_content=answer.model_dump(mode="json"),
+        evidence_snapshot=[item.model_dump(mode="json") for item in answer.evidence],
+        prompt_version=EXPLANATION_PROMPT_VERSION,
+        usage={
+            "prompt_tokens": provider_result.prompt_tokens,
+            "completion_tokens": provider_result.completion_tokens,
+        }
+        if provider_result
+        else None,
+        validation_result={**(validation or {}), **(telemetry or {})}
+        if validation or telemetry
+        else None,
+    )
+
+
 def finish(
     run_id: uuid.UUID,
     worker_id: str,
@@ -125,33 +159,7 @@ def finish(
             answer = ExplanationAnswer(
                 outcome="cancelled", **notice_fields("cancelled")
             )
-        content = "\n\n".join(block.text for block in answer.blocks)
-        message = ConversationMessage(
-            conversation_id=run.conversation_id,
-            role=MessageRole.ASSISTANT,
-            content=content,
-            answer_status=AnswerStatus.COMPLETED
-            if answer.outcome in ("completed", "partial_evidence")
-            else AnswerStatus.INSUFFICIENT_EVIDENCE
-            if answer.outcome in ("insufficient_evidence", "clarification_required")
-            else AnswerStatus.FAILED,
-            model_provider="deepseek" if provider_result else None,
-            model_name=provider_result.model if provider_result else None,
-            answer_content=answer.model_dump(mode="json"),
-            evidence_snapshot=[
-                item.model_dump(mode="json") for item in answer.evidence
-            ],
-            prompt_version=EXPLANATION_PROMPT_VERSION,
-            usage={
-                "prompt_tokens": provider_result.prompt_tokens,
-                "completion_tokens": provider_result.completion_tokens,
-            }
-            if provider_result
-            else None,
-            validation_result={**(validation or {}), **(telemetry or {})}
-            if validation or telemetry
-            else None,
-        )
+        message = answer_message(run, answer, provider_result, validation, telemetry)
         session.add(message)
         session.flush()
         for rank, item in enumerate(answer.evidence, start=1):
@@ -312,6 +320,6 @@ async def execute(
             ExplanationAnswer(outcome="cancelled", **notice_fields("disabled")),
         )
     else:
-        from app.chat.worker import process_run
+        from app.chat import pipeline
 
-        await process_run(run_id, worker_id)
+        await pipeline.process_run(run_id, worker_id)

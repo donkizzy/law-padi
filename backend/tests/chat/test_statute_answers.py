@@ -12,7 +12,7 @@ import pytest
 from fastapi.testclient import TestClient
 from sqlmodel import Session, select
 
-from app.chat import EXPLANATION_PROMPT_VERSION, evidence_packet, runs, worker
+from app.chat import EXPLANATION_PROMPT_VERSION, evidence_packet, pipeline, runs
 from app.chat.llm.protocol import ProviderResult
 from app.chat.schemas import ExplanationBlock, ExplanationDraft
 from app.chat.validation import EvidenceValidationError, validate_draft
@@ -381,7 +381,7 @@ def _run_answer(
     assert accepted.status_code == 202
     run_id = UUID(accepted.json()["run_id"])
     assert runs.claim_run("phase5", run_id=run_id) == run_id
-    asyncio.run(worker.process_run(run_id, "phase5", provider))
+    asyncio.run(pipeline.process_run(run_id, "phase5", provider))
     db.expire_all()
     run = db.get(GenerationRun, run_id)
     assert run is not None

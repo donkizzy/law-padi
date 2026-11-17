@@ -7,7 +7,7 @@ import pytest
 from fastapi.testclient import TestClient
 from sqlmodel import Session, select
 
-from app.chat import runs, worker
+from app.chat import pipeline, preparation, runs
 from app.chat.llm.protocol import ProviderResult
 from app.chat.prompts import explanation
 from app.core.config import settings
@@ -95,7 +95,7 @@ def _answer_section_37(
         assert accepted.status_code == 202
         run_id = UUID(accepted.json()["run_id"])
         assert runs.claim_run("test-worker") == run_id
-        asyncio.run(worker.process_run(run_id, "test-worker", provider))
+        asyncio.run(pipeline.process_run(run_id, "test-worker", provider))
     db.expire_all()
     run = db.get(GenerationRun, run_id)
     assert run is not None
@@ -154,7 +154,7 @@ def _validated_explanation(
         assert accepted.status_code == 202
         run_id = UUID(accepted.json()["run_id"])
         assert runs.claim_run("test-worker") == run_id
-        asyncio.run(worker.process_run(run_id, "test-worker", provider))
+        asyncio.run(pipeline.process_run(run_id, "test-worker", provider))
         db.expire_all()
         run = db.get(GenerationRun, run_id)
         assert run is not None
@@ -283,7 +283,7 @@ def test_selected_ambiguous_identity_is_pinned_and_run_events_are_scoped(
         assert first.status_code == 202
         first_id = UUID(first.json()["run_id"])
         assert runs.claim_run("test-worker") == first_id
-        asyncio.run(worker.process_run(first_id, "test-worker", provider))
+        asyncio.run(pipeline.process_run(first_id, "test-worker", provider))
 
         second = client.post(
             endpoint,
@@ -303,7 +303,7 @@ def test_selected_ambiguous_identity_is_pinned_and_run_events_are_scoped(
             == 409
         )
         assert runs.claim_run("test-worker") == second_id
-        asyncio.run(worker.process_run(second_id, "test-worker", provider))
+        asyncio.run(pipeline.process_run(second_id, "test-worker", provider))
         db.expire_all()
         second_run = db.get(GenerationRun, second_id)
         assert second_run is not None
@@ -349,7 +349,7 @@ def test_elliptical_followup_reuses_one_resolved_identity(
             assert accepted.status_code == 202
             run_id = UUID(accepted.json()["run_id"])
             assert runs.claim_run("test-worker") == run_id
-            asyncio.run(worker.process_run(run_id, "test-worker", provider))
+            asyncio.run(pipeline.process_run(run_id, "test-worker", provider))
             db.expire_all()
             run = db.get(GenerationRun, run_id)
             assert run is not None and run.outcome == "completed"
@@ -442,7 +442,7 @@ def test_multi_source_followup_preserves_context_without_reusing_old_answer_clai
             assert accepted.status_code == 202
             run_id = UUID(accepted.json()["run_id"])
             assert runs.claim_run("context-test") == run_id
-            asyncio.run(worker.process_run(run_id, "context-test", provider))
+            asyncio.run(pipeline.process_run(run_id, "context-test", provider))
             db.expire_all()
             run = db.get(GenerationRun, run_id)
             assert run is not None and run.outcome == "completed"
@@ -484,7 +484,7 @@ def test_ambiguous_pronoun_asks_which_source_without_another_provider_call(
             assert accepted.status_code == 202
             run_id = UUID(accepted.json()["run_id"])
             assert runs.claim_run("clarification-test") == run_id
-            asyncio.run(worker.process_run(run_id, "clarification-test", provider))
+            asyncio.run(pipeline.process_run(run_id, "clarification-test", provider))
         db.expire_all()
         run = db.get(GenerationRun, run_id)
         assert run is not None and run.outcome == "clarification_required"
@@ -522,7 +522,7 @@ def test_followup_keeps_a_user_selected_printed_identity(
             assert accepted.status_code == 202
             run_id = UUID(accepted.json()["run_id"])
             assert runs.claim_run("identity-test") == run_id
-            asyncio.run(worker.process_run(run_id, "identity-test", provider))
+            asyncio.run(pipeline.process_run(run_id, "identity-test", provider))
             db.expire_all()
             run = db.get(GenerationRun, run_id)
             assert run is not None and run.outcome == "completed"
@@ -591,7 +591,7 @@ def test_privacy_answers_signpost_other_laws(
     monkeypatch.setattr(settings, "CHAT_ENABLED", True)
     monkeypatch.setattr(settings, "CHAT_GENERATION_ENABLED", True)
     monkeypatch.setattr(
-        worker, "related_laws", lambda _question, **_: ["Police Act 2020"]
+        preparation, "related_laws", lambda _question, **_: ["Police Act 2020"]
     )
     provider = FakeProvider()
     _run, message = _answer_section_37(db, monkeypatch, provider)

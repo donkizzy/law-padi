@@ -1,10 +1,9 @@
 import uuid
 from datetime import datetime
-from typing import Literal
+from typing import Any, Literal
 
 from sqlmodel import Field, SQLModel
 
-from app.chat.llm.protocol import JsonObject
 from app.languages.codes import Language
 from app.legal.schemas import CitationOutcome, EvidenceItem
 
@@ -45,8 +44,8 @@ class MessagePublic(SQLModel):
     role: str
     content: str
     answer_status: str | None
-    answer_content: JsonObject | None
-    evidence_snapshot: list[JsonObject] | None
+    answer_content: dict[str, Any] | None
+    evidence_snapshot: list[dict[str, Any]] | None
     helpful: bool | None = None
     created_at: datetime
 
@@ -152,7 +151,7 @@ class ExplanationAnswer(SQLModel):
     # Stable key and values so clients can show the notice in any language;
     # notice keeps the English text.
     notice_code: str | None = None
-    notice_params: JsonObject = Field(default_factory=dict)
+    notice_params: dict[str, Any] = Field(default_factory=dict)
     # Language the reader asked in, and the language this answer is for.
     question_language: Language | None = None
     answer_language: Language = Language.ENGLISH

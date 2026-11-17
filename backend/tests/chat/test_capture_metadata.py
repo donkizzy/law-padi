@@ -7,7 +7,7 @@ from uuid import UUID
 import httpx
 import pytest
 
-from app.chat import EXPLANATION_PROMPT_VERSION, runs, worker
+from app.chat import EXPLANATION_PROMPT_VERSION, pipeline, runs
 from app.core.config import settings
 from scripts import collect_explanation_review as collector
 from scripts.evaluate_explanations import _check_captures
@@ -145,7 +145,7 @@ def _mock_capture(
         generated = True
         calls.append("simulated_generation")
 
-    monkeypatch.setattr(worker, "process_run", fake_process)
+    monkeypatch.setattr(pipeline, "process_run", fake_process)
     return calls
 
 

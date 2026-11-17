@@ -234,7 +234,7 @@ async def _capture_case(
             response.raise_for_status()
             accepted = response.json()
             if inline_worker:
-                from app.chat import runs, worker
+                from app.chat import pipeline, runs
 
                 expected = uuid.UUID(accepted["run_id"])
                 worker_id = f"review-{uuid.uuid4()}"
@@ -245,7 +245,7 @@ async def _capture_case(
                     raise RuntimeError(
                         "The API run was not found in the isolated review database"
                     )
-                await worker.process_run(expected, worker_id)
+                await pipeline.process_run(expected, worker_id)
             answer = await _completed_answer(
                 client, conversation["id"], accepted["user_message_id"]
             )

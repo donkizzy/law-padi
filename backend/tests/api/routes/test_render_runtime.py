@@ -9,10 +9,11 @@ from fastapi import FastAPI, HTTPException
 from fastapi.responses import StreamingResponse
 from fastapi.testclient import TestClient
 
+from app.chat import pipeline
 from app.chat import runs as run_lifecycle
 from app.chat import runtime as chat_runtime
-from app.chat import worker
 from app.chat.llm import budgeted
+from app.chat.llm.protocol import ProviderResult
 from app.core.config import settings
 from app.deployment import render_app
 from app.main import app as api_app
@@ -89,7 +90,7 @@ def test_worker_drains_pending_runs_sequentially(
         active -= 1
 
     monkeypatch.setattr(run_lifecycle, "claim_run", claim)
-    monkeypatch.setattr(worker, "process_run", process)
+    monkeypatch.setattr(pipeline, "process_run", process)
 
     async def exercise() -> None:
         runtime = render_app.RequestWorker()
@@ -143,9 +144,10 @@ def test_shutdown_awaits_uncertain_call_cleanup_and_never_claims_another_run(
         started = asyncio.Event()
 
         class Provider:
-            async def complete_json(self, **_kwargs: Any) -> None:
+            async def complete_json(self, **_kwargs: Any) -> ProviderResult:
                 started.set()
                 await asyncio.Event().wait()
+                raise AssertionError("The blocked provider must be cancelled")
 
         def claim(_identity: str) -> UUID:
             run_id = uuid4()
@@ -157,7 +159,7 @@ def test_shutdown_awaits_uncertain_call_cleanup_and_never_claims_another_run(
             # this adapter consumes cancellation after its settlement completes.
             try:
                 await budgeted.call(
-                    Provider(),  # type: ignore[arg-type]
+                    Provider(),
                     run_id,
                     "generation",
                     "system",
@@ -168,7 +170,7 @@ def test_shutdown_awaits_uncertain_call_cleanup_and_never_claims_another_run(
                 pass
 
         monkeypatch.setattr(run_lifecycle, "claim_run", claim)
-        monkeypatch.setattr(worker, "process_run", process)
+        monkeypatch.setattr(pipeline, "process_run", process)
         monkeypatch.setattr(budgeted, "reserve_call", lambda *_args: uuid4())
         monkeypatch.setattr(
             budgeted,
