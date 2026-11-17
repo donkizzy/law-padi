@@ -184,9 +184,15 @@ matches neither the served nor the normalised text.
 ## Answers
 
 A question becomes a `GenerationRun`. The API admits it after per-guest and
-per-account daily and one-minute limits and a global active-generation cap
-(`api/routes/conversations.py`), and the chat worker processes it
-(`chat/worker.py`):
+per-account daily and one-minute limits and a global cap on admitted runs
+(`api/routes/conversations.py`), and the chat worker processes it as a
+sequence of typed stages (`chat/pipeline.py`). The cap
+(`CHAT_MAX_ACTIVE_GENERATIONS`) is a queue depth: the worker generates
+`CHAT_WORKER_CONCURRENCY` answers at once and claims the rest in the order
+they arrived. While a run waits, its event stream sends `run.queued` with its
+place among waiting runs (1 is next). The place is derived on each read, so it
+carries no event ID and is not replayed. A question beyond the cap is refused
+with HTTP 429.
 
 1. **Understand the language.** A question that is not clearly English gets one
    budgeted call that returns its language and an English rendering
@@ -196,17 +202,32 @@ per-account daily and one-minute limits and a global active-generation cap
    (parent sections, companions, application provisions) and trims the packet
    to `CHAT_EVIDENCE_MAX_CHARS`, dropping the lowest-ranked matches before
    context and never the best match. Source cards are sent to the client first.
+   A question is treated as a follow-up only when it has no subject of its own
+   (`chat/history.py`): a subsection or paragraph without a section, or no
+   topic the guide recognises and fewer than three subject words once
+   follow-up vocabulary ("explain", "more simply", "next section",
+   "exceptions") is set aside. "Why?", "Explain that more simply" and "Tell me
+   more" reuse the sections the previous answer cited, and a pronoun that could
+   mean any of several cited sections gets a clarifying question. Any other
+   question, including "How long can police detain me?" after an answer about
+   Section 37, is retrieved as written; earlier turns reach the drafter only as
+   conversation context.
 3. **Draft.** The drafting call returns JSON blocks; each block lists the
    evidence IDs it relies on. The prompt version is
    `EXPLANATION_PROMPT_VERSION` in `chat/__init__.py`.
 4. **Deterministic validation** (`chat/validation.py`). A block fails if it has
    no evidence or cites an ID that was not supplied, quotes wording that is not
    in its cited text, cites a section or names a law outside its evidence,
-   describes how the answer was produced, or calls historical text current law.
-   A failing first block rejects the answer; later failing blocks are dropped.
+   describes how the answer was produced, calls historical text current law,
+   or gives a link, email address or phone number that is not in its cited
+   text. A failing first block rejects the answer; later failing blocks are
+   dropped.
 5. **Model verification.** A separate verifier call reviews each block against
    its evidence; `validate_verifier` rejects a missing or malformed verdict.
-   One revision may carry the rejection reason back to the drafter.
+   One revision may carry the rejection reason back to the drafter. To limit
+   what reader-written text can steer, the verifier receives the question and,
+   for a follow-up, the question it follows, each capped at the 2,000-character
+   admission limit, but not the conversation history.
 6. **Translate.** For a non-English reader, the verified English answer is
    translated with a glossary slice, then checked deterministically (numbers,
    law names, list items, quotation marks, length ratio, still-English text).
@@ -216,19 +237,37 @@ per-account daily and one-minute limits and a global active-generation cap
 The pipeline fails closed: a provider error, a schema error, a validation
 failure or an exhausted budget ends the run with an explanation-unavailable
 notice, and the reader still sees the source wording. Draft tokens are never
-streamed; the answer is published only after both checks pass.
+streamed; the answer is published only after both checks pass. Only the draft
+stage's schema and grounding rejections are recorded as `validation_failed`.
+Any other unexpected error is logged with its traceback and stored with
+`failure_stage: "internal"` and its exception type, so a defect is not counted
+as a grounding failure.
 
 **Spend ledger** (`chat/budget.py`). Before every paid call the worst-case cost
 is reserved against Lagos-day and month ledgers, serialised by a row lock, and
 settled with the provider's reported usage afterwards. A call whose outcome is
 uncertain stays reserved until it is reconciled. Limits come from
 `CHAT_DAILY_BUDGET_USD`, `CHAT_MONTHLY_BUDGET_USD` and `AI_MONTHLY_BUDGET_USD`.
+Rate limiting and server errors that the provider reports itself (HTTP 429, 500
+and 503) are not charged. Such a call is retried once, after any `Retry-After`
+pause of up to ten seconds. A response that is truncated or is not valid JSON
+but reports its usage settles at that cost. Timeouts, transport errors and
+gateway errors (502, 504) remain uncertain and are never retried.
 
 **Durable runs and replay.** Runs are claimed with leases; a lease that expires
 is recovered without repeating a call that may already have been charged.
 Events are written to `GenerationEvent` before `pg_notify`, and the SSE endpoint
 resumes from `Last-Event-ID`. `CHAT_GENERATION_KILL_SWITCH=true` stops new
 explanations while lookup and reading continue.
+
+**Cancellation and shutdown.** A reader's stop request is a flag on the run.
+It is checked between stages and polled once a second while a provider call is
+in flight; the call is then abandoned, its reservation is kept as possibly
+charged, and the reader sees "You stopped this answer." A worker that is itself
+stopped, for a deploy or restart, never reports that notice. A run that has
+not dispatched a paid call goes back to the queue. One that may have been
+charged is finished as stalled ("This answer took too long. Please try
+again."), the same rule lease recovery applies after a crash.
 
 ## Reader languages
 
