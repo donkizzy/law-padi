@@ -183,3 +183,36 @@ def test_heartbeat_retries_database_blips(
         assert result.task_status == IngestionTaskStatus.RUNNING
         assert len(calls) == 3
     queue.mark_run_cancelled(db, run, "test cleanup")
+
+
+def test_worker_starts_task_step_run_and_event_in_one_commit(
+    db: Session, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    from sqlalchemy import event
+
+    run = IngestionRun(status=IngestionRunStatus.QUEUED)
+    db.add(run)
+    db.commit()
+    step = queue.create_run_steps(db, run, (IngestionStage.PROFILING,))[0]
+    queue.enqueue_task(
+        db, run=run, step=step, task_type="profiling", idempotency_key=str(run.id)
+    )
+    task = queue.lease_next_task(db, worker_id="worker-a", task_type="profiling")
+    assert task is not None
+    commits: list[None] = []
+
+    def count_commits(_session: Session) -> None:
+        commits.append(None)
+
+    def handler(*_args: Any) -> runner.StageOutcome:
+        assert len(commits) == 1
+        return runner.StageOutcome(metrics={})
+
+    monkeypatch.setattr(runner, "handler_for", lambda _stage: handler)
+    event.listen(db, "after_commit", count_commits)
+    try:
+        result = runner.run_leased_task(db, task, worker_id="worker-a")
+    finally:
+        event.remove(db, "after_commit", count_commits)
+    assert result.task_status == IngestionTaskStatus.SUCCEEDED
+    assert len(commits) == 2

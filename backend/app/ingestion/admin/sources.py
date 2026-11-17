@@ -69,7 +69,6 @@ def verify_source_document(
                 payload={"reason": reason},
             )
         )
-        session.commit()
 
     queue_materialization_for_verified_source(session, source=source)
     add_idempotency_record(

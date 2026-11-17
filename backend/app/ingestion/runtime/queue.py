@@ -267,7 +267,9 @@ def lease_next_task(
     return None
 
 
-def mark_task_running(session: Session, task: IngestionTask) -> IngestionTask:
+def mark_task_running(
+    session: Session, task: IngestionTask, *, commit: bool = True
+) -> IngestionTask:
     now = get_datetime_utc()
     update_owned_task(
         session,
@@ -279,7 +281,8 @@ def mark_task_running(session: Session, task: IngestionTask) -> IngestionTask:
             "lock_version": col(IngestionTask.lock_version) + 1,
         },
     )
-    session.commit()
+    if commit:
+        session.commit()
     session.refresh(task)
     return task
 
@@ -370,7 +373,7 @@ def fail_task(
 
 
 def mark_run_cancelled(
-    session: Session, run: IngestionRun, reason: str
+    session: Session, run: IngestionRun, reason: str, *, commit: bool = True
 ) -> IngestionRun:
     now = get_datetime_utc()
     tasks = session.exec(
@@ -404,14 +407,16 @@ def mark_run_cancelled(
     run.completed_at = now
     run.updated_at = now
     session.add(run)
-    session.commit()
     append_run_event(
         session,
         run,
         event_type="run_cancelled",
         message=reason,
         stage=run.current_stage,
+        commit=False,
     )
+    if commit:
+        session.commit()
     return run
 
 

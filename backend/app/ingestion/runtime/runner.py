@@ -121,10 +121,12 @@ def _run_leased_task(
     stage = stage_for_task(task)
     step = get_step(session, run.id, stage, task.step_id)
     started_at = get_datetime_utc()
-    task = mark_task_running(session, task)
+    task = mark_task_running(session, task, commit=False)
     with fence_stage_writes(session, lease):
-        mark_step_running(session, step, worker_id=worker_id, started_at=started_at)
-        mark_run_running(session, run, stage=stage)
+        mark_step_running(
+            session, step, worker_id=worker_id, started_at=started_at, commit=False
+        )
+        mark_run_running(session, run, stage=stage, commit=False)
         append_run_event(
             session,
             run,
@@ -132,7 +134,10 @@ def _run_leased_task(
             message=f"{stage.value} started",
             step=step,
             payload={"worker_id": worker_id, "task_id": str(task.id)},
+            commit=False,
         )
+
+    session.commit()
 
     stop_heartbeat = threading.Event()
     lease_lost = threading.Event()
@@ -333,6 +338,7 @@ def mark_step_running(
     *,
     worker_id: str,
     started_at: datetime,
+    commit: bool = True,
 ) -> None:
     now = get_datetime_utc()
     step.status = IngestionStepStatus.RUNNING
@@ -343,7 +349,8 @@ def mark_step_running(
     step.lock_version += 1
     step.updated_at = now
     session.add(step)
-    session.commit()
+    if commit:
+        session.commit()
 
 
 def mark_step_succeeded(
@@ -371,14 +378,15 @@ def mark_step_succeeded(
 
 
 def mark_run_running(
-    session: Session, run: IngestionRun, *, stage: IngestionStage
+    session: Session, run: IngestionRun, *, stage: IngestionStage, commit: bool = True
 ) -> None:
     run.status = IngestionRunStatus.RUNNING
     run.current_stage = stage
     run.lock_version += 1
     run.updated_at = get_datetime_utc()
     session.add(run)
-    session.commit()
+    if commit:
+        session.commit()
 
 
 def get_run(session: Session, run_id: uuid.UUID) -> IngestionRun:

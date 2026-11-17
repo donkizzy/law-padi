@@ -382,9 +382,9 @@ def decide_review_candidate(
         result_id=decision.id,
         created_by=current_user.id,
     )
-    session.commit()
     if body.decision == ReviewDecisionType.APPROVE:
         maybe_complete_review_and_queue_materialization(session, candidate=candidate)
+    session.commit()
     session.refresh(candidate)
     return candidate
 

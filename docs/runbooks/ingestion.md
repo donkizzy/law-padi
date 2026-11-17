@@ -201,3 +201,12 @@ Stage flushes and commits take the same fence, so a worker whose task has been
 reclaimed discards its uncommitted results without failing the new owner's run.
 Heartbeat database errors are retried on the next interval, up to three
 consecutive failures; a confirmed ownership loss stops renewal immediately.
+
+### Interrupted administrative commands
+
+Run controls, source verification and final review approval commit their state,
+queued task, event, outbox rows and idempotency receipt together. If a request
+fails before commit, retry the same request and idempotency key. It cannot leave
+a queued run behind without its task. The operational alerts also flag existing
+queued/running runs with no pending, leased or running task as
+`missing_active_task`; inspect the run before cancelling/resuming or retrying it.

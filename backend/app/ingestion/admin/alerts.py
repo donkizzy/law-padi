@@ -63,6 +63,48 @@ def read_admin_operational_alerts(
             )
         )
 
+    active_task_exists = (
+        select(IngestionTask.id)
+        .where(
+            IngestionTask.run_id == IngestionRun.id,
+            col(IngestionTask.status).in_(
+                [
+                    IngestionTaskStatus.PENDING,
+                    IngestionTaskStatus.LEASED,
+                    IngestionTaskStatus.RUNNING,
+                ]
+            ),
+        )
+        .exists()
+    )
+    orphaned_runs = session.exec(
+        select(IngestionRun)
+        .where(
+            col(IngestionRun.status).in_(
+                [IngestionRunStatus.QUEUED, IngestionRunStatus.RUNNING]
+            ),
+            ~active_task_exists,
+        )
+        .order_by(col(IngestionRun.updated_at).desc())
+        .limit(limit)
+    ).all()
+    for run in orphaned_runs:
+        alerts.append(
+            AdminOperationalAlertPublic(
+                id=f"missing-active-task:{run.id}",
+                alert_type="missing_active_task",
+                severity=AuditSeverity.HIGH,
+                title="Ingestion run has no active task",
+                message=f"{enum_value(run.current_stage)} needs operator recovery.",
+                detected_at=run.updated_at,
+                run_id=run.id,
+                evidence={
+                    "status": enum_value(run.status),
+                    "stage": enum_value(run.current_stage),
+                },
+            )
+        )
+
     stalled_tasks = session.exec(
         select(IngestionTask)
         .where(

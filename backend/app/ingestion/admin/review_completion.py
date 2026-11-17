@@ -119,7 +119,6 @@ def mark_review_waiting_for_source_verification(
         )
     ).first()
     if existing_event:
-        session.commit()
         return
     append_run_event(
         session,
@@ -131,6 +130,7 @@ def mark_review_waiting_for_source_verification(
             "candidate_count": len(candidates),
             "source_document_id": str(source.id) if source else None,
         },
+        commit=False,
     )
 
 
@@ -156,7 +156,6 @@ def complete_review_and_queue_materialization(
     run.lock_version += 1
     run.updated_at = now
     session.add(run)
-    session.commit()
     enqueue_task(
         session,
         run=run,
@@ -165,6 +164,7 @@ def complete_review_and_queue_materialization(
         idempotency_key=f"{run.id}:{IngestionStage.MATERIALIZING.value}",
         payload={"source_document_id": str(source.id)},
         priority=50,
+        commit=False,
     )
     append_run_event(
         session,
@@ -173,4 +173,5 @@ def complete_review_and_queue_materialization(
         message="Review approved; materialization queued",
         step=review_step,
         payload={"candidate_count": len(candidates)},
+        commit=False,
     )

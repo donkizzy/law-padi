@@ -31,7 +31,6 @@ from app.legal.enums import (
     IngestionRunStatus,
     IngestionStage,
     IngestionStepStatus,
-    IngestionTaskStatus,
 )
 from app.legal.models import (
     EmbeddingProfile,
@@ -69,7 +68,7 @@ def cancel_ingestion_run(
             status_code=status.HTTP_409_CONFLICT,
             detail="Terminal ingestion runs cannot be cancelled",
         )
-    cancelled = mark_run_cancelled(session, run, reason)
+    cancelled = mark_run_cancelled(session, run, reason, commit=False)
     add_idempotency_record(
         session,
         scope=scope,
@@ -124,6 +123,7 @@ def resume_ingestion_run(
             event_type="run_resume_not_required",
             message="Ingestion run is already awaiting operator input",
             stage=resume_stage,
+            commit=False,
         )
         add_idempotency_record(
             session,
@@ -163,7 +163,6 @@ def resume_ingestion_run(
     resume_step.lock_version += 1
     resume_step.updated_at = run.updated_at
     session.add(resume_step)
-    session.commit()
     if not is_page_confirmation:
         payload: dict[str, object] = {"resume": True}
         if run.source_document_id:
@@ -178,6 +177,7 @@ def resume_ingestion_run(
             ),
             payload=payload,
             priority=5,
+            commit=False,
         )
     append_run_event(
         session,
@@ -185,6 +185,7 @@ def resume_ingestion_run(
         event_type="run_resumed",
         message="Ingestion run resumed",
         stage=resume_stage,
+        commit=False,
     )
     add_idempotency_record(
         session,
@@ -268,7 +269,6 @@ def start_embedding(
     run.lock_version += 1
     run.updated_at = get_datetime_utc()
     session.add_all([run, step])
-    session.commit()
     enqueue_task(
         session,
         run=run,
@@ -285,6 +285,7 @@ def start_embedding(
             "release_id": str(release_id),
         },
         priority=40,
+        commit=False,
     )
     append_run_event(
         session,
@@ -292,6 +293,7 @@ def start_embedding(
         event_type="embedding_started",
         message="Embedding benchmark and indexing queued",
         stage=IngestionStage.EMBEDDING,
+        commit=False,
     )
     add_idempotency_record(
         session,
@@ -357,22 +359,23 @@ def retry_ingestion_run(
         ),
         {},
     )
-    task = IngestionTask(
-        run_id=run.id,
+    enqueue_task(
+        session,
+        run=run,
+        step=get_run_step(session, run.id, run.current_stage),
         task_type=stage_value,
-        status=IngestionTaskStatus.PENDING,
         idempotency_key=f"{run.id}:{stage_value}:retry:{run.lock_version}",
         payload={**previous_payload, "retry": True},
         priority=5,
+        commit=False,
     )
-    session.add(task)
-    session.commit()
     append_run_event(
         session,
         run,
         event_type="run_retried",
         message="Failed ingestion run queued for retry",
         stage=run.current_stage,
+        commit=False,
     )
     add_idempotency_record(
         session,
