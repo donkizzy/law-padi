@@ -41,6 +41,14 @@ class Settings(BaseSettings):
     APP_RUNTIME_ROLE: Literal["api"] | None = None
     SENTRY_DSN: HttpUrl | None = None
     SENTRY_TRACES_SAMPLE_RATE: float = Field(default=0.05, ge=0, le=1)
+    SENTRY_ENVIRONMENT: str = Field(default="production", min_length=1, max_length=64)
+    # JSON lines for log collectors; readable text for a local terminal. Unset,
+    # development uses text and every other environment uses JSON.
+    LOG_FORMAT: Literal["json", "text"] | None = None
+    LOG_LEVEL: Literal["DEBUG", "INFO", "WARNING", "ERROR"] = "INFO"
+    # The standalone chat worker touches this file on every loop so a container
+    # health check can tell a live loop from a hung one. Unset, nothing is written.
+    CHAT_WORKER_HEARTBEAT_FILE: str | None = None
     DATABASE_URL: PostgresDsn
     DATABASE_LISTENER_URL: PostgresDsn | None = None
     DATABASE_CONNECT_TIMEOUT_SECONDS: int = Field(default=15, ge=1, le=60)
@@ -140,6 +148,12 @@ class Settings(BaseSettings):
     AZURE_DOCUMENT_INTELLIGENCE_KEY: str | None = None
     AZURE_DOCUMENT_INTELLIGENCE_MODEL_ID: str = "prebuilt-layout"
     AZURE_DOCUMENT_INTELLIGENCE_API_VERSION: str = "2024-11-30"
+
+    @property
+    def log_format(self) -> Literal["json", "text"]:
+        if self.LOG_FORMAT is not None:
+            return self.LOG_FORMAT
+        return "text" if self.FASTAPI_ENV == "development" else "json"
 
     @property
     def explanations_enabled(self) -> bool:
