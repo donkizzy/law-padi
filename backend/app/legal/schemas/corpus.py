@@ -72,25 +72,6 @@ class CorpusReleaseManifestPublic(SQLModel):
     manifest: dict[str, Any]
 
 
-class CorpusReleaseVectorIndexPublic(SQLModel):
-    """Legacy response shape retained for clients; no new indexes use it."""
-
-    id: uuid.UUID
-    release_id: uuid.UUID
-    embedding_run_id: uuid.UUID
-    profile_id: uuid.UUID
-    collection_name: str
-    alias_name: str
-    status: VectorIndexStatus
-    point_count: int
-    vector_dimensions: int
-    payload_schema_hash: str | None = None
-    checksum: str | None = None
-    validation_report: dict[str, Any] | None = None
-    created_at: datetime
-    updated_at: datetime
-
-
 class CorpusReleaseRetrievalIndexBuildPublic(SQLModel):
     id: uuid.UUID
     release_id: uuid.UUID
@@ -116,15 +97,11 @@ class CorpusReleaseRetrievalIndexBuildPublic(SQLModel):
 class CorpusReleasePromotionAttemptPublic(SQLModel):
     id: uuid.UUID
     release_id: uuid.UUID
-    # Legacy response fields stay null for pgvector promotions.
-    vector_index_id: uuid.UUID | None = None
     retrieval_index_build_id: uuid.UUID | None = None
     index_kind: str | None = None
     requested_by: uuid.UUID | None = None
     status: ReleasePromotionStatus
     previous_release_id: uuid.UUID | None = None
-    previous_collection_name: str | None = None
-    target_collection_name: str | None = None
     rollback_completed: bool
     error_details: dict[str, Any] | None = None
     started_at: datetime | None = None
@@ -157,7 +134,6 @@ class ActiveRetrievalTargetPublic(SQLModel):
 class CorpusReleasePublicationEvidencePublic(SQLModel):
     release_id: uuid.UUID
     release_version: str
-    vector_indexes: list[CorpusReleaseVectorIndexPublic]
     retrieval_index_builds: list[CorpusReleaseRetrievalIndexBuildPublic]
     promotion_attempts: list[CorpusReleasePromotionAttemptPublic]
     active_targets: list[ActiveRetrievalTargetPublic]

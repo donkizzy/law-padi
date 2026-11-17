@@ -695,10 +695,6 @@ export type CorpusReleasePromotionAttemptPublic = {
      */
     release_id: string;
     /**
-     * Vector Index Id
-     */
-    vector_index_id?: string | null;
-    /**
      * Retrieval Index Build Id
      */
     retrieval_index_build_id?: string | null;
@@ -715,14 +711,6 @@ export type CorpusReleasePromotionAttemptPublic = {
      * Previous Release Id
      */
     previous_release_id?: string | null;
-    /**
-     * Previous Collection Name
-     */
-    previous_collection_name?: string | null;
-    /**
-     * Target Collection Name
-     */
-    target_collection_name?: string | null;
     /**
      * Rollback Completed
      */
@@ -824,10 +812,6 @@ export type CorpusReleasePublicationEvidencePublic = {
      * Release Version
      */
     release_version: string;
-    /**
-     * Vector Indexes
-     */
-    vector_indexes: Array<CorpusReleaseVectorIndexPublic>;
     /**
      * Retrieval Index Builds
      */
@@ -968,67 +952,6 @@ export type CorpusReleaseValidationRequest = {
      * Expected Version
      */
     expected_version: number;
-};
-
-/**
- * CorpusReleaseVectorIndexPublic
- */
-export type CorpusReleaseVectorIndexPublic = {
-    /**
-     * Id
-     */
-    id: string;
-    /**
-     * Release Id
-     */
-    release_id: string;
-    /**
-     * Embedding Run Id
-     */
-    embedding_run_id: string;
-    /**
-     * Profile Id
-     */
-    profile_id: string;
-    /**
-     * Collection Name
-     */
-    collection_name: string;
-    /**
-     * Alias Name
-     */
-    alias_name: string;
-    status: VectorIndexStatus;
-    /**
-     * Point Count
-     */
-    point_count: number;
-    /**
-     * Vector Dimensions
-     */
-    vector_dimensions: number;
-    /**
-     * Payload Schema Hash
-     */
-    payload_schema_hash?: string | null;
-    /**
-     * Checksum
-     */
-    checksum?: string | null;
-    /**
-     * Validation Report
-     */
-    validation_report?: {
-        [key: string]: unknown;
-    } | null;
-    /**
-     * Created At
-     */
-    created_at: string;
-    /**
-     * Updated At
-     */
-    updated_at: string;
 };
 
 /**

@@ -1132,7 +1132,6 @@ def read_release_publication_evidence(
     return CorpusReleasePublicationEvidencePublic(
         release_id=release.id,
         release_version=release.version,
-        vector_indexes=[],
         retrieval_index_builds=[
             CorpusReleaseRetrievalIndexBuildPublic.model_validate(build)
             for build in retrieval_index_builds

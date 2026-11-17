@@ -98,7 +98,6 @@ export function ReleaseWorkspace({
   const unresolvedGates = Array.isArray(gates) ? gates : []
   const releaseManifest = releaseManifestSummary(manifest)
   const benchmarkResults = benchmark?.results ?? []
-  const vectorIndexes = evidence?.vector_indexes ?? []
   const retrievalIndexBuilds = evidence?.retrieval_index_builds ?? []
   const promotionAttempts = evidence?.promotion_attempts ?? []
   const actorEvidence = evidence?.actor_separation
@@ -400,54 +399,11 @@ export function ReleaseWorkspace({
                     ))}
                   </div>
                 ) : (
-                  <>
-                    <ListState
-                      isEmpty={!vectorIndexes.length}
-                      isLoading={isEvidenceLoading}
-                      text="Vector index evidence pending."
-                    />
-                    <div className="mt-3 grid gap-2">
-                      {vectorIndexes.map((index) => (
-                        <div
-                          className="sq-sm border border-border/70 bg-card p-3"
-                          key={index.id}
-                        >
-                          <div className="flex flex-wrap items-start justify-between gap-3">
-                            <div>
-                              <p className="break-all text-sm font-semibold">
-                                {index.collection_name}
-                              </p>
-                              <p className="mt-1 text-xs text-muted-foreground">
-                                {vectorIndexValidationLabel(
-                                  index.validation_report,
-                                )}
-                              </p>
-                            </div>
-                            <StatusPill status={index.status} />
-                          </div>
-                          <div className="mt-3 grid gap-2 sm:grid-cols-3">
-                            <SmallStat
-                              label="Points"
-                              value={formatMetric(index.point_count)}
-                            />
-                            <SmallStat
-                              label="Dimensions"
-                              value={formatMetric(index.vector_dimensions)}
-                            />
-                            <SmallStat
-                              label="Remote count"
-                              value={formatMetric(
-                                reportNumber(
-                                  index.validation_report,
-                                  "remote_point_count",
-                                ),
-                              )}
-                            />
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  </>
+                  <ListState
+                    isEmpty
+                    isLoading={isEvidenceLoading}
+                    text="Vector index evidence pending."
+                  />
                 )}
               </div>
             </div>
@@ -626,39 +582,9 @@ export function ReleaseWorkspace({
   )
 }
 
-// A pgvector promotion names the index build it switched to; only attempts
-// from the earlier vector store carry a collection name.
+// A promotion names the index build it switched to.
 function promotionTarget(attempt: CorpusReleasePromotionAttemptPublic): string {
-  if (attempt.target_collection_name) return attempt.target_collection_name
   if (attempt.index_kind && attempt.retrieval_index_build_id)
     return `${attempt.index_kind} · build ${attempt.retrieval_index_build_id}`
   return attempt.index_kind ?? "Index build pending"
-}
-
-function reportNumber(
-  report: Record<string, unknown> | null | undefined,
-  key: string,
-): number | undefined {
-  const value = report?.[key]
-  return typeof value === "number" ? value : undefined
-}
-
-function vectorIndexValidationLabel(
-  report: Record<string, unknown> | null | undefined,
-): string {
-  if (!report) return "Validation pending"
-  const smokeQueries = Array.isArray(report.smoke_queries)
-    ? report.smoke_queries
-    : []
-  const smokeQueriesPassed =
-    smokeQueries.length > 0 &&
-    smokeQueries.every(
-      (query) =>
-        Boolean(query) &&
-        typeof query === "object" &&
-        (query as Record<string, unknown>).passed === true,
-    )
-  return report.is_valid === true && smokeQueriesPassed
-    ? "Validation passed"
-    : "Validation has unresolved evidence"
 }

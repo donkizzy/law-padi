@@ -42,9 +42,6 @@ from app.legal.schemas.corpus import CorpusReleasesPublic as CorpusReleasesPubli
 from app.legal.schemas.corpus import (
     CorpusReleaseValidationRequest as CorpusReleaseValidationRequest,
 )
-from app.legal.schemas.corpus import (
-    CorpusReleaseVectorIndexPublic as CorpusReleaseVectorIndexPublic,
-)
 from app.legal.schemas.corpus import PublicProvisionVersion as PublicProvisionVersion
 from app.legal.schemas.corpus import PublicProvisionVersions as PublicProvisionVersions
 from app.legal.schemas.ingestion import (

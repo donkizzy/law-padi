@@ -946,7 +946,6 @@ test("Promotion history names the pgvector index build a release went live on", 
   await expect(
     page.getByText(`enacted · build ${retrievalIndexBuildId}`, { exact: true }),
   ).toBeVisible()
-  await expect(page.getByText("Collection pending")).toHaveCount(0)
 })
 
 test("The release manifest identifies a source by its document ID", async ({

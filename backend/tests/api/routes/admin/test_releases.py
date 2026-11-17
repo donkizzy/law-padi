@@ -277,10 +277,12 @@ def test_read_release_publication_evidence_returns_index_actor_and_promotion_his
     assert response.status_code == 200
     payload = response.json()
     assert payload["release_id"] == str(release.id)
-    assert payload["vector_indexes"] == []
-    assert payload["promotion_attempts"][0]["vector_index_id"] is None
-    assert payload["promotion_attempts"][0]["previous_collection_name"] is None
-    assert payload["promotion_attempts"][0]["target_collection_name"] is None
+    assert "vector_indexes" not in payload
+    assert not {
+        "vector_index_id",
+        "previous_collection_name",
+        "target_collection_name",
+    } & set(payload["promotion_attempts"][0])
     assert payload["retrieval_index_builds"][0]["id"] == str(build.id)
     assert payload["promotion_attempts"][0]["id"] == str(promotion.id)
     assert payload["promotion_attempts"][0]["status"] == (

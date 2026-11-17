@@ -611,15 +611,13 @@ export function corpusReleaseManifest(): CorpusReleaseManifestPublic {
 }
 
 /**
- * Publication evidence for a release published to the pgvector target. The
- * server no longer creates `vector_indexes`, rolled-back attempts or collection
- * names; it records a ready index build and a succeeded promotion attempt.
+ * Publication evidence for a release published to the pgvector target: a
+ * ready index build and a succeeded promotion attempt.
  */
 export function releasePublicationEvidence(): CorpusReleasePublicationEvidencePublic {
   return {
     release_id: releaseId,
     release_version: "2026.09.test",
-    vector_indexes: [],
     retrieval_index_builds: [
       {
         id: retrievalIndexBuildId,
@@ -647,14 +645,11 @@ export function releasePublicationEvidence(): CorpusReleasePublicationEvidencePu
       {
         id: promotionAttemptId,
         release_id: releaseId,
-        vector_index_id: null,
         retrieval_index_build_id: retrievalIndexBuildId,
         index_kind: "enacted",
         requested_by: adminUserId,
         status: "succeeded",
         previous_release_id: null,
-        previous_collection_name: null,
-        target_collection_name: null,
         rollback_completed: false,
         error_details: null,
         started_at: now(),
@@ -757,9 +752,8 @@ export function operationalAlerts(): AdminOperationalAlertPublic[] {
       release_id: releaseId,
       promotion_attempt_id: promotionAttemptId,
       evidence: {
-        vector_index_id: null,
+        retrieval_index_build_id: retrievalIndexBuildId,
         previous_release_id: null,
-        target_collection_name: null,
         rollback_completed: false,
         error_details: null,
       },
