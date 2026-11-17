@@ -7,12 +7,12 @@ from uuid import UUID, uuid4
 
 import httpx
 import pytest
-from sqlmodel import Session, delete
+from sqlmodel import Session, delete, select
 
 from app.chat import budget
 from app.chat.llm import budgeted
 from app.chat.llm.deepseek import DeepSeekClient
-from app.chat.llm.protocol import ProviderError, ProviderResult
+from app.chat.llm.protocol import ProviderError, ProviderResult, TokenUsage
 from app.core.config import settings
 from app.core.db import engine, init_db
 from app.legal.enums import MessageRole
@@ -236,6 +236,162 @@ def test_invalid_success_response_retains_possible_provider_charge(
             assert error.value.uncertain_charge is True
 
     asyncio.run(call())
+
+
+@pytest.mark.parametrize(
+    ("status", "headers", "uncertain", "retry_after"),
+    [
+        (429, {"Retry-After": "3"}, False, 3.0),
+        (503, {}, False, None),
+        (500, {"Retry-After": "Wed, 21 Oct 2015 07:28:00 GMT"}, False, 0.0),
+        (502, {}, True, None),
+        (504, {}, True, None),
+    ],
+)
+def test_provider_reported_failures_are_uncharged_but_gateway_failures_are_not(
+    monkeypatch: pytest.MonkeyPatch,
+    status: int,
+    headers: dict[str, str],
+    uncertain: bool,
+    retry_after: float | None,
+) -> None:
+    monkeypatch.setattr(settings, "DEEPSEEK_API_KEY", "test-key")
+
+    async def call() -> None:
+        transport = httpx.MockTransport(
+            lambda _request: httpx.Response(status, headers=headers)
+        )
+        async with httpx.AsyncClient(transport=transport) as client:
+            with pytest.raises(ProviderError) as error:
+                await DeepSeekClient(client).complete_json(system="system", payload={})
+        assert error.value.retryable is True
+        assert error.value.uncertain_charge is uncertain
+        assert error.value.retry_after == retry_after
+        assert budgeted.retry_delay(error.value) == (
+            None if uncertain else (1.0 if retry_after is None else retry_after)
+        )
+
+    asyncio.run(call())
+
+
+def test_an_uncharged_failure_is_retried_once_after_the_requested_pause(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    monkeypatch.setattr(settings, "DEEPSEEK_API_KEY", "test-key")
+    responses = [
+        httpx.Response(503, headers={"Retry-After": "2"}),
+        httpx.Response(
+            200,
+            json={
+                "choices": [{"finish_reason": "stop", "message": {"content": "{}"}}],
+                "usage": {"prompt_tokens": 10, "completion_tokens": 5},
+            },
+        ),
+    ]
+    pauses: list[float] = []
+    settlements: list[tuple[TokenUsage | None, bool]] = []
+
+    async def pause(delay: float) -> None:
+        pauses.append(delay)
+
+    monkeypatch.setattr(budgeted, "reserve_call", lambda *_args: uuid4())
+    monkeypatch.setattr(
+        budgeted,
+        "settle_call",
+        lambda _reservation, usage, *, uncertain: settlements.append(
+            (usage, uncertain)
+        ),
+    )
+    monkeypatch.setattr(budgeted.asyncio, "sleep", pause)
+
+    async def call() -> ProviderResult:
+        transport = httpx.MockTransport(lambda _request: responses.pop(0))
+        async with httpx.AsyncClient(transport=transport) as client:
+            return await budgeted.call(
+                DeepSeekClient(client),
+                uuid4(),
+                "generation",
+                "system",
+                {},
+                max_tokens=10,
+            )
+
+    result = asyncio.run(call())
+    assert result.usage == TokenUsage(10, 5)
+    assert responses == []
+    assert pauses == [2.0]
+    assert settlements == [(None, False), (TokenUsage(10, 5), False)]
+
+
+def test_a_longer_requested_pause_fails_the_call_instead_of_waiting(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    calls: list[str] = []
+
+    class BusyProvider:
+        async def complete_json(self, **_kwargs: Any) -> ProviderResult:
+            calls.append("provider")
+            raise ProviderError("busy", retryable=True, retry_after=30.0)
+
+    monkeypatch.setattr(budgeted, "reserve_call", lambda *_args: uuid4())
+    monkeypatch.setattr(budgeted, "settle_call", lambda *_args, uncertain: None)
+    with pytest.raises(ProviderError):
+        asyncio.run(
+            budgeted.call(
+                BusyProvider(), uuid4(), "generation", "system", {}, max_tokens=10
+            )
+        )
+    assert calls == ["provider"]
+
+
+@pytest.mark.parametrize(
+    "choice",
+    [
+        {"finish_reason": "length", "message": {"content": '{"blocks": ['}},
+        {"finish_reason": "stop", "message": {"content": "not JSON"}},
+    ],
+)
+def test_a_rejected_response_that_reports_usage_settles_at_that_cost(
+    budget_db: Session, monkeypatch: pytest.MonkeyPatch, choice: dict[str, Any]
+) -> None:
+    monkeypatch.setattr(settings, "DEEPSEEK_API_KEY", "test-key")
+    run = _run(budget_db)
+
+    async def call() -> None:
+        transport = httpx.MockTransport(
+            lambda _request: httpx.Response(
+                200,
+                json={
+                    "choices": [choice],
+                    "usage": {"prompt_tokens": 100, "completion_tokens": 40},
+                },
+            )
+        )
+        async with httpx.AsyncClient(transport=transport) as client:
+            with pytest.raises(ProviderError) as error:
+                await budgeted.call(
+                    DeepSeekClient(client),
+                    run.id,
+                    "generation",
+                    "system",
+                    {},
+                    max_tokens=1000,
+                )
+        assert error.value.uncertain_charge is False
+        assert error.value.usage == TokenUsage(100, 40)
+
+    asyncio.run(call())
+    reservation = budget_db.exec(
+        select(GenerationReservation).where(GenerationReservation.run_id == run.id)
+    ).one()
+    budget_db.refresh(reservation)
+    assert reservation.status == "settled"
+    assert reservation.actual_micro_usd == 140
+    day = budget_db.get(GenerationBudgetDay, reservation.day)
+    assert day is not None
+    budget_db.refresh(day)
+    assert day.reserved_micro_usd == 0
+    assert day.spent_micro_usd == 140
 
 
 def test_reservations_and_settlement_use_the_calling_providers_prices(

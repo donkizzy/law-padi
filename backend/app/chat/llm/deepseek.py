@@ -1,11 +1,51 @@
 """HTTPX adapter for DeepSeek JSON completions."""
 
 import json
+import math
+from datetime import UTC, datetime
+from email.utils import parsedate_to_datetime
+from typing import Any
 
 import httpx
 
-from app.chat.llm.protocol import JsonObject, ProviderError, ProviderResult
+from app.chat.llm.protocol import JsonObject, ProviderError, ProviderResult, TokenUsage
 from app.core.config import settings
+
+# Rate limiting and the server errors the provider reports itself mean nothing
+# was generated, so the call is not charged and may be retried.
+_UNCHARGED_STATUSES = frozenset({429, 500, 503})
+
+
+def _retry_after(response: httpx.Response) -> float | None:
+    """Seconds named by a Retry-After header, in either of its two forms."""
+    value = response.headers.get("retry-after")
+    if value is None:
+        return None
+    try:
+        seconds = float(value)
+    except ValueError:
+        try:
+            when = parsedate_to_datetime(value)
+        except TypeError, ValueError:
+            return None
+        if when.tzinfo is None:
+            when = when.replace(tzinfo=UTC)
+        seconds = (when - datetime.now(UTC)).total_seconds()
+    return max(0.0, seconds) if math.isfinite(seconds) else None
+
+
+def _usage(data: Any) -> TokenUsage | None:
+    usage = data.get("usage") if isinstance(data, dict) else None
+    if not isinstance(usage, dict):
+        return None
+    try:
+        prompt_tokens = int(usage["prompt_tokens"])
+        completion_tokens = int(usage["completion_tokens"])
+    except KeyError, TypeError, ValueError:
+        return None
+    if prompt_tokens < 0 or completion_tokens < 0:
+        return None
+    return TokenUsage(prompt_tokens, completion_tokens)
 
 
 class DeepSeekClient:
@@ -52,7 +92,15 @@ class DeepSeekClient:
                     retryable=True,
                     uncertain_charge=True,
                 ) from exc
-            if response.status_code == 429 or response.status_code >= 500:
+            if response.status_code in _UNCHARGED_STATUSES:
+                raise ProviderError(
+                    "DeepSeek is temporarily unavailable",
+                    retryable=True,
+                    retry_after=_retry_after(response),
+                )
+            if response.status_code >= 500:
+                # A gateway error (502, 504) can arrive while the provider is
+                # still generating, so the call may yet be charged.
                 raise ProviderError(
                     "DeepSeek is temporarily unavailable",
                     retryable=True,
@@ -62,36 +110,40 @@ class DeepSeekClient:
                 raise ProviderError("DeepSeek rejected the request")
             try:
                 data = response.json()
-                choice = data["choices"][0]
-                if choice["finish_reason"] != "stop":
-                    raise ProviderError(
-                        "DeepSeek response was incomplete", uncertain_charge=True
-                    )
-                content = choice["message"]["content"]
-                value = json.loads(content)
-                if not isinstance(value, dict):
-                    raise ValueError("Expected JSON object")
-                usage = data["usage"]
-                prompt_tokens = int(usage["prompt_tokens"])
-                completion_tokens = int(usage["completion_tokens"])
-                if prompt_tokens < 0 or completion_tokens < 0:
-                    raise ValueError("Provider usage cannot be negative")
-                return ProviderResult(
-                    value=value,
-                    prompt_tokens=prompt_tokens,
-                    completion_tokens=completion_tokens,
-                    model=str(data.get("model") or settings.DEEPSEEK_MODEL),
-                )
-            except (
-                KeyError,
-                IndexError,
-                TypeError,
-                ValueError,
-                json.JSONDecodeError,
-            ) as exc:
+            except ValueError as exc:
                 raise ProviderError(
                     "DeepSeek returned an invalid JSON response", uncertain_charge=True
                 ) from exc
+            # A rejected response that reports its usage settles at that cost;
+            # only one without usage keeps its worst-case reservation.
+            usage = _usage(data)
+            try:
+                choice = data["choices"][0]
+                if choice["finish_reason"] != "stop":
+                    raise ProviderError(
+                        "DeepSeek response was incomplete",
+                        uncertain_charge=usage is None,
+                        usage=usage,
+                    )
+                value = json.loads(choice["message"]["content"])
+                if not isinstance(value, dict):
+                    raise ValueError("Expected JSON object")
+            except (KeyError, IndexError, TypeError, ValueError) as exc:
+                raise ProviderError(
+                    "DeepSeek returned an invalid JSON response",
+                    uncertain_charge=usage is None,
+                    usage=usage,
+                ) from exc
+            if usage is None:
+                raise ProviderError(
+                    "DeepSeek returned an invalid JSON response", uncertain_charge=True
+                )
+            return ProviderResult(
+                value=value,
+                prompt_tokens=usage.prompt_tokens,
+                completion_tokens=usage.completion_tokens,
+                model=str(data.get("model") or settings.DEEPSEEK_MODEL),
+            )
         finally:
             if owns_client:
                 await client.aclose()

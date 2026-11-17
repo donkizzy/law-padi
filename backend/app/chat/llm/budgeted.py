@@ -7,10 +7,21 @@ import uuid
 from sqlmodel import Session, select
 
 from app.chat.budget import reserve, settle
-from app.chat.llm.protocol import ChatModel, JsonObject, ProviderError, ProviderResult
+from app.chat.llm.protocol import (
+    ChatModel,
+    JsonObject,
+    ProviderError,
+    ProviderResult,
+    TokenUsage,
+)
 from app.core.config import settings
 from app.core.db import engine
 from app.legal.models import GenerationRun, get_datetime_utc
+
+# The pause before the single retry when the provider does not name one.
+_RETRY_DELAY_SECONDS = 1.0
+# A provider that asks for a longer pause than this has failed the answer.
+_MAX_RETRY_DELAY_SECONDS = 10.0
 
 
 def reserve_call(
@@ -42,17 +53,29 @@ def reserve_call(
 
 
 def settle_call(
-    reservation_id: uuid.UUID, result: ProviderResult | None, *, uncertain: bool
+    reservation_id: uuid.UUID, usage: TokenUsage | None, *, uncertain: bool
 ) -> None:
     with Session(engine) as session:
         settle(
             session,
             reservation_id,
-            prompt_tokens=result.prompt_tokens if result else None,
-            completion_tokens=result.completion_tokens if result else None,
+            prompt_tokens=usage.prompt_tokens if usage else None,
+            completion_tokens=usage.completion_tokens if usage else None,
             uncertain=uncertain,
         )
         session.commit()
+
+
+def retry_delay(error: ProviderError) -> float | None:
+    """Seconds to wait before retrying, or None when a retry is not safe.
+
+    Only a failure the provider reports as uncharged is retried, so a retry
+    can never pay twice for one answer.
+    """
+    if not error.retryable or error.uncertain_charge:
+        return None
+    delay = _RETRY_DELAY_SECONDS if error.retry_after is None else error.retry_after
+    return delay if delay <= _MAX_RETRY_DELAY_SECONDS else None
 
 
 async def call(
@@ -78,14 +101,18 @@ async def call(
             )
         except ProviderError as exc:
             await asyncio.to_thread(
-                settle_call, reservation_id, None, uncertain=exc.uncertain_charge
+                settle_call, reservation_id, exc.usage, uncertain=exc.uncertain_charge
             )
-            if exc.retryable and not exc.uncertain_charge and attempt == 0:
-                continue
-            raise
+            delay = retry_delay(exc) if attempt == 0 else None
+            if delay is None:
+                raise
+            await asyncio.sleep(delay)
+            continue
         except BaseException:
             await asyncio.to_thread(settle_call, reservation_id, None, uncertain=True)
             raise
-        await asyncio.to_thread(settle_call, reservation_id, result, uncertain=False)
+        await asyncio.to_thread(
+            settle_call, reservation_id, result.usage, uncertain=False
+        )
         return result
     raise ProviderError("DeepSeek request failed")

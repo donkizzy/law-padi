@@ -18,7 +18,7 @@ from sqlmodel import Session
 
 from app.chat.budget import SEARCH_UNDERSTANDING, BudgetExhausted, reserve, settle
 from app.chat.llm.deepseek import DeepSeekClient
-from app.chat.llm.protocol import ChatModel, JsonObject, ProviderError, ProviderResult
+from app.chat.llm.protocol import ChatModel, JsonObject, ProviderError, TokenUsage
 from app.chat.prompts import understanding
 from app.chat.translation import (
     TranslationRejected,
@@ -82,7 +82,7 @@ def _understand(query: str, provider: ChatModel) -> Understanding | None:
             session.rollback()
             return None
         reservation_id = reservation.id
-    result: ProviderResult | None = None
+    usage: TokenUsage | None = None
     uncertain = False
     try:
         result = asyncio.run(
@@ -92,8 +92,10 @@ def _understand(query: str, provider: ChatModel) -> Understanding | None:
                 max_tokens=settings.SEARCH_TRANSLATION_MAX_OUTPUT_TOKENS,
             )
         )
+        usage = result.usage
         return parse_understanding(result.value, query)
     except ProviderError as exc:
+        usage = exc.usage
         uncertain = exc.uncertain_charge
         _logger.info("search_understanding_failed %s", exc)
         return None
@@ -105,8 +107,8 @@ def _understand(query: str, provider: ChatModel) -> Understanding | None:
             settle(
                 session,
                 reservation_id,
-                prompt_tokens=result.prompt_tokens if result else None,
-                completion_tokens=result.completion_tokens if result else None,
+                prompt_tokens=usage.prompt_tokens if usage else None,
+                completion_tokens=usage.completion_tokens if usage else None,
                 uncertain=uncertain,
             )
             session.commit()
