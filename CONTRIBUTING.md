@@ -42,6 +42,8 @@ Every pull request runs these workflows, and all of them should pass before merg
 
 A new push to a branch cancels the previous run of the same workflow on it.
 
+The job names that must pass before a pull request merges into `master`, and the branch rules around them, are in [docs/runbooks/branch-protection.md](docs/runbooks/branch-protection.md).
+
 ## Commits and pull requests
 
 - Write short, imperative subjects, optionally scoped, for example `backend: validate reset tokens`. Group related changes into focused commits.
