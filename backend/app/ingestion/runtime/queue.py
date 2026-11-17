@@ -379,6 +379,35 @@ def fail_task(
     return task
 
 
+def release_task(
+    session: Session,
+    task: IngestionTask,
+    *,
+    lease: TaskLease,
+    commit: bool = True,
+) -> IngestionTask:
+    now = get_datetime_utc()
+    update_owned_task(
+        session,
+        lease,
+        {
+            "status": IngestionTaskStatus.PENDING,
+            "lease_owner": None,
+            "leased_until": None,
+            "available_at": now,
+            "updated_at": now,
+            "lock_version": col(IngestionTask.lock_version) + 1,
+            # A cooperative yield does not spend an error retry. Keep the fencing
+            # version monotonic while extending the failure-attempt allowance.
+            "max_attempts": col(IngestionTask.max_attempts) + 1,
+        },
+    )
+    if commit:
+        session.commit()
+    session.refresh(task)
+    return task
+
+
 def mark_run_cancelled(
     session: Session, run: IngestionRun, reason: str, *, commit: bool = True
 ) -> IngestionRun:

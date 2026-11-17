@@ -23,13 +23,14 @@ def raw_extraction_payloads(
             IngestionArtifact.run_id == run.id,
             IngestionArtifact.artifact_type == IngestionArtifactType.RAW_EXTRACTION,
         )
-        .order_by(col(IngestionArtifact.storage_key))
+        .order_by(col(IngestionArtifact.created_at), col(IngestionArtifact.id))
     ).all()
-    payloads = [
-        json_object(get_blob_store().read_bytes(artifact.storage_key))
-        for artifact in artifacts
-    ]
-    return sorted(payloads, key=lambda payload: int(payload["page_number"]))
+    keys = [artifact.storage_key for artifact in artifacts]
+    session.commit()
+    store = get_blob_store()
+    payloads = [json_object(store.read_bytes(key)) for key in keys]
+    latest = {int(payload["page_number"]): payload for payload in payloads}
+    return [latest[number] for number in sorted(latest)]
 
 
 def ocr_output_payloads(session: Session, run: IngestionRun) -> list[dict[str, Any]]:
@@ -39,13 +40,23 @@ def ocr_output_payloads(session: Session, run: IngestionRun) -> list[dict[str, A
             IngestionArtifact.run_id == run.id,
             IngestionArtifact.artifact_type == IngestionArtifactType.OCR_OUTPUT,
         )
-        .order_by(col(IngestionArtifact.storage_key))
+        .order_by(col(IngestionArtifact.created_at), col(IngestionArtifact.id))
     ).all()
-    payloads = [
-        json_object(get_blob_store().read_bytes(artifact.storage_key))
-        for artifact in artifacts
-    ]
-    return sorted(payloads, key=lambda payload: int(payload["page_number"]))
+    keys = [artifact.storage_key for artifact in artifacts]
+    session.commit()
+    store = get_blob_store()
+    payloads = [json_object(store.read_bytes(key)) for key in keys]
+    latest = {
+        (int(payload["page_number"]), str(payload.get("method", ""))): payload
+        for payload in payloads
+    }
+    return sorted(
+        latest.values(),
+        key=lambda payload: (
+            int(payload["page_number"]),
+            str(payload.get("method", "")),
+        ),
+    )
 
 
 def best_extraction_payloads(

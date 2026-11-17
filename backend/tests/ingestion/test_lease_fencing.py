@@ -216,3 +216,50 @@ def test_worker_starts_task_step_run_and_event_in_one_commit(
         event.remove(db, "after_commit", count_commits)
     assert result.task_status == IngestionTaskStatus.SUCCEEDED
     assert len(commits) == 2
+
+
+def test_shutdown_keeps_checkpoint_and_releases_task_immediately(
+    db: Session,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    from app.ingestion.runtime.control import check_stage_continue
+
+    run = IngestionRun(status=IngestionRunStatus.QUEUED)
+    db.add(run)
+    db.commit()
+    step = queue.create_run_steps(db, run, (IngestionStage.PROFILING,))[0]
+    task = queue.enqueue_task(
+        db, run=run, step=step, task_type="profiling", idempotency_key=str(run.id)
+    )
+    stopping = [False]
+    db.info["ingestion_stop_requested"] = lambda: stopping[0]
+
+    def handler(
+        session: Session, current_run: IngestionRun, _task: IngestionTask
+    ) -> Any:
+        for number in range(1, 4):
+            check_stage_continue(session)
+            current_run.completed_units = number
+            session.add(current_run)
+            session.commit()
+            stopping[0] = True
+        return runner.StageOutcome(metrics={})
+
+    monkeypatch.setattr(runner, "handler_for", lambda _: handler)
+    try:
+        result = runner.run_once(db, worker_id="stopping-worker", task_type="profiling")
+        assert result is not None and result.task_status == IngestionTaskStatus.PENDING
+        db.refresh(run)
+        db.refresh(task)
+        assert run.completed_units == 1
+        assert run.status == IngestionRunStatus.QUEUED
+        assert task.lease_owner is None
+        assert task.max_attempts == 4
+        next_task = queue.lease_next_task(
+            db, worker_id="next-worker", task_type="profiling"
+        )
+        assert next_task is not None and next_task.id == task.id
+        assert next_task.attempt_count == 2
+    finally:
+        db.info.pop("ingestion_stop_requested", None)
+        queue.mark_run_cancelled(db, run, "test cleanup")

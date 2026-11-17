@@ -251,3 +251,21 @@ def test_managed_ocr_provider_from_settings_selects_configured_provider(
     provider = managed_ocr_provider_from_settings()
 
     assert isinstance(provider, AzureDocumentIntelligenceOcrProvider)
+
+
+def test_managed_ocr_records_configured_per_page_price() -> None:
+    provider = GoogleDocumentAiOcrProvider(
+        processor_name="test",
+        access_token="test",
+        endpoint_url="https://ocr.test/process",
+        cost_per_page_usd=0.0015,
+        client=httpx.Client(
+            transport=httpx.MockTransport(
+                lambda _: httpx.Response(
+                    200, json={"document": {"text": "hello", "pages": []}}
+                )
+            )
+        ),
+    )
+    result = provider.extract_page(OcrPageInput(1, b"png", "image/png"))
+    assert result.cost_usd == 0.0015

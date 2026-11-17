@@ -120,6 +120,8 @@ def run_worker(
                             "published ingestion outbox events",
                             extra={"count": len(published)},
                         )
+                if isinstance(session, Session):
+                    session.info["ingestion_stop_requested"] = stop_requested
                 result = run_once_fn(
                     session,
                     worker_id=worker_settings.worker_id,

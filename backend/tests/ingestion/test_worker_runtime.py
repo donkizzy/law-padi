@@ -202,3 +202,32 @@ def _fake_result(
         task_status=task_status,
         run_status=run_status,
     )
+
+
+def test_worker_passes_shutdown_signal_into_running_session(
+    db: Any, tmp_path: Path
+) -> None:
+    @contextmanager
+    def session_factory() -> Iterator[Any]:
+        yield db
+
+    def stop_requested() -> bool:
+        return False
+
+    def fake_run_once(session: Any, **_kwargs: Any) -> None:
+        assert session.info["ingestion_stop_requested"] is stop_requested
+
+    run_worker(
+        settings=WorkerSettings(
+            worker_id="test",
+            poll_interval_seconds=0,
+            lease_seconds=60,
+            max_tasks_per_poll=1,
+            outbox_sink_path=str(tmp_path / "outbox.jsonl"),
+        ),
+        session_factory=session_factory,
+        stop_requested=stop_requested,
+        run_once_fn=fake_run_once,
+        max_iterations=1,
+    )
+    db.info.pop("ingestion_stop_requested", None)

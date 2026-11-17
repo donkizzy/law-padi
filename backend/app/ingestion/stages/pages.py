@@ -16,9 +16,11 @@ from app.ingestion.pdf import (
     profile_pdf_pages,
 )
 from app.ingestion.rendering import render_page_thumbnail
+from app.ingestion.runtime.control import check_stage_continue
 from app.ingestion.runtime.errors import IngestionWorkerError
 from app.ingestion.runtime.types import StageOutcome
 from app.ingestion.stages.artifacts import ensure_artifact
+from app.ingestion.stages.page_checkpoints import completed_pages, page_checkpoint_key
 from app.ingestion.stages.page_payloads import (
     best_extraction_payloads,
     ocr_output_payloads,
@@ -49,6 +51,8 @@ def handle_profiling(
     session: Session, run: IngestionRun, task: IngestionTask
 ) -> StageOutcome:
     source = get_source_for_run(session, run, task)
+    session.commit()
+    check_stage_continue(session)
     profiles = profile_pdf_pages(read_source_bytes(source), max_pages=MAX_SOURCE_PAGES)
     included_pages = 0
     requires_ocr = 0
@@ -74,18 +78,25 @@ def handle_rendering(
     session: Session, run: IngestionRun, task: IngestionTask
 ) -> StageOutcome:
     source = get_source_for_run(session, run, task)
-    content = read_source_bytes(source)
     pages = pages_for_run(session, run)
     if not pages:
         raise IngestionWorkerError("Run does not have profiled pages to render")
 
+    key = page_checkpoint_key(source, IngestionStage.RENDERING)
+    cached = completed_pages(session, run, IngestionArtifactType.PAGE_THUMBNAIL, key)
+    session.commit()
+    content = read_source_bytes(source)
     rendered_count = 0
     for page in pages:
+        check_stage_continue(session)
+        if page.page_number in cached:
+            rendered_count += 1
+            continue
         thumbnail = render_page_thumbnail(content, page_number=page.page_number)
         blob = get_blob_store().put_artifact(
             run_id=str(run.id),
             artifact_type=IngestionArtifactType.PAGE_THUMBNAIL.value,
-            filename=f"page-{page.page_number:04d}.png",
+            filename=f"page-{page.page_number:04d}-{key[:12]}.png",
             content=thumbnail.content,
             content_type=thumbnail.content_type,
             metadata={
@@ -102,12 +113,12 @@ def handle_rendering(
             sha256=blob.sha256,
             mime_type=blob.content_type,
             retention_policy="expire_after_90_days",
-            metadata={"page_number": page.page_number},
+            metadata={"page_number": page.page_number, "checkpoint_key": key},
         )
         page.thumbnail_key = blob.key
         session.add(page)
         rendered_count += 1
-    session.commit()
+        session.commit()
     confirmed = all(
         page.inclusion_status
         in {PageInclusionStatus.INCLUDED, PageInclusionStatus.EXCLUDED}
@@ -140,11 +151,20 @@ def handle_native_extraction(
         raise IngestionWorkerError("Run does not have confirmed included pages")
 
     extractor = NativePdfExtractor()
-    extractions = extractor.extract(
-        read_source_bytes(source), included_pages=included_pages
-    )
     pages_by_number = {page.page_number: page for page in pages_for_run(session, run)}
-    needs_ocr = 0
+    key = page_checkpoint_key(source, IngestionStage.NATIVE_EXTRACTION)
+    cached = completed_pages(session, run, IngestionArtifactType.RAW_EXTRACTION, key)
+    session.commit()
+    extractions = extractor.iter_extract(
+        read_source_bytes(source),
+        included_pages=included_pages - set(cached),
+        should_continue=lambda: check_stage_continue(session),
+    )
+    needs_ocr = sum(
+        bool(item.get("quality_flags", {}).get("needs_ocr"))
+        for number, item in cached.items()
+        if number in included_pages
+    )
     for extraction in extractions:
         page = pages_by_number[extraction.page_number]
         raw_payload = {
@@ -167,7 +187,7 @@ def handle_native_extraction(
         blob = get_blob_store().put_artifact(
             run_id=str(run.id),
             artifact_type=IngestionArtifactType.RAW_EXTRACTION.value,
-            filename=f"page-{extraction.page_number:04d}.json",
+            filename=f"page-{extraction.page_number:04d}-{key[:12]}.json",
             content=json.dumps(raw_payload, sort_keys=True).encode(),
             content_type="application/json",
             metadata={
@@ -185,6 +205,8 @@ def handle_native_extraction(
             mime_type=blob.content_type,
             metadata={
                 "page_number": extraction.page_number,
+                "checkpoint_key": key,
+                "quality_flags": extraction.quality_flags,
                 "method": extraction.method,
                 "provider_version": extraction.provider_version,
                 "confidence": extraction.confidence,
@@ -203,14 +225,14 @@ def handle_native_extraction(
         session.add(page)
         if extraction.quality_flags.get("needs_ocr"):
             needs_ocr += 1
-    session.commit()
+        session.commit()
     next_stage = IngestionStage.LOCAL_OCR if needs_ocr else IngestionStage.NORMALIZING
     skipped_stages = (
         () if needs_ocr else (IngestionStage.LOCAL_OCR, IngestionStage.MANAGED_OCR)
     )
     return StageOutcome(
         metrics={
-            "page_count": len(extractions),
+            "page_count": len(included_pages),
             "needs_ocr_pages": needs_ocr,
         },
         next_stage=next_stage,
@@ -235,7 +257,6 @@ def handle_local_ocr(
             skipped_stages=(IngestionStage.MANAGED_OCR,),
         )
 
-    source_content = read_source_bytes(source)
     pages_by_number = {page.page_number: page for page in pages_for_run(session, run)}
     instrument = session.get(LegalInstrument, source.legal_instrument_id)
     provider = (
@@ -243,8 +264,17 @@ def handle_local_ocr(
         if instrument and instrument.instrument_type == InstrumentType.ACT
         else TesseractOcrProvider()
     )
+    key = page_checkpoint_key(source, IngestionStage.LOCAL_OCR, provider)
+    cached = completed_pages(session, run, IngestionArtifactType.OCR_OUTPUT, key)
+    session.commit()
+    source_content = read_source_bytes(source)
     managed_required_pages: list[int] = []
     for page_number in page_numbers:
+        check_stage_continue(session)
+        if page_number in cached:
+            if cached[page_number].get("quality_flags", {}).get("requires_managed_ocr"):
+                managed_required_pages.append(page_number)
+            continue
         thumbnail = render_page_thumbnail(
             source_content, page_number=page_number, scale_to=1600
         )
@@ -278,7 +308,7 @@ def handle_local_ocr(
         blob = get_blob_store().put_artifact(
             run_id=str(run.id),
             artifact_type=IngestionArtifactType.OCR_OUTPUT.value,
-            filename=f"page-{page_number:04d}-local-ocr.json",
+            filename=f"page-{page_number:04d}-local-ocr-{key[:12]}.json",
             content=json.dumps(payload, sort_keys=True).encode(),
             content_type="application/json",
             metadata={
@@ -298,6 +328,8 @@ def handle_local_ocr(
             retention_policy="expire_after_90_days",
             metadata={
                 "page_number": page_number,
+                "checkpoint_key": key,
+                "quality_flags": result.quality_flags,
                 "method": result.method,
                 "provider": result.provider,
                 "provider_version": result.provider_version,
@@ -320,7 +352,7 @@ def handle_local_ocr(
             session.add(page)
         if result.quality_flags.get("requires_managed_ocr"):
             managed_required_pages.append(page_number)
-    session.commit()
+        session.commit()
     if managed_required_pages:
         return StageOutcome(
             metrics={
@@ -357,10 +389,16 @@ def handle_managed_ocr(
             next_task_payload={"source_document_id": str(source.id)},
         )
 
-    source_content = read_source_bytes(source)
     pages_by_number = {page.page_number: page for page in pages_for_run(session, run)}
     provider = managed_ocr_provider_from_settings()
+    key = page_checkpoint_key(source, IngestionStage.MANAGED_OCR, provider)
+    cached = completed_pages(session, run, IngestionArtifactType.OCR_OUTPUT, key)
+    session.commit()
+    source_content = read_source_bytes(source)
     for page_number in page_numbers:
+        check_stage_continue(session)
+        if page_number in cached:
+            continue
         thumbnail = render_page_thumbnail(
             source_content, page_number=page_number, scale_to=1600
         )
@@ -376,7 +414,7 @@ def handle_managed_ocr(
         blob = get_blob_store().put_artifact(
             run_id=str(run.id),
             artifact_type=IngestionArtifactType.OCR_OUTPUT.value,
-            filename=f"page-{page_number:04d}-managed-ocr.json",
+            filename=f"page-{page_number:04d}-managed-ocr-{key[:12]}.json",
             content=json.dumps(payload, sort_keys=True).encode(),
             content_type="application/json",
             metadata={
@@ -396,6 +434,8 @@ def handle_managed_ocr(
             retention_policy="expire_after_90_days",
             metadata={
                 "page_number": page_number,
+                "checkpoint_key": key,
+                "quality_flags": result.quality_flags,
                 "method": result.method,
                 "provider": result.provider,
                 "provider_version": result.provider_version,
@@ -416,7 +456,7 @@ def handle_managed_ocr(
                 },
             }
             session.add(page)
-    session.commit()
+        session.commit()
     return StageOutcome(
         metrics={"managed_ocr_page_count": len(page_numbers)},
         next_stage=IngestionStage.NORMALIZING,

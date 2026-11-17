@@ -232,3 +232,23 @@ R2, embedding and managed OCR requests retry connection/timeouts, HTTP 429 and
 5xx up to five attempts, honoring `Retry-After` within a shared request deadline.
 The default deadline is two minutes; large R2 uploads retain their size-based
 write allowance plus 30 seconds. Azure polling also has an overall deadline.
+
+### Page checkpoints and worker shutdown
+
+Rendering, native extraction and both OCR stages commit each page and reuse
+checkpoints for the same source, stage and provider configuration/version.
+Provider and blob calls run outside the page database transaction. A retry
+skips completed pages, including the managed OCR charge for those pages.
+Artifact readers select the latest version of each page and OCR method.
+
+SIGTERM/SIGINT is checked between pages and embedding batches. The worker
+finishes its current checkpoint, returns the task to pending immediately and
+preserves its error retry allowance. A replacement worker can resume without
+waiting for the original lease deadline. An external call already in flight
+still needs to return or reach its timeout before shutdown can finish.
+
+Set `GOOGLE_DOCUMENT_AI_COST_PER_PAGE_USD` or
+`AZURE_DOCUMENT_INTELLIGENCE_COST_PER_PAGE_USD` in the worker environment to
+record the configured unit price on each OCR page artifact. These are estimates
+from the configured price, not provider billing receipts; an unset price stays
+unknown rather than being recorded as zero.

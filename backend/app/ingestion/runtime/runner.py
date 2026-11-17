@@ -11,6 +11,7 @@ from app.ingestion.registry import handler_for
 from app.ingestion.runtime.errors import (
     IngestionLeaseLost,
     IngestionWorkerError,
+    IngestionWorkerStopped,
     retryable_error,
 )
 from app.ingestion.runtime.inputs import retain_pipeline_inputs
@@ -22,6 +23,7 @@ from app.ingestion.runtime.queue import (
     fail_task,
     lease_next_task,
     mark_task_running,
+    release_task,
     renew_task_lease,
 )
 from app.ingestion.runtime.types import StageOutcome, WorkerResult
@@ -92,6 +94,8 @@ def run_leased_task(
     if lease.worker_id != worker_id:
         raise IngestionLeaseLost("Task lease belongs to a different worker")
     run_id, stage = task.run_id, stage_for_task(task)
+    expire_on_commit = session.expire_on_commit
+    session.expire_on_commit = False
     try:
         return _run_leased_task(
             session,
@@ -112,6 +116,9 @@ def run_leased_task(
             task_status=task.status,
             run_status=run.status,
         )
+    finally:
+        session.expire_on_commit = expire_on_commit
+        session.info.pop("ingestion_continue", None)
 
 
 def _run_leased_task(
@@ -171,15 +178,48 @@ def _run_leased_task(
                     lease_lost.set()
                     return
 
+    def should_continue() -> None:
+        if lease_lost.is_set():
+            raise IngestionLeaseLost("Task lease was lost during stage execution")
+        stopping = session.info.get("ingestion_stop_requested")
+        if stopping and stopping():
+            raise IngestionWorkerStopped("Worker shutdown requested")
+
+    session.info["ingestion_continue"] = should_continue
     heartbeat_thread = threading.Thread(target=heartbeat, daemon=True)
     heartbeat_thread.start()
     try:
+        should_continue()
         with fence_stage_writes(session, lease):
             outcome = handler_for(stage)(session, run, task)
         if lease_lost.is_set():
             raise IngestionLeaseLost("Task lease was lost during stage execution")
     except IngestionLeaseLost:
         raise
+    except IngestionWorkerStopped:
+        session.rollback()
+        release_task(session, task, lease=lease, commit=False)
+        step.status = IngestionStepStatus.PENDING
+        step.lease_owner = None
+        step.leased_until = None
+        run.status = IngestionRunStatus.QUEUED
+        session.add_all([step, run])
+        append_run_event(
+            session,
+            run,
+            event_type="stage_interrupted",
+            message="Worker stopped; checkpointed work can resume",
+            step=step,
+            commit=False,
+        )
+        session.commit()
+        return WorkerResult(
+            task_id=task.id,
+            run_id=run.id,
+            stage=stage,
+            task_status=task.status,
+            run_status=run.status,
+        )
     except Exception as exc:
         # A failed flush leaves SQLAlchemy unable to record task failure until
         # its transaction is rolled back. Discard partial stage writes first.

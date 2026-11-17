@@ -1,5 +1,7 @@
 import base64
 import csv
+import math
+import os
 import shutil
 import subprocess
 import tempfile
@@ -149,7 +151,9 @@ class GoogleDocumentAiOcrProvider:
         endpoint_url: str | None = None,
         client: httpx.Client | None = None,
         timeout_seconds: float = 120,
+        cost_per_page_usd: float | None = None,
     ) -> None:
+        self.cost_per_page_usd = cost_per_page_usd
         self.timeout_seconds = timeout_seconds
         self.processor_name = processor_name
         self.access_token = access_token
@@ -196,7 +200,7 @@ class GoogleDocumentAiOcrProvider:
             provider_version=GOOGLE_DOCUMENT_AI_PROVIDER_VERSION,
             confidence=confidence,
             timing_ms=round((perf_counter() - started_at) * 1000, 3),
-            cost_usd=None,
+            cost_usd=self.cost_per_page_usd,
             quality_flags={
                 "empty_text": not bool(text),
                 "word_count": len(words),
@@ -225,7 +229,9 @@ class AzureDocumentIntelligenceOcrProvider:
         client: httpx.Client | None = None,
         poll_interval_seconds: float = 1,
         timeout_seconds: float = 120,
+        cost_per_page_usd: float | None = None,
     ) -> None:
+        self.cost_per_page_usd = cost_per_page_usd
         self.timeout_seconds = timeout_seconds
         self.endpoint = endpoint
         self.api_key = api_key
@@ -281,7 +287,7 @@ class AzureDocumentIntelligenceOcrProvider:
             ),
             confidence=confidence,
             timing_ms=round((perf_counter() - started_at) * 1000, 3),
-            cost_usd=None,
+            cost_usd=self.cost_per_page_usd,
             quality_flags={
                 "empty_text": not bool(text),
                 "word_count": len(words),
@@ -336,6 +342,9 @@ def managed_ocr_provider_from_settings() -> ManagedOcrProvider:
         return GoogleDocumentAiOcrProvider(
             processor_name=settings.GOOGLE_DOCUMENT_AI_PROCESSOR_NAME,
             access_token=settings.GOOGLE_DOCUMENT_AI_ACCESS_TOKEN,
+            cost_per_page_usd=_configured_page_cost(
+                "GOOGLE_DOCUMENT_AI_COST_PER_PAGE_USD"
+            ),
         )
     if settings.MANAGED_OCR_PROVIDER == "azure_document_intelligence":
         return AzureDocumentIntelligenceOcrProvider(
@@ -343,6 +352,9 @@ def managed_ocr_provider_from_settings() -> ManagedOcrProvider:
             api_key=settings.AZURE_DOCUMENT_INTELLIGENCE_KEY,
             model_id=settings.AZURE_DOCUMENT_INTELLIGENCE_MODEL_ID,
             api_version=settings.AZURE_DOCUMENT_INTELLIGENCE_API_VERSION,
+            cost_per_page_usd=_configured_page_cost(
+                "AZURE_DOCUMENT_INTELLIGENCE_COST_PER_PAGE_USD"
+            ),
         )
     raise ManagedOcrUnavailable("Managed OCR provider is disabled")
 
@@ -569,3 +581,13 @@ def _parse_float(value: str | None) -> float:
         return float(value or "0")
     except ValueError:
         return 0
+
+
+def _configured_page_cost(name: str) -> float | None:
+    configured = os.getenv(name)
+    if configured is None:
+        return None
+    price = float(configured)
+    if not math.isfinite(price) or price < 0:
+        raise ValueError(f"{name} must be a finite non-negative price")
+    return price

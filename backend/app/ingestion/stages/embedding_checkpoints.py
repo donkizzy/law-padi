@@ -8,6 +8,7 @@ from app.ingestion.embedding import (
     DenseEmbeddingProvider,
     EmbeddingBatch,
 )
+from app.ingestion.runtime.control import check_stage_continue
 from app.ingestion.runtime.errors import IngestionWorkerError
 from app.ingestion.stages.artifacts import (
     ensure_artifact,
@@ -40,6 +41,8 @@ def embed_with_checkpoints(
 ) -> EmbeddingBatch:
     size = max(1, batch_size)
     if len(texts) <= size:
+        session.commit()
+        check_stage_continue(session)
         return provider.embed(texts)
     artifacts = session.exec(
         select(IngestionArtifact).where(
@@ -56,6 +59,7 @@ def embed_with_checkpoints(
     first: EmbeddingBatch | None = None
     costs: list[float | None] = []
     for offset in range(0, len(texts), size):
+        check_stage_continue(session)
         inputs = texts[offset : offset + size]
         key = sha256_json(
             {
@@ -71,6 +75,7 @@ def embed_with_checkpoints(
             }
         )
         cached = checkpoints.get(key)
+        session.commit()
         if cached:
             content = get_blob_store().read_bytes(cached.storage_key)
             if hashlib.sha256(content).hexdigest() != cached.sha256:

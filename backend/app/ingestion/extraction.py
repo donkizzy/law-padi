@@ -1,3 +1,4 @@
+from collections.abc import Callable, Iterator
 from dataclasses import dataclass
 from io import BytesIO
 from time import perf_counter
@@ -44,6 +45,15 @@ class NativePdfExtractor:
     def extract(
         self, content: bytes, *, included_pages: set[int] | None = None
     ) -> list[PageExtraction]:
+        return list(self.iter_extract(content, included_pages=included_pages))
+
+    def iter_extract(
+        self,
+        content: bytes,
+        *,
+        included_pages: set[int] | None = None,
+        should_continue: Callable[[], None] | None = None,
+    ) -> Iterator[PageExtraction]:
         try:
             reader = PdfReader(BytesIO(content))
             if reader.is_encrypted:
@@ -55,11 +65,12 @@ class NativePdfExtractor:
                 "PDF could not be opened for extraction"
             ) from exc
 
-        extractions: list[PageExtraction] = []
         for index, page in enumerate(reader.pages):
             page_number = index + 1
             if included_pages is not None and page_number not in included_pages:
                 continue
+            if should_continue:
+                should_continue()
             started_at = perf_counter()
             spans: list[TextSpan] = []
             try:
@@ -91,25 +102,22 @@ class NativePdfExtractor:
             ]
             text, layout_flags = _page_text_with_layout(page, extracted_text)
             timing_ms = (perf_counter() - started_at) * 1000
-            extractions.append(
-                PageExtraction(
-                    page_number=page_number,
-                    text=text,
-                    spans=ordered_spans,
-                    method="native_pdf",
-                    provider_version=NATIVE_PDF_EXTRACTOR_VERSION,
-                    confidence=0.96 if text.strip() else 0.0,
-                    timing_ms=round(timing_ms, 3),
-                    quality_flags={
-                        "span_count": len(ordered_spans),
-                        "empty_text": not bool(text.strip()),
-                        "needs_ocr": not bool(text.strip()),
-                        **layout_flags,
-                    },
-                    plain_text=extracted_text,
-                )
+            yield PageExtraction(
+                page_number=page_number,
+                text=text,
+                spans=ordered_spans,
+                method="native_pdf",
+                provider_version=NATIVE_PDF_EXTRACTOR_VERSION,
+                confidence=0.96 if text.strip() else 0.0,
+                timing_ms=round(timing_ms, 3),
+                quality_flags={
+                    "span_count": len(ordered_spans),
+                    "empty_text": not bool(text.strip()),
+                    "needs_ocr": not bool(text.strip()),
+                    **layout_flags,
+                },
+                plain_text=extracted_text,
             )
-        return extractions
 
 
 def _page_text_with_layout(page: Any, plain_text: str) -> tuple[str, dict[str, Any]]:

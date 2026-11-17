@@ -34,3 +34,7 @@ def retryable_error(exc: Exception) -> bool:
     if isinstance(explicit, bool):
         return explicit
     return not isinstance(exc, IngestionWorkerError | ValueError | FileNotFoundError)
+
+
+class IngestionWorkerStopped(IngestionWorkerError):
+    pass

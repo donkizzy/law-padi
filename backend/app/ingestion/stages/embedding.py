@@ -16,9 +16,11 @@ from app.ingestion.embedding import (
 from app.ingestion.embedding_reuse import member_document_vectors, profile_fingerprint
 from app.ingestion.retrieval import build_retrieval_documents
 from app.ingestion.runtime.errors import (
+    IngestionLeaseLost,
     IngestionPermanentError,
     IngestionTransientError,
     IngestionWorkerError,
+    IngestionWorkerStopped,
     retryable_error,
 )
 from app.ingestion.runtime.inputs import retain_pipeline_inputs
@@ -295,6 +297,8 @@ def handle_embedding(
                 "vector_dimensions": batch.dimensions,
                 "sparse_vector_count": 0,
             }
+        except IngestionWorkerStopped, IngestionLeaseLost:
+            raise
         except Exception as exc:
             provider_errors.append(exc)
             embedding_run.status = EmbeddingRunStatus.FAILED
