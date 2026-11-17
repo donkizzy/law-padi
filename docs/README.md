@@ -16,6 +16,7 @@ Start with [`architecture.md`](architecture.md).
 - [`runbooks/release.md`](runbooks/release.md): code and corpus releases.
 - [`runbooks/backup-restore.md`](runbooks/backup-restore.md): backups and restore checks.
 - [`runbooks/ingestion.md`](runbooks/ingestion.md): turning a source PDF into a release.
+- [`runbooks/observability.md`](runbooks/observability.md): request ids, logs, probes, heartbeats and Sentry.
 - [`runbooks/branch-protection.md`](runbooks/branch-protection.md): required checks and branch rules to apply on GitHub.
 - [`evidence-chat-rollout.md`](evidence-chat-rollout.md): chat controls, the
   answer-quality gate and the recorded launch exception.
