@@ -1,9 +1,9 @@
 import uuid
 
-from fastapi import HTTPException, status
 from sqlmodel import Session, col, select
 
 from app.core.config import settings
+from app.core.errors import DomainError, ErrorCode
 from app.ingestion.admin.idempotency import (
     add_idempotency_record,
     idempotency_payload_hash,
@@ -64,9 +64,8 @@ def cancel_ingestion_run(
     run = get_run(session, run_id)
     check_expected_version(run.lock_version, expected_version)
     if run.status in {IngestionRunStatus.PUBLISHED, IngestionRunStatus.CANCELLED}:
-        raise HTTPException(
-            status_code=status.HTTP_409_CONFLICT,
-            detail="Terminal ingestion runs cannot be cancelled",
+        raise DomainError(
+            ErrorCode.CONFLICT, "Terminal ingestion runs cannot be cancelled"
         )
     run.pipeline_config = {
         **(run.pipeline_config or {}),
@@ -114,9 +113,9 @@ def resume_ingestion_run(
         IngestionRunStatus.WAITING_FOR_REVIEW,
         IngestionRunStatus.CANCELLED,
     }:
-        raise HTTPException(
-            status_code=status.HTTP_409_CONFLICT,
-            detail="Only waiting or cancelled ingestion runs can be resumed",
+        raise DomainError(
+            ErrorCode.CONFLICT,
+            "Only waiting or cancelled ingestion runs can be resumed",
         )
     was_cancelled = run.status == IngestionRunStatus.CANCELLED
     resume_stage = IngestionStage(enum_value(run.current_stage))
@@ -222,26 +221,24 @@ def start_embedding(
     run = get_run(session, run_id)
     check_expected_version(run.lock_version, expected_version)
     if run.status != IngestionRunStatus.READY_TO_EMBED:
-        raise HTTPException(
-            status_code=status.HTTP_409_CONFLICT,
-            detail="Only runs ready to embed can start embedding",
+        raise DomainError(
+            ErrorCode.CONFLICT, "Only runs ready to embed can start embedding"
         )
     profiles = session.exec(
         select(EmbeddingProfile).where(col(EmbeddingProfile.is_active).is_(True))
     ).all()
     if not profiles:
-        raise HTTPException(
-            status_code=status.HTTP_409_CONFLICT,
-            detail="At least one active embedding profile is required",
+        raise DomainError(
+            ErrorCode.CONFLICT, "At least one active embedding profile is required"
         )
     if any(
         profile.vector_dimensions != settings.RETRIEVAL_VECTOR_DIMENSIONS
         or not profile.model_revision
         for profile in profiles
     ):
-        raise HTTPException(
-            status_code=status.HTTP_409_CONFLICT,
-            detail="Active embedding profiles must use 1,024 dimensions and pinned revisions",
+        raise DomainError(
+            ErrorCode.CONFLICT,
+            "Active embedding profiles must use 1,024 dimensions and pinned revisions",
         )
     release_id = release_id_for_run(session, run)
     release = get_release(session, release_id)
@@ -250,9 +247,9 @@ def start_embedding(
             session, release_entries(session, release.id), release=release
         )
         if gates:
-            raise HTTPException(
-                status_code=409,
-                detail={
+            raise DomainError(
+                ErrorCode.CONFLICT,
+                {
                     "message": "Composite member gates must pass before embedding",
                     "gates": gates,
                 },
@@ -329,9 +326,8 @@ def retry_ingestion_run(
     run = get_run(session, run_id)
     check_expected_version(run.lock_version, expected_version)
     if run.status != IngestionRunStatus.FAILED:
-        raise HTTPException(
-            status_code=status.HTTP_409_CONFLICT,
-            detail="Only failed ingestion runs can be retried",
+        raise DomainError(
+            ErrorCode.CONFLICT, "Only failed ingestion runs can be retried"
         )
     run.status = IngestionRunStatus.QUEUED
     run.lock_version += 1

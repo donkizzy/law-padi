@@ -1,6 +1,6 @@
-from fastapi import HTTPException, status
 from sqlmodel import Session, select
 
+from app.core.errors import DomainError, ErrorCode
 from app.legal.enums import (
     AdminRole,
 )
@@ -26,7 +26,6 @@ def user_has_admin_role(session: Session, user: User, role: AdminRole) -> bool:
 def require_admin_role(session: Session, user: User, role: AdminRole) -> None:
     if user_has_admin_role(session, user, role):
         return
-    raise HTTPException(
-        status_code=status.HTTP_403_FORBIDDEN,
-        detail="The user does not have the required admin role",
+    raise DomainError(
+        ErrorCode.FORBIDDEN, "The user does not have the required admin role"
     )

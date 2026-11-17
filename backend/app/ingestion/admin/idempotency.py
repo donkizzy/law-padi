@@ -3,9 +3,9 @@ import json
 import uuid
 from typing import cast
 
-from fastapi import HTTPException, status
 from sqlmodel import Session, select
 
+from app.core.errors import DomainError, ErrorCode
 from app.legal.models import (
     IdempotencyRecord,
 )
@@ -44,9 +44,9 @@ def idempotency_record_for_request(
     if not record:
         return None
     if record.request_hash != request_hash:
-        raise HTTPException(
-            status_code=status.HTTP_409_CONFLICT,
-            detail="Idempotency key was already used for a different request",
+        raise DomainError(
+            ErrorCode.CONFLICT,
+            "Idempotency key was already used for a different request",
         )
     return record
 
@@ -78,8 +78,7 @@ def add_idempotency_record(
 def idempotency_result_payload(record: IdempotencyRecord) -> dict[str, object]:
     payload = record.result_payload
     if not isinstance(payload, dict):
-        raise HTTPException(
-            status_code=status.HTTP_409_CONFLICT,
-            detail="Idempotent mutation result is no longer available",
+        raise DomainError(
+            ErrorCode.CONFLICT, "Idempotent mutation result is no longer available"
         )
     return cast(dict[str, object], payload)

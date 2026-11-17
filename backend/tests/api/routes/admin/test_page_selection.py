@@ -2,13 +2,13 @@ import threading
 import uuid
 from concurrent.futures import ThreadPoolExecutor
 
-from fastapi import HTTPException
 from fastapi.testclient import TestClient
 from sqlmodel import Session, func, select
 
 from app import crud
 from app.core.config import settings
 from app.core.db import engine
+from app.core.errors import DomainError, ErrorCode
 from app.ingestion.admin.pages import update_page_selection
 from app.legal.enums import (
     IngestionRunStatus,
@@ -179,9 +179,10 @@ def test_concurrent_page_selection_has_one_winner_and_one_conflict(
             barrier.wait()
             try:
                 update_page_selection(concurrent_session, run.id, body, current_user)
-            except HTTPException as exc:
+            except DomainError as exc:
                 concurrent_session.rollback()
-                return exc.status_code
+                assert exc.code == ErrorCode.CONFLICT
+                return 409
             return 200
 
     with ThreadPoolExecutor(max_workers=2) as executor:

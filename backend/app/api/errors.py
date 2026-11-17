@@ -51,6 +51,14 @@ _STATUS_CODES = {
 _DOMAIN_STATUS = {
     ErrorCode.EMAIL_ALREADY_EXISTS: 409,
     ErrorCode.RATE_LIMIT_EXCEEDED: 429,
+    ErrorCode.BAD_REQUEST: 400,
+    ErrorCode.FORBIDDEN: 403,
+    ErrorCode.NOT_FOUND: 404,
+    ErrorCode.CONFLICT: 409,
+    ErrorCode.PAYLOAD_TOO_LARGE: 413,
+    ErrorCode.UNSUPPORTED_MEDIA_TYPE: 415,
+    ErrorCode.VALIDATION_ERROR: 422,
+    ErrorCode.BAD_GATEWAY: 502,
 }
 
 

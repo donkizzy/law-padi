@@ -2,10 +2,10 @@ import uuid
 from datetime import timedelta
 from typing import BinaryIO, cast
 
-from fastapi import HTTPException, status
 from sqlmodel import Session, select
 
 from app.core.config import settings
+from app.core.errors import DomainError, ErrorCode
 from app.ingestion.admin.idempotency import (
     add_idempotency_record,
     idempotency_payload_hash,
@@ -156,14 +156,13 @@ def create_source_upload_multipart_parts(
     require_upload_open(upload)
     check_expected_version(upload.lock_version, expected_version)
     if upload.upload_backend != "r2":
-        raise HTTPException(
-            status_code=status.HTTP_409_CONFLICT,
-            detail="Multipart upload URLs are available only for R2 upload sessions",
+        raise DomainError(
+            ErrorCode.CONFLICT,
+            "Multipart upload URLs are available only for R2 upload sessions",
         )
     if not multipart_required(upload):
-        raise HTTPException(
-            status_code=status.HTTP_409_CONFLICT,
-            detail="Multipart upload is required only above 100 MB",
+        raise DomainError(
+            ErrorCode.CONFLICT, "Multipart upload is required only above 100 MB"
         )
     multipart = managed_upload_store().create_multipart_upload(
         key=upload.quarantine_key,
@@ -213,20 +212,18 @@ def create_source_upload_session(
     )
     if record:
         if record.result_id is None:
-            raise HTTPException(
-                status_code=status.HTTP_409_CONFLICT,
-                detail="Idempotent source upload result is no longer available",
+            raise DomainError(
+                ErrorCode.CONFLICT,
+                "Idempotent source upload result is no longer available",
             )
         return get_source_upload_for_user(session, record.result_id, current_user)
     if body.expected_size > MAX_UPLOAD_BYTES:
-        raise HTTPException(
-            status_code=status.HTTP_413_REQUEST_ENTITY_TOO_LARGE,
-            detail="Source files must be 500 MB or smaller",
+        raise DomainError(
+            ErrorCode.PAYLOAD_TOO_LARGE, "Source files must be 500 MB or smaller"
         )
     if body.mime_type != "application/pdf":
-        raise HTTPException(
-            status_code=status.HTTP_415_UNSUPPORTED_MEDIA_TYPE,
-            detail="Ingestion accepts PDF sources only",
+        raise DomainError(
+            ErrorCode.UNSUPPORTED_MEDIA_TYPE, "Ingestion accepts PDF sources only"
         )
 
     upload_id = uuid.uuid4()
@@ -291,14 +288,14 @@ def put_local_upload_object(
     )
     require_upload_open(upload)
     if upload.upload_backend != "local":
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Local upload endpoint can only be used with local upload sessions",
+        raise DomainError(
+            ErrorCode.BAD_REQUEST,
+            "Local upload endpoint can only be used with local upload sessions",
         )
     if content_type.split(";", 1)[0].strip().lower() != upload.mime_type:
-        raise HTTPException(
-            status_code=status.HTTP_415_UNSUPPORTED_MEDIA_TYPE,
-            detail="Uploaded object content type does not match the upload session",
+        raise DomainError(
+            ErrorCode.UNSUPPORTED_MEDIA_TYPE,
+            "Uploaded object content type does not match the upload session",
         )
     try:
         store = get_blob_store()
@@ -312,7 +309,7 @@ def put_local_upload_object(
             metadata={"source_upload_id": str(upload.id)},
         )
     except BlobStoreError as exc:
-        raise HTTPException(status_code=400, detail=str(exc))
+        raise DomainError(ErrorCode.BAD_REQUEST, str(exc))
 
     upload.quarantine_key = blob.key
     upload.actual_sha256 = blob.sha256
@@ -370,24 +367,23 @@ def complete_source_upload(
         head = store.head(upload.quarantine_key)
     except (BlobStoreError, FileNotFoundError) as exc:
         mark_upload_failed(session, upload, str(exc))
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Uploaded object was not found in quarantine",
+        raise DomainError(
+            ErrorCode.BAD_REQUEST, "Uploaded object was not found in quarantine"
         )
 
     if head.size_bytes != upload.expected_size:
         mark_upload_failed(session, upload, "Uploaded object size does not match")
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Uploaded object size does not match the upload session",
+        raise DomainError(
+            ErrorCode.BAD_REQUEST,
+            "Uploaded object size does not match the upload session",
         )
     if upload.expected_sha256 and head.sha256 and head.sha256 != upload.expected_sha256:
         mark_upload_failed(
             session, upload, "Uploaded object metadata hash does not match"
         )
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Uploaded object SHA-256 does not match the upload session",
+        raise DomainError(
+            ErrorCode.BAD_REQUEST,
+            "Uploaded object SHA-256 does not match the upload session",
         )
 
     # Completion is deliberately a control-plane operation. The object remains
@@ -496,32 +492,28 @@ def multipart_upload_from_idempotency_record(
     payload = idempotency_result_payload(record)
     parts_payload = payload.get("parts")
     if not isinstance(parts_payload, list):
-        raise HTTPException(
-            status_code=status.HTTP_409_CONFLICT,
-            detail="Idempotent multipart result is no longer available",
+        raise DomainError(
+            ErrorCode.CONFLICT, "Idempotent multipart result is no longer available"
         )
     parts: list[MultipartUploadPartUrl] = []
     for item in parts_payload:
         if not isinstance(item, dict):
-            raise HTTPException(
-                status_code=status.HTTP_409_CONFLICT,
-                detail="Idempotent multipart result is no longer available",
+            raise DomainError(
+                ErrorCode.CONFLICT, "Idempotent multipart result is no longer available"
             )
         part_number = item.get("part_number")
         upload_url = item.get("upload_url")
         if not isinstance(part_number, int) or not isinstance(upload_url, str):
-            raise HTTPException(
-                status_code=status.HTTP_409_CONFLICT,
-                detail="Idempotent multipart result is no longer available",
+            raise DomainError(
+                ErrorCode.CONFLICT, "Idempotent multipart result is no longer available"
             )
         parts.append(
             MultipartUploadPartUrl(part_number=part_number, upload_url=upload_url)
         )
     upload_id = payload.get("multipart_upload_id")
     if not isinstance(upload_id, str):
-        raise HTTPException(
-            status_code=status.HTTP_409_CONFLICT,
-            detail="Idempotent multipart result is no longer available",
+        raise DomainError(
+            ErrorCode.CONFLICT, "Idempotent multipart result is no longer available"
         )
     return MultipartUpload(upload_id=upload_id, parts=tuple(parts))
 
@@ -532,33 +524,33 @@ def completed_upload_from_idempotency_record(
     payload = idempotency_result_payload(record)
     upload_id = payload.get("upload_id")
     if not isinstance(upload_id, str):
-        raise HTTPException(
-            status_code=status.HTTP_409_CONFLICT,
-            detail="Idempotent upload completion result is no longer available",
+        raise DomainError(
+            ErrorCode.CONFLICT,
+            "Idempotent upload completion result is no longer available",
         )
     upload = session.get(SourceUpload, uuid.UUID(upload_id))
     if not upload:
-        raise HTTPException(
-            status_code=status.HTTP_409_CONFLICT,
-            detail="Idempotent upload completion result is no longer available",
+        raise DomainError(
+            ErrorCode.CONFLICT,
+            "Idempotent upload completion result is no longer available",
         )
     source = None
     source_id = payload.get("source_document_id")
     if isinstance(source_id, str):
         source = session.get(SourceDocument, uuid.UUID(source_id))
         if not source:
-            raise HTTPException(
-                status_code=status.HTTP_409_CONFLICT,
-                detail="Idempotent upload completion result is no longer available",
+            raise DomainError(
+                ErrorCode.CONFLICT,
+                "Idempotent upload completion result is no longer available",
             )
     run = None
     run_id = payload.get("run_id")
     if isinstance(run_id, str):
         run = session.get(IngestionRun, uuid.UUID(run_id))
         if not run:
-            raise HTTPException(
-                status_code=status.HTTP_409_CONFLICT,
-                detail="Idempotent upload completion result is no longer available",
+            raise DomainError(
+                ErrorCode.CONFLICT,
+                "Idempotent upload completion result is no longer available",
             )
     return upload, source, run, bool(payload.get("duplicate"))
 
@@ -573,13 +565,13 @@ def get_source_upload_for_user(
         populate_existing=for_update,
     )
     if upload is None or (upload.created_by != user.id and not user.is_superuser):
-        raise HTTPException(status_code=404, detail="Source upload not found")
+        raise DomainError(ErrorCode.NOT_FOUND, "Source upload not found")
     return upload
 
 
 def require_upload_open(upload: SourceUpload) -> None:
     if upload.status not in (SourceUploadStatus.CREATED, SourceUploadStatus.UPLOADING):
-        raise HTTPException(status_code=409, detail="Source upload is no longer open")
+        raise DomainError(ErrorCode.CONFLICT, "Source upload is no longer open")
 
 
 def mark_upload_failed(
@@ -597,17 +589,14 @@ def validate_pdf(content: bytes) -> int:
     try:
         return inspect_pdf_bytes(content, max_pages=MAX_SOURCE_PAGES).page_count
     except PdfInspectionError as exc:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail=str(exc),
-        )
+        raise DomainError(ErrorCode.BAD_REQUEST, str(exc))
 
 
 def ensure_allowed_instrument_type(instrument_type: InstrumentType) -> None:
     if str(instrument_type) not in settings.INGESTION_ALLOWED_INSTRUMENT_TYPES:
-        raise HTTPException(
-            status_code=422,
-            detail=f"Ingestion is disabled for instrument type: {instrument_type}",
+        raise DomainError(
+            ErrorCode.VALIDATION_ERROR,
+            f"Ingestion is disabled for instrument type: {instrument_type}",
         )
 
 
@@ -618,9 +607,9 @@ def get_or_create_instrument(session: Session, upload: SourceUpload) -> LegalIns
     ).first()
     if instrument:
         if instrument.instrument_type != upload.instrument_type:
-            raise HTTPException(
-                status_code=status.HTTP_409_CONFLICT,
-                detail="Instrument slug already belongs to a different instrument type",
+            raise DomainError(
+                ErrorCode.CONFLICT,
+                "Instrument slug already belongs to a different instrument type",
             )
         return instrument
     instrument = LegalInstrument(

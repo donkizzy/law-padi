@@ -1,0 +1,549 @@
+[
+  {
+    "site": "app/ingestion/admin/idempotency.py:0",
+    "status": 409,
+    "detail_expression": "'Idempotency key was already used for a different request'",
+    "detail": "Idempotency key was already used for a different request"
+  },
+  {
+    "site": "app/ingestion/admin/idempotency.py:1",
+    "status": 409,
+    "detail_expression": "'Idempotent mutation result is no longer available'",
+    "detail": "Idempotent mutation result is no longer available"
+  },
+  {
+    "site": "app/ingestion/admin/pages.py:0",
+    "status": 404,
+    "detail_expression": "'Ingestion run not found'",
+    "detail": "Ingestion run not found"
+  },
+  {
+    "site": "app/ingestion/admin/pages.py:1",
+    "status": 409,
+    "detail_expression": "'Page selection is not currently awaiting confirmation'",
+    "detail": "Page selection is not currently awaiting confirmation"
+  },
+  {
+    "site": "app/ingestion/admin/pages.py:2",
+    "status": 422,
+    "detail_expression": "'Each profiled page must be included exactly once'",
+    "detail": "Each profiled page must be included exactly once"
+  },
+  {
+    "site": "app/ingestion/admin/pages.py:3",
+    "status": 422,
+    "detail_expression": "'Page selection must include every profiled page exactly once'",
+    "detail": "Page selection must include every profiled page exactly once"
+  },
+  {
+    "site": "app/ingestion/admin/pages.py:4",
+    "status": 422,
+    "detail_expression": "'Imported review pages require explicit inclusion decisions and reasons'",
+    "detail": "Imported review pages require explicit inclusion decisions and reasons"
+  },
+  {
+    "site": "app/ingestion/admin/pages.py:5",
+    "status": 404,
+    "detail_expression": "'Source page not found'",
+    "detail": "Source page not found"
+  },
+  {
+    "site": "app/ingestion/admin/pages.py:6",
+    "status": 409,
+    "detail_expression": "'Materialized runs cannot change page boundaries'",
+    "detail": "Materialized runs cannot change page boundaries"
+  },
+  {
+    "site": "app/ingestion/admin/pages.py:7",
+    "status": 409,
+    "detail_expression": "'Idempotent page-selection result is no longer available'",
+    "detail": "Idempotent page-selection result is no longer available"
+  },
+  {
+    "site": "app/ingestion/admin/pages.py:8",
+    "status": 409,
+    "detail_expression": "'Idempotent page-selection result is no longer available'",
+    "detail": "Idempotent page-selection result is no longer available"
+  },
+  {
+    "site": "app/ingestion/admin/queries.py:0",
+    "status": 404,
+    "detail_expression": "'Ingestion run not found'",
+    "detail": "Ingestion run not found"
+  },
+  {
+    "site": "app/ingestion/admin/queries.py:1",
+    "status": 409,
+    "detail_expression": "'Composite run identity differs from its release'",
+    "detail": "Composite run identity differs from its release"
+  },
+  {
+    "site": "app/ingestion/admin/queries.py:2",
+    "status": 409,
+    "detail_expression": "'Ingestion run does not identify a single original corpus release'",
+    "detail": "Ingestion run does not identify a single original corpus release"
+  },
+  {
+    "site": "app/ingestion/admin/queries.py:3",
+    "status": 404,
+    "detail_expression": "'Source document not found'",
+    "detail": "Source document not found"
+  },
+  {
+    "site": "app/ingestion/admin/queries.py:4",
+    "status": 404,
+    "detail_expression": "f'{stage.value} step not found'",
+    "detail": "parsing_structure step not found"
+  },
+  {
+    "site": "app/ingestion/admin/queries.py:5",
+    "status": 404,
+    "detail_expression": "'Review item not found'",
+    "detail": "Review item not found"
+  },
+  {
+    "site": "app/ingestion/admin/queries.py:6",
+    "status": 404,
+    "detail_expression": "'Corpus release not found'",
+    "detail": "Corpus release not found"
+  },
+  {
+    "site": "app/ingestion/admin/queries.py:7",
+    "status": 409,
+    "detail_expression": "'The record was modified by another operation'",
+    "detail": "The record was modified by another operation"
+  },
+  {
+    "site": "app/ingestion/admin/release_compose.py:0",
+    "status": 404,
+    "detail_expression": "'Member corpus release was not found'",
+    "detail": "Member corpus release was not found"
+  },
+  {
+    "site": "app/ingestion/admin/release_compose.py:1",
+    "status": 409,
+    "detail_expression": "'Composition requires the current production base and approved Act releases'",
+    "detail": "Composition requires the current production base and approved Act releases"
+  },
+  {
+    "site": "app/ingestion/admin/release_compose.py:2",
+    "status": 409,
+    "detail_expression": "str(exc)",
+    "detail": "provider failure"
+  },
+  {
+    "site": "app/ingestion/admin/release_compose.py:3",
+    "status": 409,
+    "detail_expression": "'The base must contain the Constitution; each added member must contain one Act'",
+    "detail": "The base must contain the Constitution; each added member must contain one Act"
+  },
+  {
+    "site": "app/ingestion/admin/release_compose.py:4",
+    "status": 409,
+    "detail_expression": "'Each member requires a retained source manifest hash'",
+    "detail": "Each member requires a retained source manifest hash"
+  },
+  {
+    "site": "app/ingestion/admin/release_compose.py:5",
+    "status": 409,
+    "detail_expression": "{'message': 'Member source/review gates must pass before composition', 'release_id': str(member.id), 'gates': sorted(set(gates))}",
+    "detail": {
+      "message": "Member source/review gates must pass before composition",
+      "release_id": "release-id",
+      "gates": [
+        "gate-a",
+        "gate-b"
+      ]
+    }
+  },
+  {
+    "site": "app/ingestion/admin/release_compose.py:6",
+    "status": 409,
+    "detail_expression": "'Members contain conflicting versions of the same provision'",
+    "detail": "Members contain conflicting versions of the same provision"
+  },
+  {
+    "site": "app/ingestion/admin/release_compose.py:7",
+    "status": 409,
+    "detail_expression": "\"Members disagree about an entry's review provenance\"",
+    "detail": "Members disagree about an entry's review provenance"
+  },
+  {
+    "site": "app/ingestion/admin/release_compose.py:8",
+    "status": 409,
+    "detail_expression": "'Release version already exists'",
+    "detail": "Release version already exists"
+  },
+  {
+    "site": "app/ingestion/admin/release_publish.py:0",
+    "status": 409,
+    "detail_expression": "'Idempotent publication result is no longer available'",
+    "detail": "Idempotent publication result is no longer available"
+  },
+  {
+    "site": "app/ingestion/admin/release_publish.py:1",
+    "status": 409,
+    "detail_expression": "'Release must validate cleanly before publication'",
+    "detail": "Release must validate cleanly before publication"
+  },
+  {
+    "site": "app/ingestion/admin/release_publish.py:2",
+    "status": 409,
+    "detail_expression": "'Only a release that contains the Constitution can be published; compose Act releases with the Constitution first'",
+    "detail": "Only a release that contains the Constitution can be published; compose Act releases with the Constitution first"
+  },
+  {
+    "site": "app/ingestion/admin/release_publish.py:3",
+    "status": 409,
+    "detail_expression": "{'message': 'Release source/review gates no longer pass', 'gates': quality_gates}",
+    "detail": {
+      "message": "Release source/review gates no longer pass",
+      "gates": [
+        "gate-a"
+      ]
+    }
+  },
+  {
+    "site": "app/ingestion/admin/release_publish.py:4",
+    "status": 409,
+    "detail_expression": "'Release does not have a ready pgvector index build'",
+    "detail": "Release does not have a ready pgvector index build"
+  },
+  {
+    "site": "app/ingestion/admin/release_publish.py:5",
+    "status": 409,
+    "detail_expression": "'Release does not have a ready pgvector index build'",
+    "detail": "Release does not have a ready pgvector index build"
+  },
+  {
+    "site": "app/ingestion/admin/release_publish.py:6",
+    "status": 409,
+    "detail_expression": "'pgvector index validation no longer passes'",
+    "detail": "pgvector index validation no longer passes"
+  },
+  {
+    "site": "app/ingestion/admin/release_publish.py:7",
+    "status": 409,
+    "detail_expression": "'Publisher must differ from the source uploader'",
+    "detail": "Publisher must differ from the source uploader"
+  },
+  {
+    "site": "app/ingestion/admin/release_read.py:0",
+    "status": 404,
+    "detail_expression": "'Release manifest artifact was not found'",
+    "detail": "Release manifest artifact was not found"
+  },
+  {
+    "site": "app/ingestion/admin/release_read.py:1",
+    "status": 502,
+    "detail_expression": "'Release manifest artifact could not be read'",
+    "detail": "Release manifest artifact could not be read"
+  },
+  {
+    "site": "app/ingestion/admin/release_read.py:2",
+    "status": 502,
+    "detail_expression": "'Release manifest artifact is invalid'",
+    "detail": "Release manifest artifact is invalid"
+  },
+  {
+    "site": "app/ingestion/admin/review.py:0",
+    "status": 409,
+    "detail_expression": "'Idempotent review revision result is no longer available'",
+    "detail": "Idempotent review revision result is no longer available"
+  },
+  {
+    "site": "app/ingestion/admin/review.py:1",
+    "status": 409,
+    "detail_expression": "'Derive from an unmaterialized review candidate'",
+    "detail": "Derive from an unmaterialized review candidate"
+  },
+  {
+    "site": "app/ingestion/admin/review.py:2",
+    "status": 409,
+    "detail_expression": "'Materialized candidates cannot be revised'",
+    "detail": "Materialized candidates cannot be revised"
+  },
+  {
+    "site": "app/ingestion/admin/review.py:3",
+    "status": 409,
+    "detail_expression": "'Cancelled runs cannot be revised'",
+    "detail": "Cancelled runs cannot be revised"
+  },
+  {
+    "site": "app/ingestion/admin/review.py:4",
+    "status": 409,
+    "detail_expression": "'Canonical path already exists in this run'",
+    "detail": "Canonical path already exists in this run"
+  },
+  {
+    "site": "app/ingestion/admin/review.py:5",
+    "status": 422,
+    "detail_expression": "'Candidate parent would create a cycle'",
+    "detail": "Candidate parent would create a cycle"
+  },
+  {
+    "site": "app/ingestion/admin/review.py:6",
+    "status": 422,
+    "detail_expression": "'Parent must belong to the same source and run'",
+    "detail": "Parent must belong to the same source and run"
+  },
+  {
+    "site": "app/ingestion/admin/review.py:7",
+    "status": 422,
+    "detail_expression": "'Source end page precedes start page'",
+    "detail": "Source end page precedes start page"
+  },
+  {
+    "site": "app/ingestion/admin/review.py:8",
+    "status": 422,
+    "detail_expression": "'Source page exceeds the document page count'",
+    "detail": "Source page exceeds the document page count"
+  },
+  {
+    "site": "app/ingestion/admin/review.py:9",
+    "status": 422,
+    "detail_expression": "'Each source span must name a page within the candidate range'",
+    "detail": "Each source span must name a page within the candidate range"
+  },
+  {
+    "site": "app/ingestion/admin/review.py:10",
+    "status": 409,
+    "detail_expression": "'Blocking review issues must be resolved before approval'",
+    "detail": "Blocking review issues must be resolved before approval"
+  },
+  {
+    "site": "app/ingestion/admin/review.py:11",
+    "status": 404,
+    "detail_expression": "'Review issue not found'",
+    "detail": "Review issue not found"
+  },
+  {
+    "site": "app/ingestion/admin/review.py:12",
+    "status": 404,
+    "detail_expression": "'Review issue not found'",
+    "detail": "Review issue not found"
+  },
+  {
+    "site": "app/ingestion/admin/review.py:13",
+    "status": 409,
+    "detail_expression": "'Review issue is already resolved'",
+    "detail": "Review issue is already resolved"
+  },
+  {
+    "site": "app/ingestion/admin/review.py:14",
+    "status": 409,
+    "detail_expression": "'Blocking issues must be resolved by candidate revalidation'",
+    "detail": "Blocking issues must be resolved by candidate revalidation"
+  },
+  {
+    "site": "app/ingestion/admin/review.py:15",
+    "status": 409,
+    "detail_expression": "'A blocking issue override requires a reason'",
+    "detail": "A blocking issue override requires a reason"
+  },
+  {
+    "site": "app/ingestion/admin/roles.py:0",
+    "status": 403,
+    "detail_expression": "'The user does not have the required admin role'",
+    "detail": "The user does not have the required admin role"
+  },
+  {
+    "site": "app/ingestion/admin/runs.py:0",
+    "status": 409,
+    "detail_expression": "'Terminal ingestion runs cannot be cancelled'",
+    "detail": "Terminal ingestion runs cannot be cancelled"
+  },
+  {
+    "site": "app/ingestion/admin/runs.py:1",
+    "status": 409,
+    "detail_expression": "'Only waiting or cancelled ingestion runs can be resumed'",
+    "detail": "Only waiting or cancelled ingestion runs can be resumed"
+  },
+  {
+    "site": "app/ingestion/admin/runs.py:2",
+    "status": 409,
+    "detail_expression": "'Only runs ready to embed can start embedding'",
+    "detail": "Only runs ready to embed can start embedding"
+  },
+  {
+    "site": "app/ingestion/admin/runs.py:3",
+    "status": 409,
+    "detail_expression": "'At least one active embedding profile is required'",
+    "detail": "At least one active embedding profile is required"
+  },
+  {
+    "site": "app/ingestion/admin/runs.py:4",
+    "status": 409,
+    "detail_expression": "'Active embedding profiles must use 1,024 dimensions and pinned revisions'",
+    "detail": "Active embedding profiles must use 1,024 dimensions and pinned revisions"
+  },
+  {
+    "site": "app/ingestion/admin/runs.py:5",
+    "status": 409,
+    "detail_expression": "{'message': 'Composite member gates must pass before embedding', 'gates': gates}",
+    "detail": {
+      "message": "Composite member gates must pass before embedding",
+      "gates": [
+        "gate-b",
+        "gate-a",
+        "gate-b"
+      ]
+    }
+  },
+  {
+    "site": "app/ingestion/admin/runs.py:6",
+    "status": 409,
+    "detail_expression": "'Only failed ingestion runs can be retried'",
+    "detail": "Only failed ingestion runs can be retried"
+  },
+  {
+    "site": "app/ingestion/admin/upload_promotion.py:0",
+    "status": 409,
+    "detail_expression": "'Source hash already belongs to a different legal instrument'",
+    "detail": "Source hash already belongs to a different legal instrument"
+  },
+  {
+    "site": "app/ingestion/admin/uploads.py:0",
+    "status": 409,
+    "detail_expression": "'Multipart upload URLs are available only for R2 upload sessions'",
+    "detail": "Multipart upload URLs are available only for R2 upload sessions"
+  },
+  {
+    "site": "app/ingestion/admin/uploads.py:1",
+    "status": 409,
+    "detail_expression": "'Multipart upload is required only above 100 MB'",
+    "detail": "Multipart upload is required only above 100 MB"
+  },
+  {
+    "site": "app/ingestion/admin/uploads.py:2",
+    "status": 409,
+    "detail_expression": "'Idempotent source upload result is no longer available'",
+    "detail": "Idempotent source upload result is no longer available"
+  },
+  {
+    "site": "app/ingestion/admin/uploads.py:3",
+    "status": 413,
+    "detail_expression": "'Source files must be 500 MB or smaller'",
+    "detail": "Source files must be 500 MB or smaller"
+  },
+  {
+    "site": "app/ingestion/admin/uploads.py:4",
+    "status": 415,
+    "detail_expression": "'Ingestion accepts PDF sources only'",
+    "detail": "Ingestion accepts PDF sources only"
+  },
+  {
+    "site": "app/ingestion/admin/uploads.py:5",
+    "status": 400,
+    "detail_expression": "'Local upload endpoint can only be used with local upload sessions'",
+    "detail": "Local upload endpoint can only be used with local upload sessions"
+  },
+  {
+    "site": "app/ingestion/admin/uploads.py:6",
+    "status": 415,
+    "detail_expression": "'Uploaded object content type does not match the upload session'",
+    "detail": "Uploaded object content type does not match the upload session"
+  },
+  {
+    "site": "app/ingestion/admin/uploads.py:7",
+    "status": 400,
+    "detail_expression": "str(exc)",
+    "detail": "provider failure"
+  },
+  {
+    "site": "app/ingestion/admin/uploads.py:8",
+    "status": 400,
+    "detail_expression": "'Uploaded object was not found in quarantine'",
+    "detail": "Uploaded object was not found in quarantine"
+  },
+  {
+    "site": "app/ingestion/admin/uploads.py:9",
+    "status": 400,
+    "detail_expression": "'Uploaded object size does not match the upload session'",
+    "detail": "Uploaded object size does not match the upload session"
+  },
+  {
+    "site": "app/ingestion/admin/uploads.py:10",
+    "status": 400,
+    "detail_expression": "'Uploaded object SHA-256 does not match the upload session'",
+    "detail": "Uploaded object SHA-256 does not match the upload session"
+  },
+  {
+    "site": "app/ingestion/admin/uploads.py:11",
+    "status": 409,
+    "detail_expression": "'Idempotent multipart result is no longer available'",
+    "detail": "Idempotent multipart result is no longer available"
+  },
+  {
+    "site": "app/ingestion/admin/uploads.py:12",
+    "status": 409,
+    "detail_expression": "'Idempotent multipart result is no longer available'",
+    "detail": "Idempotent multipart result is no longer available"
+  },
+  {
+    "site": "app/ingestion/admin/uploads.py:13",
+    "status": 409,
+    "detail_expression": "'Idempotent multipart result is no longer available'",
+    "detail": "Idempotent multipart result is no longer available"
+  },
+  {
+    "site": "app/ingestion/admin/uploads.py:14",
+    "status": 409,
+    "detail_expression": "'Idempotent multipart result is no longer available'",
+    "detail": "Idempotent multipart result is no longer available"
+  },
+  {
+    "site": "app/ingestion/admin/uploads.py:15",
+    "status": 409,
+    "detail_expression": "'Idempotent upload completion result is no longer available'",
+    "detail": "Idempotent upload completion result is no longer available"
+  },
+  {
+    "site": "app/ingestion/admin/uploads.py:16",
+    "status": 409,
+    "detail_expression": "'Idempotent upload completion result is no longer available'",
+    "detail": "Idempotent upload completion result is no longer available"
+  },
+  {
+    "site": "app/ingestion/admin/uploads.py:17",
+    "status": 409,
+    "detail_expression": "'Idempotent upload completion result is no longer available'",
+    "detail": "Idempotent upload completion result is no longer available"
+  },
+  {
+    "site": "app/ingestion/admin/uploads.py:18",
+    "status": 409,
+    "detail_expression": "'Idempotent upload completion result is no longer available'",
+    "detail": "Idempotent upload completion result is no longer available"
+  },
+  {
+    "site": "app/ingestion/admin/uploads.py:19",
+    "status": 404,
+    "detail_expression": "'Source upload not found'",
+    "detail": "Source upload not found"
+  },
+  {
+    "site": "app/ingestion/admin/uploads.py:20",
+    "status": 409,
+    "detail_expression": "'Source upload is no longer open'",
+    "detail": "Source upload is no longer open"
+  },
+  {
+    "site": "app/ingestion/admin/uploads.py:21",
+    "status": 400,
+    "detail_expression": "str(exc)",
+    "detail": "provider failure"
+  },
+  {
+    "site": "app/ingestion/admin/uploads.py:22",
+    "status": 422,
+    "detail_expression": "f'Ingestion is disabled for instrument type: {instrument_type}'",
+    "detail": "Ingestion is disabled for instrument type: statute"
+  },
+  {
+    "site": "app/ingestion/admin/uploads.py:23",
+    "status": 409,
+    "detail_expression": "'Instrument slug already belongs to a different instrument type'",
+    "detail": "Instrument slug already belongs to a different instrument type"
+  }
+]

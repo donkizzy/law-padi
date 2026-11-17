@@ -2,9 +2,9 @@ import json
 import uuid
 from typing import cast
 
-from fastapi import HTTPException, status
 from sqlmodel import Session, col, select
 
+from app.core.errors import DomainError, ErrorCode
 from app.ingestion.admin.queries import get_release
 from app.ingestion.blob_store import (
     BlobStoreError,
@@ -46,22 +46,17 @@ def read_corpus_release_manifest(
         None,
     )
     if not artifact:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="Release manifest artifact was not found",
+        raise DomainError(
+            ErrorCode.NOT_FOUND, "Release manifest artifact was not found"
         )
     try:
         manifest = json.loads(get_blob_store().read_bytes(artifact.storage_key))
     except (BlobStoreError, json.JSONDecodeError) as exc:
-        raise HTTPException(
-            status_code=status.HTTP_502_BAD_GATEWAY,
-            detail="Release manifest artifact could not be read",
+        raise DomainError(
+            ErrorCode.BAD_GATEWAY, "Release manifest artifact could not be read"
         ) from exc
     if not isinstance(manifest, dict):
-        raise HTTPException(
-            status_code=status.HTTP_502_BAD_GATEWAY,
-            detail="Release manifest artifact is invalid",
-        )
+        raise DomainError(ErrorCode.BAD_GATEWAY, "Release manifest artifact is invalid")
     return release, artifact, cast(dict[str, object], manifest)
 
 

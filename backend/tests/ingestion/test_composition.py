@@ -8,11 +8,11 @@ from datetime import date
 from pathlib import Path
 
 import pytest
-from fastapi import HTTPException
 from fastapi.testclient import TestClient
 from sqlmodel import Session, col, delete, select
 
 from app.core.config import settings
+from app.core.errors import DomainError, ErrorCode
 from app.ingestion.admin.queries import release_id_for_run
 from app.ingestion.admin.release_compose import compose_corpus_release
 from app.ingestion.admin.release_publish import publish_corpus_release
@@ -344,9 +344,9 @@ def test_unapproved_or_mismatched_act_cannot_be_composed(
         ].source_document_id
     db.add_all([act, source, candidate, entry])
     db.commit()
-    with pytest.raises(HTTPException) as error:
+    with pytest.raises(DomainError) as error:
         compose_corpus_release(db, _body(members), _actor(db))
-    assert error.value.status_code == 409
+    assert error.value.code == ErrorCode.CONFLICT
 
 
 def test_changed_member_is_blocked_before_build_and_publication(
@@ -368,7 +368,7 @@ def test_changed_member_is_blocked_before_build_and_publication(
     release.status = CorpusReleaseStatus.APPROVED
     db.add(release)
     db.commit()
-    with pytest.raises(HTTPException) as error:
+    with pytest.raises(DomainError) as error:
         publish_corpus_release(
             db,
             release.id,
@@ -418,7 +418,7 @@ def test_correcting_a_source_title_is_audited_and_keeps_composition_gates_clear(
         "previous_title": previous_title,
         "title": "Corrected source title",
     }
-    with pytest.raises(HTTPException) as error:
+    with pytest.raises(DomainError) as error:
         correct_source_document_title(
             db,
             source.id,
@@ -428,7 +428,7 @@ def test_correcting_a_source_title_is_audited_and_keeps_composition_gates_clear(
             reason="Source is verified.",
             current_user=_actor(db),
         )
-    assert error.value.status_code == 409
+    assert error.value.code == ErrorCode.CONFLICT
 
 
 def test_composite_build_reuses_vectors_promotes_and_preserves_conversation_pins(
@@ -619,9 +619,9 @@ def test_composition_rejects_stale_versions_and_conflicting_retries(
             body.version += "-changed"
         else:
             body.idempotency_key = f"another-{uuid.uuid4()}"
-    with pytest.raises(HTTPException) as error:
+    with pytest.raises(DomainError) as error:
         compose_corpus_release(db, body, actor)
-    assert error.value.status_code == 409
+    assert error.value.code == ErrorCode.CONFLICT
 
 
 @pytest.mark.parametrize(

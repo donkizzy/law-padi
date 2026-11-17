@@ -1,8 +1,8 @@
 import uuid
 
-from fastapi import HTTPException, status
 from sqlmodel import Session, select
 
+from app.core.errors import DomainError, ErrorCode
 from app.legal.enums import (
     IngestionStage,
 )
@@ -19,7 +19,7 @@ from app.legal.models import (
 def get_run(session: Session, run_id: uuid.UUID) -> IngestionRun:
     run = session.get(IngestionRun, run_id)
     if not run:
-        raise HTTPException(status_code=404, detail="Ingestion run not found")
+        raise DomainError(ErrorCode.NOT_FOUND, "Ingestion run not found")
     return run
 
 
@@ -30,9 +30,8 @@ def release_id_for_run(session: Session, run: IngestionRun) -> uuid.UUID:
         if ((release.validation_report or {}).get("composition") or {}).get(
             "run_id"
         ) != str(run.id):
-            raise HTTPException(
-                status_code=409,
-                detail="Composite run identity differs from its release",
+            raise DomainError(
+                ErrorCode.CONFLICT, "Composite run identity differs from its release"
             )
         return release.id
     original = session.exec(
@@ -52,9 +51,9 @@ def release_id_for_run(session: Session, run: IngestionRun) -> uuid.UUID:
         and not (item.validation_report or {}).get("composition")
     ]
     if len(originals) != 1:
-        raise HTTPException(
-            status_code=status.HTTP_409_CONFLICT,
-            detail="Ingestion run does not identify a single original corpus release",
+        raise DomainError(
+            ErrorCode.CONFLICT,
+            "Ingestion run does not identify a single original corpus release",
         )
     return originals[0].id
 
@@ -64,7 +63,7 @@ def get_source_document(
 ) -> SourceDocument:
     source = session.get(SourceDocument, source_document_id)
     if not source:
-        raise HTTPException(status_code=404, detail="Source document not found")
+        raise DomainError(ErrorCode.NOT_FOUND, "Source document not found")
     return source
 
 
@@ -78,7 +77,7 @@ def get_run_step(
         )
     ).first()
     if not step:
-        raise HTTPException(status_code=404, detail=f"{stage.value} step not found")
+        raise DomainError(ErrorCode.NOT_FOUND, f"{stage.value} step not found")
     return step
 
 
@@ -90,20 +89,19 @@ def get_candidate(session: Session, candidate_id: uuid.UUID) -> ExtractionCandid
         .execution_options(populate_existing=True)
     ).one_or_none()
     if not candidate:
-        raise HTTPException(status_code=404, detail="Review item not found")
+        raise DomainError(ErrorCode.NOT_FOUND, "Review item not found")
     return candidate
 
 
 def get_release(session: Session, release_id: uuid.UUID) -> CorpusRelease:
     release = session.get(CorpusRelease, release_id)
     if not release:
-        raise HTTPException(status_code=404, detail="Corpus release not found")
+        raise DomainError(ErrorCode.NOT_FOUND, "Corpus release not found")
     return release
 
 
 def check_expected_version(actual_version: int, expected_version: int) -> None:
     if actual_version != expected_version:
-        raise HTTPException(
-            status_code=status.HTTP_409_CONFLICT,
-            detail="The record was modified by another operation",
+        raise DomainError(
+            ErrorCode.CONFLICT, "The record was modified by another operation"
         )

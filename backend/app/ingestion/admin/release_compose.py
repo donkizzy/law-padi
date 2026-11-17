@@ -1,9 +1,9 @@
 import json
 import uuid
 
-from fastapi import HTTPException
 from sqlmodel import Session, col, select
 
+from app.core.errors import DomainError, ErrorCode
 from app.ingestion.admin.idempotency import (
     add_idempotency_record,
     idempotency_record_for_request,
@@ -75,8 +75,8 @@ def compose_corpus_release(
             .with_for_update()
         ).one_or_none()
         if member is None:
-            raise HTTPException(
-                status_code=404, detail="Member corpus release was not found"
+            raise DomainError(
+                ErrorCode.NOT_FOUND, "Member corpus release was not found"
             )
         if index == 0:
             # Concurrent identical requests serialize on the production base.
@@ -92,15 +92,15 @@ def compose_corpus_release(
         if (index == 0 and member.status != CorpusReleaseStatus.PRODUCTION) or (
             index > 0 and member.status != CorpusReleaseStatus.APPROVED
         ):
-            raise HTTPException(
-                status_code=409,
-                detail="Composition requires the current production base and approved Act releases",
+            raise DomainError(
+                ErrorCode.CONFLICT,
+                "Composition requires the current production base and approved Act releases",
             )
         entries = release_entries(session, member.id)
         try:
             snapshot = member_snapshot(session, member)
         except ValueError as exc:
-            raise HTTPException(status_code=409, detail=str(exc)) from exc
+            raise DomainError(ErrorCode.CONFLICT, str(exc)) from exc
         types = {item["type"] for item in snapshot["instruments"]}
         if (index == 0 and str(InstrumentType.CONSTITUTION) not in types) or (
             index > 0
@@ -108,21 +108,21 @@ def compose_corpus_release(
                 types != {str(InstrumentType.ACT)} or len(snapshot["instruments"]) != 1
             )
         ):
-            raise HTTPException(
-                status_code=409,
-                detail="The base must contain the Constitution; each added member must contain one Act",
+            raise DomainError(
+                ErrorCode.CONFLICT,
+                "The base must contain the Constitution; each added member must contain one Act",
             )
         if not member.source_manifest_hash:
-            raise HTTPException(
-                status_code=409,
-                detail="Each member requires a retained source manifest hash",
+            raise DomainError(
+                ErrorCode.CONFLICT,
+                "Each member requires a retained source manifest hash",
             )
         gates = release_source_and_review_gates(session, entries, release=member)
         gates.extend(act_review_gates(session, entries))
         if gates:
-            raise HTTPException(
-                status_code=409,
-                detail={
+            raise DomainError(
+                ErrorCode.CONFLICT,
+                {
                     "message": "Member source/review gates must pass before composition",
                     "release_id": str(member.id),
                     "gates": sorted(set(gates)),
@@ -135,25 +135,25 @@ def compose_corpus_release(
                 version.provision_id, version.id
             )
             if previous != version.id:
-                raise HTTPException(
-                    status_code=409,
-                    detail="Members contain conflicting versions of the same provision",
+                raise DomainError(
+                    ErrorCode.CONFLICT,
+                    "Members contain conflicting versions of the same provision",
                 )
             existing = union.setdefault(version.id, entry)
             if (existing.source_document_id, existing.ingestion_run_id) != (
                 entry.source_document_id,
                 entry.ingestion_run_id,
             ):
-                raise HTTPException(
-                    status_code=409,
-                    detail="Members disagree about an entry's review provenance",
+                raise DomainError(
+                    ErrorCode.CONFLICT,
+                    "Members disagree about an entry's review provenance",
                 )
         members.append(member)
         snapshots.append(snapshot)
     if session.exec(
         select(CorpusRelease).where(CorpusRelease.version == body.version)
     ).first():
-        raise HTTPException(status_code=409, detail="Release version already exists")
+        raise DomainError(ErrorCode.CONFLICT, "Release version already exists")
     release = CorpusRelease(version=body.version, parser_version="composite-v1")
     run = IngestionRun(
         created_by=current_user.id,

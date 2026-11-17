@@ -1,8 +1,8 @@
 import uuid
 
-from fastapi import HTTPException, status
 from sqlmodel import Session, col, select
 
+from app.core.errors import DomainError, ErrorCode
 from app.ingestion.admin.idempotency import (
     add_idempotency_record,
     idempotency_record_for_request,
@@ -61,7 +61,7 @@ def update_page_selection(
         select(IngestionRun).where(IngestionRun.id == run_id).with_for_update()
     ).one_or_none()
     if run is None:
-        raise HTTPException(status_code=404, detail="Ingestion run not found")
+        raise DomainError(ErrorCode.NOT_FOUND, "Ingestion run not found")
     check_expected_version(run.lock_version, body.expected_run_version)
     imported_review = (
         run.status == IngestionRunStatus.WAITING_FOR_REVIEW
@@ -72,24 +72,23 @@ def update_page_selection(
         run.status != IngestionRunStatus.WAITING_FOR_INPUT
         or run.current_stage != IngestionStage.AWAITING_PAGE_CONFIRMATION
     ):
-        raise HTTPException(
-            status_code=status.HTTP_409_CONFLICT,
-            detail="Page selection is not currently awaiting confirmation",
+        raise DomainError(
+            ErrorCode.CONFLICT, "Page selection is not currently awaiting confirmation"
         )
     all_pages = session.exec(
         select(SourcePage).where(SourcePage.run_id == run.id).with_for_update()
     ).all()
     requested_numbers = [item.page_number for item in body.pages]
     if len(requested_numbers) != len(set(requested_numbers)):
-        raise HTTPException(
-            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
-            detail="Each profiled page must be included exactly once",
+        raise DomainError(
+            ErrorCode.VALIDATION_ERROR,
+            "Each profiled page must be included exactly once",
         )
     profiled_numbers = {page.page_number for page in all_pages}
     if set(requested_numbers) != profiled_numbers:
-        raise HTTPException(
-            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
-            detail="Page selection must include every profiled page exactly once",
+        raise DomainError(
+            ErrorCode.VALIDATION_ERROR,
+            "Page selection must include every profiled page exactly once",
         )
     pages_by_number = {page.page_number: page for page in all_pages}
     if imported_review and any(
@@ -98,15 +97,15 @@ def update_page_selection(
         or not (page.inclusion_reason or "").strip()
         for page in body.pages
     ):
-        raise HTTPException(
-            status_code=422,
-            detail="Imported review pages require explicit inclusion decisions and reasons",
+        raise DomainError(
+            ErrorCode.VALIDATION_ERROR,
+            "Imported review pages require explicit inclusion decisions and reasons",
         )
     pages: list[SourcePage] = []
     for requested_page in body.pages:
         page = pages_by_number.get(requested_page.page_number)
         if not page:
-            raise HTTPException(status_code=404, detail="Source page not found")
+            raise DomainError(ErrorCode.NOT_FOUND, "Source page not found")
         check_expected_version(page.lock_version, requested_page.expected_version)
         page.inclusion_status = requested_page.inclusion_status
         page.inclusion_reason = requested_page.inclusion_reason
@@ -127,9 +126,9 @@ def update_page_selection(
                 candidate.status == ExtractionCandidateStatus.MATERIALIZED
                 or candidate.materialized_version_id
             ):
-                raise HTTPException(
-                    status_code=409,
-                    detail="Materialized runs cannot change page boundaries",
+                raise DomainError(
+                    ErrorCode.CONFLICT,
+                    "Materialized runs cannot change page boundaries",
                 )
             revalidate_review_page_coverage(session, candidate, included, current_user)
             if candidate.status in {
@@ -256,9 +255,9 @@ def pages_for_idempotency_record(
     run_id = payload.get("run_id")
     page_numbers = payload.get("page_numbers")
     if not isinstance(run_id, str) or not isinstance(page_numbers, list):
-        raise HTTPException(
-            status_code=status.HTTP_409_CONFLICT,
-            detail="Idempotent page-selection result is no longer available",
+        raise DomainError(
+            ErrorCode.CONFLICT,
+            "Idempotent page-selection result is no longer available",
         )
     numbers = [number for number in page_numbers if isinstance(number, int)]
     if not numbers:
@@ -272,8 +271,8 @@ def pages_for_idempotency_record(
         .order_by(col(SourcePage.page_number))
     ).all()
     if len(pages) != len(numbers):
-        raise HTTPException(
-            status_code=status.HTTP_409_CONFLICT,
-            detail="Idempotent page-selection result is no longer available",
+        raise DomainError(
+            ErrorCode.CONFLICT,
+            "Idempotent page-selection result is no longer available",
         )
     return list(pages)

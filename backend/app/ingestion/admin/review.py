@@ -1,8 +1,8 @@
 import uuid
 
-from fastapi import HTTPException, status
 from sqlmodel import Session, select
 
+from app.core.errors import DomainError, ErrorCode
 from app.ingestion.admin.idempotency import (
     add_idempotency_record,
     idempotency_record_for_request,
@@ -68,9 +68,9 @@ def update_review_candidate(
             else None
         )
         if not revision:
-            raise HTTPException(
-                status_code=status.HTTP_409_CONFLICT,
-                detail="Idempotent review revision result is no longer available",
+            raise DomainError(
+                ErrorCode.CONFLICT,
+                "Idempotent review revision result is no longer available",
             )
         return revision
     candidate = get_candidate(session, candidate_id)
@@ -168,8 +168,8 @@ def derive_review_candidate(
         original.materialized_version_id
         or original.status == ExtractionCandidateStatus.MATERIALIZED
     ):
-        raise HTTPException(
-            status_code=409, detail="Derive from an unmaterialized review candidate"
+        raise DomainError(
+            ErrorCode.CONFLICT, "Derive from an unmaterialized review candidate"
         )
     candidate = ExtractionCandidate(
         run_id=original.run_id,
@@ -248,12 +248,12 @@ def validate_review_patch(
         or candidate.materialized_version_id
         or candidate.materialized_provision_id
     ):
-        raise HTTPException(
-            status_code=409, detail="Materialized candidates cannot be revised"
+        raise DomainError(
+            ErrorCode.CONFLICT, "Materialized candidates cannot be revised"
         )
     run = session.get(IngestionRun, candidate.run_id)
     if not run or run.status == IngestionRunStatus.CANCELLED:
-        raise HTTPException(status_code=409, detail="Cancelled runs cannot be revised")
+        raise DomainError(ErrorCode.CONFLICT, "Cancelled runs cannot be revised")
     # Serialize graph edits within a run, including path uniqueness checks.
     session.exec(
         select(IngestionRun).where(IngestionRun.id == run.id).with_for_update()
@@ -267,8 +267,8 @@ def validate_review_patch(
         )
     ).first()
     if duplicate:
-        raise HTTPException(
-            status_code=409, detail="Canonical path already exists in this run"
+        raise DomainError(
+            ErrorCode.CONFLICT, "Canonical path already exists in this run"
         )
     parent_id = (
         body.parent_candidate_id
@@ -278,8 +278,8 @@ def validate_review_patch(
     visited = {candidate.id}
     while parent_id:
         if parent_id in visited:
-            raise HTTPException(
-                status_code=422, detail="Candidate parent would create a cycle"
+            raise DomainError(
+                ErrorCode.VALIDATION_ERROR, "Candidate parent would create a cycle"
             )
         visited.add(parent_id)
         parent = session.get(ExtractionCandidate, parent_id)
@@ -288,8 +288,9 @@ def validate_review_patch(
             or parent.run_id != candidate.run_id
             or parent.source_document_id != candidate.source_document_id
         ):
-            raise HTTPException(
-                status_code=422, detail="Parent must belong to the same source and run"
+            raise DomainError(
+                ErrorCode.VALIDATION_ERROR,
+                "Parent must belong to the same source and run",
             )
         parent_id = parent.parent_candidate_id
     start = (
@@ -304,16 +305,16 @@ def validate_review_patch(
     )
     source = session.get(SourceDocument, candidate.source_document_id)
     if start is not None and end is not None and end < start:
-        raise HTTPException(
-            status_code=422, detail="Source end page precedes start page"
+        raise DomainError(
+            ErrorCode.VALIDATION_ERROR, "Source end page precedes start page"
         )
     if (
         source
         and source.page_count
         and any(page and page > source.page_count for page in (start, end))
     ):
-        raise HTTPException(
-            status_code=422, detail="Source page exceeds the document page count"
+        raise DomainError(
+            ErrorCode.VALIDATION_ERROR, "Source page exceeds the document page count"
         )
     if body.model_fields_set & {"source_spans", "source_page_start", "source_page_end"}:
         spans = (
@@ -330,9 +331,9 @@ def validate_review_patch(
                 or (start is not None and page < start)
                 or (end is not None and page > end)
             ):
-                raise HTTPException(
-                    status_code=422,
-                    detail="Each source span must name a page within the candidate range",
+                raise DomainError(
+                    ErrorCode.VALIDATION_ERROR,
+                    "Each source span must name a page within the candidate range",
                 )
 
 
@@ -357,9 +358,9 @@ def decide_review_candidate(
     if body.decision == ReviewDecisionType.APPROVE and has_open_blocking_issue(
         session, candidate.id
     ):
-        raise HTTPException(
-            status_code=status.HTTP_409_CONFLICT,
-            detail="Blocking review issues must be resolved before approval",
+        raise DomainError(
+            ErrorCode.CONFLICT,
+            "Blocking review issues must be resolved before approval",
         )
     decision = ReviewDecisionRecord(
         candidate_id=candidate.id,
@@ -406,24 +407,23 @@ def update_review_issue(
     if record:
         issue = session.get(ReviewIssue, issue_id)
         if issue is None:
-            raise HTTPException(status_code=404, detail="Review issue not found")
+            raise DomainError(ErrorCode.NOT_FOUND, "Review issue not found")
         return issue
     issue = session.exec(
         select(ReviewIssue).where(ReviewIssue.id == issue_id).with_for_update()
     ).one_or_none()
     if issue is None:
-        raise HTTPException(status_code=404, detail="Review issue not found")
+        raise DomainError(ErrorCode.NOT_FOUND, "Review issue not found")
     if issue.status == ReviewIssueStatus.RESOLVED:
-        raise HTTPException(status_code=409, detail="Review issue is already resolved")
+        raise DomainError(ErrorCode.CONFLICT, "Review issue is already resolved")
     if issue.blocking and not current_user.is_superuser:
-        raise HTTPException(
-            status_code=409,
-            detail="Blocking issues must be resolved by candidate revalidation",
+        raise DomainError(
+            ErrorCode.CONFLICT,
+            "Blocking issues must be resolved by candidate revalidation",
         )
     if issue.blocking and not body.superuser_override_reason:
-        raise HTTPException(
-            status_code=409,
-            detail="A blocking issue override requires a reason",
+        raise DomainError(
+            ErrorCode.CONFLICT, "A blocking issue override requires a reason"
         )
     now = get_datetime_utc()
     issue.status = ReviewIssueStatus.RESOLVED

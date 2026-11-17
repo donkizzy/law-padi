@@ -2,10 +2,10 @@ from datetime import UTC, datetime, time
 from pathlib import Path
 from typing import BinaryIO
 
-from fastapi import HTTPException
 from sqlmodel import Session, select
 
 from app.core.config import settings
+from app.core.errors import DomainError, ErrorCode
 from app.ingestion.admin.uploads import (
     ensure_allowed_instrument_type,
     get_or_create_instrument,
@@ -57,9 +57,9 @@ def finalize_verified_upload(
             )
             or instrument.instrument_type != upload.instrument_type
         ):
-            raise HTTPException(
-                status_code=409,
-                detail="Source hash already belongs to a different legal instrument",
+            raise DomainError(
+                ErrorCode.CONFLICT,
+                "Source hash already belongs to a different legal instrument",
             )
         ensure_allowed_instrument_type(upload.instrument_type)
         if not existing_source.storage_key:

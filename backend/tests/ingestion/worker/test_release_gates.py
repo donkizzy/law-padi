@@ -3,10 +3,10 @@ from datetime import date
 from pathlib import Path
 
 import pytest
-from fastapi import HTTPException
 from sqlmodel import Session, select
 
 from app.core.config import settings
+from app.core.errors import DomainError, ErrorCode
 from app.ingestion.admin.release_gates import release_source_and_review_gates
 from app.ingestion.admin.release_publish import publish_corpus_release
 from app.legal.enums import (
@@ -83,7 +83,7 @@ def test_an_act_only_release_cannot_be_published(
     db.commit()
     db.refresh(release)
 
-    with pytest.raises(HTTPException) as refused:
+    with pytest.raises(DomainError) as refused:
         publish_corpus_release(
             db,
             release.id,
@@ -93,7 +93,7 @@ def test_an_act_only_release_cannot_be_published(
             superuser_override_reason=None,
         )
 
-    assert refused.value.status_code == 409
+    assert refused.value.code == ErrorCode.CONFLICT
     assert "contains the Constitution" in str(refused.value.detail)
     db.refresh(release)
     assert release.status == CorpusReleaseStatus.APPROVED

@@ -1,8 +1,8 @@
 import uuid
 
-from fastapi import HTTPException, status
 from sqlmodel import Session, col, select
 
+from app.core.errors import DomainError, ErrorCode
 from app.ingestion.admin.idempotency import (
     add_idempotency_record,
     idempotency_payload_hash,
@@ -75,17 +75,16 @@ def publish_corpus_release(
             else None
         )
         if not promotion:
-            raise HTTPException(
-                status_code=status.HTTP_409_CONFLICT,
-                detail="Idempotent publication result is no longer available",
+            raise DomainError(
+                ErrorCode.CONFLICT,
+                "Idempotent publication result is no longer available",
             )
         return release, promotion
     release = get_release(session, release_id)
     check_expected_version(release.lock_version, expected_version)
     if release.status != CorpusReleaseStatus.APPROVED:
-        raise HTTPException(
-            status_code=status.HTTP_409_CONFLICT,
-            detail="Release must validate cleanly before publication",
+        raise DomainError(
+            ErrorCode.CONFLICT, "Release must validate cleanly before publication"
         )
     # Publication replaces the whole live corpus, so an Act-only release (a
     # member for composition) would take the Constitution away from readers.
@@ -93,29 +92,25 @@ def publish_corpus_release(
         instrument.instrument_type
         for instrument in release_instruments(session, release.id).values()
     }:
-        raise HTTPException(
-            status_code=status.HTTP_409_CONFLICT,
-            detail=(
-                "Only a release that contains the Constitution can be published; "
-                "compose Act releases with the Constitution first"
-            ),
+        raise DomainError(
+            ErrorCode.CONFLICT,
+            "Only a release that contains the Constitution can be published; compose Act releases with the Constitution first",
         )
     entries = session.exec(
         select(CorpusReleaseEntry).where(CorpusReleaseEntry.release_id == release.id)
     ).all()
     quality_gates = release_source_and_review_gates(session, entries, release=release)
     if quality_gates:
-        raise HTTPException(
-            status_code=status.HTTP_409_CONFLICT,
-            detail={
+        raise DomainError(
+            ErrorCode.CONFLICT,
+            {
                 "message": "Release source/review gates no longer pass",
                 "gates": quality_gates,
             },
         )
     if not ready_retrieval_index_build(session, release.id):
-        raise HTTPException(
-            status_code=status.HTTP_409_CONFLICT,
-            detail="Release does not have a ready pgvector index build",
+        raise DomainError(
+            ErrorCode.CONFLICT, "Release does not have a ready pgvector index build"
         )
     enforce_actor_separation(
         session,
@@ -151,9 +146,8 @@ def publish_pgvector_release(
     check_expected_version(release.lock_version, expected_version)
     build = ready_retrieval_index_build(session, release.id)
     if build is None:
-        raise HTTPException(
-            status_code=status.HTTP_409_CONFLICT,
-            detail="Release does not have a ready pgvector index build",
+        raise DomainError(
+            ErrorCode.CONFLICT, "Release does not have a ready pgvector index build"
         )
     report = validate_index_build(
         session,
@@ -162,9 +156,8 @@ def publish_pgvector_release(
     )
     build.validation_report = report
     if not report["is_valid"] or retrieval_index_build_validation_gates(build):
-        raise HTTPException(
-            status_code=status.HTTP_409_CONFLICT,
-            detail="pgvector index validation no longer passes",
+        raise DomainError(
+            ErrorCode.CONFLICT, "pgvector index validation no longer passes"
         )
     index_kind = build.index_kind
     target = session.exec(
@@ -361,7 +354,6 @@ def enforce_actor_separation(
         )
         session.commit()
         return
-    raise HTTPException(
-        status_code=status.HTTP_409_CONFLICT,
-        detail="Publisher must differ from the source uploader",
+    raise DomainError(
+        ErrorCode.CONFLICT, "Publisher must differ from the source uploader"
     )

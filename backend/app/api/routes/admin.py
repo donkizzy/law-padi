@@ -12,6 +12,7 @@ from sqlmodel import Session, col, func, select
 
 from app.api.deps import CurrentUser, SessionDep
 from app.core.config import settings
+from app.core.errors import DomainError
 from app.ingestion.admin.alerts import read_admin_operational_alerts
 from app.ingestion.admin.pages import update_page_selection
 from app.ingestion.admin.release_compose import compose_corpus_release
@@ -1260,7 +1261,7 @@ def _require_any_admin(session: Session, current_user: CurrentUser) -> None:
         try:
             require_admin_role(session, current_user, role)
             return
-        except HTTPException:
+        except DomainError:
             continue
     raise HTTPException(
         status_code=403, detail="The user does not have an ingestion admin role"

@@ -18,6 +18,7 @@ def retryable_error(exc: Exception) -> bool:
     import httpx
     from fastapi import HTTPException
 
+    from app.core.errors import DomainError, ErrorCode
     from app.ingestion.runtime.retry import retryable_status
 
     if isinstance(exc, IngestionPermanentError):
@@ -28,6 +29,8 @@ def retryable_error(exc: Exception) -> bool:
         return retryable_status(exc.response.status_code)
     if isinstance(exc, HTTPException):
         return retryable_status(exc.status_code)
+    if isinstance(exc, DomainError):
+        return exc.code in {ErrorCode.BAD_GATEWAY, ErrorCode.RATE_LIMIT_EXCEEDED}
     if isinstance(exc.__cause__, Exception):
         return retryable_error(exc.__cause__)
     explicit = getattr(exc, "retryable", None)
