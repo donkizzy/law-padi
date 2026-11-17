@@ -219,7 +219,23 @@ month's spend ledger.
 
 Then redeploy `api` (or wait for its retry): the pre-deploy step runs
 `alembic upgrade head`, which does nothing when the dump is already at the
-build's head, and the deploy goes live only when `/readyz` answers. Confirm it
+build's head, and the deploy goes live only when `/readyz` answers.
+
+The first cutover is different: production is older than this build, so the
+pre-deploy step applies the pending migrations (`alembic history -r
+<neon revision>:head` lists them). Two of them stop rather than lose data, and
+change nothing when they do:
+
+- `a3c3553158d1` makes email addresses unique regardless of case. It stops if
+  two accounts share an address that differs only in case, and prints how many.
+  Find them with `SELECT lower(email) FROM "user" GROUP BY 1 HAVING count(*) > 1`,
+  resolve each account, and redeploy.
+- `d8e9f0a1b2c3` removes the unused remote-vector tables and columns. It stops
+  if any history remains in `vector_index` or the promotion attempts'
+  collection columns. Export those rows if you want them, then set
+  `ALLOW_DROP_VECTOR_HISTORY=1` on `api` for one deploy and remove it after.
+
+Run both checks against Neon before the freeze so neither can stop the cutover. Confirm it
 from your machine with the origin credential in a file, never on the command
 line:
 
