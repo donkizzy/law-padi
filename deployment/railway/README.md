@@ -149,7 +149,7 @@ anything into a terminal history.
 | `DEEPSEEK_API_KEY` | shared | The current provider key. |
 | `HUGGINGFACE_API_TOKEN` | shared | The current token. |
 | `R2_ENDPOINT_URL`, `R2_BUCKET_NAME`, `R2_ACCESS_KEY_ID`, `R2_SECRET_ACCESS_KEY` | shared | The current source-document bucket and its scoped key. |
-| `SENTRY_DSN` | `api` and `chat-worker` | Optional; reporting is off while it is unset. Set on each service, not as a shared variable. |
+| `SENTRY_DSN` | `api`, `chat-worker` and `ingestion-worker` | Optional; reporting is off while it is unset. Set on each service, not as a shared variable. |
 
 ### Per service
 

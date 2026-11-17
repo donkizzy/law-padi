@@ -7,6 +7,8 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
 
+import pytest
+
 REPO_ROOT = Path(__file__).resolve().parents[3]
 WORKER_ROOT = REPO_ROOT / "services" / "ingestion-worker"
 sys.path.insert(0, str(WORKER_ROOT))
@@ -302,3 +304,31 @@ def test_worker_shutdown_closes_embedding_clients() -> None:
     provider = embedding_provider_for_profile(profile)
     run_worker(max_iterations=0)
     assert provider.client.is_closed
+
+
+def test_worker_sentry_initialisation_is_a_noop_without_a_dsn(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    from ingestion_worker import cli
+
+    from app.core import sentry
+    from app.core.config import settings
+
+    monkeypatch.setattr(settings, "FASTAPI_ENV", "production")
+    monkeypatch.setattr(settings, "SENTRY_DSN", None)
+    calls: list[tuple[str, bool]] = []
+
+    def init(component: str) -> bool:
+        enabled = sentry.init_sentry(component)
+        calls.append((component, enabled))
+        return enabled
+
+    def unexpected_init(**_kwargs: Any) -> None:
+        raise AssertionError("The Sentry SDK must stay off without SENTRY_DSN")
+
+    monkeypatch.setattr(sentry.sentry_sdk, "init", unexpected_init)
+    monkeypatch.setattr(cli, "init_sentry", init)
+    monkeypatch.setattr(cli, "configure_logging", lambda **_kwargs: None)
+    monkeypatch.setattr(cli, "_signal_stop_flag", lambda: lambda: True)
+    assert cli.main() == 0
+    assert calls == [("ingestion-worker", False)]

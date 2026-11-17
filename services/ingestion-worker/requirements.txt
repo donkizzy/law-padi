@@ -11,3 +11,4 @@ pwdlib[argon2,bcrypt]>=0.3.0
 pypdf>=6.18.1,<7.0.0
 sqlmodel>=0.0.42,<1.0.0
 pgvector>=0.4.2,<1.0.0
+sentry-sdk==2.66.1

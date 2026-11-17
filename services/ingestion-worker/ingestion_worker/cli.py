@@ -15,6 +15,7 @@ from sqlmodel import Session
 from app.core.db import engine
 from app.core.heartbeat import Heartbeat
 from app.core.logs import configure_logging
+from app.core.sentry import init_sentry
 from app.ingestion.common import enum_value
 from app.ingestion.embedding import close_embedding_providers
 from app.ingestion.runtime.queue import drain_outbox_batch
@@ -212,6 +213,7 @@ class JsonLinesOutboxPublisher:
 
 def main() -> int:
     configure_logging(level=os.getenv("INGESTION_WORKER_LOG_LEVEL") or None)
+    init_sentry("ingestion-worker")
     stop_requested = _signal_stop_flag()
     stats = run_worker(stop_requested=stop_requested)
     logger.info(
