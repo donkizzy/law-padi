@@ -1230,6 +1230,20 @@ export type EmbeddingProviderKind = 'openai' | 'huggingface_tei';
 export type EmbeddingRunStatus = 'pending' | 'running' | 'benchmarking' | 'succeeded' | 'failed';
 
 /**
+ * ErrorResponse
+ */
+export type ErrorResponse = {
+    /**
+     * Code
+     */
+    code: string;
+    /**
+     * Detail
+     */
+    detail: string;
+};
+
+/**
  * EvidenceItem
  */
 export type EvidenceItem = {
@@ -1367,16 +1381,6 @@ export type FeedbackPublic = {
      * Updated At
      */
     updated_at: string;
-};
-
-/**
- * HTTPValidationError
- */
-export type HTTPValidationError = {
-    /**
-     * Detail
-     */
-    detail?: Array<ValidationError>;
 };
 
 /**
@@ -3776,31 +3780,19 @@ export type UsersPublic = {
 };
 
 /**
- * ValidationError
+ * ValidationErrorResponse
  */
-export type ValidationError = {
+export type ValidationErrorResponse = {
     /**
-     * Location
+     * Code
      */
-    loc: Array<string | number>;
+    code: string;
     /**
-     * Message
+     * Detail
      */
-    msg: string;
-    /**
-     * Error Type
-     */
-    type: string;
-    /**
-     * Input
-     */
-    input?: unknown;
-    /**
-     * Context
-     */
-    ctx?: {
+    detail: Array<{
         [key: string]: unknown;
-    };
+    }>;
 };
 
 /**
@@ -3822,9 +3814,39 @@ export type loginLoginAccessTokenData = {
 
 export type loginLoginAccessTokenErrors = {
     /**
-     * Validation Error
+     * Bad Request
      */
-    422: HTTPValidationError;
+    400: ErrorResponse;
+    /**
+     * Unauthorized
+     */
+    401: ErrorResponse;
+    /**
+     * Forbidden
+     */
+    403: ErrorResponse;
+    /**
+     * Not Found
+     */
+    404: ErrorResponse;
+    /**
+     * Conflict
+     */
+    409: ErrorResponse;
+    /**
+     * Response 422 Login-Login Access Token
+     *
+     * Unprocessable Content
+     */
+    422: ErrorResponse | ValidationErrorResponse;
+    /**
+     * Too Many Requests
+     */
+    429: ErrorResponse;
+    /**
+     * Service Unavailable
+     */
+    503: ErrorResponse;
 };
 
 export type loginLoginAccessTokenError = loginLoginAccessTokenErrors[keyof loginLoginAccessTokenErrors];
@@ -3847,13 +3869,39 @@ export type loginRefreshAccessTokenData = {
 
 export type loginRefreshAccessTokenErrors = {
     /**
+     * Bad Request
+     */
+    400: ErrorResponse;
+    /**
      * No usable session
      */
-    401: Message;
+    401: ErrorResponse;
     /**
-     * Validation Error
+     * Forbidden
      */
-    422: HTTPValidationError;
+    403: ErrorResponse;
+    /**
+     * Not Found
+     */
+    404: ErrorResponse;
+    /**
+     * Conflict
+     */
+    409: ErrorResponse;
+    /**
+     * Response 422 Login-Refresh Access Token
+     *
+     * Unprocessable Content
+     */
+    422: ErrorResponse | ValidationErrorResponse;
+    /**
+     * Too Many Requests
+     */
+    429: ErrorResponse;
+    /**
+     * Service Unavailable
+     */
+    503: ErrorResponse;
 };
 
 export type loginRefreshAccessTokenError = loginRefreshAccessTokenErrors[keyof loginRefreshAccessTokenErrors];
@@ -3876,9 +3924,39 @@ export type loginLogoutData = {
 
 export type loginLogoutErrors = {
     /**
-     * Validation Error
+     * Bad Request
      */
-    422: HTTPValidationError;
+    400: ErrorResponse;
+    /**
+     * Unauthorized
+     */
+    401: ErrorResponse;
+    /**
+     * Forbidden
+     */
+    403: ErrorResponse;
+    /**
+     * Not Found
+     */
+    404: ErrorResponse;
+    /**
+     * Conflict
+     */
+    409: ErrorResponse;
+    /**
+     * Response 422 Login-Logout
+     *
+     * Unprocessable Content
+     */
+    422: ErrorResponse | ValidationErrorResponse;
+    /**
+     * Too Many Requests
+     */
+    429: ErrorResponse;
+    /**
+     * Service Unavailable
+     */
+    503: ErrorResponse;
 };
 
 export type loginLogoutError = loginLogoutErrors[keyof loginLogoutErrors];
@@ -3898,6 +3976,45 @@ export type loginTestTokenData = {
     query?: never;
     url: '/api/v1/login/test-token';
 };
+
+export type loginTestTokenErrors = {
+    /**
+     * Bad Request
+     */
+    400: ErrorResponse;
+    /**
+     * Unauthorized
+     */
+    401: ErrorResponse;
+    /**
+     * Forbidden
+     */
+    403: ErrorResponse;
+    /**
+     * Not Found
+     */
+    404: ErrorResponse;
+    /**
+     * Conflict
+     */
+    409: ErrorResponse;
+    /**
+     * Response 422 Login-Test Token
+     *
+     * Unprocessable Content
+     */
+    422: ErrorResponse | ValidationErrorResponse;
+    /**
+     * Too Many Requests
+     */
+    429: ErrorResponse;
+    /**
+     * Service Unavailable
+     */
+    503: ErrorResponse;
+};
+
+export type loginTestTokenError = loginTestTokenErrors[keyof loginTestTokenErrors];
 
 export type loginTestTokenResponses = {
     /**
@@ -3922,9 +4039,39 @@ export type loginRecoverPasswordData = {
 
 export type loginRecoverPasswordErrors = {
     /**
-     * Validation Error
+     * Bad Request
      */
-    422: HTTPValidationError;
+    400: ErrorResponse;
+    /**
+     * Unauthorized
+     */
+    401: ErrorResponse;
+    /**
+     * Forbidden
+     */
+    403: ErrorResponse;
+    /**
+     * Not Found
+     */
+    404: ErrorResponse;
+    /**
+     * Conflict
+     */
+    409: ErrorResponse;
+    /**
+     * Response 422 Login-Recover Password
+     *
+     * Unprocessable Content
+     */
+    422: ErrorResponse | ValidationErrorResponse;
+    /**
+     * Too Many Requests
+     */
+    429: ErrorResponse;
+    /**
+     * Service Unavailable
+     */
+    503: ErrorResponse;
 };
 
 export type loginRecoverPasswordError = loginRecoverPasswordErrors[keyof loginRecoverPasswordErrors];
@@ -3947,9 +4094,39 @@ export type loginResetPasswordData = {
 
 export type loginResetPasswordErrors = {
     /**
-     * Validation Error
+     * Bad Request
      */
-    422: HTTPValidationError;
+    400: ErrorResponse;
+    /**
+     * Unauthorized
+     */
+    401: ErrorResponse;
+    /**
+     * Forbidden
+     */
+    403: ErrorResponse;
+    /**
+     * Not Found
+     */
+    404: ErrorResponse;
+    /**
+     * Conflict
+     */
+    409: ErrorResponse;
+    /**
+     * Response 422 Login-Reset Password
+     *
+     * Unprocessable Content
+     */
+    422: ErrorResponse | ValidationErrorResponse;
+    /**
+     * Too Many Requests
+     */
+    429: ErrorResponse;
+    /**
+     * Service Unavailable
+     */
+    503: ErrorResponse;
 };
 
 export type loginResetPasswordError = loginResetPasswordErrors[keyof loginResetPasswordErrors];
@@ -3977,9 +4154,39 @@ export type loginRecoverPasswordHtmlContentData = {
 
 export type loginRecoverPasswordHtmlContentErrors = {
     /**
-     * Validation Error
+     * Bad Request
      */
-    422: HTTPValidationError;
+    400: ErrorResponse;
+    /**
+     * Unauthorized
+     */
+    401: ErrorResponse;
+    /**
+     * Forbidden
+     */
+    403: ErrorResponse;
+    /**
+     * Not Found
+     */
+    404: ErrorResponse;
+    /**
+     * Conflict
+     */
+    409: ErrorResponse;
+    /**
+     * Response 422 Login-Recover Password Html Content
+     *
+     * Unprocessable Content
+     */
+    422: ErrorResponse | ValidationErrorResponse;
+    /**
+     * Too Many Requests
+     */
+    429: ErrorResponse;
+    /**
+     * Service Unavailable
+     */
+    503: ErrorResponse;
 };
 
 export type loginRecoverPasswordHtmlContentError = loginRecoverPasswordHtmlContentErrors[keyof loginRecoverPasswordHtmlContentErrors];
@@ -4011,9 +4218,39 @@ export type usersReadUsersData = {
 
 export type usersReadUsersErrors = {
     /**
-     * Validation Error
+     * Bad Request
      */
-    422: HTTPValidationError;
+    400: ErrorResponse;
+    /**
+     * Unauthorized
+     */
+    401: ErrorResponse;
+    /**
+     * Forbidden
+     */
+    403: ErrorResponse;
+    /**
+     * Not Found
+     */
+    404: ErrorResponse;
+    /**
+     * Conflict
+     */
+    409: ErrorResponse;
+    /**
+     * Response 422 Users-Read Users
+     *
+     * Unprocessable Content
+     */
+    422: ErrorResponse | ValidationErrorResponse;
+    /**
+     * Too Many Requests
+     */
+    429: ErrorResponse;
+    /**
+     * Service Unavailable
+     */
+    503: ErrorResponse;
 };
 
 export type usersReadUsersError = usersReadUsersErrors[keyof usersReadUsersErrors];
@@ -4036,9 +4273,39 @@ export type usersCreateUserData = {
 
 export type usersCreateUserErrors = {
     /**
-     * Validation Error
+     * Bad Request
      */
-    422: HTTPValidationError;
+    400: ErrorResponse;
+    /**
+     * Unauthorized
+     */
+    401: ErrorResponse;
+    /**
+     * Forbidden
+     */
+    403: ErrorResponse;
+    /**
+     * Not Found
+     */
+    404: ErrorResponse;
+    /**
+     * Conflict
+     */
+    409: ErrorResponse;
+    /**
+     * Response 422 Users-Create User
+     *
+     * Unprocessable Content
+     */
+    422: ErrorResponse | ValidationErrorResponse;
+    /**
+     * Too Many Requests
+     */
+    429: ErrorResponse;
+    /**
+     * Service Unavailable
+     */
+    503: ErrorResponse;
 };
 
 export type usersCreateUserError = usersCreateUserErrors[keyof usersCreateUserErrors];
@@ -4061,9 +4328,39 @@ export type usersDeleteUserMeData = {
 
 export type usersDeleteUserMeErrors = {
     /**
-     * Validation Error
+     * Bad Request
      */
-    422: HTTPValidationError;
+    400: ErrorResponse;
+    /**
+     * Unauthorized
+     */
+    401: ErrorResponse;
+    /**
+     * Forbidden
+     */
+    403: ErrorResponse;
+    /**
+     * Not Found
+     */
+    404: ErrorResponse;
+    /**
+     * Conflict
+     */
+    409: ErrorResponse;
+    /**
+     * Response 422 Users-Delete User Me
+     *
+     * Unprocessable Content
+     */
+    422: ErrorResponse | ValidationErrorResponse;
+    /**
+     * Too Many Requests
+     */
+    429: ErrorResponse;
+    /**
+     * Service Unavailable
+     */
+    503: ErrorResponse;
 };
 
 export type usersDeleteUserMeError = usersDeleteUserMeErrors[keyof usersDeleteUserMeErrors];
@@ -4084,6 +4381,45 @@ export type usersReadUserMeData = {
     url: '/api/v1/users/me';
 };
 
+export type usersReadUserMeErrors = {
+    /**
+     * Bad Request
+     */
+    400: ErrorResponse;
+    /**
+     * Unauthorized
+     */
+    401: ErrorResponse;
+    /**
+     * Forbidden
+     */
+    403: ErrorResponse;
+    /**
+     * Not Found
+     */
+    404: ErrorResponse;
+    /**
+     * Conflict
+     */
+    409: ErrorResponse;
+    /**
+     * Response 422 Users-Read User Me
+     *
+     * Unprocessable Content
+     */
+    422: ErrorResponse | ValidationErrorResponse;
+    /**
+     * Too Many Requests
+     */
+    429: ErrorResponse;
+    /**
+     * Service Unavailable
+     */
+    503: ErrorResponse;
+};
+
+export type usersReadUserMeError = usersReadUserMeErrors[keyof usersReadUserMeErrors];
+
 export type usersReadUserMeResponses = {
     /**
      * Successful Response
@@ -4102,9 +4438,39 @@ export type usersUpdateUserMeData = {
 
 export type usersUpdateUserMeErrors = {
     /**
-     * Validation Error
+     * Bad Request
      */
-    422: HTTPValidationError;
+    400: ErrorResponse;
+    /**
+     * Unauthorized
+     */
+    401: ErrorResponse;
+    /**
+     * Forbidden
+     */
+    403: ErrorResponse;
+    /**
+     * Not Found
+     */
+    404: ErrorResponse;
+    /**
+     * Conflict
+     */
+    409: ErrorResponse;
+    /**
+     * Response 422 Users-Update User Me
+     *
+     * Unprocessable Content
+     */
+    422: ErrorResponse | ValidationErrorResponse;
+    /**
+     * Too Many Requests
+     */
+    429: ErrorResponse;
+    /**
+     * Service Unavailable
+     */
+    503: ErrorResponse;
 };
 
 export type usersUpdateUserMeError = usersUpdateUserMeErrors[keyof usersUpdateUserMeErrors];
@@ -4127,9 +4493,39 @@ export type usersRequestEmailChangeData = {
 
 export type usersRequestEmailChangeErrors = {
     /**
-     * Validation Error
+     * Bad Request
      */
-    422: HTTPValidationError;
+    400: ErrorResponse;
+    /**
+     * Unauthorized
+     */
+    401: ErrorResponse;
+    /**
+     * Forbidden
+     */
+    403: ErrorResponse;
+    /**
+     * Not Found
+     */
+    404: ErrorResponse;
+    /**
+     * Conflict
+     */
+    409: ErrorResponse;
+    /**
+     * Response 422 Users-Request Email Change
+     *
+     * Unprocessable Content
+     */
+    422: ErrorResponse | ValidationErrorResponse;
+    /**
+     * Too Many Requests
+     */
+    429: ErrorResponse;
+    /**
+     * Service Unavailable
+     */
+    503: ErrorResponse;
 };
 
 export type usersRequestEmailChangeError = usersRequestEmailChangeErrors[keyof usersRequestEmailChangeErrors];
@@ -4152,9 +4548,39 @@ export type usersUpdatePasswordMeData = {
 
 export type usersUpdatePasswordMeErrors = {
     /**
-     * Validation Error
+     * Bad Request
      */
-    422: HTTPValidationError;
+    400: ErrorResponse;
+    /**
+     * Unauthorized
+     */
+    401: ErrorResponse;
+    /**
+     * Forbidden
+     */
+    403: ErrorResponse;
+    /**
+     * Not Found
+     */
+    404: ErrorResponse;
+    /**
+     * Conflict
+     */
+    409: ErrorResponse;
+    /**
+     * Response 422 Users-Update Password Me
+     *
+     * Unprocessable Content
+     */
+    422: ErrorResponse | ValidationErrorResponse;
+    /**
+     * Too Many Requests
+     */
+    429: ErrorResponse;
+    /**
+     * Service Unavailable
+     */
+    503: ErrorResponse;
 };
 
 export type usersUpdatePasswordMeError = usersUpdatePasswordMeErrors[keyof usersUpdatePasswordMeErrors];
@@ -4177,9 +4603,39 @@ export type usersRegisterUserData = {
 
 export type usersRegisterUserErrors = {
     /**
-     * Validation Error
+     * Bad Request
      */
-    422: HTTPValidationError;
+    400: ErrorResponse;
+    /**
+     * Unauthorized
+     */
+    401: ErrorResponse;
+    /**
+     * Forbidden
+     */
+    403: ErrorResponse;
+    /**
+     * Not Found
+     */
+    404: ErrorResponse;
+    /**
+     * Conflict
+     */
+    409: ErrorResponse;
+    /**
+     * Response 422 Users-Register User
+     *
+     * Unprocessable Content
+     */
+    422: ErrorResponse | ValidationErrorResponse;
+    /**
+     * Too Many Requests
+     */
+    429: ErrorResponse;
+    /**
+     * Service Unavailable
+     */
+    503: ErrorResponse;
 };
 
 export type usersRegisterUserError = usersRegisterUserErrors[keyof usersRegisterUserErrors];
@@ -4202,9 +4658,39 @@ export type usersVerifyEmailData = {
 
 export type usersVerifyEmailErrors = {
     /**
-     * Validation Error
+     * Bad Request
      */
-    422: HTTPValidationError;
+    400: ErrorResponse;
+    /**
+     * Unauthorized
+     */
+    401: ErrorResponse;
+    /**
+     * Forbidden
+     */
+    403: ErrorResponse;
+    /**
+     * Not Found
+     */
+    404: ErrorResponse;
+    /**
+     * Conflict
+     */
+    409: ErrorResponse;
+    /**
+     * Response 422 Users-Verify Email
+     *
+     * Unprocessable Content
+     */
+    422: ErrorResponse | ValidationErrorResponse;
+    /**
+     * Too Many Requests
+     */
+    429: ErrorResponse;
+    /**
+     * Service Unavailable
+     */
+    503: ErrorResponse;
 };
 
 export type usersVerifyEmailError = usersVerifyEmailErrors[keyof usersVerifyEmailErrors];
@@ -4224,6 +4710,45 @@ export type usersResendVerificationEmailData = {
     query?: never;
     url: '/api/v1/users/me/verification-email';
 };
+
+export type usersResendVerificationEmailErrors = {
+    /**
+     * Bad Request
+     */
+    400: ErrorResponse;
+    /**
+     * Unauthorized
+     */
+    401: ErrorResponse;
+    /**
+     * Forbidden
+     */
+    403: ErrorResponse;
+    /**
+     * Not Found
+     */
+    404: ErrorResponse;
+    /**
+     * Conflict
+     */
+    409: ErrorResponse;
+    /**
+     * Response 422 Users-Resend Verification Email
+     *
+     * Unprocessable Content
+     */
+    422: ErrorResponse | ValidationErrorResponse;
+    /**
+     * Too Many Requests
+     */
+    429: ErrorResponse;
+    /**
+     * Service Unavailable
+     */
+    503: ErrorResponse;
+};
+
+export type usersResendVerificationEmailError = usersResendVerificationEmailErrors[keyof usersResendVerificationEmailErrors];
 
 export type usersResendVerificationEmailResponses = {
     /**
@@ -4248,9 +4773,39 @@ export type usersDeleteUserData = {
 
 export type usersDeleteUserErrors = {
     /**
-     * Validation Error
+     * Bad Request
      */
-    422: HTTPValidationError;
+    400: ErrorResponse;
+    /**
+     * Unauthorized
+     */
+    401: ErrorResponse;
+    /**
+     * Forbidden
+     */
+    403: ErrorResponse;
+    /**
+     * Not Found
+     */
+    404: ErrorResponse;
+    /**
+     * Conflict
+     */
+    409: ErrorResponse;
+    /**
+     * Response 422 Users-Delete User
+     *
+     * Unprocessable Content
+     */
+    422: ErrorResponse | ValidationErrorResponse;
+    /**
+     * Too Many Requests
+     */
+    429: ErrorResponse;
+    /**
+     * Service Unavailable
+     */
+    503: ErrorResponse;
 };
 
 export type usersDeleteUserError = usersDeleteUserErrors[keyof usersDeleteUserErrors];
@@ -4278,9 +4833,39 @@ export type usersReadUserByIdData = {
 
 export type usersReadUserByIdErrors = {
     /**
-     * Validation Error
+     * Bad Request
      */
-    422: HTTPValidationError;
+    400: ErrorResponse;
+    /**
+     * Unauthorized
+     */
+    401: ErrorResponse;
+    /**
+     * Forbidden
+     */
+    403: ErrorResponse;
+    /**
+     * Not Found
+     */
+    404: ErrorResponse;
+    /**
+     * Conflict
+     */
+    409: ErrorResponse;
+    /**
+     * Response 422 Users-Read User By Id
+     *
+     * Unprocessable Content
+     */
+    422: ErrorResponse | ValidationErrorResponse;
+    /**
+     * Too Many Requests
+     */
+    429: ErrorResponse;
+    /**
+     * Service Unavailable
+     */
+    503: ErrorResponse;
 };
 
 export type usersReadUserByIdError = usersReadUserByIdErrors[keyof usersReadUserByIdErrors];
@@ -4308,9 +4893,39 @@ export type usersUpdateUserData = {
 
 export type usersUpdateUserErrors = {
     /**
-     * Validation Error
+     * Bad Request
      */
-    422: HTTPValidationError;
+    400: ErrorResponse;
+    /**
+     * Unauthorized
+     */
+    401: ErrorResponse;
+    /**
+     * Forbidden
+     */
+    403: ErrorResponse;
+    /**
+     * Not Found
+     */
+    404: ErrorResponse;
+    /**
+     * Conflict
+     */
+    409: ErrorResponse;
+    /**
+     * Response 422 Users-Update User
+     *
+     * Unprocessable Content
+     */
+    422: ErrorResponse | ValidationErrorResponse;
+    /**
+     * Too Many Requests
+     */
+    429: ErrorResponse;
+    /**
+     * Service Unavailable
+     */
+    503: ErrorResponse;
 };
 
 export type usersUpdateUserError = usersUpdateUserErrors[keyof usersUpdateUserErrors];
@@ -4342,9 +4957,39 @@ export type accountRemoveSavedProvisionData = {
 
 export type accountRemoveSavedProvisionErrors = {
     /**
-     * Validation Error
+     * Bad Request
      */
-    422: HTTPValidationError;
+    400: ErrorResponse;
+    /**
+     * Unauthorized
+     */
+    401: ErrorResponse;
+    /**
+     * Forbidden
+     */
+    403: ErrorResponse;
+    /**
+     * Not Found
+     */
+    404: ErrorResponse;
+    /**
+     * Conflict
+     */
+    409: ErrorResponse;
+    /**
+     * Response 422 Account-Remove Saved Provision
+     *
+     * Unprocessable Content
+     */
+    422: ErrorResponse | ValidationErrorResponse;
+    /**
+     * Too Many Requests
+     */
+    429: ErrorResponse;
+    /**
+     * Service Unavailable
+     */
+    503: ErrorResponse;
 };
 
 export type accountRemoveSavedProvisionError = accountRemoveSavedProvisionErrors[keyof accountRemoveSavedProvisionErrors];
@@ -4364,6 +5009,45 @@ export type accountReadSavedProvisionsData = {
     query?: never;
     url: '/api/v1/account/saved-provisions';
 };
+
+export type accountReadSavedProvisionsErrors = {
+    /**
+     * Bad Request
+     */
+    400: ErrorResponse;
+    /**
+     * Unauthorized
+     */
+    401: ErrorResponse;
+    /**
+     * Forbidden
+     */
+    403: ErrorResponse;
+    /**
+     * Not Found
+     */
+    404: ErrorResponse;
+    /**
+     * Conflict
+     */
+    409: ErrorResponse;
+    /**
+     * Response 422 Account-Read Saved Provisions
+     *
+     * Unprocessable Content
+     */
+    422: ErrorResponse | ValidationErrorResponse;
+    /**
+     * Too Many Requests
+     */
+    429: ErrorResponse;
+    /**
+     * Service Unavailable
+     */
+    503: ErrorResponse;
+};
+
+export type accountReadSavedProvisionsError = accountReadSavedProvisionsErrors[keyof accountReadSavedProvisionsErrors];
 
 export type accountReadSavedProvisionsResponses = {
     /**
@@ -4385,9 +5069,39 @@ export type accountSaveProvisionData = {
 
 export type accountSaveProvisionErrors = {
     /**
-     * Validation Error
+     * Bad Request
      */
-    422: HTTPValidationError;
+    400: ErrorResponse;
+    /**
+     * Unauthorized
+     */
+    401: ErrorResponse;
+    /**
+     * Forbidden
+     */
+    403: ErrorResponse;
+    /**
+     * Not Found
+     */
+    404: ErrorResponse;
+    /**
+     * Conflict
+     */
+    409: ErrorResponse;
+    /**
+     * Response 422 Account-Save Provision
+     *
+     * Unprocessable Content
+     */
+    422: ErrorResponse | ValidationErrorResponse;
+    /**
+     * Too Many Requests
+     */
+    429: ErrorResponse;
+    /**
+     * Service Unavailable
+     */
+    503: ErrorResponse;
 };
 
 export type accountSaveProvisionError = accountSaveProvisionErrors[keyof accountSaveProvisionErrors];
@@ -4410,9 +5124,39 @@ export type accountMergeSavedProvisionsData = {
 
 export type accountMergeSavedProvisionsErrors = {
     /**
-     * Validation Error
+     * Bad Request
      */
-    422: HTTPValidationError;
+    400: ErrorResponse;
+    /**
+     * Unauthorized
+     */
+    401: ErrorResponse;
+    /**
+     * Forbidden
+     */
+    403: ErrorResponse;
+    /**
+     * Not Found
+     */
+    404: ErrorResponse;
+    /**
+     * Conflict
+     */
+    409: ErrorResponse;
+    /**
+     * Response 422 Account-Merge Saved Provisions
+     *
+     * Unprocessable Content
+     */
+    422: ErrorResponse | ValidationErrorResponse;
+    /**
+     * Too Many Requests
+     */
+    429: ErrorResponse;
+    /**
+     * Service Unavailable
+     */
+    503: ErrorResponse;
 };
 
 export type accountMergeSavedProvisionsError = accountMergeSavedProvisionsErrors[keyof accountMergeSavedProvisionsErrors];
@@ -4435,6 +5179,45 @@ export type accountExportAccountDataData = {
     url: '/api/v1/account/export';
 };
 
+export type accountExportAccountDataErrors = {
+    /**
+     * Bad Request
+     */
+    400: ErrorResponse;
+    /**
+     * Unauthorized
+     */
+    401: ErrorResponse;
+    /**
+     * Forbidden
+     */
+    403: ErrorResponse;
+    /**
+     * Not Found
+     */
+    404: ErrorResponse;
+    /**
+     * Conflict
+     */
+    409: ErrorResponse;
+    /**
+     * Response 422 Account-Export Account Data
+     *
+     * Unprocessable Content
+     */
+    422: ErrorResponse | ValidationErrorResponse;
+    /**
+     * Too Many Requests
+     */
+    429: ErrorResponse;
+    /**
+     * Service Unavailable
+     */
+    503: ErrorResponse;
+};
+
+export type accountExportAccountDataError = accountExportAccountDataErrors[keyof accountExportAccountDataErrors];
+
 export type accountExportAccountDataResponses = {
     /**
      * Successful Response
@@ -4448,6 +5231,45 @@ export type accountReadPreferencesData = {
     query?: never;
     url: '/api/v1/account/preferences';
 };
+
+export type accountReadPreferencesErrors = {
+    /**
+     * Bad Request
+     */
+    400: ErrorResponse;
+    /**
+     * Unauthorized
+     */
+    401: ErrorResponse;
+    /**
+     * Forbidden
+     */
+    403: ErrorResponse;
+    /**
+     * Not Found
+     */
+    404: ErrorResponse;
+    /**
+     * Conflict
+     */
+    409: ErrorResponse;
+    /**
+     * Response 422 Account-Read Preferences
+     *
+     * Unprocessable Content
+     */
+    422: ErrorResponse | ValidationErrorResponse;
+    /**
+     * Too Many Requests
+     */
+    429: ErrorResponse;
+    /**
+     * Service Unavailable
+     */
+    503: ErrorResponse;
+};
+
+export type accountReadPreferencesError = accountReadPreferencesErrors[keyof accountReadPreferencesErrors];
 
 export type accountReadPreferencesResponses = {
     /**
@@ -4469,9 +5291,39 @@ export type accountSavePreferencesData = {
 
 export type accountSavePreferencesErrors = {
     /**
-     * Validation Error
+     * Bad Request
      */
-    422: HTTPValidationError;
+    400: ErrorResponse;
+    /**
+     * Unauthorized
+     */
+    401: ErrorResponse;
+    /**
+     * Forbidden
+     */
+    403: ErrorResponse;
+    /**
+     * Not Found
+     */
+    404: ErrorResponse;
+    /**
+     * Conflict
+     */
+    409: ErrorResponse;
+    /**
+     * Response 422 Account-Save Preferences
+     *
+     * Unprocessable Content
+     */
+    422: ErrorResponse | ValidationErrorResponse;
+    /**
+     * Too Many Requests
+     */
+    429: ErrorResponse;
+    /**
+     * Service Unavailable
+     */
+    503: ErrorResponse;
 };
 
 export type accountSavePreferencesError = accountSavePreferencesErrors[keyof accountSavePreferencesErrors];
@@ -4499,9 +5351,39 @@ export type utilsTestEmailData = {
 
 export type utilsTestEmailErrors = {
     /**
-     * Validation Error
+     * Bad Request
      */
-    422: HTTPValidationError;
+    400: ErrorResponse;
+    /**
+     * Unauthorized
+     */
+    401: ErrorResponse;
+    /**
+     * Forbidden
+     */
+    403: ErrorResponse;
+    /**
+     * Not Found
+     */
+    404: ErrorResponse;
+    /**
+     * Conflict
+     */
+    409: ErrorResponse;
+    /**
+     * Response 422 Utils-Test Email
+     *
+     * Unprocessable Content
+     */
+    422: ErrorResponse | ValidationErrorResponse;
+    /**
+     * Too Many Requests
+     */
+    429: ErrorResponse;
+    /**
+     * Service Unavailable
+     */
+    503: ErrorResponse;
 };
 
 export type utilsTestEmailError = utilsTestEmailErrors[keyof utilsTestEmailErrors];
@@ -4522,6 +5404,45 @@ export type utilsHealthCheckData = {
     url: '/api/v1/utils/health-check/';
 };
 
+export type utilsHealthCheckErrors = {
+    /**
+     * Bad Request
+     */
+    400: ErrorResponse;
+    /**
+     * Unauthorized
+     */
+    401: ErrorResponse;
+    /**
+     * Forbidden
+     */
+    403: ErrorResponse;
+    /**
+     * Not Found
+     */
+    404: ErrorResponse;
+    /**
+     * Conflict
+     */
+    409: ErrorResponse;
+    /**
+     * Response 422 Utils-Health Check
+     *
+     * Unprocessable Content
+     */
+    422: ErrorResponse | ValidationErrorResponse;
+    /**
+     * Too Many Requests
+     */
+    429: ErrorResponse;
+    /**
+     * Service Unavailable
+     */
+    503: ErrorResponse;
+};
+
+export type utilsHealthCheckError = utilsHealthCheckErrors[keyof utilsHealthCheckErrors];
+
 export type utilsHealthCheckResponses = {
     /**
      * Response Utils-Health Check
@@ -4541,6 +5462,45 @@ export type adminReadMyAdminRolesData = {
     query?: never;
     url: '/api/v1/admin/my-roles';
 };
+
+export type adminReadMyAdminRolesErrors = {
+    /**
+     * Bad Request
+     */
+    400: ErrorResponse;
+    /**
+     * Unauthorized
+     */
+    401: ErrorResponse;
+    /**
+     * Forbidden
+     */
+    403: ErrorResponse;
+    /**
+     * Not Found
+     */
+    404: ErrorResponse;
+    /**
+     * Conflict
+     */
+    409: ErrorResponse;
+    /**
+     * Response 422 Admin-Read My Admin Roles
+     *
+     * Unprocessable Content
+     */
+    422: ErrorResponse | ValidationErrorResponse;
+    /**
+     * Too Many Requests
+     */
+    429: ErrorResponse;
+    /**
+     * Service Unavailable
+     */
+    503: ErrorResponse;
+};
+
+export type adminReadMyAdminRolesError = adminReadMyAdminRolesErrors[keyof adminReadMyAdminRolesErrors];
 
 export type adminReadMyAdminRolesResponses = {
     /**
@@ -4573,9 +5533,39 @@ export type adminReadAuditEventsData = {
 
 export type adminReadAuditEventsErrors = {
     /**
-     * Validation Error
+     * Bad Request
      */
-    422: HTTPValidationError;
+    400: ErrorResponse;
+    /**
+     * Unauthorized
+     */
+    401: ErrorResponse;
+    /**
+     * Forbidden
+     */
+    403: ErrorResponse;
+    /**
+     * Not Found
+     */
+    404: ErrorResponse;
+    /**
+     * Conflict
+     */
+    409: ErrorResponse;
+    /**
+     * Response 422 Admin-Read Audit Events
+     *
+     * Unprocessable Content
+     */
+    422: ErrorResponse | ValidationErrorResponse;
+    /**
+     * Too Many Requests
+     */
+    429: ErrorResponse;
+    /**
+     * Service Unavailable
+     */
+    503: ErrorResponse;
 };
 
 export type adminReadAuditEventsError = adminReadAuditEventsErrors[keyof adminReadAuditEventsErrors];
@@ -4596,6 +5586,45 @@ export type adminReadAdminMetricsData = {
     url: '/api/v1/admin/metrics';
 };
 
+export type adminReadAdminMetricsErrors = {
+    /**
+     * Bad Request
+     */
+    400: ErrorResponse;
+    /**
+     * Unauthorized
+     */
+    401: ErrorResponse;
+    /**
+     * Forbidden
+     */
+    403: ErrorResponse;
+    /**
+     * Not Found
+     */
+    404: ErrorResponse;
+    /**
+     * Conflict
+     */
+    409: ErrorResponse;
+    /**
+     * Response 422 Admin-Read Admin Metrics
+     *
+     * Unprocessable Content
+     */
+    422: ErrorResponse | ValidationErrorResponse;
+    /**
+     * Too Many Requests
+     */
+    429: ErrorResponse;
+    /**
+     * Service Unavailable
+     */
+    503: ErrorResponse;
+};
+
+export type adminReadAdminMetricsError = adminReadAdminMetricsErrors[keyof adminReadAdminMetricsErrors];
+
 export type adminReadAdminMetricsResponses = {
     /**
      * Successful Response
@@ -4611,6 +5640,45 @@ export type adminReadAdminAlertsData = {
     query?: never;
     url: '/api/v1/admin/alerts';
 };
+
+export type adminReadAdminAlertsErrors = {
+    /**
+     * Bad Request
+     */
+    400: ErrorResponse;
+    /**
+     * Unauthorized
+     */
+    401: ErrorResponse;
+    /**
+     * Forbidden
+     */
+    403: ErrorResponse;
+    /**
+     * Not Found
+     */
+    404: ErrorResponse;
+    /**
+     * Conflict
+     */
+    409: ErrorResponse;
+    /**
+     * Response 422 Admin-Read Admin Alerts
+     *
+     * Unprocessable Content
+     */
+    422: ErrorResponse | ValidationErrorResponse;
+    /**
+     * Too Many Requests
+     */
+    429: ErrorResponse;
+    /**
+     * Service Unavailable
+     */
+    503: ErrorResponse;
+};
+
+export type adminReadAdminAlertsError = adminReadAdminAlertsErrors[keyof adminReadAdminAlertsErrors];
 
 export type adminReadAdminAlertsResponses = {
     /**
@@ -4630,9 +5698,39 @@ export type adminCreateSourceUploadData = {
 
 export type adminCreateSourceUploadErrors = {
     /**
-     * Validation Error
+     * Bad Request
      */
-    422: HTTPValidationError;
+    400: ErrorResponse;
+    /**
+     * Unauthorized
+     */
+    401: ErrorResponse;
+    /**
+     * Forbidden
+     */
+    403: ErrorResponse;
+    /**
+     * Not Found
+     */
+    404: ErrorResponse;
+    /**
+     * Conflict
+     */
+    409: ErrorResponse;
+    /**
+     * Response 422 Admin-Create Source Upload
+     *
+     * Unprocessable Content
+     */
+    422: ErrorResponse | ValidationErrorResponse;
+    /**
+     * Too Many Requests
+     */
+    429: ErrorResponse;
+    /**
+     * Service Unavailable
+     */
+    503: ErrorResponse;
 };
 
 export type adminCreateSourceUploadError = adminCreateSourceUploadErrors[keyof adminCreateSourceUploadErrors];
@@ -4660,9 +5758,39 @@ export type adminPutSourceUploadObjectData = {
 
 export type adminPutSourceUploadObjectErrors = {
     /**
-     * Validation Error
+     * Bad Request
      */
-    422: HTTPValidationError;
+    400: ErrorResponse;
+    /**
+     * Unauthorized
+     */
+    401: ErrorResponse;
+    /**
+     * Forbidden
+     */
+    403: ErrorResponse;
+    /**
+     * Not Found
+     */
+    404: ErrorResponse;
+    /**
+     * Conflict
+     */
+    409: ErrorResponse;
+    /**
+     * Response 422 Admin-Put Source Upload Object
+     *
+     * Unprocessable Content
+     */
+    422: ErrorResponse | ValidationErrorResponse;
+    /**
+     * Too Many Requests
+     */
+    429: ErrorResponse;
+    /**
+     * Service Unavailable
+     */
+    503: ErrorResponse;
 };
 
 export type adminPutSourceUploadObjectError = adminPutSourceUploadObjectErrors[keyof adminPutSourceUploadObjectErrors];
@@ -4690,9 +5818,39 @@ export type adminCreateMultipartUploadPartsData = {
 
 export type adminCreateMultipartUploadPartsErrors = {
     /**
-     * Validation Error
+     * Bad Request
      */
-    422: HTTPValidationError;
+    400: ErrorResponse;
+    /**
+     * Unauthorized
+     */
+    401: ErrorResponse;
+    /**
+     * Forbidden
+     */
+    403: ErrorResponse;
+    /**
+     * Not Found
+     */
+    404: ErrorResponse;
+    /**
+     * Conflict
+     */
+    409: ErrorResponse;
+    /**
+     * Response 422 Admin-Create Multipart Upload Parts
+     *
+     * Unprocessable Content
+     */
+    422: ErrorResponse | ValidationErrorResponse;
+    /**
+     * Too Many Requests
+     */
+    429: ErrorResponse;
+    /**
+     * Service Unavailable
+     */
+    503: ErrorResponse;
 };
 
 export type adminCreateMultipartUploadPartsError = adminCreateMultipartUploadPartsErrors[keyof adminCreateMultipartUploadPartsErrors];
@@ -4720,9 +5878,39 @@ export type adminCompleteUploadData = {
 
 export type adminCompleteUploadErrors = {
     /**
-     * Validation Error
+     * Bad Request
      */
-    422: HTTPValidationError;
+    400: ErrorResponse;
+    /**
+     * Unauthorized
+     */
+    401: ErrorResponse;
+    /**
+     * Forbidden
+     */
+    403: ErrorResponse;
+    /**
+     * Not Found
+     */
+    404: ErrorResponse;
+    /**
+     * Conflict
+     */
+    409: ErrorResponse;
+    /**
+     * Response 422 Admin-Complete Upload
+     *
+     * Unprocessable Content
+     */
+    422: ErrorResponse | ValidationErrorResponse;
+    /**
+     * Too Many Requests
+     */
+    429: ErrorResponse;
+    /**
+     * Service Unavailable
+     */
+    503: ErrorResponse;
 };
 
 export type adminCompleteUploadError = adminCompleteUploadErrors[keyof adminCompleteUploadErrors];
@@ -4750,9 +5938,39 @@ export type adminVerifyDocumentSourceData = {
 
 export type adminVerifyDocumentSourceErrors = {
     /**
-     * Validation Error
+     * Bad Request
      */
-    422: HTTPValidationError;
+    400: ErrorResponse;
+    /**
+     * Unauthorized
+     */
+    401: ErrorResponse;
+    /**
+     * Forbidden
+     */
+    403: ErrorResponse;
+    /**
+     * Not Found
+     */
+    404: ErrorResponse;
+    /**
+     * Conflict
+     */
+    409: ErrorResponse;
+    /**
+     * Response 422 Admin-Verify Document Source
+     *
+     * Unprocessable Content
+     */
+    422: ErrorResponse | ValidationErrorResponse;
+    /**
+     * Too Many Requests
+     */
+    429: ErrorResponse;
+    /**
+     * Service Unavailable
+     */
+    503: ErrorResponse;
 };
 
 export type adminVerifyDocumentSourceError = adminVerifyDocumentSourceErrors[keyof adminVerifyDocumentSourceErrors];
@@ -4792,9 +6010,39 @@ export type adminReadIngestionRunsData = {
 
 export type adminReadIngestionRunsErrors = {
     /**
-     * Validation Error
+     * Bad Request
      */
-    422: HTTPValidationError;
+    400: ErrorResponse;
+    /**
+     * Unauthorized
+     */
+    401: ErrorResponse;
+    /**
+     * Forbidden
+     */
+    403: ErrorResponse;
+    /**
+     * Not Found
+     */
+    404: ErrorResponse;
+    /**
+     * Conflict
+     */
+    409: ErrorResponse;
+    /**
+     * Response 422 Admin-Read Ingestion Runs
+     *
+     * Unprocessable Content
+     */
+    422: ErrorResponse | ValidationErrorResponse;
+    /**
+     * Too Many Requests
+     */
+    429: ErrorResponse;
+    /**
+     * Service Unavailable
+     */
+    503: ErrorResponse;
 };
 
 export type adminReadIngestionRunsError = adminReadIngestionRunsErrors[keyof adminReadIngestionRunsErrors];
@@ -4822,9 +6070,39 @@ export type adminReadIngestionRunData = {
 
 export type adminReadIngestionRunErrors = {
     /**
-     * Validation Error
+     * Bad Request
      */
-    422: HTTPValidationError;
+    400: ErrorResponse;
+    /**
+     * Unauthorized
+     */
+    401: ErrorResponse;
+    /**
+     * Forbidden
+     */
+    403: ErrorResponse;
+    /**
+     * Not Found
+     */
+    404: ErrorResponse;
+    /**
+     * Conflict
+     */
+    409: ErrorResponse;
+    /**
+     * Response 422 Admin-Read Ingestion Run
+     *
+     * Unprocessable Content
+     */
+    422: ErrorResponse | ValidationErrorResponse;
+    /**
+     * Too Many Requests
+     */
+    429: ErrorResponse;
+    /**
+     * Service Unavailable
+     */
+    503: ErrorResponse;
 };
 
 export type adminReadIngestionRunError = adminReadIngestionRunErrors[keyof adminReadIngestionRunErrors];
@@ -4852,9 +6130,39 @@ export type adminReadIngestionArtifactContentData = {
 
 export type adminReadIngestionArtifactContentErrors = {
     /**
-     * Validation Error
+     * Bad Request
      */
-    422: HTTPValidationError;
+    400: ErrorResponse;
+    /**
+     * Unauthorized
+     */
+    401: ErrorResponse;
+    /**
+     * Forbidden
+     */
+    403: ErrorResponse;
+    /**
+     * Not Found
+     */
+    404: ErrorResponse;
+    /**
+     * Conflict
+     */
+    409: ErrorResponse;
+    /**
+     * Response 422 Admin-Read Ingestion Artifact Content
+     *
+     * Unprocessable Content
+     */
+    422: ErrorResponse | ValidationErrorResponse;
+    /**
+     * Too Many Requests
+     */
+    429: ErrorResponse;
+    /**
+     * Service Unavailable
+     */
+    503: ErrorResponse;
 };
 
 export type adminReadIngestionArtifactContentError = adminReadIngestionArtifactContentErrors[keyof adminReadIngestionArtifactContentErrors];
@@ -4891,9 +6199,39 @@ export type adminStreamIngestionRunEventsData = {
 
 export type adminStreamIngestionRunEventsErrors = {
     /**
-     * Validation Error
+     * Bad Request
      */
-    422: HTTPValidationError;
+    400: ErrorResponse;
+    /**
+     * Unauthorized
+     */
+    401: ErrorResponse;
+    /**
+     * Forbidden
+     */
+    403: ErrorResponse;
+    /**
+     * Not Found
+     */
+    404: ErrorResponse;
+    /**
+     * Conflict
+     */
+    409: ErrorResponse;
+    /**
+     * Response 422 Admin-Stream Ingestion Run Events
+     *
+     * Unprocessable Content
+     */
+    422: ErrorResponse | ValidationErrorResponse;
+    /**
+     * Too Many Requests
+     */
+    429: ErrorResponse;
+    /**
+     * Service Unavailable
+     */
+    503: ErrorResponse;
 };
 
 export type adminStreamIngestionRunEventsError = adminStreamIngestionRunEventsErrors[keyof adminStreamIngestionRunEventsErrors];
@@ -4919,9 +6257,39 @@ export type adminReadIngestionRunPagesData = {
 
 export type adminReadIngestionRunPagesErrors = {
     /**
-     * Validation Error
+     * Bad Request
      */
-    422: HTTPValidationError;
+    400: ErrorResponse;
+    /**
+     * Unauthorized
+     */
+    401: ErrorResponse;
+    /**
+     * Forbidden
+     */
+    403: ErrorResponse;
+    /**
+     * Not Found
+     */
+    404: ErrorResponse;
+    /**
+     * Conflict
+     */
+    409: ErrorResponse;
+    /**
+     * Response 422 Admin-Read Ingestion Run Pages
+     *
+     * Unprocessable Content
+     */
+    422: ErrorResponse | ValidationErrorResponse;
+    /**
+     * Too Many Requests
+     */
+    429: ErrorResponse;
+    /**
+     * Service Unavailable
+     */
+    503: ErrorResponse;
 };
 
 export type adminReadIngestionRunPagesError = adminReadIngestionRunPagesErrors[keyof adminReadIngestionRunPagesErrors];
@@ -4949,9 +6317,39 @@ export type adminPatchPageSelectionData = {
 
 export type adminPatchPageSelectionErrors = {
     /**
-     * Validation Error
+     * Bad Request
      */
-    422: HTTPValidationError;
+    400: ErrorResponse;
+    /**
+     * Unauthorized
+     */
+    401: ErrorResponse;
+    /**
+     * Forbidden
+     */
+    403: ErrorResponse;
+    /**
+     * Not Found
+     */
+    404: ErrorResponse;
+    /**
+     * Conflict
+     */
+    409: ErrorResponse;
+    /**
+     * Response 422 Admin-Patch Page Selection
+     *
+     * Unprocessable Content
+     */
+    422: ErrorResponse | ValidationErrorResponse;
+    /**
+     * Too Many Requests
+     */
+    429: ErrorResponse;
+    /**
+     * Service Unavailable
+     */
+    503: ErrorResponse;
 };
 
 export type adminPatchPageSelectionError = adminPatchPageSelectionErrors[keyof adminPatchPageSelectionErrors];
@@ -4979,9 +6377,39 @@ export type adminRetryRunData = {
 
 export type adminRetryRunErrors = {
     /**
-     * Validation Error
+     * Bad Request
      */
-    422: HTTPValidationError;
+    400: ErrorResponse;
+    /**
+     * Unauthorized
+     */
+    401: ErrorResponse;
+    /**
+     * Forbidden
+     */
+    403: ErrorResponse;
+    /**
+     * Not Found
+     */
+    404: ErrorResponse;
+    /**
+     * Conflict
+     */
+    409: ErrorResponse;
+    /**
+     * Response 422 Admin-Retry Run
+     *
+     * Unprocessable Content
+     */
+    422: ErrorResponse | ValidationErrorResponse;
+    /**
+     * Too Many Requests
+     */
+    429: ErrorResponse;
+    /**
+     * Service Unavailable
+     */
+    503: ErrorResponse;
 };
 
 export type adminRetryRunError = adminRetryRunErrors[keyof adminRetryRunErrors];
@@ -5009,9 +6437,39 @@ export type adminCancelRunData = {
 
 export type adminCancelRunErrors = {
     /**
-     * Validation Error
+     * Bad Request
      */
-    422: HTTPValidationError;
+    400: ErrorResponse;
+    /**
+     * Unauthorized
+     */
+    401: ErrorResponse;
+    /**
+     * Forbidden
+     */
+    403: ErrorResponse;
+    /**
+     * Not Found
+     */
+    404: ErrorResponse;
+    /**
+     * Conflict
+     */
+    409: ErrorResponse;
+    /**
+     * Response 422 Admin-Cancel Run
+     *
+     * Unprocessable Content
+     */
+    422: ErrorResponse | ValidationErrorResponse;
+    /**
+     * Too Many Requests
+     */
+    429: ErrorResponse;
+    /**
+     * Service Unavailable
+     */
+    503: ErrorResponse;
 };
 
 export type adminCancelRunError = adminCancelRunErrors[keyof adminCancelRunErrors];
@@ -5039,9 +6497,39 @@ export type adminResumeRunData = {
 
 export type adminResumeRunErrors = {
     /**
-     * Validation Error
+     * Bad Request
      */
-    422: HTTPValidationError;
+    400: ErrorResponse;
+    /**
+     * Unauthorized
+     */
+    401: ErrorResponse;
+    /**
+     * Forbidden
+     */
+    403: ErrorResponse;
+    /**
+     * Not Found
+     */
+    404: ErrorResponse;
+    /**
+     * Conflict
+     */
+    409: ErrorResponse;
+    /**
+     * Response 422 Admin-Resume Run
+     *
+     * Unprocessable Content
+     */
+    422: ErrorResponse | ValidationErrorResponse;
+    /**
+     * Too Many Requests
+     */
+    429: ErrorResponse;
+    /**
+     * Service Unavailable
+     */
+    503: ErrorResponse;
 };
 
 export type adminResumeRunError = adminResumeRunErrors[keyof adminResumeRunErrors];
@@ -5069,9 +6557,39 @@ export type adminStartEmbeddingRunData = {
 
 export type adminStartEmbeddingRunErrors = {
     /**
-     * Validation Error
+     * Bad Request
      */
-    422: HTTPValidationError;
+    400: ErrorResponse;
+    /**
+     * Unauthorized
+     */
+    401: ErrorResponse;
+    /**
+     * Forbidden
+     */
+    403: ErrorResponse;
+    /**
+     * Not Found
+     */
+    404: ErrorResponse;
+    /**
+     * Conflict
+     */
+    409: ErrorResponse;
+    /**
+     * Response 422 Admin-Start Embedding Run
+     *
+     * Unprocessable Content
+     */
+    422: ErrorResponse | ValidationErrorResponse;
+    /**
+     * Too Many Requests
+     */
+    429: ErrorResponse;
+    /**
+     * Service Unavailable
+     */
+    503: ErrorResponse;
 };
 
 export type adminStartEmbeddingRunError = adminStartEmbeddingRunErrors[keyof adminStartEmbeddingRunErrors];
@@ -5127,9 +6645,39 @@ export type adminReadReviewItemsData = {
 
 export type adminReadReviewItemsErrors = {
     /**
-     * Validation Error
+     * Bad Request
      */
-    422: HTTPValidationError;
+    400: ErrorResponse;
+    /**
+     * Unauthorized
+     */
+    401: ErrorResponse;
+    /**
+     * Forbidden
+     */
+    403: ErrorResponse;
+    /**
+     * Not Found
+     */
+    404: ErrorResponse;
+    /**
+     * Conflict
+     */
+    409: ErrorResponse;
+    /**
+     * Response 422 Admin-Read Review Items
+     *
+     * Unprocessable Content
+     */
+    422: ErrorResponse | ValidationErrorResponse;
+    /**
+     * Too Many Requests
+     */
+    429: ErrorResponse;
+    /**
+     * Service Unavailable
+     */
+    503: ErrorResponse;
 };
 
 export type adminReadReviewItemsError = adminReadReviewItemsErrors[keyof adminReadReviewItemsErrors];
@@ -5157,9 +6705,39 @@ export type adminReadReviewItemData = {
 
 export type adminReadReviewItemErrors = {
     /**
-     * Validation Error
+     * Bad Request
      */
-    422: HTTPValidationError;
+    400: ErrorResponse;
+    /**
+     * Unauthorized
+     */
+    401: ErrorResponse;
+    /**
+     * Forbidden
+     */
+    403: ErrorResponse;
+    /**
+     * Not Found
+     */
+    404: ErrorResponse;
+    /**
+     * Conflict
+     */
+    409: ErrorResponse;
+    /**
+     * Response 422 Admin-Read Review Item
+     *
+     * Unprocessable Content
+     */
+    422: ErrorResponse | ValidationErrorResponse;
+    /**
+     * Too Many Requests
+     */
+    429: ErrorResponse;
+    /**
+     * Service Unavailable
+     */
+    503: ErrorResponse;
 };
 
 export type adminReadReviewItemError = adminReadReviewItemErrors[keyof adminReadReviewItemErrors];
@@ -5187,9 +6765,39 @@ export type adminPatchReviewItemData = {
 
 export type adminPatchReviewItemErrors = {
     /**
-     * Validation Error
+     * Bad Request
      */
-    422: HTTPValidationError;
+    400: ErrorResponse;
+    /**
+     * Unauthorized
+     */
+    401: ErrorResponse;
+    /**
+     * Forbidden
+     */
+    403: ErrorResponse;
+    /**
+     * Not Found
+     */
+    404: ErrorResponse;
+    /**
+     * Conflict
+     */
+    409: ErrorResponse;
+    /**
+     * Response 422 Admin-Patch Review Item
+     *
+     * Unprocessable Content
+     */
+    422: ErrorResponse | ValidationErrorResponse;
+    /**
+     * Too Many Requests
+     */
+    429: ErrorResponse;
+    /**
+     * Service Unavailable
+     */
+    503: ErrorResponse;
 };
 
 export type adminPatchReviewItemError = adminPatchReviewItemErrors[keyof adminPatchReviewItemErrors];
@@ -5217,9 +6825,39 @@ export type adminDeriveReviewItemData = {
 
 export type adminDeriveReviewItemErrors = {
     /**
-     * Validation Error
+     * Bad Request
      */
-    422: HTTPValidationError;
+    400: ErrorResponse;
+    /**
+     * Unauthorized
+     */
+    401: ErrorResponse;
+    /**
+     * Forbidden
+     */
+    403: ErrorResponse;
+    /**
+     * Not Found
+     */
+    404: ErrorResponse;
+    /**
+     * Conflict
+     */
+    409: ErrorResponse;
+    /**
+     * Response 422 Admin-Derive Review Item
+     *
+     * Unprocessable Content
+     */
+    422: ErrorResponse | ValidationErrorResponse;
+    /**
+     * Too Many Requests
+     */
+    429: ErrorResponse;
+    /**
+     * Service Unavailable
+     */
+    503: ErrorResponse;
 };
 
 export type adminDeriveReviewItemError = adminDeriveReviewItemErrors[keyof adminDeriveReviewItemErrors];
@@ -5247,9 +6885,39 @@ export type adminDecideReviewItemData = {
 
 export type adminDecideReviewItemErrors = {
     /**
-     * Validation Error
+     * Bad Request
      */
-    422: HTTPValidationError;
+    400: ErrorResponse;
+    /**
+     * Unauthorized
+     */
+    401: ErrorResponse;
+    /**
+     * Forbidden
+     */
+    403: ErrorResponse;
+    /**
+     * Not Found
+     */
+    404: ErrorResponse;
+    /**
+     * Conflict
+     */
+    409: ErrorResponse;
+    /**
+     * Response 422 Admin-Decide Review Item
+     *
+     * Unprocessable Content
+     */
+    422: ErrorResponse | ValidationErrorResponse;
+    /**
+     * Too Many Requests
+     */
+    429: ErrorResponse;
+    /**
+     * Service Unavailable
+     */
+    503: ErrorResponse;
 };
 
 export type adminDecideReviewItemError = adminDecideReviewItemErrors[keyof adminDecideReviewItemErrors];
@@ -5277,9 +6945,39 @@ export type adminPatchReviewIssueData = {
 
 export type adminPatchReviewIssueErrors = {
     /**
-     * Validation Error
+     * Bad Request
      */
-    422: HTTPValidationError;
+    400: ErrorResponse;
+    /**
+     * Unauthorized
+     */
+    401: ErrorResponse;
+    /**
+     * Forbidden
+     */
+    403: ErrorResponse;
+    /**
+     * Not Found
+     */
+    404: ErrorResponse;
+    /**
+     * Conflict
+     */
+    409: ErrorResponse;
+    /**
+     * Response 422 Admin-Patch Review Issue
+     *
+     * Unprocessable Content
+     */
+    422: ErrorResponse | ValidationErrorResponse;
+    /**
+     * Too Many Requests
+     */
+    429: ErrorResponse;
+    /**
+     * Service Unavailable
+     */
+    503: ErrorResponse;
 };
 
 export type adminPatchReviewIssueError = adminPatchReviewIssueErrors[keyof adminPatchReviewIssueErrors];
@@ -5307,9 +7005,39 @@ export type adminReadEmbeddingBenchmarkData = {
 
 export type adminReadEmbeddingBenchmarkErrors = {
     /**
-     * Validation Error
+     * Bad Request
      */
-    422: HTTPValidationError;
+    400: ErrorResponse;
+    /**
+     * Unauthorized
+     */
+    401: ErrorResponse;
+    /**
+     * Forbidden
+     */
+    403: ErrorResponse;
+    /**
+     * Not Found
+     */
+    404: ErrorResponse;
+    /**
+     * Conflict
+     */
+    409: ErrorResponse;
+    /**
+     * Response 422 Admin-Read Embedding Benchmark
+     *
+     * Unprocessable Content
+     */
+    422: ErrorResponse | ValidationErrorResponse;
+    /**
+     * Too Many Requests
+     */
+    429: ErrorResponse;
+    /**
+     * Service Unavailable
+     */
+    503: ErrorResponse;
 };
 
 export type adminReadEmbeddingBenchmarkError = adminReadEmbeddingBenchmarkErrors[keyof adminReadEmbeddingBenchmarkErrors];
@@ -5329,6 +7057,45 @@ export type adminReadEmbeddingProfilesData = {
     query?: never;
     url: '/api/v1/admin/embedding-profiles';
 };
+
+export type adminReadEmbeddingProfilesErrors = {
+    /**
+     * Bad Request
+     */
+    400: ErrorResponse;
+    /**
+     * Unauthorized
+     */
+    401: ErrorResponse;
+    /**
+     * Forbidden
+     */
+    403: ErrorResponse;
+    /**
+     * Not Found
+     */
+    404: ErrorResponse;
+    /**
+     * Conflict
+     */
+    409: ErrorResponse;
+    /**
+     * Response 422 Admin-Read Embedding Profiles
+     *
+     * Unprocessable Content
+     */
+    422: ErrorResponse | ValidationErrorResponse;
+    /**
+     * Too Many Requests
+     */
+    429: ErrorResponse;
+    /**
+     * Service Unavailable
+     */
+    503: ErrorResponse;
+};
+
+export type adminReadEmbeddingProfilesError = adminReadEmbeddingProfilesErrors[keyof adminReadEmbeddingProfilesErrors];
 
 export type adminReadEmbeddingProfilesResponses = {
     /**
@@ -5350,9 +7117,39 @@ export type adminCreateEmbeddingProfileData = {
 
 export type adminCreateEmbeddingProfileErrors = {
     /**
-     * Validation Error
+     * Bad Request
      */
-    422: HTTPValidationError;
+    400: ErrorResponse;
+    /**
+     * Unauthorized
+     */
+    401: ErrorResponse;
+    /**
+     * Forbidden
+     */
+    403: ErrorResponse;
+    /**
+     * Not Found
+     */
+    404: ErrorResponse;
+    /**
+     * Conflict
+     */
+    409: ErrorResponse;
+    /**
+     * Response 422 Admin-Create Embedding Profile
+     *
+     * Unprocessable Content
+     */
+    422: ErrorResponse | ValidationErrorResponse;
+    /**
+     * Too Many Requests
+     */
+    429: ErrorResponse;
+    /**
+     * Service Unavailable
+     */
+    503: ErrorResponse;
 };
 
 export type adminCreateEmbeddingProfileError = adminCreateEmbeddingProfileErrors[keyof adminCreateEmbeddingProfileErrors];
@@ -5380,9 +7177,39 @@ export type adminUpdateEmbeddingProfileData = {
 
 export type adminUpdateEmbeddingProfileErrors = {
     /**
-     * Validation Error
+     * Bad Request
      */
-    422: HTTPValidationError;
+    400: ErrorResponse;
+    /**
+     * Unauthorized
+     */
+    401: ErrorResponse;
+    /**
+     * Forbidden
+     */
+    403: ErrorResponse;
+    /**
+     * Not Found
+     */
+    404: ErrorResponse;
+    /**
+     * Conflict
+     */
+    409: ErrorResponse;
+    /**
+     * Response 422 Admin-Update Embedding Profile
+     *
+     * Unprocessable Content
+     */
+    422: ErrorResponse | ValidationErrorResponse;
+    /**
+     * Too Many Requests
+     */
+    429: ErrorResponse;
+    /**
+     * Service Unavailable
+     */
+    503: ErrorResponse;
 };
 
 export type adminUpdateEmbeddingProfileError = adminUpdateEmbeddingProfileErrors[keyof adminUpdateEmbeddingProfileErrors];
@@ -5410,9 +7237,39 @@ export type adminReadOcrBenchmarkData = {
 
 export type adminReadOcrBenchmarkErrors = {
     /**
-     * Validation Error
+     * Bad Request
      */
-    422: HTTPValidationError;
+    400: ErrorResponse;
+    /**
+     * Unauthorized
+     */
+    401: ErrorResponse;
+    /**
+     * Forbidden
+     */
+    403: ErrorResponse;
+    /**
+     * Not Found
+     */
+    404: ErrorResponse;
+    /**
+     * Conflict
+     */
+    409: ErrorResponse;
+    /**
+     * Response 422 Admin-Read Ocr Benchmark
+     *
+     * Unprocessable Content
+     */
+    422: ErrorResponse | ValidationErrorResponse;
+    /**
+     * Too Many Requests
+     */
+    429: ErrorResponse;
+    /**
+     * Service Unavailable
+     */
+    503: ErrorResponse;
 };
 
 export type adminReadOcrBenchmarkError = adminReadOcrBenchmarkErrors[keyof adminReadOcrBenchmarkErrors];
@@ -5440,9 +7297,39 @@ export type adminEvaluateOcrBenchmarkRouteData = {
 
 export type adminEvaluateOcrBenchmarkRouteErrors = {
     /**
-     * Validation Error
+     * Bad Request
      */
-    422: HTTPValidationError;
+    400: ErrorResponse;
+    /**
+     * Unauthorized
+     */
+    401: ErrorResponse;
+    /**
+     * Forbidden
+     */
+    403: ErrorResponse;
+    /**
+     * Not Found
+     */
+    404: ErrorResponse;
+    /**
+     * Conflict
+     */
+    409: ErrorResponse;
+    /**
+     * Response 422 Admin-Evaluate Ocr Benchmark Route
+     *
+     * Unprocessable Content
+     */
+    422: ErrorResponse | ValidationErrorResponse;
+    /**
+     * Too Many Requests
+     */
+    429: ErrorResponse;
+    /**
+     * Service Unavailable
+     */
+    503: ErrorResponse;
 };
 
 export type adminEvaluateOcrBenchmarkRouteError = adminEvaluateOcrBenchmarkRouteErrors[keyof adminEvaluateOcrBenchmarkRouteErrors];
@@ -5474,9 +7361,39 @@ export type adminReadCorpusReleasesData = {
 
 export type adminReadCorpusReleasesErrors = {
     /**
-     * Validation Error
+     * Bad Request
      */
-    422: HTTPValidationError;
+    400: ErrorResponse;
+    /**
+     * Unauthorized
+     */
+    401: ErrorResponse;
+    /**
+     * Forbidden
+     */
+    403: ErrorResponse;
+    /**
+     * Not Found
+     */
+    404: ErrorResponse;
+    /**
+     * Conflict
+     */
+    409: ErrorResponse;
+    /**
+     * Response 422 Admin-Read Corpus Releases
+     *
+     * Unprocessable Content
+     */
+    422: ErrorResponse | ValidationErrorResponse;
+    /**
+     * Too Many Requests
+     */
+    429: ErrorResponse;
+    /**
+     * Service Unavailable
+     */
+    503: ErrorResponse;
 };
 
 export type adminReadCorpusReleasesError = adminReadCorpusReleasesErrors[keyof adminReadCorpusReleasesErrors];
@@ -5504,9 +7421,39 @@ export type adminValidateReleaseData = {
 
 export type adminValidateReleaseErrors = {
     /**
-     * Validation Error
+     * Bad Request
      */
-    422: HTTPValidationError;
+    400: ErrorResponse;
+    /**
+     * Unauthorized
+     */
+    401: ErrorResponse;
+    /**
+     * Forbidden
+     */
+    403: ErrorResponse;
+    /**
+     * Not Found
+     */
+    404: ErrorResponse;
+    /**
+     * Conflict
+     */
+    409: ErrorResponse;
+    /**
+     * Response 422 Admin-Validate Release
+     *
+     * Unprocessable Content
+     */
+    422: ErrorResponse | ValidationErrorResponse;
+    /**
+     * Too Many Requests
+     */
+    429: ErrorResponse;
+    /**
+     * Service Unavailable
+     */
+    503: ErrorResponse;
 };
 
 export type adminValidateReleaseError = adminValidateReleaseErrors[keyof adminValidateReleaseErrors];
@@ -5529,9 +7476,39 @@ export type adminComposeReleaseData = {
 
 export type adminComposeReleaseErrors = {
     /**
-     * Validation Error
+     * Bad Request
      */
-    422: HTTPValidationError;
+    400: ErrorResponse;
+    /**
+     * Unauthorized
+     */
+    401: ErrorResponse;
+    /**
+     * Forbidden
+     */
+    403: ErrorResponse;
+    /**
+     * Not Found
+     */
+    404: ErrorResponse;
+    /**
+     * Conflict
+     */
+    409: ErrorResponse;
+    /**
+     * Response 422 Admin-Compose Release
+     *
+     * Unprocessable Content
+     */
+    422: ErrorResponse | ValidationErrorResponse;
+    /**
+     * Too Many Requests
+     */
+    429: ErrorResponse;
+    /**
+     * Service Unavailable
+     */
+    503: ErrorResponse;
 };
 
 export type adminComposeReleaseError = adminComposeReleaseErrors[keyof adminComposeReleaseErrors];
@@ -5559,9 +7536,39 @@ export type adminReadReleaseManifestData = {
 
 export type adminReadReleaseManifestErrors = {
     /**
-     * Validation Error
+     * Bad Request
      */
-    422: HTTPValidationError;
+    400: ErrorResponse;
+    /**
+     * Unauthorized
+     */
+    401: ErrorResponse;
+    /**
+     * Forbidden
+     */
+    403: ErrorResponse;
+    /**
+     * Not Found
+     */
+    404: ErrorResponse;
+    /**
+     * Conflict
+     */
+    409: ErrorResponse;
+    /**
+     * Response 422 Admin-Read Release Manifest
+     *
+     * Unprocessable Content
+     */
+    422: ErrorResponse | ValidationErrorResponse;
+    /**
+     * Too Many Requests
+     */
+    429: ErrorResponse;
+    /**
+     * Service Unavailable
+     */
+    503: ErrorResponse;
 };
 
 export type adminReadReleaseManifestError = adminReadReleaseManifestErrors[keyof adminReadReleaseManifestErrors];
@@ -5589,9 +7596,39 @@ export type adminReadReleasePublicationEvidenceData = {
 
 export type adminReadReleasePublicationEvidenceErrors = {
     /**
-     * Validation Error
+     * Bad Request
      */
-    422: HTTPValidationError;
+    400: ErrorResponse;
+    /**
+     * Unauthorized
+     */
+    401: ErrorResponse;
+    /**
+     * Forbidden
+     */
+    403: ErrorResponse;
+    /**
+     * Not Found
+     */
+    404: ErrorResponse;
+    /**
+     * Conflict
+     */
+    409: ErrorResponse;
+    /**
+     * Response 422 Admin-Read Release Publication Evidence
+     *
+     * Unprocessable Content
+     */
+    422: ErrorResponse | ValidationErrorResponse;
+    /**
+     * Too Many Requests
+     */
+    429: ErrorResponse;
+    /**
+     * Service Unavailable
+     */
+    503: ErrorResponse;
 };
 
 export type adminReadReleasePublicationEvidenceError = adminReadReleasePublicationEvidenceErrors[keyof adminReadReleasePublicationEvidenceErrors];
@@ -5619,9 +7656,39 @@ export type adminPublishReleaseData = {
 
 export type adminPublishReleaseErrors = {
     /**
-     * Validation Error
+     * Bad Request
      */
-    422: HTTPValidationError;
+    400: ErrorResponse;
+    /**
+     * Unauthorized
+     */
+    401: ErrorResponse;
+    /**
+     * Forbidden
+     */
+    403: ErrorResponse;
+    /**
+     * Not Found
+     */
+    404: ErrorResponse;
+    /**
+     * Conflict
+     */
+    409: ErrorResponse;
+    /**
+     * Response 422 Admin-Publish Release
+     *
+     * Unprocessable Content
+     */
+    422: ErrorResponse | ValidationErrorResponse;
+    /**
+     * Too Many Requests
+     */
+    429: ErrorResponse;
+    /**
+     * Service Unavailable
+     */
+    503: ErrorResponse;
 };
 
 export type adminPublishReleaseError = adminPublishReleaseErrors[keyof adminPublishReleaseErrors];
@@ -5638,9 +7705,57 @@ export type adminPublishReleaseResponse = adminPublishReleaseResponses[keyof adm
 export type adminReadProductionProvisionVersionsData = {
     body?: never;
     path?: never;
-    query?: never;
+    query?: {
+        /**
+         * Skip
+         */
+        skip?: number;
+        /**
+         * Limit
+         */
+        limit?: number;
+    };
     url: '/api/v1/admin/corpus-releases/production/provision-versions';
 };
+
+export type adminReadProductionProvisionVersionsErrors = {
+    /**
+     * Bad Request
+     */
+    400: ErrorResponse;
+    /**
+     * Unauthorized
+     */
+    401: ErrorResponse;
+    /**
+     * Forbidden
+     */
+    403: ErrorResponse;
+    /**
+     * Not Found
+     */
+    404: ErrorResponse;
+    /**
+     * Conflict
+     */
+    409: ErrorResponse;
+    /**
+     * Response 422 Admin-Read Production Provision Versions
+     *
+     * Unprocessable Content
+     */
+    422: ErrorResponse | ValidationErrorResponse;
+    /**
+     * Too Many Requests
+     */
+    429: ErrorResponse;
+    /**
+     * Service Unavailable
+     */
+    503: ErrorResponse;
+};
+
+export type adminReadProductionProvisionVersionsError = adminReadProductionProvisionVersionsErrors[keyof adminReadProductionProvisionVersionsErrors];
 
 export type adminReadProductionProvisionVersionsResponses = {
     /**
@@ -5660,9 +7775,39 @@ export type legalSearchLegalData = {
 
 export type legalSearchLegalErrors = {
     /**
-     * Validation Error
+     * Bad Request
      */
-    422: HTTPValidationError;
+    400: ErrorResponse;
+    /**
+     * Unauthorized
+     */
+    401: ErrorResponse;
+    /**
+     * Forbidden
+     */
+    403: ErrorResponse;
+    /**
+     * Not Found
+     */
+    404: ErrorResponse;
+    /**
+     * Conflict
+     */
+    409: ErrorResponse;
+    /**
+     * Response 422 Legal-Search Legal
+     *
+     * Unprocessable Content
+     */
+    422: ErrorResponse | ValidationErrorResponse;
+    /**
+     * Too Many Requests
+     */
+    429: ErrorResponse;
+    /**
+     * Service Unavailable
+     */
+    503: ErrorResponse;
 };
 
 export type legalSearchLegalError = legalSearchLegalErrors[keyof legalSearchLegalErrors];
@@ -5690,9 +7835,39 @@ export type legalReadCurrentReleaseData = {
 
 export type legalReadCurrentReleaseErrors = {
     /**
-     * Validation Error
+     * Bad Request
      */
-    422: HTTPValidationError;
+    400: ErrorResponse;
+    /**
+     * Unauthorized
+     */
+    401: ErrorResponse;
+    /**
+     * Forbidden
+     */
+    403: ErrorResponse;
+    /**
+     * Not Found
+     */
+    404: ErrorResponse;
+    /**
+     * Conflict
+     */
+    409: ErrorResponse;
+    /**
+     * Response 422 Legal-Read Current Release
+     *
+     * Unprocessable Content
+     */
+    422: ErrorResponse | ValidationErrorResponse;
+    /**
+     * Too Many Requests
+     */
+    429: ErrorResponse;
+    /**
+     * Service Unavailable
+     */
+    503: ErrorResponse;
 };
 
 export type legalReadCurrentReleaseError = legalReadCurrentReleaseErrors[keyof legalReadCurrentReleaseErrors];
@@ -5724,9 +7899,39 @@ export type legalReadLegalInstrumentsData = {
 
 export type legalReadLegalInstrumentsErrors = {
     /**
-     * Validation Error
+     * Bad Request
      */
-    422: HTTPValidationError;
+    400: ErrorResponse;
+    /**
+     * Unauthorized
+     */
+    401: ErrorResponse;
+    /**
+     * Forbidden
+     */
+    403: ErrorResponse;
+    /**
+     * Not Found
+     */
+    404: ErrorResponse;
+    /**
+     * Conflict
+     */
+    409: ErrorResponse;
+    /**
+     * Response 422 Legal-Read Legal Instruments
+     *
+     * Unprocessable Content
+     */
+    422: ErrorResponse | ValidationErrorResponse;
+    /**
+     * Too Many Requests
+     */
+    429: ErrorResponse;
+    /**
+     * Service Unavailable
+     */
+    503: ErrorResponse;
 };
 
 export type legalReadLegalInstrumentsError = legalReadLegalInstrumentsErrors[keyof legalReadLegalInstrumentsErrors];
@@ -5770,9 +7975,39 @@ export type legalReadProvisionTreeData = {
 
 export type legalReadProvisionTreeErrors = {
     /**
-     * Validation Error
+     * Bad Request
      */
-    422: HTTPValidationError;
+    400: ErrorResponse;
+    /**
+     * Unauthorized
+     */
+    401: ErrorResponse;
+    /**
+     * Forbidden
+     */
+    403: ErrorResponse;
+    /**
+     * Not Found
+     */
+    404: ErrorResponse;
+    /**
+     * Conflict
+     */
+    409: ErrorResponse;
+    /**
+     * Response 422 Legal-Read Provision Tree
+     *
+     * Unprocessable Content
+     */
+    422: ErrorResponse | ValidationErrorResponse;
+    /**
+     * Too Many Requests
+     */
+    429: ErrorResponse;
+    /**
+     * Service Unavailable
+     */
+    503: ErrorResponse;
 };
 
 export type legalReadProvisionTreeError = legalReadProvisionTreeErrors[keyof legalReadProvisionTreeErrors];
@@ -5808,9 +8043,39 @@ export type legalReadProvisionHistoryData = {
 
 export type legalReadProvisionHistoryErrors = {
     /**
-     * Validation Error
+     * Bad Request
      */
-    422: HTTPValidationError;
+    400: ErrorResponse;
+    /**
+     * Unauthorized
+     */
+    401: ErrorResponse;
+    /**
+     * Forbidden
+     */
+    403: ErrorResponse;
+    /**
+     * Not Found
+     */
+    404: ErrorResponse;
+    /**
+     * Conflict
+     */
+    409: ErrorResponse;
+    /**
+     * Response 422 Legal-Read Provision History
+     *
+     * Unprocessable Content
+     */
+    422: ErrorResponse | ValidationErrorResponse;
+    /**
+     * Too Many Requests
+     */
+    429: ErrorResponse;
+    /**
+     * Service Unavailable
+     */
+    503: ErrorResponse;
 };
 
 export type legalReadProvisionHistoryError = legalReadProvisionHistoryErrors[keyof legalReadProvisionHistoryErrors];
@@ -5846,9 +8111,39 @@ export type legalReadProvisionsByCitationData = {
 
 export type legalReadProvisionsByCitationErrors = {
     /**
-     * Validation Error
+     * Bad Request
      */
-    422: HTTPValidationError;
+    400: ErrorResponse;
+    /**
+     * Unauthorized
+     */
+    401: ErrorResponse;
+    /**
+     * Forbidden
+     */
+    403: ErrorResponse;
+    /**
+     * Not Found
+     */
+    404: ErrorResponse;
+    /**
+     * Conflict
+     */
+    409: ErrorResponse;
+    /**
+     * Response 422 Legal-Read Provisions By Citation
+     *
+     * Unprocessable Content
+     */
+    422: ErrorResponse | ValidationErrorResponse;
+    /**
+     * Too Many Requests
+     */
+    429: ErrorResponse;
+    /**
+     * Service Unavailable
+     */
+    503: ErrorResponse;
 };
 
 export type legalReadProvisionsByCitationError = legalReadProvisionsByCitationErrors[keyof legalReadProvisionsByCitationErrors];
@@ -5885,9 +8180,39 @@ export type legalReadSourceContentData = {
 
 export type legalReadSourceContentErrors = {
     /**
-     * Validation Error
+     * Bad Request
      */
-    422: HTTPValidationError;
+    400: ErrorResponse;
+    /**
+     * Unauthorized
+     */
+    401: ErrorResponse;
+    /**
+     * Forbidden
+     */
+    403: ErrorResponse;
+    /**
+     * Not Found
+     */
+    404: ErrorResponse;
+    /**
+     * Conflict
+     */
+    409: ErrorResponse;
+    /**
+     * Response 422 Legal-Read Source Content
+     *
+     * Unprocessable Content
+     */
+    422: ErrorResponse | ValidationErrorResponse;
+    /**
+     * Too Many Requests
+     */
+    429: ErrorResponse;
+    /**
+     * Service Unavailable
+     */
+    503: ErrorResponse;
 };
 
 export type legalReadSourceContentError = legalReadSourceContentErrors[keyof legalReadSourceContentErrors];
@@ -5922,9 +8247,39 @@ export type legalReadCurrentProvisionData = {
 
 export type legalReadCurrentProvisionErrors = {
     /**
-     * Validation Error
+     * Bad Request
      */
-    422: HTTPValidationError;
+    400: ErrorResponse;
+    /**
+     * Unauthorized
+     */
+    401: ErrorResponse;
+    /**
+     * Forbidden
+     */
+    403: ErrorResponse;
+    /**
+     * Not Found
+     */
+    404: ErrorResponse;
+    /**
+     * Conflict
+     */
+    409: ErrorResponse;
+    /**
+     * Response 422 Legal-Read Current Provision
+     *
+     * Unprocessable Content
+     */
+    422: ErrorResponse | ValidationErrorResponse;
+    /**
+     * Too Many Requests
+     */
+    429: ErrorResponse;
+    /**
+     * Service Unavailable
+     */
+    503: ErrorResponse;
 };
 
 export type legalReadCurrentProvisionError = legalReadCurrentProvisionErrors[keyof legalReadCurrentProvisionErrors];
@@ -5945,6 +8300,45 @@ export type conversationsReadChatCapabilitiesData = {
     url: '/api/v1/conversations/capabilities';
 };
 
+export type conversationsReadChatCapabilitiesErrors = {
+    /**
+     * Bad Request
+     */
+    400: ErrorResponse;
+    /**
+     * Unauthorized
+     */
+    401: ErrorResponse;
+    /**
+     * Forbidden
+     */
+    403: ErrorResponse;
+    /**
+     * Not Found
+     */
+    404: ErrorResponse;
+    /**
+     * Conflict
+     */
+    409: ErrorResponse;
+    /**
+     * Response 422 Conversations-Read Chat Capabilities
+     *
+     * Unprocessable Content
+     */
+    422: ErrorResponse | ValidationErrorResponse;
+    /**
+     * Too Many Requests
+     */
+    429: ErrorResponse;
+    /**
+     * Service Unavailable
+     */
+    503: ErrorResponse;
+};
+
+export type conversationsReadChatCapabilitiesError = conversationsReadChatCapabilitiesErrors[keyof conversationsReadChatCapabilitiesErrors];
+
 export type conversationsReadChatCapabilitiesResponses = {
     /**
      * Successful Response
@@ -5960,6 +8354,45 @@ export type conversationsReadChatMetricsData = {
     query?: never;
     url: '/api/v1/conversations/metrics';
 };
+
+export type conversationsReadChatMetricsErrors = {
+    /**
+     * Bad Request
+     */
+    400: ErrorResponse;
+    /**
+     * Unauthorized
+     */
+    401: ErrorResponse;
+    /**
+     * Forbidden
+     */
+    403: ErrorResponse;
+    /**
+     * Not Found
+     */
+    404: ErrorResponse;
+    /**
+     * Conflict
+     */
+    409: ErrorResponse;
+    /**
+     * Response 422 Conversations-Read Chat Metrics
+     *
+     * Unprocessable Content
+     */
+    422: ErrorResponse | ValidationErrorResponse;
+    /**
+     * Too Many Requests
+     */
+    429: ErrorResponse;
+    /**
+     * Service Unavailable
+     */
+    503: ErrorResponse;
+};
+
+export type conversationsReadChatMetricsError = conversationsReadChatMetricsErrors[keyof conversationsReadChatMetricsErrors];
 
 export type conversationsReadChatMetricsResponses = {
     /**
@@ -5992,9 +8425,39 @@ export type conversationsListConversationsData = {
 
 export type conversationsListConversationsErrors = {
     /**
-     * Validation Error
+     * Bad Request
      */
-    422: HTTPValidationError;
+    400: ErrorResponse;
+    /**
+     * Unauthorized
+     */
+    401: ErrorResponse;
+    /**
+     * Forbidden
+     */
+    403: ErrorResponse;
+    /**
+     * Not Found
+     */
+    404: ErrorResponse;
+    /**
+     * Conflict
+     */
+    409: ErrorResponse;
+    /**
+     * Response 422 Conversations-List Conversations
+     *
+     * Unprocessable Content
+     */
+    422: ErrorResponse | ValidationErrorResponse;
+    /**
+     * Too Many Requests
+     */
+    429: ErrorResponse;
+    /**
+     * Service Unavailable
+     */
+    503: ErrorResponse;
 };
 
 export type conversationsListConversationsError = conversationsListConversationsErrors[keyof conversationsListConversationsErrors];
@@ -6017,9 +8480,39 @@ export type conversationsCreateConversationData = {
 
 export type conversationsCreateConversationErrors = {
     /**
-     * Validation Error
+     * Bad Request
      */
-    422: HTTPValidationError;
+    400: ErrorResponse;
+    /**
+     * Unauthorized
+     */
+    401: ErrorResponse;
+    /**
+     * Forbidden
+     */
+    403: ErrorResponse;
+    /**
+     * Not Found
+     */
+    404: ErrorResponse;
+    /**
+     * Conflict
+     */
+    409: ErrorResponse;
+    /**
+     * Response 422 Conversations-Create Conversation
+     *
+     * Unprocessable Content
+     */
+    422: ErrorResponse | ValidationErrorResponse;
+    /**
+     * Too Many Requests
+     */
+    429: ErrorResponse;
+    /**
+     * Service Unavailable
+     */
+    503: ErrorResponse;
 };
 
 export type conversationsCreateConversationError = conversationsCreateConversationErrors[keyof conversationsCreateConversationErrors];
@@ -6047,9 +8540,39 @@ export type conversationsDeleteConversationData = {
 
 export type conversationsDeleteConversationErrors = {
     /**
-     * Validation Error
+     * Bad Request
      */
-    422: HTTPValidationError;
+    400: ErrorResponse;
+    /**
+     * Unauthorized
+     */
+    401: ErrorResponse;
+    /**
+     * Forbidden
+     */
+    403: ErrorResponse;
+    /**
+     * Not Found
+     */
+    404: ErrorResponse;
+    /**
+     * Conflict
+     */
+    409: ErrorResponse;
+    /**
+     * Response 422 Conversations-Delete Conversation
+     *
+     * Unprocessable Content
+     */
+    422: ErrorResponse | ValidationErrorResponse;
+    /**
+     * Too Many Requests
+     */
+    429: ErrorResponse;
+    /**
+     * Service Unavailable
+     */
+    503: ErrorResponse;
 };
 
 export type conversationsDeleteConversationError = conversationsDeleteConversationErrors[keyof conversationsDeleteConversationErrors];
@@ -6086,9 +8609,39 @@ export type conversationsReadConversationData = {
 
 export type conversationsReadConversationErrors = {
     /**
-     * Validation Error
+     * Bad Request
      */
-    422: HTTPValidationError;
+    400: ErrorResponse;
+    /**
+     * Unauthorized
+     */
+    401: ErrorResponse;
+    /**
+     * Forbidden
+     */
+    403: ErrorResponse;
+    /**
+     * Not Found
+     */
+    404: ErrorResponse;
+    /**
+     * Conflict
+     */
+    409: ErrorResponse;
+    /**
+     * Response 422 Conversations-Read Conversation
+     *
+     * Unprocessable Content
+     */
+    422: ErrorResponse | ValidationErrorResponse;
+    /**
+     * Too Many Requests
+     */
+    429: ErrorResponse;
+    /**
+     * Service Unavailable
+     */
+    503: ErrorResponse;
 };
 
 export type conversationsReadConversationError = conversationsReadConversationErrors[keyof conversationsReadConversationErrors];
@@ -6116,9 +8669,39 @@ export type conversationsRenameConversationData = {
 
 export type conversationsRenameConversationErrors = {
     /**
-     * Validation Error
+     * Bad Request
      */
-    422: HTTPValidationError;
+    400: ErrorResponse;
+    /**
+     * Unauthorized
+     */
+    401: ErrorResponse;
+    /**
+     * Forbidden
+     */
+    403: ErrorResponse;
+    /**
+     * Not Found
+     */
+    404: ErrorResponse;
+    /**
+     * Conflict
+     */
+    409: ErrorResponse;
+    /**
+     * Response 422 Conversations-Rename Conversation
+     *
+     * Unprocessable Content
+     */
+    422: ErrorResponse | ValidationErrorResponse;
+    /**
+     * Too Many Requests
+     */
+    429: ErrorResponse;
+    /**
+     * Service Unavailable
+     */
+    503: ErrorResponse;
 };
 
 export type conversationsRenameConversationError = conversationsRenameConversationErrors[keyof conversationsRenameConversationErrors];
@@ -6150,9 +8733,39 @@ export type conversationsSubmitMessageFeedbackData = {
 
 export type conversationsSubmitMessageFeedbackErrors = {
     /**
-     * Validation Error
+     * Bad Request
      */
-    422: HTTPValidationError;
+    400: ErrorResponse;
+    /**
+     * Unauthorized
+     */
+    401: ErrorResponse;
+    /**
+     * Forbidden
+     */
+    403: ErrorResponse;
+    /**
+     * Not Found
+     */
+    404: ErrorResponse;
+    /**
+     * Conflict
+     */
+    409: ErrorResponse;
+    /**
+     * Response 422 Conversations-Submit Message Feedback
+     *
+     * Unprocessable Content
+     */
+    422: ErrorResponse | ValidationErrorResponse;
+    /**
+     * Too Many Requests
+     */
+    429: ErrorResponse;
+    /**
+     * Service Unavailable
+     */
+    503: ErrorResponse;
 };
 
 export type conversationsSubmitMessageFeedbackError = conversationsSubmitMessageFeedbackErrors[keyof conversationsSubmitMessageFeedbackErrors];
@@ -6172,6 +8785,45 @@ export type conversationsClaimGuestConversationsData = {
     query?: never;
     url: '/api/v1/conversations/claim';
 };
+
+export type conversationsClaimGuestConversationsErrors = {
+    /**
+     * Bad Request
+     */
+    400: ErrorResponse;
+    /**
+     * Unauthorized
+     */
+    401: ErrorResponse;
+    /**
+     * Forbidden
+     */
+    403: ErrorResponse;
+    /**
+     * Not Found
+     */
+    404: ErrorResponse;
+    /**
+     * Conflict
+     */
+    409: ErrorResponse;
+    /**
+     * Response 422 Conversations-Claim Guest Conversations
+     *
+     * Unprocessable Content
+     */
+    422: ErrorResponse | ValidationErrorResponse;
+    /**
+     * Too Many Requests
+     */
+    429: ErrorResponse;
+    /**
+     * Service Unavailable
+     */
+    503: ErrorResponse;
+};
+
+export type conversationsClaimGuestConversationsError = conversationsClaimGuestConversationsErrors[keyof conversationsClaimGuestConversationsErrors];
 
 export type conversationsClaimGuestConversationsResponses = {
     /**
@@ -6196,9 +8848,39 @@ export type conversationsSubmitMessageData = {
 
 export type conversationsSubmitMessageErrors = {
     /**
-     * Validation Error
+     * Bad Request
      */
-    422: HTTPValidationError;
+    400: ErrorResponse;
+    /**
+     * Unauthorized
+     */
+    401: ErrorResponse;
+    /**
+     * Forbidden
+     */
+    403: ErrorResponse;
+    /**
+     * Not Found
+     */
+    404: ErrorResponse;
+    /**
+     * Conflict
+     */
+    409: ErrorResponse;
+    /**
+     * Response 422 Conversations-Submit Message
+     *
+     * Unprocessable Content
+     */
+    422: ErrorResponse | ValidationErrorResponse;
+    /**
+     * Too Many Requests
+     */
+    429: ErrorResponse;
+    /**
+     * Service Unavailable
+     */
+    503: ErrorResponse;
 };
 
 export type conversationsSubmitMessageError = conversationsSubmitMessageErrors[keyof conversationsSubmitMessageErrors];
@@ -6230,9 +8912,39 @@ export type conversationsCancelRunData = {
 
 export type conversationsCancelRunErrors = {
     /**
-     * Validation Error
+     * Bad Request
      */
-    422: HTTPValidationError;
+    400: ErrorResponse;
+    /**
+     * Unauthorized
+     */
+    401: ErrorResponse;
+    /**
+     * Forbidden
+     */
+    403: ErrorResponse;
+    /**
+     * Not Found
+     */
+    404: ErrorResponse;
+    /**
+     * Conflict
+     */
+    409: ErrorResponse;
+    /**
+     * Response 422 Conversations-Cancel Run
+     *
+     * Unprocessable Content
+     */
+    422: ErrorResponse | ValidationErrorResponse;
+    /**
+     * Too Many Requests
+     */
+    429: ErrorResponse;
+    /**
+     * Service Unavailable
+     */
+    503: ErrorResponse;
 };
 
 export type conversationsCancelRunError = conversationsCancelRunErrors[keyof conversationsCancelRunErrors];
@@ -6271,9 +8983,39 @@ export type conversationsConversationEventsData = {
 
 export type conversationsConversationEventsErrors = {
     /**
-     * Validation Error
+     * Bad Request
      */
-    422: HTTPValidationError;
+    400: ErrorResponse;
+    /**
+     * Unauthorized
+     */
+    401: ErrorResponse;
+    /**
+     * Forbidden
+     */
+    403: ErrorResponse;
+    /**
+     * Not Found
+     */
+    404: ErrorResponse;
+    /**
+     * Conflict
+     */
+    409: ErrorResponse;
+    /**
+     * Response 422 Conversations-Conversation Events
+     *
+     * Unprocessable Content
+     */
+    422: ErrorResponse | ValidationErrorResponse;
+    /**
+     * Too Many Requests
+     */
+    429: ErrorResponse;
+    /**
+     * Service Unavailable
+     */
+    503: ErrorResponse;
 };
 
 export type conversationsConversationEventsError = conversationsConversationEventsErrors[keyof conversationsConversationEventsErrors];
@@ -6294,9 +9036,39 @@ export type privateCreateUserData = {
 
 export type privateCreateUserErrors = {
     /**
-     * Validation Error
+     * Bad Request
      */
-    422: HTTPValidationError;
+    400: ErrorResponse;
+    /**
+     * Unauthorized
+     */
+    401: ErrorResponse;
+    /**
+     * Forbidden
+     */
+    403: ErrorResponse;
+    /**
+     * Not Found
+     */
+    404: ErrorResponse;
+    /**
+     * Conflict
+     */
+    409: ErrorResponse;
+    /**
+     * Response 422 Private-Create User
+     *
+     * Unprocessable Content
+     */
+    422: ErrorResponse | ValidationErrorResponse;
+    /**
+     * Too Many Requests
+     */
+    429: ErrorResponse;
+    /**
+     * Service Unavailable
+     */
+    503: ErrorResponse;
 };
 
 export type privateCreateUserError = privateCreateUserErrors[keyof privateCreateUserErrors];

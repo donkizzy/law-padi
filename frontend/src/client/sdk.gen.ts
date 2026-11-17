@@ -2,7 +2,7 @@
 
 import { type Client, type Options as Options2, type TDataShape, urlSearchParamsBodySerializer } from './client';
 import { client } from './client.gen';
-import type { accountExportAccountDataData, accountExportAccountDataResponses, accountMergeSavedProvisionsData, accountMergeSavedProvisionsErrors, accountMergeSavedProvisionsResponses, accountReadPreferencesData, accountReadPreferencesResponses, accountReadSavedProvisionsData, accountReadSavedProvisionsResponses, accountRemoveSavedProvisionData, accountRemoveSavedProvisionErrors, accountRemoveSavedProvisionResponses, accountSavePreferencesData, accountSavePreferencesErrors, accountSavePreferencesResponses, accountSaveProvisionData, accountSaveProvisionErrors, accountSaveProvisionResponses, adminCancelRunData, adminCancelRunErrors, adminCancelRunResponses, adminCompleteUploadData, adminCompleteUploadErrors, adminCompleteUploadResponses, adminComposeReleaseData, adminComposeReleaseErrors, adminComposeReleaseResponses, adminCreateEmbeddingProfileData, adminCreateEmbeddingProfileErrors, adminCreateEmbeddingProfileResponses, adminCreateMultipartUploadPartsData, adminCreateMultipartUploadPartsErrors, adminCreateMultipartUploadPartsResponses, adminCreateSourceUploadData, adminCreateSourceUploadErrors, adminCreateSourceUploadResponses, adminDecideReviewItemData, adminDecideReviewItemErrors, adminDecideReviewItemResponses, adminDeriveReviewItemData, adminDeriveReviewItemErrors, adminDeriveReviewItemResponses, adminEvaluateOcrBenchmarkRouteData, adminEvaluateOcrBenchmarkRouteErrors, adminEvaluateOcrBenchmarkRouteResponses, adminPatchPageSelectionData, adminPatchPageSelectionErrors, adminPatchPageSelectionResponses, adminPatchReviewIssueData, adminPatchReviewIssueErrors, adminPatchReviewIssueResponses, adminPatchReviewItemData, adminPatchReviewItemErrors, adminPatchReviewItemResponses, adminPublishReleaseData, adminPublishReleaseErrors, adminPublishReleaseResponses, adminPutSourceUploadObjectData, adminPutSourceUploadObjectErrors, adminPutSourceUploadObjectResponses, adminReadAdminAlertsData, adminReadAdminAlertsResponses, adminReadAdminMetricsData, adminReadAdminMetricsResponses, adminReadAuditEventsData, adminReadAuditEventsErrors, adminReadAuditEventsResponses, adminReadCorpusReleasesData, adminReadCorpusReleasesErrors, adminReadCorpusReleasesResponses, adminReadEmbeddingBenchmarkData, adminReadEmbeddingBenchmarkErrors, adminReadEmbeddingBenchmarkResponses, adminReadEmbeddingProfilesData, adminReadEmbeddingProfilesResponses, adminReadIngestionArtifactContentData, adminReadIngestionArtifactContentErrors, adminReadIngestionArtifactContentResponses, adminReadIngestionRunData, adminReadIngestionRunErrors, adminReadIngestionRunPagesData, adminReadIngestionRunPagesErrors, adminReadIngestionRunPagesResponses, adminReadIngestionRunResponses, adminReadIngestionRunsData, adminReadIngestionRunsErrors, adminReadIngestionRunsResponses, adminReadMyAdminRolesData, adminReadMyAdminRolesResponses, adminReadOcrBenchmarkData, adminReadOcrBenchmarkErrors, adminReadOcrBenchmarkResponses, adminReadProductionProvisionVersionsData, adminReadProductionProvisionVersionsResponses, adminReadReleaseManifestData, adminReadReleaseManifestErrors, adminReadReleaseManifestResponses, adminReadReleasePublicationEvidenceData, adminReadReleasePublicationEvidenceErrors, adminReadReleasePublicationEvidenceResponses, adminReadReviewItemData, adminReadReviewItemErrors, adminReadReviewItemResponses, adminReadReviewItemsData, adminReadReviewItemsErrors, adminReadReviewItemsResponses, adminResumeRunData, adminResumeRunErrors, adminResumeRunResponses, adminRetryRunData, adminRetryRunErrors, adminRetryRunResponses, adminStartEmbeddingRunData, adminStartEmbeddingRunErrors, adminStartEmbeddingRunResponses, adminStreamIngestionRunEventsData, adminStreamIngestionRunEventsErrors, adminStreamIngestionRunEventsResponses, adminUpdateEmbeddingProfileData, adminUpdateEmbeddingProfileErrors, adminUpdateEmbeddingProfileResponses, adminValidateReleaseData, adminValidateReleaseErrors, adminValidateReleaseResponses, adminVerifyDocumentSourceData, adminVerifyDocumentSourceErrors, adminVerifyDocumentSourceResponses, conversationsCancelRunData, conversationsCancelRunErrors, conversationsCancelRunResponses, conversationsClaimGuestConversationsData, conversationsClaimGuestConversationsResponses, conversationsConversationEventsData, conversationsConversationEventsErrors, conversationsConversationEventsResponses, conversationsCreateConversationData, conversationsCreateConversationErrors, conversationsCreateConversationResponses, conversationsDeleteConversationData, conversationsDeleteConversationErrors, conversationsDeleteConversationResponses, conversationsListConversationsData, conversationsListConversationsErrors, conversationsListConversationsResponses, conversationsReadChatCapabilitiesData, conversationsReadChatCapabilitiesResponses, conversationsReadChatMetricsData, conversationsReadChatMetricsResponses, conversationsReadConversationData, conversationsReadConversationErrors, conversationsReadConversationResponses, conversationsRenameConversationData, conversationsRenameConversationErrors, conversationsRenameConversationResponses, conversationsSubmitMessageData, conversationsSubmitMessageErrors, conversationsSubmitMessageFeedbackData, conversationsSubmitMessageFeedbackErrors, conversationsSubmitMessageFeedbackResponses, conversationsSubmitMessageResponses, legalReadCurrentProvisionData, legalReadCurrentProvisionErrors, legalReadCurrentProvisionResponses, legalReadCurrentReleaseData, legalReadCurrentReleaseErrors, legalReadCurrentReleaseResponses, legalReadLegalInstrumentsData, legalReadLegalInstrumentsErrors, legalReadLegalInstrumentsResponses, legalReadProvisionHistoryData, legalReadProvisionHistoryErrors, legalReadProvisionHistoryResponses, legalReadProvisionsByCitationData, legalReadProvisionsByCitationErrors, legalReadProvisionsByCitationResponses, legalReadProvisionTreeData, legalReadProvisionTreeErrors, legalReadProvisionTreeResponses, legalReadSourceContentData, legalReadSourceContentErrors, legalReadSourceContentResponses, legalSearchLegalData, legalSearchLegalErrors, legalSearchLegalResponses, loginLoginAccessTokenData, loginLoginAccessTokenErrors, loginLoginAccessTokenResponses, loginLogoutData, loginLogoutErrors, loginLogoutResponses, loginRecoverPasswordData, loginRecoverPasswordErrors, loginRecoverPasswordHtmlContentData, loginRecoverPasswordHtmlContentErrors, loginRecoverPasswordHtmlContentResponses, loginRecoverPasswordResponses, loginRefreshAccessTokenData, loginRefreshAccessTokenErrors, loginRefreshAccessTokenResponses, loginResetPasswordData, loginResetPasswordErrors, loginResetPasswordResponses, loginTestTokenData, loginTestTokenResponses, privateCreateUserData, privateCreateUserErrors, privateCreateUserResponses, usersCreateUserData, usersCreateUserErrors, usersCreateUserResponses, usersDeleteUserData, usersDeleteUserErrors, usersDeleteUserMeData, usersDeleteUserMeErrors, usersDeleteUserMeResponses, usersDeleteUserResponses, usersReadUserByIdData, usersReadUserByIdErrors, usersReadUserByIdResponses, usersReadUserMeData, usersReadUserMeResponses, usersReadUsersData, usersReadUsersErrors, usersReadUsersResponses, usersRegisterUserData, usersRegisterUserErrors, usersRegisterUserResponses, usersRequestEmailChangeData, usersRequestEmailChangeErrors, usersRequestEmailChangeResponses, usersResendVerificationEmailData, usersResendVerificationEmailResponses, usersUpdatePasswordMeData, usersUpdatePasswordMeErrors, usersUpdatePasswordMeResponses, usersUpdateUserData, usersUpdateUserErrors, usersUpdateUserMeData, usersUpdateUserMeErrors, usersUpdateUserMeResponses, usersUpdateUserResponses, usersVerifyEmailData, usersVerifyEmailErrors, usersVerifyEmailResponses, utilsHealthCheckData, utilsHealthCheckResponses, utilsTestEmailData, utilsTestEmailErrors, utilsTestEmailResponses } from './types.gen';
+import type { accountExportAccountDataData, accountExportAccountDataErrors, accountExportAccountDataResponses, accountMergeSavedProvisionsData, accountMergeSavedProvisionsErrors, accountMergeSavedProvisionsResponses, accountReadPreferencesData, accountReadPreferencesErrors, accountReadPreferencesResponses, accountReadSavedProvisionsData, accountReadSavedProvisionsErrors, accountReadSavedProvisionsResponses, accountRemoveSavedProvisionData, accountRemoveSavedProvisionErrors, accountRemoveSavedProvisionResponses, accountSavePreferencesData, accountSavePreferencesErrors, accountSavePreferencesResponses, accountSaveProvisionData, accountSaveProvisionErrors, accountSaveProvisionResponses, adminCancelRunData, adminCancelRunErrors, adminCancelRunResponses, adminCompleteUploadData, adminCompleteUploadErrors, adminCompleteUploadResponses, adminComposeReleaseData, adminComposeReleaseErrors, adminComposeReleaseResponses, adminCreateEmbeddingProfileData, adminCreateEmbeddingProfileErrors, adminCreateEmbeddingProfileResponses, adminCreateMultipartUploadPartsData, adminCreateMultipartUploadPartsErrors, adminCreateMultipartUploadPartsResponses, adminCreateSourceUploadData, adminCreateSourceUploadErrors, adminCreateSourceUploadResponses, adminDecideReviewItemData, adminDecideReviewItemErrors, adminDecideReviewItemResponses, adminDeriveReviewItemData, adminDeriveReviewItemErrors, adminDeriveReviewItemResponses, adminEvaluateOcrBenchmarkRouteData, adminEvaluateOcrBenchmarkRouteErrors, adminEvaluateOcrBenchmarkRouteResponses, adminPatchPageSelectionData, adminPatchPageSelectionErrors, adminPatchPageSelectionResponses, adminPatchReviewIssueData, adminPatchReviewIssueErrors, adminPatchReviewIssueResponses, adminPatchReviewItemData, adminPatchReviewItemErrors, adminPatchReviewItemResponses, adminPublishReleaseData, adminPublishReleaseErrors, adminPublishReleaseResponses, adminPutSourceUploadObjectData, adminPutSourceUploadObjectErrors, adminPutSourceUploadObjectResponses, adminReadAdminAlertsData, adminReadAdminAlertsErrors, adminReadAdminAlertsResponses, adminReadAdminMetricsData, adminReadAdminMetricsErrors, adminReadAdminMetricsResponses, adminReadAuditEventsData, adminReadAuditEventsErrors, adminReadAuditEventsResponses, adminReadCorpusReleasesData, adminReadCorpusReleasesErrors, adminReadCorpusReleasesResponses, adminReadEmbeddingBenchmarkData, adminReadEmbeddingBenchmarkErrors, adminReadEmbeddingBenchmarkResponses, adminReadEmbeddingProfilesData, adminReadEmbeddingProfilesErrors, adminReadEmbeddingProfilesResponses, adminReadIngestionArtifactContentData, adminReadIngestionArtifactContentErrors, adminReadIngestionArtifactContentResponses, adminReadIngestionRunData, adminReadIngestionRunErrors, adminReadIngestionRunPagesData, adminReadIngestionRunPagesErrors, adminReadIngestionRunPagesResponses, adminReadIngestionRunResponses, adminReadIngestionRunsData, adminReadIngestionRunsErrors, adminReadIngestionRunsResponses, adminReadMyAdminRolesData, adminReadMyAdminRolesErrors, adminReadMyAdminRolesResponses, adminReadOcrBenchmarkData, adminReadOcrBenchmarkErrors, adminReadOcrBenchmarkResponses, adminReadProductionProvisionVersionsData, adminReadProductionProvisionVersionsErrors, adminReadProductionProvisionVersionsResponses, adminReadReleaseManifestData, adminReadReleaseManifestErrors, adminReadReleaseManifestResponses, adminReadReleasePublicationEvidenceData, adminReadReleasePublicationEvidenceErrors, adminReadReleasePublicationEvidenceResponses, adminReadReviewItemData, adminReadReviewItemErrors, adminReadReviewItemResponses, adminReadReviewItemsData, adminReadReviewItemsErrors, adminReadReviewItemsResponses, adminResumeRunData, adminResumeRunErrors, adminResumeRunResponses, adminRetryRunData, adminRetryRunErrors, adminRetryRunResponses, adminStartEmbeddingRunData, adminStartEmbeddingRunErrors, adminStartEmbeddingRunResponses, adminStreamIngestionRunEventsData, adminStreamIngestionRunEventsErrors, adminStreamIngestionRunEventsResponses, adminUpdateEmbeddingProfileData, adminUpdateEmbeddingProfileErrors, adminUpdateEmbeddingProfileResponses, adminValidateReleaseData, adminValidateReleaseErrors, adminValidateReleaseResponses, adminVerifyDocumentSourceData, adminVerifyDocumentSourceErrors, adminVerifyDocumentSourceResponses, conversationsCancelRunData, conversationsCancelRunErrors, conversationsCancelRunResponses, conversationsClaimGuestConversationsData, conversationsClaimGuestConversationsErrors, conversationsClaimGuestConversationsResponses, conversationsConversationEventsData, conversationsConversationEventsErrors, conversationsConversationEventsResponses, conversationsCreateConversationData, conversationsCreateConversationErrors, conversationsCreateConversationResponses, conversationsDeleteConversationData, conversationsDeleteConversationErrors, conversationsDeleteConversationResponses, conversationsListConversationsData, conversationsListConversationsErrors, conversationsListConversationsResponses, conversationsReadChatCapabilitiesData, conversationsReadChatCapabilitiesErrors, conversationsReadChatCapabilitiesResponses, conversationsReadChatMetricsData, conversationsReadChatMetricsErrors, conversationsReadChatMetricsResponses, conversationsReadConversationData, conversationsReadConversationErrors, conversationsReadConversationResponses, conversationsRenameConversationData, conversationsRenameConversationErrors, conversationsRenameConversationResponses, conversationsSubmitMessageData, conversationsSubmitMessageErrors, conversationsSubmitMessageFeedbackData, conversationsSubmitMessageFeedbackErrors, conversationsSubmitMessageFeedbackResponses, conversationsSubmitMessageResponses, legalReadCurrentProvisionData, legalReadCurrentProvisionErrors, legalReadCurrentProvisionResponses, legalReadCurrentReleaseData, legalReadCurrentReleaseErrors, legalReadCurrentReleaseResponses, legalReadLegalInstrumentsData, legalReadLegalInstrumentsErrors, legalReadLegalInstrumentsResponses, legalReadProvisionHistoryData, legalReadProvisionHistoryErrors, legalReadProvisionHistoryResponses, legalReadProvisionsByCitationData, legalReadProvisionsByCitationErrors, legalReadProvisionsByCitationResponses, legalReadProvisionTreeData, legalReadProvisionTreeErrors, legalReadProvisionTreeResponses, legalReadSourceContentData, legalReadSourceContentErrors, legalReadSourceContentResponses, legalSearchLegalData, legalSearchLegalErrors, legalSearchLegalResponses, loginLoginAccessTokenData, loginLoginAccessTokenErrors, loginLoginAccessTokenResponses, loginLogoutData, loginLogoutErrors, loginLogoutResponses, loginRecoverPasswordData, loginRecoverPasswordErrors, loginRecoverPasswordHtmlContentData, loginRecoverPasswordHtmlContentErrors, loginRecoverPasswordHtmlContentResponses, loginRecoverPasswordResponses, loginRefreshAccessTokenData, loginRefreshAccessTokenErrors, loginRefreshAccessTokenResponses, loginResetPasswordData, loginResetPasswordErrors, loginResetPasswordResponses, loginTestTokenData, loginTestTokenErrors, loginTestTokenResponses, privateCreateUserData, privateCreateUserErrors, privateCreateUserResponses, usersCreateUserData, usersCreateUserErrors, usersCreateUserResponses, usersDeleteUserData, usersDeleteUserErrors, usersDeleteUserMeData, usersDeleteUserMeErrors, usersDeleteUserMeResponses, usersDeleteUserResponses, usersReadUserByIdData, usersReadUserByIdErrors, usersReadUserByIdResponses, usersReadUserMeData, usersReadUserMeErrors, usersReadUserMeResponses, usersReadUsersData, usersReadUsersErrors, usersReadUsersResponses, usersRegisterUserData, usersRegisterUserErrors, usersRegisterUserResponses, usersRequestEmailChangeData, usersRequestEmailChangeErrors, usersRequestEmailChangeResponses, usersResendVerificationEmailData, usersResendVerificationEmailErrors, usersResendVerificationEmailResponses, usersUpdatePasswordMeData, usersUpdatePasswordMeErrors, usersUpdatePasswordMeResponses, usersUpdateUserData, usersUpdateUserErrors, usersUpdateUserMeData, usersUpdateUserMeErrors, usersUpdateUserMeResponses, usersUpdateUserResponses, usersVerifyEmailData, usersVerifyEmailErrors, usersVerifyEmailResponses, utilsHealthCheckData, utilsHealthCheckErrors, utilsHealthCheckResponses, utilsTestEmailData, utilsTestEmailErrors, utilsTestEmailResponses } from './types.gen';
 
 export type Options<TData extends TDataShape = TDataShape, ThrowOnError extends boolean = boolean, TResponse = unknown> = Options2<TData, ThrowOnError, TResponse> & {
     /**
@@ -70,7 +70,7 @@ export class LoginService {
      * Test access token
      */
     public static testToken<ThrowOnError extends boolean = true>(options?: Options<loginTestTokenData, ThrowOnError>) {
-        return (options?.client ?? client).post<loginTestTokenResponses, unknown, ThrowOnError>({
+        return (options?.client ?? client).post<loginTestTokenResponses, loginTestTokenErrors, ThrowOnError>({
             responseType: 'json',
             security: [{ scheme: 'bearer', type: 'http' }],
             url: '/api/v1/login/test-token',
@@ -180,7 +180,7 @@ export class UsersService {
      * Get current user.
      */
     public static readUserMe<ThrowOnError extends boolean = true>(options?: Options<usersReadUserMeData, ThrowOnError>) {
-        return (options?.client ?? client).get<usersReadUserMeResponses, unknown, ThrowOnError>({
+        return (options?.client ?? client).get<usersReadUserMeResponses, usersReadUserMeErrors, ThrowOnError>({
             responseType: 'json',
             security: [{ scheme: 'bearer', type: 'http' }],
             url: '/api/v1/users/me',
@@ -284,7 +284,7 @@ export class UsersService {
      * Send the signed-in user a fresh verification link.
      */
     public static resendVerificationEmail<ThrowOnError extends boolean = true>(options?: Options<usersResendVerificationEmailData, ThrowOnError>) {
-        return (options?.client ?? client).post<usersResendVerificationEmailResponses, unknown, ThrowOnError>({
+        return (options?.client ?? client).post<usersResendVerificationEmailResponses, usersResendVerificationEmailErrors, ThrowOnError>({
             responseType: 'json',
             security: [{ scheme: 'bearer', type: 'http' }],
             url: '/api/v1/users/me/verification-email',
@@ -360,7 +360,7 @@ export class AccountService {
      * Sections saved to this account, oldest first.
      */
     public static readSavedProvisions<ThrowOnError extends boolean = true>(options?: Options<accountReadSavedProvisionsData, ThrowOnError>) {
-        return (options?.client ?? client).get<accountReadSavedProvisionsResponses, unknown, ThrowOnError>({
+        return (options?.client ?? client).get<accountReadSavedProvisionsResponses, accountReadSavedProvisionsErrors, ThrowOnError>({
             responseType: 'json',
             security: [{ scheme: 'bearer', type: 'http' }],
             url: '/api/v1/account/saved-provisions',
@@ -412,7 +412,7 @@ export class AccountService {
      * preferences and conversations with their messages.
      */
     public static exportAccountData<ThrowOnError extends boolean = true>(options?: Options<accountExportAccountDataData, ThrowOnError>) {
-        return (options?.client ?? client).get<accountExportAccountDataResponses, unknown, ThrowOnError>({
+        return (options?.client ?? client).get<accountExportAccountDataResponses, accountExportAccountDataErrors, ThrowOnError>({
             responseType: 'json',
             security: [{ scheme: 'bearer', type: 'http' }],
             url: '/api/v1/account/export',
@@ -426,7 +426,7 @@ export class AccountService {
      * This account's preferences, or null if none have been saved yet.
      */
     public static readPreferences<ThrowOnError extends boolean = true>(options?: Options<accountReadPreferencesData, ThrowOnError>) {
-        return (options?.client ?? client).get<accountReadPreferencesResponses, unknown, ThrowOnError>({
+        return (options?.client ?? client).get<accountReadPreferencesResponses, accountReadPreferencesErrors, ThrowOnError>({
             responseType: 'json',
             security: [{ scheme: 'bearer', type: 'http' }],
             url: '/api/v1/account/preferences',
@@ -474,7 +474,7 @@ export class UtilsService {
      * The probe is public, so it reports readiness only, never versions.
      */
     public static healthCheck<ThrowOnError extends boolean = true>(options?: Options<utilsHealthCheckData, ThrowOnError>) {
-        return (options?.client ?? client).get<utilsHealthCheckResponses, unknown, ThrowOnError>({
+        return (options?.client ?? client).get<utilsHealthCheckResponses, utilsHealthCheckErrors, ThrowOnError>({
             responseType: 'json',
             url: '/api/v1/utils/health-check/',
             ...options
@@ -487,7 +487,7 @@ export class AdminService {
      * Read My Admin Roles
      */
     public static readMyAdminRoles<ThrowOnError extends boolean = true>(options?: Options<adminReadMyAdminRolesData, ThrowOnError>) {
-        return (options?.client ?? client).get<adminReadMyAdminRolesResponses, unknown, ThrowOnError>({
+        return (options?.client ?? client).get<adminReadMyAdminRolesResponses, adminReadMyAdminRolesErrors, ThrowOnError>({
             responseType: 'json',
             security: [{ scheme: 'bearer', type: 'http' }],
             url: '/api/v1/admin/my-roles',
@@ -511,7 +511,7 @@ export class AdminService {
      * Read Admin Metrics
      */
     public static readAdminMetrics<ThrowOnError extends boolean = true>(options?: Options<adminReadAdminMetricsData, ThrowOnError>) {
-        return (options?.client ?? client).get<adminReadAdminMetricsResponses, unknown, ThrowOnError>({
+        return (options?.client ?? client).get<adminReadAdminMetricsResponses, adminReadAdminMetricsErrors, ThrowOnError>({
             responseType: 'json',
             security: [{ scheme: 'bearer', type: 'http' }],
             url: '/api/v1/admin/metrics',
@@ -523,7 +523,7 @@ export class AdminService {
      * Read Admin Alerts
      */
     public static readAdminAlerts<ThrowOnError extends boolean = true>(options?: Options<adminReadAdminAlertsData, ThrowOnError>) {
-        return (options?.client ?? client).get<adminReadAdminAlertsResponses, unknown, ThrowOnError>({
+        return (options?.client ?? client).get<adminReadAdminAlertsResponses, adminReadAdminAlertsErrors, ThrowOnError>({
             responseType: 'json',
             security: [{ scheme: 'bearer', type: 'http' }],
             url: '/api/v1/admin/alerts',
@@ -852,7 +852,7 @@ export class AdminService {
      * Read Embedding Profiles
      */
     public static readEmbeddingProfiles<ThrowOnError extends boolean = true>(options?: Options<adminReadEmbeddingProfilesData, ThrowOnError>) {
-        return (options?.client ?? client).get<adminReadEmbeddingProfilesResponses, unknown, ThrowOnError>({
+        return (options?.client ?? client).get<adminReadEmbeddingProfilesResponses, adminReadEmbeddingProfilesErrors, ThrowOnError>({
             responseType: 'json',
             security: [{ scheme: 'bearer', type: 'http' }],
             url: '/api/v1/admin/embedding-profiles',
@@ -1008,7 +1008,7 @@ export class AdminService {
      * Read Production Provision Versions
      */
     public static readProductionProvisionVersions<ThrowOnError extends boolean = true>(options?: Options<adminReadProductionProvisionVersionsData, ThrowOnError>) {
-        return (options?.client ?? client).get<adminReadProductionProvisionVersionsResponses, unknown, ThrowOnError>({
+        return (options?.client ?? client).get<adminReadProductionProvisionVersionsResponses, adminReadProductionProvisionVersionsErrors, ThrowOnError>({
             responseType: 'json',
             security: [{ scheme: 'bearer', type: 'http' }],
             url: '/api/v1/admin/corpus-releases/production/provision-versions',
@@ -1118,7 +1118,7 @@ export class ConversationsService {
      * Report product availability independently of conversation history.
      */
     public static readChatCapabilities<ThrowOnError extends boolean = true>(options?: Options<conversationsReadChatCapabilitiesData, ThrowOnError>) {
-        return (options?.client ?? client).get<conversationsReadChatCapabilitiesResponses, unknown, ThrowOnError>({
+        return (options?.client ?? client).get<conversationsReadChatCapabilitiesResponses, conversationsReadChatCapabilitiesErrors, ThrowOnError>({
             responseType: 'json',
             url: '/api/v1/conversations/capabilities',
             ...options
@@ -1131,7 +1131,7 @@ export class ConversationsService {
      * Aggregate quality signals without exposing questions or answer text.
      */
     public static readChatMetrics<ThrowOnError extends boolean = true>(options?: Options<conversationsReadChatMetricsData, ThrowOnError>) {
-        return (options?.client ?? client).get<conversationsReadChatMetricsResponses, unknown, ThrowOnError>({
+        return (options?.client ?? client).get<conversationsReadChatMetricsResponses, conversationsReadChatMetricsErrors, ThrowOnError>({
             responseType: 'json',
             security: [{ scheme: 'bearer', type: 'http' }],
             url: '/api/v1/conversations/metrics',
@@ -1217,7 +1217,7 @@ export class ConversationsService {
      * Claim Guest Conversations
      */
     public static claimGuestConversations<ThrowOnError extends boolean = true>(options?: Options<conversationsClaimGuestConversationsData, ThrowOnError>) {
-        return (options?.client ?? client).post<conversationsClaimGuestConversationsResponses, unknown, ThrowOnError>({
+        return (options?.client ?? client).post<conversationsClaimGuestConversationsResponses, conversationsClaimGuestConversationsErrors, ThrowOnError>({
             responseType: 'json',
             url: '/api/v1/conversations/claim',
             ...options

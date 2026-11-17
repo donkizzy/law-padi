@@ -16,7 +16,9 @@ def test_cloud_origin_requires_proxy_credential(
 ) -> None:
     monkeypatch.setattr(settings, "ORIGIN_PROXY_SECRET", "a" * 32)
     path = f"{settings.API_V1_STR}/utils/health-check/"
-    assert client.get(path).status_code == 403
+    rejected = client.get(path)
+    assert rejected.status_code == 403
+    assert rejected.json() == {"detail": "Forbidden", "code": "forbidden"}
     assert (
         client.get(path, headers={"x-origin-proxy-secret": "wrong"}).status_code == 403
     )

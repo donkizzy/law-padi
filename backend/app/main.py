@@ -7,6 +7,7 @@ from fastapi.routing import APIRoute
 from starlette.middleware.cors import CORSMiddleware
 from starlette.types import ASGIApp, Receive, Scope, Send
 
+from app.api.errors import register_error_handlers
 from app.api.main import api_router
 from app.core.config import settings
 from app.core.request_gate import RequestGateMiddleware
@@ -37,7 +38,10 @@ class OriginProxyMiddleware:
                     }
                 )
                 await send(
-                    {"type": "http.response.body", "body": b'{"detail":"Forbidden"}'}
+                    {
+                        "type": "http.response.body",
+                        "body": b'{"detail":"Forbidden","code":"forbidden"}',
+                    }
                 )
                 return
         await self.app(scope, receive, send)
@@ -58,6 +62,8 @@ app = FastAPI(
     openapi_url=f"{settings.API_V1_STR}/openapi.json",
     generate_unique_id_function=custom_generate_unique_id,
 )
+
+register_error_handlers(app)
 
 app.add_middleware(
     RequestGateMiddleware,

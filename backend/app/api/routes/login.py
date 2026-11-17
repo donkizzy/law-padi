@@ -6,7 +6,6 @@ from fastapi import (
     BackgroundTasks,
     Cookie,
     Depends,
-    HTTPException,
     Request,
     Response,
 )
@@ -15,6 +14,7 @@ from fastapi.security import OAuth2PasswordRequestForm
 
 from app import crud
 from app.api.deps import CurrentUser, SessionDep, get_current_active_superuser
+from app.api.errors import APIError, ErrorResponse
 from app.core import rate_limit, security, sessions
 from app.core.config import settings
 from app.models import (
@@ -61,7 +61,9 @@ def require_trusted_browser_origin(request: Request) -> None:
     if not origins and fetch_site is None:
         # OAuth clients and other non-browser API callers send neither header.
         return
-    raise HTTPException(status_code=403, detail="Untrusted request origin")
+    raise APIError(
+        status_code=403, detail="Untrusted request origin", code="untrusted_origin"
+    )
 
 
 @router.post(
@@ -90,9 +92,13 @@ def login_access_token(
         commit=False,
     )
     if not user:
-        raise HTTPException(status_code=400, detail="Incorrect email or password")
+        raise APIError(
+            status_code=400,
+            detail="Incorrect email or password",
+            code="invalid_credentials",
+        )
     elif not user.is_active:
-        raise HTTPException(status_code=400, detail="Inactive user")
+        raise APIError(status_code=400, detail="Inactive user", code="inactive_user")
     refresh_token = sessions.issue_refresh_token(session=session, user=user)
     access_token = _access_token(user)
     session.commit()
@@ -103,7 +109,7 @@ def login_access_token(
 @router.post(
     "/login/refresh",
     response_model=Token,
-    responses={401: {"model": Message, "description": "No usable session"}},
+    responses={401: {"model": ErrorResponse, "description": "No usable session"}},
     dependencies=[Depends(require_trusted_browser_origin)],
 )
 def refresh_access_token(
@@ -126,7 +132,7 @@ def refresh_access_token(
     if rotated is None:
         session.commit()
         expired = JSONResponse(
-            {"detail": "Session expired"},
+            {"detail": "Session expired", "code": "session_expired"},
             status_code=401,
             headers={"WWW-Authenticate": "Bearer"},
         )
@@ -211,9 +217,9 @@ def reset_password(session: SessionDep, request: Request, body: NewPassword) -> 
         or user.email != claims.email
         or user.auth_version != claims.auth_version
     ):
-        raise HTTPException(status_code=400, detail="Invalid token")
+        raise APIError(status_code=400, detail="Invalid token", code="invalid_token")
     if not user.is_active:
-        raise HTTPException(status_code=400, detail="Inactive user")
+        raise APIError(status_code=400, detail="Inactive user", code="inactive_user")
     user.hashed_password = security.get_password_hash(body.new_password)
     if user.email_verified_at is None:
         # Following the reset link proves the person controls this inbox.
@@ -235,9 +241,10 @@ def recover_password_html_content(email: str, session: SessionDep) -> Any:
     user = crud.get_user_by_email(session=session, email=email)
 
     if not user:
-        raise HTTPException(
+        raise APIError(
             status_code=404,
             detail="The user with this username does not exist in the system.",
+            code="user_not_found",
         )
     password_reset_token = generate_password_reset_token(user)
     email_data = generate_reset_password_email(

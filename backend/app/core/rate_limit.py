@@ -11,12 +11,13 @@ import random
 from dataclasses import dataclass
 from datetime import UTC, datetime, timedelta
 
-from fastapi import HTTPException, Request
+from fastapi import Request
 from sqlalchemy import func
 from sqlalchemy.dialects.postgresql import insert
 from sqlmodel import Session, col, delete
 
 from app.core.config import settings
+from app.core.errors import DomainError, ErrorCode
 from app.models import RateLimitCounter
 
 
@@ -119,11 +120,11 @@ def enforce(session: Session, limit: Limit, subject: str) -> None:
         window_end = _window_start(limit, now) + timedelta(seconds=limit.window_seconds)
         retry_after = max(1, math.ceil((window_end - now).total_seconds()))
         minutes = math.ceil(retry_after / 60)
-        raise HTTPException(
-            status_code=429,
+        raise DomainError(
+            code=ErrorCode.RATE_LIMIT_EXCEEDED,
             detail=(
                 "Too many attempts. Try again in "
                 f"{minutes} minute{'s' if minutes != 1 else ''}."
             ),
-            headers={"Retry-After": str(retry_after)},
+            retry_after=retry_after,
         )

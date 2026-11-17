@@ -43,7 +43,10 @@ class RequestGateMiddleware:
                 await self.slots.acquire()
         except TimeoutError:
             response = JSONResponse(
-                {"detail": "The service is busy. Please try again shortly."},
+                {
+                    "detail": "The service is busy. Please try again shortly.",
+                    "code": "service_busy",
+                },
                 status_code=503,
                 headers={"Cache-Control": "no-store", "Retry-After": "5"},
             )

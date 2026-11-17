@@ -1,4 +1,5 @@
 import asyncio
+import json
 
 import pytest
 
@@ -88,6 +89,10 @@ def test_request_that_waits_too_long_gets_a_quick_503() -> None:
     holder, busy = asyncio.run(scenario())
     assert holder.status == 200
     assert busy.status == 503
+    assert json.loads(busy.messages[1]["body"]) == {
+        "detail": "The service is busy. Please try again shortly.",
+        "code": "service_busy",
+    }
     assert busy.headers[b"retry-after"] == b"5"
     assert busy.headers[b"cache-control"] == b"no-store"
 

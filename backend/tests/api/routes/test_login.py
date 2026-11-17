@@ -114,7 +114,7 @@ def test_reset_password(client: TestClient, db: Session) -> None:
             json={"new_password": random_lower_string(), "token": stale_token},
         )
         assert replay.status_code == 400
-        assert replay.json() == {"detail": "Invalid token"}
+        assert replay.json() == {"detail": "Invalid token", "code": "invalid_token"}
     db.refresh(user)
     verified, _ = verify_password(new_password, user.hashed_password)
     assert verified

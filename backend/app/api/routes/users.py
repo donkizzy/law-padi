@@ -5,7 +5,6 @@ from fastapi import (
     APIRouter,
     BackgroundTasks,
     Depends,
-    HTTPException,
     Query,
     Request,
     Response,
@@ -21,8 +20,10 @@ from app.api.deps import (
     authenticated_user,
     get_current_active_superuser,
 )
+from app.api.errors import APIError
 from app.core import rate_limit, sessions
 from app.core.config import settings
+from app.core.errors import DomainError, ErrorCode
 from app.core.security import get_password_hash, verify_password
 from app.models import (
     AccountDeletion,
@@ -43,7 +44,8 @@ from app.utils import (
     generate_account_exists_email,
     generate_email_change_token,
     generate_email_verification_token,
-    generate_new_account_email,
+    generate_password_reset_token,
+    generate_reset_password_email,
     generate_verify_email_email,
     send_email,
     verify_email_change_token,
@@ -101,23 +103,34 @@ def read_users(
 @router.post(
     "/", dependencies=[Depends(get_current_active_superuser)], response_model=UserPublic
 )
-def create_user(*, session: SessionDep, user_in: UserCreate) -> Any:
+def create_user(
+    *, session: SessionDep, background: BackgroundTasks, user_in: UserCreate
+) -> Any:
     """
     Create new user.
     """
     user = crud.get_user_by_email(session=session, email=user_in.email)
     if user:
-        raise HTTPException(
+        raise APIError(
             status_code=400,
             detail="The user with this email already exists in the system.",
+            code="email_already_exists",
         )
 
-    user = crud.create_user(session=session, user_create=user_in)
+    try:
+        user = crud.create_user(session=session, user_create=user_in)
+    except DomainError as exc:
+        if exc.code != ErrorCode.EMAIL_ALREADY_EXISTS:
+            raise
+        raise APIError(status_code=400, detail=exc.detail, code=exc.code) from exc
     if settings.emails_enabled and user_in.email:
-        email_data = generate_new_account_email(
-            email_to=user_in.email, username=user_in.email, password=user_in.password
+        email_data = generate_reset_password_email(
+            email_to=user.email,
+            email=user.email,
+            token=generate_password_reset_token(user),
         )
-        send_email(
+        background.add_task(
+            send_email,
             email_to=user_in.email,
             subject=email_data.subject,
             html_content=email_data.html_content,
@@ -160,12 +173,16 @@ def request_email_change(
     user = authenticated_user(session, token, lock=True)
     verified, _ = verify_password(body.current_password, user.hashed_password)
     if not verified:
-        raise HTTPException(status_code=400, detail="Incorrect password")
-    if not settings.emails_enabled:
-        raise HTTPException(
-            status_code=503, detail="Email isn't available right now. Try again later."
+        raise APIError(
+            status_code=400, detail="Incorrect password", code="invalid_credentials"
         )
-    if body.email != user.email:
+    if not settings.emails_enabled:
+        raise APIError(
+            status_code=503,
+            detail="Email isn't available right now. Try again later.",
+            code="email_unavailable",
+        )
+    if body.email.lower() != user.email.lower():
         email_data = generate_verify_email_email(
             email_to=body.email,
             token=generate_email_change_token(user=user, email=body.email),
@@ -194,10 +211,14 @@ def update_password_me(
     current_user = authenticated_user(session, token, lock=True)
     verified, _ = verify_password(body.current_password, current_user.hashed_password)
     if not verified:
-        raise HTTPException(status_code=400, detail="Incorrect password")
+        raise APIError(
+            status_code=400, detail="Incorrect password", code="invalid_credentials"
+        )
     if body.current_password == body.new_password:
-        raise HTTPException(
-            status_code=400, detail="New password cannot be the same as the current one"
+        raise APIError(
+            status_code=400,
+            detail="New password cannot be the same as the current one",
+            code="password_unchanged",
         )
     # Sign out every other device, then keep this browser signed in.
     current_user.hashed_password = get_password_hash(body.new_password)
@@ -226,10 +247,14 @@ def delete_user_me(session: SessionDep, token: TokenDep, body: AccountDeletion) 
     current_user = authenticated_user(session, token, lock=True)
     verified, _ = verify_password(body.current_password, current_user.hashed_password)
     if not verified:
-        raise HTTPException(status_code=400, detail="Incorrect password")
+        raise APIError(
+            status_code=400, detail="Incorrect password", code="invalid_credentials"
+        )
     if current_user.is_superuser:
-        raise HTTPException(
-            status_code=403, detail="Super users are not allowed to delete themselves"
+        raise APIError(
+            status_code=403,
+            detail="Super users are not allowed to delete themselves",
+            code="forbidden",
         )
     session.delete(current_user)
     session.commit()
@@ -265,7 +290,12 @@ def register_user(
             )
         return Message(message=SIGNUP_MESSAGE)
     user_create = UserCreate.model_validate(user_in)
-    user = crud.create_user(session=session, user_create=user_create)
+    try:
+        user = crud.create_user(session=session, user_create=user_create)
+    except DomainError as exc:
+        if exc.code != ErrorCode.EMAIL_ALREADY_EXISTS:
+            raise
+        return Message(message=SIGNUP_MESSAGE)
     send_verification_email(user, background)
     return Message(message=SIGNUP_MESSAGE)
 
@@ -288,8 +318,10 @@ def verify_email(
             or not user.is_active
             or user.auth_version != change.auth_version
         ):
-            raise HTTPException(
-                status_code=400, detail="This link is invalid or has expired"
+            raise APIError(
+                status_code=400,
+                detail="This link is invalid or has expired",
+                code="invalid_token",
             )
         user.email = change.email
         user.email_verified_at = get_datetime_utc()
@@ -298,18 +330,22 @@ def verify_email(
             session.commit()
         except IntegrityError as exc:
             session.rollback()
-            if getattr(exc.orig, "sqlstate", None) != "23505":
+            if not crud.is_email_conflict(exc):
                 raise
-            raise HTTPException(
-                status_code=400, detail="This link is invalid or has expired"
+            raise APIError(
+                status_code=400,
+                detail="This link is invalid or has expired",
+                code="invalid_token",
             ) from exc
         return Message(message="Email confirmed")
 
     claims = verify_email_verification_token(body.token)
     user = session.get(User, claims[0], with_for_update=True) if claims else None
     if claims is None or user is None or user.email != claims[1]:
-        raise HTTPException(
-            status_code=400, detail="This link is invalid or has expired"
+        raise APIError(
+            status_code=400,
+            detail="This link is invalid or has expired",
+            code="invalid_token",
         )
     if user.email_verified_at is None:
         user.email_verified_at = get_datetime_utc()
@@ -331,8 +367,10 @@ def resend_verification_email(
         session, rate_limit.VERIFICATION_EMAIL_PER_USER, str(current_user.id)
     )
     if not settings.emails_enabled:
-        raise HTTPException(
-            status_code=503, detail="Email isn't available right now. Try again later."
+        raise APIError(
+            status_code=503,
+            detail="Email isn't available right now. Try again later.",
+            code="email_unavailable",
         )
     send_verification_email(current_user, background)
     return Message(message="Verification email sent")
@@ -349,12 +387,13 @@ def read_user_by_id(
     if user == current_user:
         return user
     if not current_user.is_superuser:
-        raise HTTPException(
+        raise APIError(
             status_code=403,
             detail="The user doesn't have enough privileges",
+            code="forbidden",
         )
     if user is None:
-        raise HTTPException(status_code=404, detail="User not found")
+        raise APIError(status_code=404, detail="User not found", code="user_not_found")
     return user
 
 
@@ -375,18 +414,23 @@ def update_user(
 
     db_user = session.get(User, user_id, populate_existing=True, with_for_update=True)
     if not db_user:
-        raise HTTPException(
+        raise APIError(
             status_code=404,
             detail="The user with this id does not exist in the system",
+            code="user_not_found",
         )
     if user_in.email:
         existing_user = crud.get_user_by_email(session=session, email=user_in.email)
         if existing_user and existing_user.id != user_id:
-            raise HTTPException(
-                status_code=409, detail="User with this email already exists"
+            raise APIError(
+                status_code=409,
+                detail="User with this email already exists",
+                code="email_already_exists",
             )
 
-    email_changed = user_in.email is not None and user_in.email != db_user.email
+    email_changed = (
+        user_in.email is not None and user_in.email.lower() != db_user.email.lower()
+    )
     active_changed = (
         user_in.is_active is not None and user_in.is_active != db_user.is_active
     )
@@ -415,10 +459,12 @@ def delete_user(
     """
     user = session.get(User, user_id)
     if not user:
-        raise HTTPException(status_code=404, detail="User not found")
+        raise APIError(status_code=404, detail="User not found", code="user_not_found")
     if user == current_user:
-        raise HTTPException(
-            status_code=403, detail="Super users are not allowed to delete themselves"
+        raise APIError(
+            status_code=403,
+            detail="Super users are not allowed to delete themselves",
+            code="forbidden",
         )
     session.delete(user)
     session.commit()

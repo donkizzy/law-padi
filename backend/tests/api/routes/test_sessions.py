@@ -131,7 +131,7 @@ def test_refresh_rotates_cookie_and_returns_working_token(
 def test_refresh_without_cookie_is_unauthorized(browser: TestClient) -> None:
     r = browser.post(REFRESH)
     assert r.status_code == 401
-    assert r.json() == {"detail": "Session expired"}
+    assert r.json() == {"detail": "Session expired", "code": "session_expired"}
 
 
 def test_reused_refresh_token_inside_grace_window_keeps_session(

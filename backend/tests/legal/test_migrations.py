@@ -272,7 +272,6 @@ KNOWN_DRIFT = [
         "remove_index",
         "CREATE INDEX ix_retrieval_segment_search_vector ON retrieval_segment USING gin (search_vector)",
     ),
-    ("remove_index", 'CREATE INDEX ix_user_email_lower ON "user" (lower(email::text))'),
 ]
 
 
@@ -312,5 +311,85 @@ def test_latest_revision_downgrades_and_upgrades(migration_database: URL) -> Non
                 == head
             )
         assert _drift_signature(_schema_differences(migration_database)) == KNOWN_DRIFT
+    finally:
+        engine.dispose()
+
+
+def test_email_uniqueness_migration_aborts_without_deleting_duplicates(
+    migration_database: URL,
+) -> None:
+    _migrate(migration_database, "b9c0d1e2f3a4")
+    engine = create_engine(migration_database)
+    try:
+        with engine.begin() as connection:
+            for email in ("Duplicate@example.test", "duplicate@example.test"):
+                connection.execute(
+                    text(
+                        'INSERT INTO "user" (id, email, hashed_password, is_active, is_superuser) '
+                        "VALUES (:id, :email, :password, true, false)"
+                    ),
+                    {"id": uuid4(), "email": email, "password": "unused"},
+                )
+        with pytest.raises(subprocess.CalledProcessError) as failure:
+            _migrate(migration_database, "head")
+        assert (
+            "duplicate addresses: duplicate@example.test (2 accounts)"
+            in failure.value.stderr
+        )
+        assert "no data was deleted" in failure.value.stderr
+        with engine.connect() as connection:
+            assert (
+                connection.execute(text('SELECT count(*) FROM "user"')).scalar_one()
+                == 2
+            )
+            assert (
+                connection.execute(
+                    text("SELECT version_num FROM alembic_version")
+                ).scalar_one()
+                == "b9c0d1e2f3a4"
+            )
+            assert connection.execute(
+                text("SELECT to_regclass('ix_user_email_lower')")
+            ).scalar_one()
+            assert (
+                connection.execute(
+                    text("SELECT to_regclass('ux_user_email_lower')")
+                ).scalar_one()
+                is None
+            )
+        # An operator resolves the duplicate explicitly; retrying then succeeds.
+        with engine.begin() as connection:
+            connection.execute(
+                text('UPDATE "user" SET email = :replacement WHERE email = :email'),
+                {
+                    "replacement": "resolved@example.test",
+                    "email": "Duplicate@example.test",
+                },
+            )
+        _migrate(migration_database, "head")
+        with engine.begin() as connection:
+            assert (
+                connection.execute(text('SELECT count(*) FROM "user"')).scalar_one()
+                == 2
+            )
+            assert (
+                connection.execute(
+                    text("SELECT to_regclass('ix_user_email_lower')")
+                ).scalar_one()
+                is None
+            )
+            assert (
+                connection.execute(
+                    text("SELECT to_regclass('ix_user_email')")
+                ).scalar_one()
+                is None
+            )
+        from sqlalchemy.exc import IntegrityError
+
+        with pytest.raises(IntegrityError), engine.begin() as connection:
+            connection.execute(
+                text('UPDATE "user" SET email = :email WHERE email = :old'),
+                {"email": "DUPLICATE@example.test", "old": "resolved@example.test"},
+            )
     finally:
         engine.dispose()
