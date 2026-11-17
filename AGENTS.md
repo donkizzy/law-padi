@@ -18,8 +18,8 @@ Run frontend commands from the repository root and backend commands from `backen
 - `bun install && bun run dev` installs workspace dependencies and starts Vite at `http://localhost:5173`.
 - `bun run build` type-checks the application sources and builds the frontend.
 - `bun run lint` runs Biome in check-only mode; `bun run lint:fix` applies its safe fixes. `cd backend && uv run bash scripts/lint.sh` runs mypy, ty, and Ruff checks.
-- `bun run typecheck` type-checks the whole frontend project, including tests; CI does not run it yet.
-- `cd backend && uv run bash scripts/test.sh` runs Pytest with coverage; `bun run test` runs Playwright against the full stack.
+- `bun run typecheck` type-checks the whole frontend project, including the browser tests; CI gates pull requests on it.
+- `cd backend && uv run bash scripts/test.sh` runs Pytest with coverage; `bun run test:mocked` runs the browser specs that mock the API (no backend needed); `bun run test` runs the specs that need the backend and Compose services.
 
 ## Coding Style & Naming Conventions
 
@@ -29,7 +29,7 @@ The project's design system (tokens in `frontend/src/index.css`, the constitutio
 
 ## Testing Guidelines
 
-Name backend tests `test_*.py` and Playwright cases `*.spec.ts`. Add regression coverage for behavior changes and keep helpers in existing `tests/utils/` locations. Backend tests produce `htmlcov/index.html`; CI enforces an 87% floor with branch coverage on `backend/app`. Playwright requires the backend and Compose services.
+Name backend tests `test_*.py` and Playwright cases `*.spec.ts`. Add regression coverage for behavior changes and keep helpers in existing `tests/utils/` locations. Backend tests produce `htmlcov/index.html`; CI enforces an 87% floor with branch coverage on `backend/app`. `bun run test` requires the backend and Compose services; `bun run test:mocked` does not. Type browser-test API mocks against the generated client.
 
 ## Commit & Pull Request Guidelines
 
