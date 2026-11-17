@@ -586,8 +586,11 @@ test("Answer loading rotates research phrases and respects reduced motion", asyn
   await expect(
     pending.getByText("Consulting the text…", { exact: true }),
   ).toBeVisible()
-  await page.clock.pauseAt(new Date())
-  await page.clock.runFor(4000)
+  // Pause just ahead of the page's own clock: pausing at the host's wall time
+  // races the page clock, which may already be past it.
+  const pageNow = await page.evaluate(() => Date.now())
+  await page.clock.pauseAt(pageNow + 500)
+  await page.clock.runFor(3500)
   await expect(
     pending.getByText("Tracing the provisions…", { exact: true }),
   ).toBeVisible()
