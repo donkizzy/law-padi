@@ -55,7 +55,14 @@ function releaseManifestSourcePreview(
   return {
     authority:
       typeof source.authority === "string" ? source.authority : undefined,
-    id: typeof source.id === "string" ? source.id : undefined,
+    // Single-run manifests key a source by `source_document_id`; composed
+    // releases also write `id`.
+    id:
+      typeof source.id === "string"
+        ? source.id
+        : typeof source.source_document_id === "string"
+          ? source.source_document_id
+          : undefined,
     pageCountLabel: pageCount,
     title: typeof source.title === "string" ? source.title : undefined,
   }

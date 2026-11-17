@@ -38,7 +38,7 @@ export const adminUserId = "99999999-9999-4999-8999-999999999999"
 const issueId = "12121212-1212-4121-8121-121212121212"
 const embeddingRunId = "93939393-9393-4393-9393-939393939393"
 const profileId = "88888888-8888-4888-8888-888888888888"
-const retrievalIndexBuildId = "92929292-9292-4292-9292-929292929292"
+export const retrievalIndexBuildId = "92929292-9292-4292-9292-929292929292"
 const promotionAttemptId = "94949494-9494-4494-9494-949494949494"
 const stepIds = {
   uploading: "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa",

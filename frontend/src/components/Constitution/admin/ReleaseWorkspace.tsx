@@ -3,6 +3,7 @@ import { FiCheckCircle, FiSearch } from "react-icons/fi"
 import type {
   CompositeReleaseCreate,
   CorpusReleaseManifestPublic,
+  CorpusReleasePromotionAttemptPublic,
   CorpusReleasePublic,
   CorpusReleasePublicationEvidencePublic,
   EmbeddingBenchmarkPublic,
@@ -509,8 +510,7 @@ export function ReleaseWorkspace({
                       <div className="flex flex-wrap items-start justify-between gap-3">
                         <div>
                           <p className="break-all text-sm font-semibold">
-                            {attempt.target_collection_name ??
-                              "Collection pending"}
+                            {promotionTarget(attempt)}
                           </p>
                           <p className="mt-1 text-xs text-muted-foreground">
                             {attempt.rollback_completed
@@ -624,6 +624,15 @@ export function ReleaseWorkspace({
       </Panel>
     </div>
   )
+}
+
+// A pgvector promotion names the index build it switched to; only attempts
+// from the earlier vector store carry a collection name.
+function promotionTarget(attempt: CorpusReleasePromotionAttemptPublic): string {
+  if (attempt.target_collection_name) return attempt.target_collection_name
+  if (attempt.index_kind && attempt.retrieval_index_build_id)
+    return `${attempt.index_kind} · build ${attempt.retrieval_index_build_id}`
+  return attempt.index_kind ?? "Index build pending"
 }
 
 function reportNumber(

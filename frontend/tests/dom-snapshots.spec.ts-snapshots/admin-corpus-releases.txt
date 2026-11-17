@@ -812,7 +812,7 @@
 <div class="sq-sm border border-border/70 bg-card p-3">
 <div class="flex flex-wrap items-start justify-between gap-3">
 <div>
-<p class="break-all text-sm font-semibold">Collection pending</p>
+<p class="break-all text-sm font-semibold">enacted · build 92929292-9292-4292-9292-929292929292</p>
 <p class="mt-1 text-xs text-muted-foreground">Rollback not needed</p>
 </div>
 <span class="sq-xs inline-flex w-fit items-center gap-1.5 border border-border bg-secondary px-2 py-1 text-xs font-bold text-secondary-foreground">

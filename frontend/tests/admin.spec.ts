@@ -1,5 +1,6 @@
 import { expect, test } from "@playwright/test"
 import type {
+  CorpusReleaseManifestPublic,
   CorpusReleasePublic,
   CorpusReleasePublicationEvidencePublic,
   CorpusReleasePublishResponse,
@@ -11,11 +12,14 @@ import type {
 import {
   candidateId,
   corpusRelease,
+  corpusReleaseManifest,
   nativeExtractorVersion,
   publicationFailureMessage,
   releaseId,
   releasePublicationEvidence,
+  retrievalIndexBuildId,
   reviewItem,
+  sourceDocumentId,
 } from "./admin/fixtures.ts"
 import {
   installDroppingRunEventStream,
@@ -931,6 +935,43 @@ test("A release with no index build yet shows the pgvector build as pending", as
   ).toBeVisible()
   await expect(page.getByText("Vector index evidence pending.")).toBeVisible()
   await expect(page.getByText("pgvector validation")).toHaveCount(0)
+})
+
+test("Promotion history names the pgvector index build a release went live on", async ({
+  page,
+}) => {
+  await mockAdminApi(page)
+  await page.goto("/admin")
+  await page.getByRole("tab", { name: "Corpus releases" }).click()
+  await expect(
+    page.getByText(`enacted · build ${retrievalIndexBuildId}`, { exact: true }),
+  ).toBeVisible()
+  await expect(page.getByText("Collection pending")).toHaveCount(0)
+})
+
+test("The release manifest identifies a source by its document ID", async ({
+  page,
+}) => {
+  await mockAdminApi(page)
+  const manifest = corpusReleaseManifest()
+  await page.route(
+    `**/api/v1/admin/corpus-releases/${releaseId}/manifest`,
+    (route) =>
+      json<CorpusReleaseManifestPublic>(route, {
+        ...manifest,
+        manifest: {
+          ...manifest.manifest,
+          // A single-run manifest keys each source by `source_document_id`.
+          source_documents: [
+            { source_document_id: sourceDocumentId, authority: "Gazette" },
+          ],
+        },
+      }),
+  )
+  await page.goto("/admin")
+  await page.getByRole("tab", { name: "Corpus releases" }).click()
+  await expect(page.getByText(sourceDocumentId, { exact: true })).toBeVisible()
+  await expect(page.getByText("Untitled source")).toHaveCount(0)
 })
 
 test("Accounts without admin roles see read-only controls", async ({
