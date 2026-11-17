@@ -1,7 +1,7 @@
 import { useQuery, useQueryClient } from "@tanstack/react-query"
 import { useNavigate, useSearch } from "@tanstack/react-router"
 import { AxiosError } from "axios"
-import { useCallback, useEffect, useRef, useState } from "react"
+import { useCallback, useEffect, useMemo, useRef, useState } from "react"
 import { useTranslation } from "react-i18next"
 import { FiArrowDown } from "react-icons/fi"
 import { toast } from "sonner"
@@ -13,6 +13,7 @@ import type {
   MessagePublic,
 } from "@/client"
 import { ConversationsService } from "@/client"
+import { AnswerBoundary } from "@/components/LawPadi/AnswerBoundary"
 import { AnswerLoading } from "@/components/LawPadi/AnswerLoading"
 import { ChatComposer } from "@/components/LawPadi/ChatComposer"
 import { ChatEvidencePanel } from "@/components/LawPadi/ChatEvidencePanel"
@@ -30,6 +31,12 @@ import { conversationHeaders } from "@/hooks/useConversations"
 import { useLegalRelease } from "@/hooks/useLegalCorpus"
 import { useSavedProvisions } from "@/hooks/useSavedProvisions"
 import { useWorkspacePreferences } from "@/hooks/useWorkspacePreferences"
+import {
+  type ExplanationAnswer,
+  parseAnswer,
+  parseCitationOutcomes,
+  parseEvidence,
+} from "@/lib/answer"
 import i18n from "@/lib/i18n"
 import {
   editionNote,
@@ -47,33 +54,6 @@ import { AnswerFeedback } from "./AnswerFeedback"
 import { EditionNotice } from "./EditionNotice"
 import { ProvisionNotices, uniqueNotices } from "./ProvisionNotices"
 import { StatuteText } from "./StatuteText"
-
-type ExplanationAnswer = {
-  outcome: string
-  blocks: Array<{
-    text: string
-    evidence_ids: string[]
-    quotation?: string | null
-  }>
-  missing_facts: string[]
-  follow_up_questions?: string[]
-  citation_outcomes: CitationOutcome[]
-  evidence: EvidenceItem[]
-  related_laws?: string[]
-  notice?: string | null
-  notice_code?: string | null
-  notice_params?: { laws?: string[]; choices?: string[] }
-  question_language?: string | null
-  answer_language?: string
-  translation?: AnswerTranslation | null
-}
-
-type AnswerTranslation = {
-  language: string
-  blocks: ExplanationAnswer["blocks"]
-  missing_facts: string[]
-  follow_up_questions: string[]
-}
 
 // Languages without native-speaker review are labelled as beta.
 const betaLanguages = new Set(["yo", "ha", "ig"])
@@ -138,14 +118,6 @@ type Progress =
   | "connectionLost"
   | "interrupted"
   | "stopping"
-
-function asAnswer(
-  value: Record<string, unknown> | null,
-): ExplanationAnswer | null {
-  return value && typeof value.outcome === "string"
-    ? (value as unknown as ExplanationAnswer)
-    : null
-}
 
 function requestError(error: unknown): string {
   if (error instanceof AxiosError) {
@@ -727,22 +699,29 @@ function MessageView({
   onAsk?: (question: string) => void
 }) {
   const { t } = useTranslation(["chat", "common"])
+  const answer = useMemo(
+    () => parseAnswer(message.answer_content),
+    [message.answer_content],
+  )
   if (message.role === "user")
     return (
       <div className="ml-auto max-w-[90%] sq-lg bg-secondary px-4 py-3 text-body">
         {message.content}
       </div>
     )
-  const answer = asAnswer(message.answer_content)
   return answer ? (
     <div data-answer-start="" className="scroll-mt-24">
-      <AnswerView answer={answer} onAsk={onAsk} onSelect={onSelect} />
+      <AnswerBoundary resetKey={message.answer_content}>
+        <AnswerView answer={answer} onAsk={onAsk} onSelect={onSelect} />
+      </AnswerBoundary>
       {conversationId && (
         <AnswerFeedback message={message} conversationId={conversationId} />
       )}
     </div>
   ) : (
-    <p className="text-body text-muted-foreground">{t("answer.loadFailed")}</p>
+    <p className="text-body text-muted-foreground" role="alert">
+      {t("answer.loadFailed")}
+    </p>
   )
 }
 
@@ -1078,10 +1057,10 @@ export function ChatHome() {
             const data = event.data as Record<string, unknown>
             if (event.event === "retrieval.started") setProgress("finding")
             if (event.event === "retrieval.complete") {
-              if (Array.isArray(data.evidence))
-                setSources(data.evidence as EvidenceItem[])
-              if (Array.isArray(data.citation_outcomes))
-                setOutcomes(data.citation_outcomes as CitationOutcome[])
+              const evidence = parseEvidence(data.evidence)
+              if (evidence) setSources(evidence)
+              const citations = parseCitationOutcomes(data.citation_outcomes)
+              if (citations) setOutcomes(citations)
               setProgress("writing")
             }
             if (event.event === "generation.started") setProgress("writing")
@@ -1090,8 +1069,10 @@ export function ChatHome() {
               setProgress("translating")
             if (event.event === "answer.complete") {
               terminal = true
-              if (data.answer && typeof data.answer === "object") {
-                const answer = data.answer as ExplanationAnswer
+              // A malformed answer is not shown. The stored message that the
+              // refetch below loads is shown in its place.
+              const answer = parseAnswer(data.answer)
+              if (answer) {
                 setLiveAnswer(answer)
                 if (
                   preferences.openSources &&
@@ -1425,11 +1406,13 @@ export function ChatHome() {
           )}
           {showLiveAnswer && (
             <div data-answer-start="" className="scroll-mt-24">
-              <AnswerView
-                answer={liveAnswer}
-                onAsk={activeRunId ? undefined : ask}
-                onSelect={setSelectedEvidence}
-              />
+              <AnswerBoundary resetKey={liveAnswer}>
+                <AnswerView
+                  answer={liveAnswer}
+                  onAsk={activeRunId ? undefined : ask}
+                  onSelect={setSelectedEvidence}
+                />
+              </AnswerBoundary>
             </div>
           )}
           {progress && !awaitingAnswer && (
@@ -1593,22 +1576,24 @@ export function ChatHome() {
           </p>
         </div>
       </section>
-      <ChatEvidencePanel
-        evidence={selectedEvidence}
-        onClose={() => setSelectedEvidence(null)}
-        onExplain={(item) => {
-          setSelectedEvidence(null)
-          void submit(
-            item.citation,
-            item.release_version,
-            item.provision_version_id,
-          )
-        }}
-        explainDisabled={
-          Boolean(activeRunId || submitting) ||
-          !capabilities.data?.explanations_enabled
-        }
-      />
+      <AnswerBoundary resetKey={selectedEvidence}>
+        <ChatEvidencePanel
+          evidence={selectedEvidence}
+          onClose={() => setSelectedEvidence(null)}
+          onExplain={(item) => {
+            setSelectedEvidence(null)
+            void submit(
+              item.citation,
+              item.release_version,
+              item.provision_version_id,
+            )
+          }}
+          explainDisabled={
+            Boolean(activeRunId || submitting) ||
+            !capabilities.data?.explanations_enabled
+          }
+        />
+      </AnswerBoundary>
     </div>
   )
 }

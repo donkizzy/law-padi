@@ -686,6 +686,56 @@ test("Persisted completion recovers when the terminal SSE event is lost", async 
   ).toBeEnabled()
 })
 
+test("An answer in an unexpected shape shows a message and leaves the app usable", async ({
+  page,
+}) => {
+  // An older or changed server payload: `blocks` is not a list.
+  const malformed = { ...answer, blocks: "not a list" } as unknown as ChatAnswer
+  await mockChat(page, malformed)
+  await page.goto("/?intent=ask")
+  await sendQuestion(page)
+  await expect(page.getByText("This answer couldn't be loaded.")).toBeVisible()
+  await expect(page.getByText(question, { exact: true }).first()).toBeVisible()
+  await expect(page.getByRole("link", { name: "Browse laws" })).toBeVisible()
+  await expect(
+    page.getByRole("textbox", { name: "Your question" }),
+  ).toBeEnabled()
+})
+
+test("An older stored answer without its lists still reads", async ({
+  page,
+}) => {
+  const older = { outcome: "cancelled" } as unknown as ChatAnswer
+  await mockChat(page, older)
+  await page.goto("/?intent=ask")
+  await sendQuestion(page)
+  await expect(
+    page.getByRole("region", { name: "Answer", exact: true }),
+  ).toContainText("You stopped this answer.")
+})
+
+test("A source panel that fails to render does not take the conversation down", async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 1440, height: 1000 })
+  // Valid by the answer contract, but the panel cannot build a link from it.
+  const unlinkable = {
+    ...answer,
+    evidence: [{ ...evidence, source_content_url: "http://" }],
+  }
+  await mockChat(page, unlinkable)
+  await page.goto("/?intent=ask")
+  await sendQuestion(page)
+  const region = page.getByRole("region", { name: "Answer", exact: true })
+  await expect(region).toContainText("protects privacy")
+  await region.getByRole("button", { name: "Section 37", exact: true }).click()
+  await expect(page.getByText("This answer couldn't be loaded.")).toBeVisible()
+  await expect(region).toContainText("protects privacy")
+  await expect(
+    page.getByRole("textbox", { name: "Your question" }),
+  ).toBeEnabled()
+})
+
 test("A history failure does not change Ask into Find", async ({ page }) => {
   await mockChat(page, answer, { historyFailures: 2 })
   await page.goto("/?intent=ask")
