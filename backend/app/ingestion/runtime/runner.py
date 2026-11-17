@@ -6,6 +6,7 @@ from typing import Any
 from sqlmodel import Session, select
 
 from app.core.config import settings
+from app.core.logs import log_context
 from app.ingestion.common import get_datetime_utc
 from app.ingestion.registry import handler_for
 from app.ingestion.runtime.errors import (
@@ -98,29 +99,30 @@ def run_leased_task(
     run_id, stage = task.run_id, stage_for_task(task)
     expire_on_commit = session.expire_on_commit
     session.expire_on_commit = False
-    try:
-        return _run_leased_task(
-            session,
-            task,
-            worker_id=worker_id,
-            lease=lease,
-            lease_seconds=lease_seconds or settings.INGESTION_WORKER_LEASE_SECONDS,
-        )
-    except IngestionLeaseLost:
-        session.rollback()
-        session.refresh(task)
-        run = get_run(session, run_id)
-        session.refresh(run)
-        return WorkerResult(
-            task_id=lease.task_id,
-            run_id=run_id,
-            stage=stage,
-            task_status=task.status,
-            run_status=run.status,
-        )
-    finally:
-        session.expire_on_commit = expire_on_commit
-        session.info.pop("ingestion_continue", None)
+    with log_context(task_id=lease.task_id, run_id=run_id):
+        try:
+            return _run_leased_task(
+                session,
+                task,
+                worker_id=worker_id,
+                lease=lease,
+                lease_seconds=lease_seconds or settings.INGESTION_WORKER_LEASE_SECONDS,
+            )
+        except IngestionLeaseLost:
+            session.rollback()
+            session.refresh(task)
+            run = get_run(session, run_id)
+            session.refresh(run)
+            return WorkerResult(
+                task_id=lease.task_id,
+                run_id=run_id,
+                stage=stage,
+                task_status=task.status,
+                run_status=run.status,
+            )
+        finally:
+            session.expire_on_commit = expire_on_commit
+            session.info.pop("ingestion_continue", None)
 
 
 def _run_leased_task(

@@ -9,7 +9,14 @@ from sqlmodel import Session, col, func, select
 from app.chat import runs
 from app.core.config import settings
 from app.core.db import engine
+from app.core.heartbeat import Heartbeat
+from app.core.logs import configure_logging
+from app.core.sentry import init_sentry
 from app.legal.models import GenerationRun, get_datetime_utc
+
+# The standalone loop sleeps at most this long between iterations; the
+# container health check measures heartbeat staleness in these intervals.
+POLL_INTERVAL_SECONDS = 2
 
 
 def next_lease_delay() -> float | None:
@@ -67,12 +74,15 @@ async def run_worker(
     *,
     wakeup: asyncio.Event | None = None,
     stopping: Callable[[], bool] = lambda: False,
+    heartbeat: Heartbeat | None = None,
 ) -> None:
     request_woken = wakeup is not None
     delay: float | None = None
     last_retention = float("-inf") if request_woken else 0.0
     active: set[asyncio.Task[None]] = set()
     while not stopping():
+        if heartbeat is not None:
+            heartbeat.beat()
         await wait_for_work(wakeup, delay)
         if request_woken:
             await asyncio.to_thread(runs.recover_expired)
@@ -91,8 +101,13 @@ async def run_worker(
                 return
             delay = await asyncio.to_thread(next_lease_delay)
         else:
-            await asyncio.sleep(2 if disabled else 0.5)
+            await asyncio.sleep(POLL_INTERVAL_SECONDS if disabled else 0.5)
 
 
 async def run_forever() -> None:
-    await run_worker(str(uuid.uuid4()))
+    configure_logging()
+    init_sentry("chat-worker")
+    await run_worker(
+        str(uuid.uuid4()),
+        heartbeat=Heartbeat(settings.CHAT_WORKER_HEARTBEAT_FILE),
+    )

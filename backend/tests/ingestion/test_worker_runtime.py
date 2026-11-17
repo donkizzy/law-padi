@@ -1,3 +1,4 @@
+import os
 import sys
 import uuid
 from collections.abc import Iterator
@@ -231,3 +232,57 @@ def test_worker_passes_shutdown_signal_into_running_session(
         max_iterations=1,
     )
     db.info.pop("ingestion_stop_requested", None)
+
+
+def test_worker_loop_beats_on_idle_and_busy_polls(tmp_path: Path) -> None:
+    heartbeat = tmp_path / "ingestion-worker.heartbeat"
+    fresh_at_poll: list[bool] = []
+    task_results: list[FakeWorkerResult | None] = [_fake_result(), None, None]
+
+    @contextmanager
+    def session_factory() -> Iterator[object]:
+        yield object()
+
+    def fake_run_once(_session: object, **_kwargs: Any) -> FakeWorkerResult | None:
+        # Record whether a beat happened since the last poll, then age the file.
+        fresh_at_poll.append(heartbeat.stat().st_mtime > 0)
+        os.utime(heartbeat, (0, 0))
+        return task_results.pop(0)
+
+    stats = run_worker(
+        settings=WorkerSettings(
+            worker_id="worker-a",
+            poll_interval_seconds=5,
+            lease_seconds=60,
+            max_tasks_per_poll=2,
+            heartbeat_file=str(heartbeat),
+        ),
+        session_factory=session_factory,
+        sleep=lambda _seconds: None,
+        max_iterations=2,
+        run_once_fn=fake_run_once,
+    )
+
+    # Busy poll: a beat at the start and after the task; idle poll: at the start.
+    assert (stats.iterations, stats.idle_polls) == (2, 1)
+    assert fresh_at_poll == [True, True, True]
+
+
+def test_worker_settings_read_the_heartbeat_file(monkeypatch: Any) -> None:
+    monkeypatch.setenv("INGESTION_WORKER_HEARTBEAT_FILE", "/tmp/worker.heartbeat")
+    assert WorkerSettings.from_env().heartbeat_file == "/tmp/worker.heartbeat"
+    monkeypatch.setenv("INGESTION_WORKER_HEARTBEAT_FILE", "")
+    assert WorkerSettings.from_env().heartbeat_file is None
+
+
+def test_stage_checkpoints_beat_before_checking_for_shutdown() -> None:
+    from sqlmodel import Session
+
+    from app.ingestion.runtime.control import check_stage_continue
+
+    calls: list[str] = []
+    session = Session()
+    session.info["ingestion_heartbeat"] = lambda: calls.append("beat")
+    session.info["ingestion_continue"] = lambda: calls.append("continue")
+    check_stage_continue(session)
+    assert calls == ["beat", "continue"]

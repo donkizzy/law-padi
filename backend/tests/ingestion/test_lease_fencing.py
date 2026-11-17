@@ -263,3 +263,32 @@ def test_shutdown_keeps_checkpoint_and_releases_task_immediately(
     finally:
         db.info.pop("ingestion_stop_requested", None)
         queue.mark_run_cancelled(db, run, "test cleanup")
+
+
+def test_stage_logs_carry_the_task_and_run(
+    db: Session, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    import logging
+
+    from tests.utils.logs import captured_logs
+
+    run = IngestionRun(status=IngestionRunStatus.QUEUED)
+    db.add(run)
+    db.commit()
+    step = queue.create_run_steps(db, run, (IngestionStage.PROFILING,))[0]
+    queue.enqueue_task(
+        db, run=run, step=step, task_type="profiling", idempotency_key=str(run.id)
+    )
+    task = queue.lease_next_task(db, worker_id="worker-a", task_type="profiling")
+    assert task is not None
+
+    def handler(*_args: Any) -> runner.StageOutcome:
+        logging.getLogger("app.ingestion.stages.test").info("stage_progress")
+        return runner.StageOutcome(metrics={})
+
+    monkeypatch.setattr(runner, "handler_for", lambda _stage: handler)
+    with captured_logs("app.ingestion") as records:
+        runner.run_leased_task(db, task, worker_id="worker-a")
+    (record,) = [r for r in records if r.getMessage() == "stage_progress"]
+    assert record.__dict__["task_id"] == str(task.id)
+    assert record.__dict__["run_id"] == str(run.id)

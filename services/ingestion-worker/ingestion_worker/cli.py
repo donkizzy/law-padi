@@ -13,6 +13,8 @@ from typing import Any
 from sqlmodel import Session
 
 from app.core.db import engine
+from app.core.heartbeat import Heartbeat
+from app.core.logs import configure_logging
 from app.ingestion.common import enum_value
 from app.ingestion.runtime.queue import drain_outbox_batch
 from app.ingestion.runtime.runner import run_once
@@ -31,6 +33,7 @@ class WorkerSettings:
     task_type: str | None = None
     stage_concurrency_limits: dict[str, int] = field(default_factory=dict)
     outbox_sink_path: str = "/app/backend/storage/source-documents/outbox-events.jsonl"
+    heartbeat_file: str | None = None
 
     @classmethod
     def from_env(cls) -> WorkerSettings:
@@ -49,6 +52,7 @@ class WorkerSettings:
                 "INGESTION_OUTBOX_SINK_PATH",
                 "/app/backend/storage/source-documents/outbox-events.jsonl",
             ),
+            heartbeat_file=os.getenv("INGESTION_WORKER_HEARTBEAT_FILE") or None,
         )
 
 
@@ -93,6 +97,7 @@ def run_worker(
                 f"INGESTION_STAGE_CONCURRENCY_LIMITS for {stage} must be at least 1"
             )
 
+    heartbeat = Heartbeat(worker_settings.heartbeat_file)
     with source_file_cache() as source_cache:
         iterations = 0
         tasks_processed = 0
@@ -105,6 +110,7 @@ def run_worker(
                 break
 
             iterations += 1
+            heartbeat.beat()
             processed_this_poll = 0
             for _ in range(worker_settings.max_tasks_per_poll):
                 if stop_requested and stop_requested():
@@ -124,6 +130,9 @@ def run_worker(
                             )
                     if isinstance(session, Session):
                         session.info["ingestion_stop_requested"] = stop_requested
+                        # Stage checkpoints beat too, so a long stage that is
+                        # still making progress does not look hung.
+                        session.info["ingestion_heartbeat"] = heartbeat.beat
                     with (
                         source_files(session, source_cache)
                         if isinstance(session, Session)
@@ -142,6 +151,7 @@ def run_worker(
                     break
                 processed_this_poll += 1
                 tasks_processed += 1
+                heartbeat.beat()
                 logger.info(
                     "processed ingestion task",
                     extra={
@@ -198,10 +208,7 @@ class JsonLinesOutboxPublisher:
 
 
 def main() -> int:
-    logging.basicConfig(
-        level=os.getenv("INGESTION_WORKER_LOG_LEVEL", "INFO"),
-        format="%(asctime)s %(levelname)s %(name)s %(message)s",
-    )
+    configure_logging(level=os.getenv("INGESTION_WORKER_LOG_LEVEL") or None)
     stop_requested = _signal_stop_flag()
     stats = run_worker(stop_requested=stop_requested)
     logger.info(
