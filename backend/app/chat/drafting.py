@@ -24,6 +24,9 @@ from app.core.config import settings
 from app.legal.schemas import EvidenceItem
 
 _DRAFT_ATTEMPTS = 2
+# Questions are admitted at up to this many characters; an English rendering
+# of one is held to the same length before it reaches the verifier.
+_QUESTION_CHARS = 2000
 
 
 class GroundingFailed(Exception):
@@ -135,19 +138,23 @@ async def verify_answer(
     await asyncio.to_thread(runs.emit_progress, run_id, "verification.started")
     started = time.perf_counter()
     state.expected_verdict_count = len(draft.blocks)
+    # The verifier is the check on the drafter, so it sees as little of the
+    # reader's own text as it can judge with: the question, and for a
+    # follow-up the question it follows, but not the conversation history.
     verdict = await budgeted.call(
         provider,
         run_id,
         "verification",
         verifier.TEXT,
         {
-            "question": prepared.question,
+            "question": prepared.question[:_QUESTION_CHARS],
             "direct_answer": draft.direct_answer,
             "evidence": prepared.prompt_evidence,
             "covered_laws": prepared.covered_laws,
             "missing_facts": draft.missing_facts[:4],
-            "previous_question": prepared.previous_question,
-            "conversation_context": prepared.conversation_context,
+            "previous_question": prepared.previous_question[:_QUESTION_CHARS]
+            if prepared.previous_question
+            else None,
             "blocks": [
                 {"index": index, **block.model_dump()}
                 for index, block in enumerate(draft.blocks)

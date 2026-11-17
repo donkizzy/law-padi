@@ -50,6 +50,18 @@ _YES_NO_OPENING = re.compile(
 )
 _WORD = re.compile(r"[a-z]{4,}")
 _REPEAT_OVERLAP = 0.5
+# Links, email addresses and phone numbers can only come from the cited law.
+# Anything else would publish text the reader, or text injected through the
+# reader's question, put there.
+_LINK = re.compile(
+    r"\bhttps?://\S+|\bwww\.\S+"
+    r"|\b[a-z0-9-]+(?:\.[a-z0-9-]+)*\.(?:com|net|org|ng|gov|edu|io|co|info|me|ly|app)\b",
+    re.I,
+)
+_EMAIL = re.compile(r"[\w.+-]+@[\w-]+(?:\.[\w-]+)+")
+_DIGIT_RUN = re.compile(r"\+?\d[\d .()-]*\d")
+# Shorter digit runs are citations, years, amounts and periods.
+_PHONE_DIGITS = 9
 
 
 class EvidenceValidationError(ValueError):
@@ -83,6 +95,25 @@ def _asserts_current_law(text: str) -> bool:
     return False
 
 
+def _contact_details(text: str) -> set[str]:
+    """Links, email addresses and phone-length digit runs, normalised."""
+    found = {match.casefold().rstrip(".,;:)") for match in _LINK.findall(text)}
+    found.update(match.casefold() for match in _EMAIL.findall(text))
+    for match in _DIGIT_RUN.findall(text):
+        digits = re.sub(r"\D", "", match)
+        if len(digits) >= _PHONE_DIGITS:
+            found.add(digits)
+    return found
+
+
+def _unsourced_contact_details(text: str, sources: list[str]) -> bool:
+    details = _contact_details(text)
+    if not details:
+        return False
+    available = set().union(*(_contact_details(source) for source in sources))
+    return not details <= available
+
+
 def _block_error(
     text: str,
     evidence_ids: list[str],
@@ -102,6 +133,8 @@ def _block_error(
     for quoted in _QUOTED.findall(text):
         if not any(quoted in source for source in texts):
             return "Quoted wording differs from the source"
+    if _unsourced_contact_details(text, texts):
+        return "A block gives a link or contact details that are not in its evidence"
     parsed = parse_section_reference(text, prose=True)
     if parsed.error:
         return "Explanation contains an unsupported citation"

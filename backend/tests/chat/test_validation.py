@@ -383,3 +383,75 @@ def test_source_list_before_a_new_paragraph_remains_available() -> None:
         SectionReference("225", "3"),
         SectionReference("227"),
     }
+
+
+def _privacy_evidence(release_id: UUID, text: str | None = None) -> EvidenceItem:
+    return EvidenceItem.model_construct(
+        evidence_id="E1",
+        release_id=release_id,
+        canonical_path="constitution-1999.chapter4.section37",
+        ancestor_citations=[],
+        authoritative_text=text
+        or "The privacy of citizens, their homes, correspondence, telephone "
+        "conversations and telegraphic communications is hereby guaranteed "
+        "and protected.",
+        legal_status="historical",
+    )
+
+
+@pytest.mark.parametrize(
+    "injected",
+    [
+        "Call 0803 123 4567 to report it.",
+        "Call +234 (803) 123-4567 to report it.",
+        "Send your details to help@example.com.",
+        "Read more at https://example.com/rights.",
+        "Read more at www.example.com.",
+        "Report it on police-help.ng today.",
+    ],
+)
+def test_a_block_cannot_publish_contact_details_missing_from_its_evidence(
+    injected: str,
+) -> None:
+    release_id = uuid4()
+    evidence = _privacy_evidence(release_id)
+    draft = ExplanationDraft(
+        blocks=[
+            ExplanationBlock(
+                text="The Constitution protects your privacy.", evidence_ids=["E1"]
+            ),
+            ExplanationBlock(
+                text=f"That covers phone calls. {injected}", evidence_ids=["E1"]
+            ),
+        ]
+    )
+    assert validate_draft(draft, [evidence], release_id=release_id) == {
+        1: "A block gives a link or contact details that are not in its evidence"
+    }
+    draft.blocks[0].text += f" {injected}"
+    with pytest.raises(EvidenceValidationError, match="contact details"):
+        validate_draft(draft, [evidence], release_id=release_id)
+
+
+def test_contact_details_from_the_cited_text_and_ordinary_numbers_are_allowed() -> None:
+    release_id = uuid4()
+    evidence = _privacy_evidence(
+        release_id,
+        "A complaint may be made to the Commission at www.ndpc.gov.ng or on "
+        "0700 000 0000 within 72 hours.",
+    )
+    draft = ExplanationDraft(
+        blocks=[
+            ExplanationBlock(
+                text="You can complain to the Commission at www.ndpc.gov.ng or "
+                "on 0700 000 0000.",
+                evidence_ids=["E1"],
+            ),
+            ExplanationBlock(
+                text="Complain within 72 hours. The 1999 Constitution, as published "
+                "in 2004, sets fines of N100,000,000 in Section 37.",
+                evidence_ids=["E1"],
+            ),
+        ]
+    )
+    assert validate_draft(draft, [evidence], release_id=release_id) == {}
