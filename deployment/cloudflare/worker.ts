@@ -70,10 +70,7 @@ function backendOrigin(value: string): URL | null {
 		const origin = new URL(value);
 		if (
 			origin.protocol !== "https:" ||
-			!(
-				origin.hostname.endsWith(".run.app") ||
-				origin.hostname.endsWith(".onrender.com")
-			) ||
+			!origin.hostname.endsWith(".onrender.com") ||
 			origin.username ||
 			origin.password ||
 			origin.port ||

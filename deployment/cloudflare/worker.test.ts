@@ -4,7 +4,7 @@ import worker, { handleRequest, withSecurityHeaders } from "./worker";
 function env(overrides = {}) {
 	return {
 		ASSETS: { fetch: async () => new Response("SPA") },
-		API_ORIGIN: "https://law-padi-123.us-east1.run.app",
+		API_ORIGIN: "https://constitution-ng-api.onrender.com",
 		ORIGIN_PROXY_SECRET: "secret-in-worker",
 		PUBLIC_SITE_URL: "https://constitution.workers.dev",
 		...overrides,
@@ -52,7 +52,7 @@ describe("same-origin API proxy", () => {
 			},
 		);
 		expect(incoming?.url).toBe(
-			"https://law-padi-123.us-east1.run.app/api/v1/conversations/abc/events?run_id=def",
+			"https://constitution-ng-api.onrender.com/api/v1/conversations/abc/events?run_id=def",
 		);
 		expect(incoming?.headers.get("x-origin-proxy-secret")).toBe(
 			"secret-in-worker",
@@ -120,7 +120,7 @@ describe("same-origin API proxy", () => {
 	test("keeps API redirects at the public hostname and source redirects external", async () => {
 		for (const [location, expected] of [
 			[
-				"https://law-padi-123.us-east1.run.app/api/v1/legal/",
+				"https://constitution-ng-api.onrender.com/api/v1/legal/",
 				"https://constitution.workers.dev/api/v1/legal/",
 			],
 			[
@@ -168,16 +168,15 @@ describe("same-origin API proxy", () => {
 
 	test("rejects proxy destinations outside a fixed hosting origin", async () => {
 		for (const origin of [
-			"http://example.run.app",
+			"http://example.onrender.com",
 			"https://attacker.example",
-			"https://a.run.app/path",
-			"https://user:password@a.run.app",
-			"https://a.run.app?redirect=evil",
-			"https://a.run.app:8443/",
+			"https://a.onrender.com/path",
+			"https://user:password@a.onrender.com",
+			"https://a.onrender.com?redirect=evil",
+			"https://a.onrender.com:8443/",
+			"https://a.run.app",
 			"https://a.onrender.com.evil.example",
 			"https://fake-onrender.com",
-			"https://a.onrender.com/path",
-			"http://a.onrender.com",
 		]) {
 			const response = await handleRequest(
 				new Request("https://constitution.workers.dev/api/v1/legal/search"),
