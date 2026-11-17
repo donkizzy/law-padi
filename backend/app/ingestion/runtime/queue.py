@@ -7,6 +7,8 @@ from sqlalchemy import and_, or_
 from sqlmodel import Session, col, func, select
 
 from app.ingestion.common import enum_value, get_datetime_utc
+from app.ingestion.runtime.errors import IngestionLeaseLost
+from app.ingestion.runtime.leases import TaskLease, update_owned_task
 from app.legal.enums import (
     IngestionRunStatus,
     IngestionStage,
@@ -266,11 +268,17 @@ def lease_next_task(
 
 
 def mark_task_running(session: Session, task: IngestionTask) -> IngestionTask:
-    task.status = IngestionTaskStatus.RUNNING
-    task.heartbeat_at = get_datetime_utc()
-    task.updated_at = task.heartbeat_at
-    task.lock_version += 1
-    session.add(task)
+    now = get_datetime_utc()
+    update_owned_task(
+        session,
+        TaskLease.from_task(task),
+        {
+            "status": IngestionTaskStatus.RUNNING,
+            "heartbeat_at": now,
+            "updated_at": now,
+            "lock_version": col(IngestionTask.lock_version) + 1,
+        },
+    )
     session.commit()
     session.refresh(task)
     return task
@@ -281,61 +289,82 @@ def renew_task_lease(
     *,
     task_id: UUID,
     worker_id: str,
+    lease_version: int,
     lease_seconds: int,
 ) -> bool:
-    """Renew only the live lease owned by this worker."""
-    task = session.get(IngestionTask, task_id)
-    if (
-        task is None
-        or task.lease_owner != worker_id
-        or task.status != IngestionTaskStatus.RUNNING
-    ):
-        return False
     now = get_datetime_utc()
-    task.leased_until = now + timedelta(seconds=max(1, lease_seconds))
-    task.heartbeat_at = now
-    task.updated_at = now
-    task.lock_version += 1
-    session.add(task)
+    try:
+        update_owned_task(
+            session,
+            TaskLease(task_id, worker_id, lease_version),
+            {
+                "leased_until": now + timedelta(seconds=max(1, lease_seconds)),
+                "heartbeat_at": now,
+                "updated_at": now,
+                "lock_version": col(IngestionTask.lock_version) + 1,
+            },
+        )
+    except IngestionLeaseLost:
+        session.rollback()
+        return False
     session.commit()
     return True
 
 
 def complete_task(
-    session: Session, task: IngestionTask, *, commit: bool = True
+    session: Session,
+    task: IngestionTask,
+    *,
+    commit: bool = True,
+    lease: TaskLease | None = None,
 ) -> IngestionTask:
     now = get_datetime_utc()
-    task.status = IngestionTaskStatus.SUCCEEDED
-    task.lease_owner = None
-    task.leased_until = None
-    task.heartbeat_at = now
-    task.updated_at = now
-    task.lock_version += 1
-    session.add(task)
+    update_owned_task(
+        session,
+        lease or TaskLease.from_task(task),
+        {
+            "status": IngestionTaskStatus.SUCCEEDED,
+            "lease_owner": None,
+            "leased_until": None,
+            "heartbeat_at": now,
+            "updated_at": now,
+            "lock_version": col(IngestionTask.lock_version) + 1,
+        },
+    )
     if commit:
         session.commit()
-        session.refresh(task)
-    else:
-        session.flush()
+    session.refresh(task)
     return task
 
 
 def fail_task(
-    session: Session, task: IngestionTask, error_details: dict[str, Any]
+    session: Session,
+    task: IngestionTask,
+    error_details: dict[str, Any],
+    *,
+    lease: TaskLease | None = None,
+    commit: bool = True,
 ) -> IngestionTask:
     now = get_datetime_utc()
-    task.error_details = error_details
-    task.lease_owner = None
-    task.leased_until = None
-    task.heartbeat_at = now
-    task.updated_at = now
-    task.lock_version += 1
-    if task.attempt_count >= task.max_attempts:
-        task.status = IngestionTaskStatus.FAILED
-    else:
-        task.status = IngestionTaskStatus.PENDING
-    session.add(task)
-    session.commit()
+    update_owned_task(
+        session,
+        lease or TaskLease.from_task(task),
+        {
+            "error_details": error_details,
+            "lease_owner": None,
+            "leased_until": None,
+            "heartbeat_at": now,
+            "updated_at": now,
+            "lock_version": col(IngestionTask.lock_version) + 1,
+            "status": (
+                IngestionTaskStatus.FAILED
+                if task.attempt_count >= task.max_attempts
+                else IngestionTaskStatus.PENDING
+            ),
+        },
+    )
+    if commit:
+        session.commit()
     session.refresh(task)
     return task
 

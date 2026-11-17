@@ -192,3 +192,12 @@ after ranking. `RetrievalSegment.retrieval_text` is derived context, not legal t
 - Add `file_size > 0` check on `source_document` (legacy backfill used 0).
 - `CandidateRevision` stores before/after snapshots, changed fields, and a
   unified text diff for audit readability.
+
+### Worker lease ownership
+
+Each task claim increments `attempt_count`, which also serves as its fencing
+version. Task updates check that version and the worker ID in the database.
+Stage flushes and commits take the same fence, so a worker whose task has been
+reclaimed discards its uncommitted results without failing the new owner's run.
+Heartbeat database errors are retried on the next interval, up to three
+consecutive failures; a confirmed ownership loss stops renewal immediately.

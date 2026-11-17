@@ -8,7 +8,8 @@ from sqlmodel import Session, select
 from app.core.config import settings
 from app.ingestion.common import get_datetime_utc
 from app.ingestion.registry import handler_for
-from app.ingestion.runtime.errors import IngestionWorkerError
+from app.ingestion.runtime.errors import IngestionLeaseLost, IngestionWorkerError
+from app.ingestion.runtime.leases import TaskLease, fence_stage_writes
 from app.ingestion.runtime.queue import (
     append_run_event,
     complete_task,
@@ -55,7 +56,9 @@ def run_once(
     )
     if not task:
         return None
-    return run_leased_task(session, task, worker_id=worker_id)
+    return run_leased_task(
+        session, task, worker_id=worker_id, lease_seconds=lease_seconds
+    )
 
 
 def run_until_idle(
@@ -74,29 +77,69 @@ def run_until_idle(
 
 
 def run_leased_task(
-    session: Session, task: IngestionTask, *, worker_id: str
+    session: Session,
+    task: IngestionTask,
+    *,
+    worker_id: str,
+    lease_seconds: int | None = None,
+) -> WorkerResult:
+    lease = TaskLease.from_task(task)
+    if lease.worker_id != worker_id:
+        raise IngestionLeaseLost("Task lease belongs to a different worker")
+    run_id, stage = task.run_id, stage_for_task(task)
+    try:
+        return _run_leased_task(
+            session,
+            task,
+            worker_id=worker_id,
+            lease=lease,
+            lease_seconds=lease_seconds or settings.INGESTION_WORKER_LEASE_SECONDS,
+        )
+    except IngestionLeaseLost:
+        session.rollback()
+        session.refresh(task)
+        run = get_run(session, run_id)
+        session.refresh(run)
+        return WorkerResult(
+            task_id=lease.task_id,
+            run_id=run_id,
+            stage=stage,
+            task_status=task.status,
+            run_status=run.status,
+        )
+
+
+def _run_leased_task(
+    session: Session,
+    task: IngestionTask,
+    *,
+    worker_id: str,
+    lease: TaskLease,
+    lease_seconds: int,
 ) -> WorkerResult:
     run = get_run(session, task.run_id)
     stage = stage_for_task(task)
     step = get_step(session, run.id, stage, task.step_id)
     started_at = get_datetime_utc()
     task = mark_task_running(session, task)
-    mark_step_running(session, step, worker_id=worker_id, started_at=started_at)
-    mark_run_running(session, run, stage=stage)
-    append_run_event(
-        session,
-        run,
-        event_type="stage_started",
-        message=f"{stage.value} started",
-        step=step,
-        payload={"worker_id": worker_id, "task_id": str(task.id)},
-    )
+    with fence_stage_writes(session, lease):
+        mark_step_running(session, step, worker_id=worker_id, started_at=started_at)
+        mark_run_running(session, run, stage=stage)
+        append_run_event(
+            session,
+            run,
+            event_type="stage_started",
+            message=f"{stage.value} started",
+            step=step,
+            payload={"worker_id": worker_id, "task_id": str(task.id)},
+        )
 
     stop_heartbeat = threading.Event()
     lease_lost = threading.Event()
 
     def heartbeat() -> None:
-        interval = max(1.0, settings.INGESTION_WORKER_LEASE_SECONDS / 3)
+        interval = max(1.0, lease_seconds / 3)
+        failures = 0
         while not stop_heartbeat.wait(interval):
             try:
                 from app.core.db import engine
@@ -104,22 +147,29 @@ def run_leased_task(
                 with Session(engine) as heartbeat_session:
                     if not renew_task_lease(
                         heartbeat_session,
-                        task_id=task.id,
+                        task_id=lease.task_id,
                         worker_id=worker_id,
-                        lease_seconds=settings.INGESTION_WORKER_LEASE_SECONDS,
+                        lease_seconds=lease_seconds,
+                        lease_version=lease.version,
                     ):
                         lease_lost.set()
                         return
+                failures = 0
             except Exception:
-                lease_lost.set()
-                return
+                failures += 1
+                if failures >= 3:
+                    lease_lost.set()
+                    return
 
     heartbeat_thread = threading.Thread(target=heartbeat, daemon=True)
     heartbeat_thread.start()
     try:
-        outcome = handler_for(stage)(session, run, task)
+        with fence_stage_writes(session, lease):
+            outcome = handler_for(stage)(session, run, task)
         if lease_lost.is_set():
-            raise IngestionWorkerError("Task lease was lost during stage execution")
+            raise IngestionLeaseLost("Task lease was lost during stage execution")
+    except IngestionLeaseLost:
+        raise
     except Exception as exc:
         # A failed flush leaves SQLAlchemy unable to record task failure until
         # its transaction is rolled back. Discard partial stage writes first.
@@ -131,12 +181,13 @@ def run_leased_task(
             task=task,
             stage=stage,
             exc=exc,
+            lease=lease,
         )
     finally:
         stop_heartbeat.set()
         heartbeat_thread.join(timeout=1)
 
-    completed_task = complete_task(session, task, commit=False)
+    completed_task = complete_task(session, task, commit=False, lease=lease)
     mark_step_succeeded(session, step, metrics=outcome.metrics, commit=False)
     append_run_event(
         session,
@@ -222,12 +273,15 @@ def handle_stage_failure(
     task: IngestionTask,
     stage: IngestionStage,
     exc: Exception,
+    lease: TaskLease | None = None,
 ) -> WorkerResult:
     error_details = {
         "error_type": exc.__class__.__name__,
         "message": str(exc),
     }
-    failed_or_retryable_task = fail_task(session, task, error_details)
+    failed_or_retryable_task = fail_task(
+        session, task, error_details, lease=lease, commit=False
+    )
     now = get_datetime_utc()
     step.error_details = error_details
     step.heartbeat_at = now
@@ -253,7 +307,6 @@ def handle_stage_failure(
     else:
         step.status = IngestionStepStatus.PENDING
     session.add(step)
-    session.commit()
     append_run_event(
         session,
         run,
@@ -261,7 +314,9 @@ def handle_stage_failure(
         message=str(exc),
         step=step,
         payload=error_details,
+        commit=False,
     )
+    session.commit()
     session.refresh(run)
     return WorkerResult(
         task_id=failed_or_retryable_task.id,
