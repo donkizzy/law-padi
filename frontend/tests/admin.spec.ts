@@ -672,7 +672,7 @@ test("Admin uploads large R2 sources through multipart part URLs", async ({
   expect(requests.completeExpectedVersion).toBe(2)
 })
 
-test("Admin reconnects streamed run events and keeps five-second polling as fallback", async ({
+test("Admin reconnects streamed run events and keeps polling as fallback", async ({
   page,
 }) => {
   await installDroppingRunEventStream(page)
@@ -691,7 +691,7 @@ test("Admin reconnects streamed run events and keeps five-second polling as fall
     .toContain("1")
   expect(await runEventStreamLastEventIds(page)).toEqual([null, "1"])
   await expect(page.getByLabel("Run event stream status")).toContainText(
-    /Live events streaming|Polling every 5 seconds/,
+    /Live events streaming|Live events unavailable; checking for updates/,
   )
 
   const polledRuns = requests.runs

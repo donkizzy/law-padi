@@ -1,4 +1,9 @@
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
+import {
+  type QueryKey,
+  useMutation,
+  useQuery,
+  useQueryClient,
+} from "@tanstack/react-query"
 import type { FormEvent, ReactElement, ReactNode } from "react"
 import { cloneElement, isValidElement, useEffect, useState } from "react"
 import type { IconType } from "react-icons"
@@ -69,6 +74,13 @@ import {
 } from "@/components/ui/dialog"
 import { Input } from "@/components/ui/input"
 import useCustomToast from "@/hooks/useCustomToast"
+import {
+  adminKeys,
+  createInvalidationBatcher,
+  hasActiveWork,
+  liveQuery,
+  pollWhile,
+} from "@/lib/admin-queries"
 import { getAccessToken } from "@/lib/session"
 import { cn } from "@/lib/utils"
 
@@ -168,52 +180,87 @@ export function AdminWorkspace() {
     useState<ExtractionCandidateStatus>("needs_review")
   const [selectedReleaseId, setSelectedReleaseId] = useState<string>()
 
+  // The stream feeds the selected run, so it is read before the queries that
+  // fall back to polling when it is not delivering.
+  const runEventsStream = useRunEventsStream(selectedRunId)
+  const streaming = runEventsStream.status === "streaming"
+  const onRunsTab = tab === "runs"
+  const onPagesTab = tab === "pages"
+  const onReviewTab = tab === "review"
+  const onReleasesTab = tab === "releases"
+  const onBenchmarksTab = tab === "benchmarks"
+
+  // The metrics say whether the pipeline is busy, so they are always followed,
+  // slowing down while nothing changes. Everything else is followed only while
+  // there is work to follow and its tab is open.
   const metricsQuery = useQuery({
-    queryKey: ["admin", "metrics"],
+    queryKey: adminKeys.metrics(),
     queryFn: async () => (await AdminService.readAdminMetrics()).data,
-    refetchInterval: 5000,
+    refetchInterval: pollWhile(true, 5_000, 30_000),
+    ...liveQuery,
   })
 
   const alertsQuery = useQuery({
-    queryKey: ["admin", "alerts"],
+    queryKey: adminKeys.alerts(),
     queryFn: async () => (await AdminService.readAdminAlerts()).data,
-    refetchInterval: 5000,
+    refetchInterval: pollWhile(true, 5_000, 30_000),
+    ...liveQuery,
   })
 
   const runsQuery = useQuery({
-    queryKey: ["admin", "ingestion-runs"],
+    queryKey: adminKeys.runs(),
     queryFn: async () => (await AdminService.readIngestionRuns()).data,
-    refetchInterval: 5000,
+    // The list is also what shows whether a run is in progress.
+    refetchInterval: (query) =>
+      pollWhile(
+        hasActiveWork(metricsQuery.data, query.state.data?.data ?? []),
+        5_000,
+        30_000,
+      )(query),
+    ...liveQuery,
   })
+  const workActive = hasActiveWork(
+    metricsQuery.data,
+    runsQuery.data?.data ?? [],
+  )
+  const followWork = (baseMs: number, maxMs = 30_000) =>
+    pollWhile(workActive, baseMs, maxMs)
+  // The stream refreshes the selected run as it changes; polling is its fallback.
+  const followRunUnlessStreaming = pollWhile(
+    workActive && !streaming,
+    5_000,
+    30_000,
+  )
 
   const selectedRunQuery = useQuery({
-    queryKey: ["admin", "ingestion-runs", selectedRunId],
+    queryKey: adminKeys.run(selectedRunId),
     queryFn: async () =>
       (
         await AdminService.readIngestionRun({
           path: { run_id: selectedRunId ?? "" },
         })
       ).data,
-    enabled: Boolean(selectedRunId),
-    refetchInterval: 5000,
+    enabled: Boolean(selectedRunId) && (onRunsTab || onPagesTab),
+    refetchInterval: followRunUnlessStreaming,
+    ...liveQuery,
   })
 
   const pagesQuery = useQuery({
-    queryKey: ["admin", "ingestion-runs", selectedRunId, "pages"],
+    queryKey: adminKeys.runPages(selectedRunId),
     queryFn: async () =>
       (
         await AdminService.readIngestionRunPages({
           path: { run_id: selectedRunId ?? "" },
         })
       ).data,
-    enabled: Boolean(selectedRunId),
-    refetchInterval: 5000,
+    enabled: Boolean(selectedRunId) && (onPagesTab || onReviewTab),
+    refetchInterval: followRunUnlessStreaming,
+    ...liveQuery,
   })
 
   const reviewsQuery = useQuery({
     queryKey: [
-      "admin",
-      "review-items",
+      ...adminKeys.reviews(),
       selectedRunId,
       reviewStatus,
       reviewOffset,
@@ -232,7 +279,9 @@ export function AdminWorkspace() {
           },
         })
       ).data,
-    refetchInterval: 5000,
+    enabled: onReviewTab,
+    refetchInterval: followWork(10_000),
+    ...liveQuery,
   })
 
   useEffect(() => {
@@ -243,69 +292,72 @@ export function AdminWorkspace() {
   }, [reviewsQuery.data?.count, reviewOffset])
 
   const releasesQuery = useQuery({
-    queryKey: ["admin", "corpus-releases"],
+    queryKey: adminKeys.releases(),
     queryFn: async () => (await AdminService.readCorpusReleases()).data,
-    refetchInterval: 5000,
+    enabled: onReleasesTab || onBenchmarksTab,
+    refetchInterval: followWork(5_000),
+    ...liveQuery,
   })
 
   const benchmarkQuery = useQuery({
-    queryKey: ["admin", "embedding-benchmarks", selectedReleaseId],
+    queryKey: adminKeys.benchmark(selectedReleaseId),
     queryFn: async () =>
       (
         await AdminService.readEmbeddingBenchmark({
           path: { release_id: selectedReleaseId ?? "" },
         })
       ).data,
-    enabled: Boolean(selectedReleaseId),
-    refetchInterval: 5000,
+    enabled: Boolean(selectedReleaseId) && (onReleasesTab || onBenchmarksTab),
+    refetchInterval: followWork(5_000),
+    ...liveQuery,
   })
 
   const releaseManifestQuery = useQuery({
-    queryKey: ["admin", "corpus-releases", selectedReleaseId, "manifest"],
+    queryKey: adminKeys.releaseManifest(selectedReleaseId),
     queryFn: async () =>
       (
         await AdminService.readReleaseManifest({
           path: { release_id: selectedReleaseId ?? "" },
         })
       ).data,
-    enabled: Boolean(selectedReleaseId),
-    refetchInterval: 5000,
+    enabled: Boolean(selectedReleaseId) && onReleasesTab,
+    refetchInterval: followWork(5_000),
     retry: false,
+    ...liveQuery,
   })
 
   const publicationEvidenceQuery = useQuery({
-    queryKey: [
-      "admin",
-      "corpus-releases",
-      selectedReleaseId,
-      "publication-evidence",
-    ],
+    queryKey: adminKeys.releaseEvidence(selectedReleaseId),
     queryFn: async () =>
       (
         await AdminService.readReleasePublicationEvidence({
           path: { release_id: selectedReleaseId ?? "" },
         })
       ).data,
-    enabled: Boolean(selectedReleaseId),
-    refetchInterval: 5000,
+    enabled: Boolean(selectedReleaseId) && onReleasesTab,
+    refetchInterval: followWork(5_000),
+    ...liveQuery,
   })
 
+  // Roles change rarely and by an administrator's hand, so they are read when
+  // the screen opens and again when the tab is returned to.
   const myRolesQuery = useQuery({
-    queryKey: ["admin", "my-roles"],
+    queryKey: adminKeys.roles(),
     queryFn: async () => (await AdminService.readMyAdminRoles()).data,
-    refetchInterval: 30000,
+    ...liveQuery,
   })
 
   const auditEventsQuery = useQuery({
-    queryKey: ["admin", "audit-events", selectedReleaseId],
+    queryKey: adminKeys.auditEvents(selectedReleaseId),
     queryFn: async () =>
       (
         await AdminService.readAuditEvents({
           query: { entity_id: selectedReleaseId, limit: 50 },
         })
       ).data,
-    enabled: Boolean(selectedReleaseId),
-    refetchInterval: 10000,
+    enabled: Boolean(selectedReleaseId) && onReleasesTab,
+    refetchInterval: followWork(10_000),
+    ...liveQuery,
   })
 
   const myRoles = myRolesQuery.data?.roles ?? []
@@ -314,8 +366,20 @@ export function AdminWorkspace() {
   const canReview = isSuperuser || myRoles.includes("legal_reviewer")
   const canPublish = isSuperuser || myRoles.includes("corpus_publisher")
 
-  const invalidateAdmin = () =>
-    queryClient.invalidateQueries({ queryKey: ["admin"] })
+  // A write refreshes only what it can have changed. The pipeline's own
+  // follow-on work is picked up by the polling above.
+  const refresh = (...keys: QueryKey[]) => {
+    for (const queryKey of keys)
+      void queryClient.invalidateQueries({ queryKey, exact: true })
+  }
+  const refreshReleases = (releaseId: string | undefined) => {
+    refresh(adminKeys.releases(), adminKeys.metrics(), adminKeys.alerts())
+    // The manifest, publication evidence and benchmark of this release.
+    void queryClient.invalidateQueries({
+      queryKey: adminKeys.release(releaseId),
+    })
+    refresh(adminKeys.auditEvents(releaseId), adminKeys.benchmark(releaseId))
+  }
 
   const uploadMutation = useMutation({
     mutationFn: uploadSourcePdf,
@@ -330,7 +394,7 @@ export function AdminWorkspace() {
           ? "Duplicate source linked to the existing document."
           : "Source upload completed and ingestion queued.",
       )
-      invalidateAdmin()
+      refresh(adminKeys.runs(), adminKeys.metrics(), adminKeys.alerts())
     },
     onError: (error) =>
       showErrorToast(error instanceof Error ? error.message : "Upload failed."),
@@ -349,7 +413,12 @@ export function AdminWorkspace() {
     onSuccess: (run) => {
       setSelectedRunId(run.id)
       showSuccessToast("Run control saved.")
-      invalidateAdmin()
+      refresh(
+        adminKeys.runs(),
+        adminKeys.run(run.id),
+        adminKeys.metrics(),
+        adminKeys.alerts(),
+      )
     },
     onError: (error) =>
       showErrorToast(
@@ -369,9 +438,12 @@ export function AdminWorkspace() {
         path: { run_id: runId },
         body,
       }),
-    onSuccess: () => {
+    onSuccess: (_result, { runId }) => {
       showSuccessToast("Page boundaries saved.")
-      invalidateAdmin()
+      refresh(adminKeys.runs(), adminKeys.run(runId), adminKeys.metrics())
+      void queryClient.invalidateQueries({
+        queryKey: adminKeys.runPages(runId),
+      })
     },
     onError: (error) =>
       showErrorToast(
@@ -393,7 +465,7 @@ export function AdminWorkspace() {
       }),
     onSuccess: () => {
       showSuccessToast("Review revision saved.")
-      invalidateAdmin()
+      void queryClient.invalidateQueries({ queryKey: adminKeys.reviews() })
     },
     onError: (error) =>
       showErrorToast(
@@ -415,7 +487,13 @@ export function AdminWorkspace() {
       }),
     onSuccess: () => {
       showSuccessToast("Review decision recorded.")
-      invalidateAdmin()
+      void queryClient.invalidateQueries({ queryKey: adminKeys.reviews() })
+      refresh(
+        adminKeys.runs(),
+        adminKeys.run(selectedRunId),
+        adminKeys.metrics(),
+        adminKeys.alerts(),
+      )
     },
     onError: (error) =>
       showErrorToast(
@@ -433,7 +511,7 @@ export function AdminWorkspace() {
     }) => verifySourceDocument(source, reason),
     onSuccess: () => {
       showSuccessToast("Source document verified.")
-      invalidateAdmin()
+      void queryClient.invalidateQueries({ queryKey: adminKeys.reviews() })
     },
     onError: (error) =>
       showErrorToast(
@@ -454,7 +532,7 @@ export function AdminWorkspace() {
     onSuccess: (releaseId) => {
       setSelectedReleaseId(releaseId)
       showSuccessToast("Corpus release updated.")
-      invalidateAdmin()
+      refreshReleases(releaseId)
     },
     onError: (error) =>
       showErrorToast(
@@ -476,7 +554,8 @@ export function AdminWorkspace() {
       )
         setSelectedRunId(composition.run_id)
       showSuccessToast("Release composed. Retrieval build queued.")
-      invalidateAdmin()
+      refreshReleases(release.id)
+      refresh(adminKeys.runs())
     },
     onError: (error) =>
       showErrorToast(
@@ -494,7 +573,6 @@ export function AdminWorkspace() {
     reviews.find((review) => review.id === selectedReviewId) ?? reviews[0]
   const selectedRelease =
     releases.find((release) => release.id === selectedReleaseId) ?? releases[0]
-  const runEventsStream = useRunEventsStream(selectedRunId)
   const selectedRunDetail = selectedRunQuery.data
     ? {
         ...selectedRunQuery.data,
@@ -770,6 +848,7 @@ function useRunEventsStream(runId?: string): RunEventsStreamState {
     }
 
     const controller = new AbortController()
+    const refreshes = createInvalidationBatcher(queryClient)
     let isCurrentRun = true
 
     setStreamState({ events: [], status: "connecting" })
@@ -799,20 +878,22 @@ function useRunEventsStream(runId?: string): RunEventsStreamState {
             lastEventId: String(runEvent.sequence),
             status: "streaming",
           }))
-          void queryClient.invalidateQueries({
-            queryKey: ["admin", "ingestion-runs"],
-          })
-          void queryClient.invalidateQueries({
-            queryKey: ["admin", "ingestion-runs", runId],
-          })
+          // The event is added to the cached run, and the figures only the
+          // server knows (status, progress) are refreshed once per second.
+          queryClient.setQueryData<IngestionRunDetail>(
+            adminKeys.run(runId),
+            (current) =>
+              current && {
+                ...current,
+                events: mergeRunEvents(current.events, [runEvent]),
+              },
+          )
+          refreshes.invalidate(adminKeys.runs(), adminKeys.run(runId))
           if (
             runEvent.stage === "profiling" ||
             runEvent.stage === "awaiting_page_confirmation"
-          ) {
-            void queryClient.invalidateQueries({
-              queryKey: ["admin", "ingestion-runs", runId, "pages"],
-            })
-          }
+          )
+            refreshes.invalidate(adminKeys.runPages(runId))
         }
 
         if (isCurrentRun) {
@@ -836,6 +917,7 @@ function useRunEventsStream(runId?: string): RunEventsStreamState {
     return () => {
       isCurrentRun = false
       controller.abort()
+      refreshes.cancel()
     }
   }, [queryClient, runId])
 
@@ -2704,7 +2786,7 @@ function BenchmarkWorkspace({
 function OcrBenchmarkPanel() {
   const [datasetVersion, setDatasetVersion] = useState("")
   const infoQuery = useQuery({
-    queryKey: ["admin", "ocr-benchmarks", datasetVersion],
+    queryKey: adminKeys.ocrBenchmark(datasetVersion),
     queryFn: async () =>
       (
         await AdminService.readOcrBenchmark({
@@ -3374,10 +3456,10 @@ function runEventStreamLabel(stream: RunEventsStreamState): string {
       : "Live events streaming."
   }
   if (stream.status === "reconnecting") {
-    return "Live events reconnecting; polling every 5 seconds."
+    return "Live events reconnecting; checking for updates."
   }
   if (stream.status === "polling") {
-    return "Polling every 5 seconds."
+    return "Live events unavailable; checking for updates."
   }
   return "No live run selected."
 }

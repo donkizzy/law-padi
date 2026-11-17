@@ -10,6 +10,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog"
 import useCustomToast from "@/hooks/useCustomToast"
+import { adminKeys } from "@/lib/admin-queries"
 
 export function ResolveReviewIssueForm({
   issue,
@@ -55,7 +56,13 @@ export function ResolveReviewIssueForm({
         },
       }),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["admin"] })
+      // The review queue and the counts derived from it.
+      for (const queryKey of [
+        adminKeys.reviews(),
+        adminKeys.metrics(),
+        adminKeys.alerts(),
+      ])
+        void queryClient.invalidateQueries({ queryKey })
       showSuccessToast("Review issue resolution recorded.")
       setOpen(false)
     },
