@@ -11,7 +11,7 @@ from app.chat.llm.protocol import JsonObject
 from app.legal.enums import (
     MessageRole,
 )
-from app.legal.instruments import INSTRUMENT_NAMES
+from app.legal.instruments import instrument_names
 from app.legal.models import (
     ConversationMessage,
 )
@@ -125,7 +125,7 @@ def _names_topic(question: str) -> bool:
         for word in _WORD.findall(question)
         if not _FOLLOWUP_WORDS.intersection(tokens(word))
     )
-    return bool(topic_sections(remaining, instrument_slugs=INSTRUMENT_NAMES))
+    return bool(topic_sections(remaining, instrument_slugs=instrument_names()))
 
 
 def is_followup_question(question: str) -> bool:
