@@ -15,6 +15,7 @@ from app.chat import runtime as chat_runtime
 from app.chat.llm import budgeted
 from app.chat.llm.protocol import ProviderResult
 from app.core.config import settings
+from app.core.request_id import RequestIdMiddleware, current_request_id
 from app.deployment import render_app
 from app.main import app as api_app
 
@@ -307,3 +308,54 @@ def test_runtime_metadata_is_protected_reports_worker_settings_and_never_wakes_d
         }
         assert not wakeups
         assert not any(calls.values())
+
+
+def test_render_liveness_reports_the_worker_and_requests_share_one_id(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    calls = _idle_worker(monkeypatch)
+    monkeypatch.setattr(settings, "ORIGIN_PROXY_SECRET", "a" * 32)
+    seen: list[str | None] = []
+    application = FastAPI()
+    application.add_middleware(RequestIdMiddleware)
+
+    @application.get("/api/v1/conversations/ok")
+    def ok() -> dict[str, bool]:
+        seen.append(current_request_id())
+        return {"ok": True}
+
+    def fail() -> None:
+        calls["recover"] += 1
+        raise RuntimeError("simulated database failure")
+
+    async def exercise() -> None:
+        runtime = render_app.RequestWorker()
+        wrapper = render_app.create_app(application, runtime)
+        runtime.start()
+        try:
+            await _until(lambda: calls["leases"] == 1)
+            async with httpx.AsyncClient(
+                transport=httpx.ASGITransport(app=wrapper), base_url="http://test"
+            ) as client:
+                for path in ("/livez", "/healthz"):
+                    assert (await client.get(path)).json() == {"status": "ok"}
+                response = await client.get(
+                    "/api/v1/conversations/ok",
+                    headers={"x-origin-proxy-secret": "a" * 32, "X-Request-ID": "one"},
+                )
+                assert response.headers.get_list("x-request-id") == ["one"]
+                assert seen == ["one"]
+                monkeypatch.setattr(run_lifecycle, "recover_expired", fail)
+                runtime.wake()
+                await _until(lambda: runtime.failure is not None)
+                assert (await client.get("/livez")).status_code == 503
+                unavailable = await client.get(
+                    "/api/v1/conversations/ok",
+                    headers={"x-origin-proxy-secret": "a" * 32, "X-Request-ID": "two"},
+                )
+                assert unavailable.status_code == 503
+                assert unavailable.headers["x-request-id"] == "two"
+        finally:
+            await runtime.close()
+
+    asyncio.run(exercise())

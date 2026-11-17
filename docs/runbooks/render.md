@@ -19,8 +19,11 @@ runbook does not repeat them, so it cannot drift from them.
   `app.deployment.render_app:app`. Incoming conversation requests wake the
   chat worker; runs, leases, events and spend reservations are durable in
   PostgreSQL, so sleeping or restarting loses no work.
-- `/healthz` checks the worker without querying the database. Do not add
-  uptime pings to keep the service awake.
+- `/healthz` (the same probe as `/livez`) checks the in-process chat worker
+  without querying the database. `/readyz` also checks the database and the
+  migration head, and sits behind the origin credential. See
+  [`observability.md`](observability.md). Do not add uptime pings to keep the
+  service awake.
 - Keep `plan: free` explicit in `render.yaml`. Do not add a Render database,
   disk, paid worker, cron job or preview environment. Free services sleep after
   a period of inactivity and take time to wake, have an ephemeral filesystem and

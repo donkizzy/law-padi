@@ -53,6 +53,9 @@ services:
       WEB_CONCURRENCY: ${WEB_CONCURRENCY:-2}
       SENTRY_DSN: ${SENTRY_DSN:-}
       SENTRY_TRACES_SAMPLE_RATE: ${SENTRY_TRACES_SAMPLE_RATE:-0.05}
+      SENTRY_ENVIRONMENT: ${SENTRY_ENVIRONMENT:-production}
+      # Empty selects JSON lines; set "text" for a readable terminal.
+      LOG_FORMAT: ${LOG_FORMAT:-}
       INGESTION_STORAGE_BACKEND: ${INGESTION_STORAGE_BACKEND:-local}
       INGESTION_ALLOWED_INSTRUMENT_TYPES: '${INGESTION_ALLOWED_INSTRUMENT_TYPES:-["constitution"]}'
       INGESTION_STORAGE_DIR: /app/backend/storage/source-documents
@@ -96,7 +99,9 @@ services:
       AZURE_DOCUMENT_INTELLIGENCE_API_VERSION: ${AZURE_DOCUMENT_INTELLIGENCE_API_VERSION:-2024-11-30}
 
     healthcheck:
-      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/api/v1/utils/health-check/', timeout=4).close()"]
+      # Readiness: the database answers and its schema is at this build's head.
+      # Traefik holds traffic back from a container that is not healthy.
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/readyz', timeout=4).close()"]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -133,6 +138,7 @@ services:
       DATABASE_URL: postgresql://postgres:${POSTGRES_PASSWORD:?Variable not set}@db:5432/app
       DATABASE_POOL_SIZE: ${INGESTION_DATABASE_POOL_SIZE:-10}
       SENTRY_DSN: ${SENTRY_DSN:-}
+      LOG_FORMAT: ${LOG_FORMAT:-}
       INGESTION_STORAGE_BACKEND: ${INGESTION_STORAGE_BACKEND:-local}
       INGESTION_ALLOWED_INSTRUMENT_TYPES: '${INGESTION_ALLOWED_INSTRUMENT_TYPES:-["constitution"]}'
       INGESTION_STORAGE_DIR: /app/backend/storage/source-documents
@@ -147,6 +153,7 @@ services:
       INGESTION_WORKER_MAX_TASKS_PER_POLL: ${INGESTION_WORKER_MAX_TASKS_PER_POLL:-10}
       INGESTION_WORKER_TASK_TYPE: ${INGESTION_WORKER_TASK_TYPE:-}
       INGESTION_OUTBOX_SINK_PATH: ${INGESTION_OUTBOX_SINK_PATH:-/app/backend/storage/source-documents/outbox-events.jsonl}
+      INGESTION_WORKER_HEARTBEAT_FILE: /tmp/ingestion-worker.heartbeat
       R2_ENDPOINT_URL: ${R2_ENDPOINT_URL:-}
       R2_BUCKET_NAME: ${R2_BUCKET_NAME:-}
       R2_ACCESS_KEY_ID: ${R2_ACCESS_KEY_ID:-}
@@ -166,6 +173,14 @@ services:
       AZURE_DOCUMENT_INTELLIGENCE_KEY: ${AZURE_DOCUMENT_INTELLIGENCE_KEY:-}
       AZURE_DOCUMENT_INTELLIGENCE_MODEL_ID: ${AZURE_DOCUMENT_INTELLIGENCE_MODEL_ID:-prebuilt-layout}
       AZURE_DOCUMENT_INTELLIGENCE_API_VERSION: ${AZURE_DOCUMENT_INTELLIGENCE_API_VERSION:-2024-11-30}
+    healthcheck:
+      # The worker loop touches the file on every poll and at stage checkpoints.
+      # Unhealthy after this many poll intervals without a beat.
+      test: ["CMD", "python", "-m", "app.core.heartbeat", "/tmp/ingestion-worker.heartbeat", "--interval", "${INGESTION_WORKER_POLL_INTERVAL_SECONDS:-5}", "--intervals", "${INGESTION_WORKER_HEARTBEAT_INTERVALS:-60}"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
     build:
       context: .
       dockerfile: services/ingestion-worker/Dockerfile
@@ -184,6 +199,14 @@ services:
       args:
         BUILD_REVISION: ${BUILD_REVISION:-development}
     command: ["python", "-m", "app.chat.worker"]
+    healthcheck:
+      # The worker loop touches the file every iteration, at most 2 seconds
+      # apart. Unhealthy after this many intervals without a beat.
+      test: ["CMD", "python", "-m", "app.core.heartbeat", "/tmp/chat-worker.heartbeat", "--interval", "2", "--intervals", "${CHAT_WORKER_HEARTBEAT_INTERVALS:-30}"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
     environment:
       PROJECT_NAME: ${PROJECT_NAME:?Variable not set}
       SECRET_KEY: ${SECRET_KEY:?Variable not set}
@@ -191,6 +214,11 @@ services:
       FIRST_SUPERUSER_PASSWORD: ${FIRST_SUPERUSER_PASSWORD:?Variable not set}
       DATABASE_URL: postgresql://postgres:${POSTGRES_PASSWORD:?Variable not set}@db:5432/app
       DATABASE_POOL_SIZE: ${CHAT_WORKER_DATABASE_POOL_SIZE:-10}
+      CHAT_WORKER_HEARTBEAT_FILE: /tmp/chat-worker.heartbeat
+      SENTRY_DSN: ${SENTRY_DSN:-}
+      SENTRY_TRACES_SAMPLE_RATE: ${SENTRY_TRACES_SAMPLE_RATE:-0.05}
+      SENTRY_ENVIRONMENT: ${SENTRY_ENVIRONMENT:-production}
+      LOG_FORMAT: ${LOG_FORMAT:-}
       INGESTION_STORAGE_BACKEND: ${INGESTION_STORAGE_BACKEND:-local}
       INGESTION_ALLOWED_INSTRUMENT_TYPES: '${INGESTION_ALLOWED_INSTRUMENT_TYPES:-["constitution"]}'
       INGESTION_STORAGE_DIR: /app/backend/storage/source-documents

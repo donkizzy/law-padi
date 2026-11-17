@@ -18,6 +18,8 @@ from starlette.types import ASGIApp, Message, Receive, Scope, Send
 from app.chat import EXPLANATION_PROMPT_VERSION
 from app.chat import runtime as chat_runtime
 from app.core.config import settings
+from app.core.logs import configure_logging
+from app.core.request_id import RequestIdMiddleware
 from app.main import app as api_app
 
 _logger = logging.getLogger(__name__)
@@ -52,7 +54,7 @@ class RequestWorker:
         else:
             error = task.exception()
             self.failure = type(error).__name__ if error else "worker_stopped"
-        _logger.error("render_chat_worker_unavailable %s", self.failure)
+        _logger.error("render_chat_worker_unavailable", extra={"failure": self.failure})
 
     def start(self) -> None:
         self.stopping = False
@@ -128,6 +130,8 @@ def create_app(
 
     @asynccontextmanager
     async def lifespan(_app: FastAPI) -> AsyncIterator[None]:
+        # Starlette does not run a mounted application's lifespan.
+        configure_logging()
         runtime.start()
         try:
             yield
@@ -137,9 +141,12 @@ def create_app(
     app = FastAPI(lifespan=lifespan, docs_url=None, redoc_url=None, openapi_url=None)
     app.state.chat_worker = runtime
 
+    @app.get("/livez")
     @app.get("/healthz")
     def health() -> JSONResponse:
         # Render's health probe must not connect to Neon or require edge secrets.
+        # Liveness includes the in-process chat worker: only a restart revives
+        # it. Readiness (/readyz) is served by the API behind the edge secret.
         return JSONResponse(
             {"status": "ok" if runtime.healthy else "degraded"},
             status_code=200 if runtime.healthy else 503,
@@ -170,6 +177,9 @@ def create_app(
         )
 
     app.add_middleware(RequestWakeMiddleware, runtime=runtime)
+    # Outermost, so the worker-unavailable response carries the id too; the
+    # mounted API reuses the id bound here.
+    app.add_middleware(RequestIdMiddleware)
     app.mount("/", application)
     return app
 
