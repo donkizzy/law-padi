@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState } from "react"
 import { getSessionOwner } from "@/lib/session"
-import { draftPrefix, workspaceStorageEvent } from "./useWorkspacePreferences"
+import { draftPrefix, workspaceStorageEvent } from "@/lib/storage-keys"
 
 export function useChatDraft(key: string) {
   const owner = getSessionOwner()

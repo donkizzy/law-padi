@@ -33,6 +33,7 @@ import {
   refreshSession,
   subscribeSession,
 } from "./lib/session"
+import { themeKey } from "./lib/storage-keys"
 import { routeTree } from "./routeTree.gen"
 
 client.setConfig({
@@ -175,7 +176,7 @@ void Promise.allSettled([initSession(), initI18n()]).finally(() => {
   routerMounted = true
   ReactDOM.createRoot(document.getElementById("root")!).render(
     <StrictMode>
-      <ThemeProvider defaultTheme="light" storageKey="law-padi-theme">
+      <ThemeProvider defaultTheme="light" storageKey={themeKey}>
         <QueryClientProvider client={queryClient}>
           <RouterProvider router={router} />
           <Toaster richColors closeButton />

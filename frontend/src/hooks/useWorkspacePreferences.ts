@@ -1,9 +1,12 @@
 import { useSyncExternalStore } from "react"
 import { z } from "zod"
 
-export const workspaceStorageEvent = "law-padi-workspace-storage"
-export const preferencesKey = "law-padi.preferences.v1"
-export const draftPrefix = "law-padi.draft.v2."
+import {
+  draftPrefix,
+  preferencesKey,
+  workspaceStorageEvent,
+} from "@/lib/storage-keys"
+
 const legacyDraftPrefix = "law-padi.draft.v1."
 const schema = z.object({
   enterToSend: z.boolean().default(true),

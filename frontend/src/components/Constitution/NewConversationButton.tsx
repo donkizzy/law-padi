@@ -2,11 +2,11 @@ import { useNavigate } from "@tanstack/react-router"
 import { useTranslation } from "react-i18next"
 import { FiMessageSquare } from "react-icons/fi"
 import { useSidebar } from "@/components/ui/sidebar"
-import { draftPrefix } from "@/hooks/useWorkspacePreferences"
 import {
   cancelChatRequests,
   requestComposerFocusAfterDrawer,
 } from "@/lib/chat-navigation"
+import { draftPrefix } from "@/lib/storage-keys"
 import { SquircleButton } from "./primitives"
 
 export function NewConversationButton({

@@ -5,7 +5,7 @@ import {
 } from "@/client"
 import { conversationHeaders } from "@/hooks/useConversations"
 import { readSavedProvisions } from "@/hooks/useSavedProvisions"
-import { preferencesKey } from "@/hooks/useWorkspacePreferences"
+import { preferencesKey } from "@/lib/storage-keys"
 import { editionName, editionNote, pageLabel } from "./legal-provisions"
 import { referencePath } from "./seo"
 import { getSessionSignal } from "./session"

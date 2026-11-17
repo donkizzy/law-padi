@@ -1,10 +1,12 @@
 import { useSyncExternalStore } from "react"
 import { z } from "zod"
 import { getSessionOwner } from "@/lib/session"
+import { savedProvisionsKey, syncedAccountKey } from "@/lib/storage-keys"
 
-const storageKey = "law-padi.saved-provisions.v2"
+const storageKey = savedProvisionsKey
 const legacyStorageKey = "law-padi.saved-provisions.v1"
-const legacyOwnerKey = "law-padi.synced-account"
+// The first format's owner marker is the key account sync still writes.
+const legacyOwnerKey = syncedAccountKey
 const migratedKey = `${storageKey}.migrated`
 const keyFor = (owner: string | null) =>
   owner ? `${storageKey}.${owner}` : storageKey

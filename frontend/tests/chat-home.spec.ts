@@ -1065,7 +1065,7 @@ test("A non-English interface asks for answers in its language when enabled", as
 }) => {
   await page.addInitScript(() =>
     localStorage.setItem(
-      "law-padi.preferences.v1",
+      "constitution-ng.preferences.v1",
       JSON.stringify({ language: "yoruba" }),
     ),
   )

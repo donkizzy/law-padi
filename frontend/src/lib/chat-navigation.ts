@@ -1,4 +1,5 @@
-export const chatResetEvent = "law-padi-new-conversation"
+import { chatResetEvent } from "@/lib/storage-keys"
+
 let focusAfterDrawer = false
 export function requestComposerFocusAfterDrawer() {
   focusAfterDrawer = true

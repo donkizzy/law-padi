@@ -2,12 +2,10 @@ import { completeLanguages } from "virtual:locale-manifest"
 import i18n, { type BackendModule, type ResourceKey } from "i18next"
 import { initReactI18next } from "react-i18next"
 
-import {
-  readPreferences,
-  workspaceStorageEvent,
-} from "@/hooks/useWorkspacePreferences"
+import { readPreferences } from "@/hooks/useWorkspacePreferences"
 import type { LanguageValue } from "@/lib/languages"
 import { setEditionTranslator } from "@/lib/legal-provisions"
+import { workspaceStorageEvent } from "@/lib/storage-keys"
 
 export const namespaces = [
   "common",

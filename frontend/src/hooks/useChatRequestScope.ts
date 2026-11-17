@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef } from "react"
-import { chatResetEvent } from "@/lib/chat-navigation"
+import { chatResetEvent } from "@/lib/storage-keys"
 
 /** A response belongs only to the mounted conversation that requested it. */
 export function useChatRequestScope() {

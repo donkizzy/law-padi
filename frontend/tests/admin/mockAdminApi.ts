@@ -117,9 +117,9 @@ export async function installDroppingRunEventStream(page: Page) {
       let requestCount = 0
       ;(
         window as unknown as {
-          __lawPadiSseLastEventIds?: Array<string | null>
+          __adminSseLastEventIds?: Array<string | null>
         }
-      ).__lawPadiSseLastEventIds = lastEventIds
+      ).__adminSseLastEventIds = lastEventIds
 
       const eventBody = (sequence: number, message: string) => {
         const payload = {
@@ -186,9 +186,9 @@ export async function runEventStreamLastEventIds(page: Page) {
     () =>
       (
         window as unknown as {
-          __lawPadiSseLastEventIds?: Array<string | null>
+          __adminSseLastEventIds?: Array<string | null>
         }
-      ).__lawPadiSseLastEventIds ?? [],
+      ).__adminSseLastEventIds ?? [],
   )
 }
 

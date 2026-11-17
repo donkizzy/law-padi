@@ -544,7 +544,7 @@ test("Saved search has an empty state and unreadable bookmarks are retained", as
     .fill("defence")
   await expect(page.getByRole("link", { name: "Open section" })).toBeVisible()
   await page.evaluate(() =>
-    localStorage.setItem("law-padi.saved-provisions.v2", "invalid-json"),
+    localStorage.setItem("constitution-ng.saved-provisions.v2", "invalid-json"),
   )
   await page.reload()
   await expect(page.getByRole("alert")).toContainText(
@@ -555,7 +555,7 @@ test("Saved search has an empty state and unreadable bookmarks are retained", as
   await expect(page.getByText("Couldn't save on this device.")).toBeVisible()
   expect(
     await page.evaluate(() =>
-      localStorage.getItem("law-padi.saved-provisions.v2"),
+      localStorage.getItem("constitution-ng.saved-provisions.v2"),
     ),
   ).toBe("invalid-json")
 })
@@ -721,7 +721,7 @@ test("A translated search says what was searched and translates server messages"
 }) => {
   await page.addInitScript(() =>
     localStorage.setItem(
-      "law-padi.preferences.v1",
+      "constitution-ng.preferences.v1",
       JSON.stringify({ language: "yoruba" }),
     ),
   )

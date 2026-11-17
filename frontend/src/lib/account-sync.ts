@@ -27,6 +27,7 @@ import {
   getSessionScope,
   getSessionSignal,
 } from "@/lib/session"
+import { syncedAccountKey } from "@/lib/storage-keys"
 
 /**
  * Keeps a confirmed account's research on every device it signs in on.
@@ -39,7 +40,7 @@ import {
  */
 
 // Which account this browser's bookmarks and preferences currently mirror.
-const SYNCED_ACCOUNT_KEY = "law-padi.synced-account"
+const SYNCED_ACCOUNT_KEY = syncedAccountKey
 
 let activeUserId: string | null = null
 let starting: { scope: number; promise: Promise<SyncResult> } | null = null

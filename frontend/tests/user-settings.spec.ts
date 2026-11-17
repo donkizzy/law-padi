@@ -277,7 +277,7 @@ test("Research export downloads real local bookmarks and source editions", async
   await mockSettings(page)
   await page.addInitScript(() =>
     localStorage.setItem(
-      "law-padi.saved-provisions.v2",
+      "constitution-ng.saved-provisions.v2",
       JSON.stringify([
         {
           canonical_path: "constitution-1999.chapter4.section37",
@@ -306,9 +306,9 @@ test("Clearing local research requires confirmation and preserves login", async 
 }) => {
   await mockSettings(page, true)
   await page.addInitScript(() => {
-    localStorage.setItem("law-padi.saved-provisions.v2", "[]")
+    localStorage.setItem("constitution-ng.saved-provisions.v2", "[]")
     sessionStorage.setItem(
-      "law-padi.draft.v2.signed-in.new",
+      "constitution-ng.draft.v2.signed-in.new",
       "Unfinished question",
     )
   })
@@ -318,7 +318,7 @@ test("Clearing local research requires confirmation and preserves login", async 
   await page.getByRole("button", { name: "Keep my research" }).click()
   expect(
     await page.evaluate(() =>
-      sessionStorage.getItem("law-padi.draft.v2.signed-in.new"),
+      sessionStorage.getItem("constitution-ng.draft.v2.signed-in.new"),
     ),
   ).toBe("Unfinished question")
   await page.getByRole("button", { name: "Clear bookmarks and drafts" }).click()
@@ -327,7 +327,7 @@ test("Clearing local research requires confirmation and preserves login", async 
     .click()
   expect(
     await page.evaluate(() =>
-      sessionStorage.getItem("law-padi.draft.v2.signed-in.new"),
+      sessionStorage.getItem("constitution-ng.draft.v2.signed-in.new"),
     ),
   ).toBeNull()
   expect(
@@ -375,7 +375,7 @@ test("A confirmed account takes in this browser's research and guest chats", asy
 
   await page.addInitScript(() =>
     localStorage.setItem(
-      "law-padi.saved-provisions.v2",
+      "constitution-ng.saved-provisions.v2",
       JSON.stringify([
         {
           canonical_path: "chapter-iv/section-35",
@@ -399,8 +399,9 @@ test("A confirmed account takes in this browser's research and guest chats", asy
     .poll(() =>
       page.evaluate(() =>
         JSON.parse(
-          localStorage.getItem("law-padi.saved-provisions.v2.signed-in") ??
-            "[]",
+          localStorage.getItem(
+            "constitution-ng.saved-provisions.v2.signed-in",
+          ) ?? "[]",
         ).map((item: { canonical_path: string }) => item.canonical_path),
       ),
     )
@@ -482,8 +483,9 @@ test("A confirmed account brings its saved language to a new browser", async ({
     .poll(() =>
       page.evaluate(
         () =>
-          JSON.parse(localStorage.getItem("law-padi.preferences.v1") ?? "{}")
-            .language,
+          JSON.parse(
+            localStorage.getItem("constitution-ng.preferences.v1") ?? "{}",
+          ).language,
       ),
     )
     .toBe("hausa")
