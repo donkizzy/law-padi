@@ -1,5 +1,5 @@
 import { expect, type Page, test } from "@playwright/test"
-import type { ClaimResult, Message } from "../src/client"
+import type { ChatMetrics, ClaimResult, Message } from "../src/client"
 import {
   preferencesPublic,
   savedProvision,
@@ -517,4 +517,32 @@ test("Deleting an account asks for the current password", async ({ page }) => {
   await expect
     .poll(() => deletions)
     .toEqual([{ current_password: "account-password" }])
+})
+
+test("Quality signals count an internal error apart from a provider failure", async ({
+  page,
+}) => {
+  await mockSettings(page, true)
+  await page.route("**/api/v1/users/me", (route) =>
+    route.fulfill({ json: userPublic({ is_superuser: true }) }),
+  )
+  await page.route("**/api/v1/conversations/metrics", (route) =>
+    route.fulfill({
+      json: {
+        window_hours: 24,
+        accepted_questions: 5,
+        finished_answers: 5,
+        explained_answers: 2,
+        average_finish_ms: 4200,
+        outcomes: { completed: 2, provider_failure: 1, internal_error: 2 },
+        helpful_ratings: 0,
+        unhelpful_ratings: 0,
+      } satisfies ChatMetrics,
+    }),
+  )
+  await page.goto("/settings")
+  await page.getByRole("tab", { name: "Security" }).click()
+  await page.getByText("Answer outcomes").click()
+  await expect(page.getByText("provider failure: 1")).toBeVisible()
+  await expect(page.getByText("internal error: 2")).toBeVisible()
 })

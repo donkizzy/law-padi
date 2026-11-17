@@ -14,7 +14,7 @@ from zoneinfo import ZoneInfo
 
 from fastapi import APIRouter, Depends, Header, HTTPException, Query, Request, Response
 from fastapi.sse import EventSourceResponse, ServerSentEvent
-from sqlalchemy import ColumnElement, and_, or_
+from sqlalchemy import ColumnElement, and_, case, or_
 from sqlmodel import Session, col, func, select, update
 
 from app.api.deps import SessionDep, authenticated_user, get_current_active_superuser
@@ -200,10 +200,29 @@ def read_chat_capabilities() -> ChatCapabilities:
 def read_chat_metrics(session: SessionDep) -> ChatMetrics:
     """Aggregate quality signals without exposing questions or answer text."""
     since = get_datetime_utc() - timedelta(hours=24)
+    # The worker records a defect on its side as a provider failure whose
+    # message carries the internal failure stage; report it as its own outcome
+    # so an outage at the provider is not confused with a bug.
+    outcome = case(
+        (
+            and_(
+                col(GenerationRun.outcome) == "provider_failure",
+                col(ConversationMessage.validation_result)["failure_stage"].astext
+                == "internal",
+            ),
+            "internal_error",
+        ),
+        else_=GenerationRun.outcome,
+    )
     rows = session.exec(
-        select(GenerationRun.outcome, func.count())
+        select(outcome, func.count())
+        .select_from(GenerationRun)
+        .outerjoin(
+            ConversationMessage,
+            col(ConversationMessage.id) == GenerationRun.assistant_message_id,
+        )
         .where(GenerationRun.created_at >= since)
-        .group_by(GenerationRun.outcome)
+        .group_by(outcome)
     ).all()
     outcomes = {outcome or "in_progress": count for outcome, count in rows}
     average = session.exec(
