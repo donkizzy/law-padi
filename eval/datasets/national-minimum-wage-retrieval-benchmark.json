@@ -1,6 +1,6 @@
 {
   "version": "national-minimum-wage-act-2019-retrieval-v1",
-  "status": "approved by the user on 5 November 2026",
+  "status": "reviewed by the maintainer on 5 November 2026",
   "description": "Retrieval benchmark for the National Minimum Wage Act 2019 (as enacted).",
   "instrument_slug": "national-minimum-wage-act-2019",
   "queries": [

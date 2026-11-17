@@ -1,6 +1,6 @@
 {
   "version": "penal-code-abuja-retrieval-v2",
-  "status": "approved by the user on 6 November 2026",
+  "status": "reviewed by the maintainer on 6 November 2026",
   "description": "Retrieval benchmark for the Penal Code Act (Federal Capital Territory, Abuja), as held in the available copy. Each query names the one section that best answers it.",
   "instrument_slug": "penal-code-act-abuja",
   "queries": [

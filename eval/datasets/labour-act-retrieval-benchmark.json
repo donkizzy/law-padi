@@ -1,6 +1,6 @@
 {
   "version": "labour-act-retrieval-v1",
-  "status": "approved by the user on 3 November 2026",
+  "status": "reviewed by the maintainer on 3 November 2026",
   "description": "Retrieval benchmark for the Labour Act, Cap. L1 LFN 2004 (as enacted). Each query names the one section that best answers it; Recall@10 is measured against this release's own retrieval documents. Queries mix everyday and legal wording and were checked against the approved text on 3 November 2026.",
   "instrument_slug": "labour-act",
   "queries": [

@@ -1,7 +1,7 @@
 {
   "source": {
     "note": "Plain-language phrasing added to the search text of individual provisions whose statutory wording is far from how people ask about them. It is embedded and keyword-indexed with the provision but is never shown to readers and is not statutory text. Each entry applies only to the provision at canonical_path.",
-    "review": "Approved by the user on 23 October 2026; see docs/legal-admin-review-2026-10-20.md (Embedding and benchmark scoring)."
+    "review": "Reviewed by the maintainer on 23 October 2026 against the per-law retrieval benchmarks in eval/datasets."
   },
   "phrasing": [
     {

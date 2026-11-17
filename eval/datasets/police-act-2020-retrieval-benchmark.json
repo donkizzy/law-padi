@@ -1,6 +1,6 @@
 {
   "version": "police-act-2020-retrieval-v1",
-  "status": "approved by the user on 23 October 2026",
+  "status": "reviewed by the maintainer on 23 October 2026",
   "description": "Retrieval benchmark for the Nigeria Police Act 2020 (as enacted, historical edition). Each query names the one provision that best answers it; Recall@10 is measured against the Police Act release's own retrieval documents. Queries mix everyday wording with legal wording and were checked against the approved text on 23 October 2026.",
   "instrument_slug": "police-act-2020",
   "queries": [

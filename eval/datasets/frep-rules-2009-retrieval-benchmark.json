@@ -1,6 +1,6 @@
 {
   "version": "frep-rules-2009-retrieval-v1",
-  "status": "approved by the user on 5 November 2026",
+  "status": "reviewed by the maintainer on 5 November 2026",
   "description": "Retrieval benchmark for the Fundamental Rights (Enforcement Procedure) Rules 2009 (as made). Each query names the one rule that best answers it.",
   "instrument_slug": "fundamental-rights-enforcement-procedure-rules-2009",
   "queries": [

@@ -1,6 +1,6 @@
 {
   "version": "nigeria-tax-act-2025-retrieval-v1",
-  "status": "approved by the user on 4 November 2026",
+  "status": "reviewed by the maintainer on 4 November 2026",
   "description": "Retrieval benchmark for the Nigeria Tax Act 2025 (as enacted; commencement 1 January 2026). Each query names the one section or schedule that best answers it; Recall@10 is measured against this release's own retrieval documents. Queries mix everyday and legal wording and were checked against the approved text on 4 November 2026.",
   "instrument_slug": "nigeria-tax-act-2025",
   "queries": [

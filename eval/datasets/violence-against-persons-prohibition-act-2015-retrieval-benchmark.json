@@ -1,6 +1,6 @@
 {
   "version": "vapp-2015-retrieval-v1",
-  "status": "approved by the user on 5 November 2026",
+  "status": "reviewed by the maintainer on 5 November 2026",
   "description": "Draft retrieval benchmark for the Violence Against Persons (Prohibition) Act 2015 (as enacted). Each query names the one section that best answers it.",
   "instrument_slug": "violence-against-persons-prohibition-act-2015",
   "queries": [
