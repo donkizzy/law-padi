@@ -20,7 +20,7 @@ CONTRACTS = json.loads(
 
 def _raise_sites() -> dict[str, ast.Call]:
     sites = {}
-    for area in ("chat", "ingestion"):
+    for area in ("chat", "ingestion", "legal"):
         for path in sorted((BACKEND / "app" / area).rglob("*.py")):
             calls = sorted(
                 (
@@ -73,6 +73,10 @@ def test_service_raise_site_preserves_response(contract: dict[str, Any]) -> None
     with TestClient(app) as client:
         response = client.get("/failure")
     assert response.status_code == contract["status"]
+    assert dict(response.headers) == {
+        "content-length": str(len(response.content)),
+        "content-type": "application/json",
+    }
     assert response.json()["detail"] == contract["detail"]
     assert response.json()["code"] == exception.code
     assert retryable_error(exception) == (contract["status"] >= 500)

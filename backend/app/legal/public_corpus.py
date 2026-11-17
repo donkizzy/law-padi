@@ -10,12 +10,12 @@ from concurrent.futures import Future, ThreadPoolExecutor
 from dataclasses import dataclass, field, replace
 from urllib.parse import urlencode
 
-from fastapi import HTTPException
 from sqlalchemy import or_
 from sqlalchemy.sql.elements import ColumnElement
 from sqlmodel import Session, col, select
 
 from app.core.config import settings
+from app.core.errors import DomainError, ErrorCode
 from app.ingestion.pgvector_repository import PgVectorRetrievalError, active_target
 from app.legal.citations import qualify_citation, rules_citation, short_citation
 from app.legal.enums import (
@@ -64,8 +64,8 @@ def published_release(
             select(CorpusRelease).where(CorpusRelease.version == release_version)
         ).first()
         if not release or release.status not in PUBLIC_RELEASE_STATUSES:
-            raise HTTPException(
-                status_code=404, detail="Published source edition was not found"
+            raise DomainError(
+                ErrorCode.NOT_FOUND, "Published source edition was not found"
             )
         return release
     target = active_target(session, index_kind=index_kind)

@@ -545,5 +545,11 @@
     "status": 409,
     "detail_expression": "'Instrument slug already belongs to a different instrument type'",
     "detail": "Instrument slug already belongs to a different instrument type"
+  },
+  {
+    "site": "app/legal/public_corpus.py:0",
+    "status": 404,
+    "detail_expression": "'Published source edition was not found'",
+    "detail": "Published source edition was not found"
   }
 ]
