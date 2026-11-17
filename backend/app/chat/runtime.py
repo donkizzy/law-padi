@@ -12,6 +12,7 @@ from app.core.db import engine
 from app.core.heartbeat import Heartbeat
 from app.core.logs import configure_logging
 from app.core.sentry import init_sentry
+from app.ingestion.embedding import close_embedding_providers
 from app.legal.models import GenerationRun, get_datetime_utc
 
 # The standalone loop sleeps at most this long between iterations; the
@@ -80,28 +81,39 @@ async def run_worker(
     delay: float | None = None
     last_retention = float("-inf") if request_woken else 0.0
     active: set[asyncio.Task[None]] = set()
-    while not stopping():
-        if heartbeat is not None:
-            heartbeat.beat()
-        await wait_for_work(wakeup, delay)
-        if request_woken:
-            await asyncio.to_thread(runs.recover_expired)
-        now = asyncio.get_running_loop().time()
-        if now - last_retention >= 3600:
-            await asyncio.to_thread(runs.expire_guest_conversations)
-            last_retention = now
-        if not request_woken:
-            await asyncio.to_thread(runs.recover_expired)
-        disabled = runs.generation_disabled(include_chat_enabled=request_woken)
-        await dispatch(
-            worker_id, active, stopping, request_woken=request_woken, disabled=disabled
-        )
-        if request_woken:
-            if stopping():
-                return
-            delay = await asyncio.to_thread(next_lease_delay)
-        else:
-            await asyncio.sleep(POLL_INTERVAL_SECONDS if disabled else 0.5)
+    try:
+        while not stopping():
+            if heartbeat is not None:
+                heartbeat.beat()
+            await wait_for_work(wakeup, delay)
+            if request_woken:
+                await asyncio.to_thread(runs.recover_expired)
+            now = asyncio.get_running_loop().time()
+            if now - last_retention >= 3600:
+                await asyncio.to_thread(runs.expire_guest_conversations)
+                last_retention = now
+            if not request_woken:
+                await asyncio.to_thread(runs.recover_expired)
+            disabled = runs.generation_disabled(include_chat_enabled=request_woken)
+            await dispatch(
+                worker_id,
+                active,
+                stopping,
+                request_woken=request_woken,
+                disabled=disabled,
+            )
+            if request_woken:
+                if stopping():
+                    return
+                delay = await asyncio.to_thread(next_lease_delay)
+            else:
+                await asyncio.sleep(POLL_INTERVAL_SECONDS if disabled else 0.5)
+    finally:
+        for task in active:
+            task.cancel()
+        if active:
+            await asyncio.gather(*active, return_exceptions=True)
+        await asyncio.to_thread(close_embedding_providers)
 
 
 async def run_forever() -> None:

@@ -1,13 +1,15 @@
 import math
 import time
+import uuid
 from collections.abc import Callable, Mapping, Sequence
 from dataclasses import dataclass
+from threading import Lock
 from typing import Any, Protocol, cast
 
 import httpx
 
 from app.ingestion.runtime.retry import request_with_retries, retryable_status
-from app.legal.enums import EmbeddingRunStatus
+from app.legal.enums import EmbeddingProviderKind, EmbeddingRunStatus
 from app.legal.models import EmbeddingRun
 
 
@@ -217,6 +219,74 @@ class HuggingFaceTeiEmbeddingProvider:
             vectors=vectors,
             metrics={"attempts": response.extensions["ingestion_attempts"]},
         )
+
+
+_provider_lock = Lock()
+_providers: dict[
+    tuple[object, ...], OpenAIEmbeddingProvider | HuggingFaceTeiEmbeddingProvider
+] = {}
+
+
+def shared_embedding_provider(
+    *,
+    profile_id: uuid.UUID,
+    provider: EmbeddingProviderKind,
+    model_name: str,
+    model_revision: str | None,
+    api_key: str | None,
+    endpoint_url: str | None,
+    api_token: str | None,
+    timeout_seconds: float,
+    max_attempts: int = 5,
+) -> OpenAIEmbeddingProvider | HuggingFaceTeiEmbeddingProvider:
+    """Keep a connection pool per profile and effective provider configuration.
+
+    Query and ingestion callers retain their own timeouts and retry budgets.
+    The lock also prevents simultaneous first queries creating duplicate pools.
+    """
+    key = (
+        profile_id,
+        provider,
+        model_name,
+        model_revision,
+        api_key,
+        endpoint_url,
+        api_token,
+        timeout_seconds,
+        max_attempts,
+    )
+    with _provider_lock:
+        existing = _providers.get(key)
+        if existing is not None:
+            return existing
+        created: OpenAIEmbeddingProvider | HuggingFaceTeiEmbeddingProvider
+        if provider == EmbeddingProviderKind.OPENAI:
+            created = OpenAIEmbeddingProvider(
+                api_key=api_key,
+                model_name=model_name,
+                model_revision=model_revision,
+                timeout_seconds=timeout_seconds,
+            )
+        else:
+            created = HuggingFaceTeiEmbeddingProvider(
+                endpoint_url=endpoint_url,
+                api_token=api_token,
+                model_name=model_name,
+                model_revision=model_revision,
+                timeout_seconds=timeout_seconds,
+                max_attempts=max_attempts,
+            )
+        _providers[key] = created
+        return created
+
+
+def close_embedding_providers() -> None:
+    """Close connection pools after the process's embedding work has stopped."""
+    with _provider_lock:
+        providers = list(_providers.values())
+        _providers.clear()
+    for provider in providers:
+        provider.client.close()
 
 
 def select_best_embedding_run(

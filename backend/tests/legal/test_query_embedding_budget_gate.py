@@ -1,4 +1,5 @@
 from types import SimpleNamespace
+from uuid import uuid4
 
 import pytest
 from fastapi.testclient import TestClient
@@ -34,6 +35,7 @@ def test_disabled_query_embeddings_use_disclosed_keyword_and_topic_retrieval(
 def test_query_embeddings_give_up_quickly_for_a_waiting_reader() -> None:
     provider = default_embedding_provider(
         SimpleNamespace(
+            id=uuid4(),
             provider="huggingface_tei",
             vector_dimensions=settings.RETRIEVAL_VECTOR_DIMENSIONS,
             model_name="BAAI/bge-m3",

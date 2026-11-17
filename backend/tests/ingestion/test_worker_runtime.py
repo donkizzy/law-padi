@@ -286,3 +286,19 @@ def test_stage_checkpoints_beat_before_checking_for_shutdown() -> None:
     session.info["ingestion_continue"] = lambda: calls.append("continue")
     check_stage_continue(session)
     assert calls == ["beat", "continue"]
+
+
+def test_worker_shutdown_closes_embedding_clients() -> None:
+    from app.ingestion.stages.embedding_profiles import embedding_provider_for_profile
+    from app.legal.enums import EmbeddingProviderKind
+    from app.legal.models import EmbeddingProfile
+
+    profile = EmbeddingProfile(
+        name="worker-shutdown",
+        provider=EmbeddingProviderKind.HUGGINGFACE_TEI,
+        model_name="test",
+        vector_dimensions=1024,
+    )
+    provider = embedding_provider_for_profile(profile)
+    run_worker(max_iterations=0)
+    assert provider.client.is_closed

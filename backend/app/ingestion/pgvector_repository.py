@@ -35,13 +35,12 @@ from app.legal.models import (
     SourceDocument,
 )
 from app.legal.references import CONSTITUTION_SLUG, SectionReference, matches_reference
-from app.legal.release_scope import release_instruments
+from app.legal.release_scope import release_instruments, with_release_scope
 from app.legal.topics import (
     STOPWORDS,
-    demoted_sections,
-    rights_question,
+    TopicAnalysis,
+    analyze_topics,
     section_target,
-    topic_sections,
 )
 
 _LEXICAL_WORD = re.compile(r"[a-z0-9]+")
@@ -324,6 +323,7 @@ def lexical_search(
     return [(segment, float(score)) for segment, score in session.exec(statement).all()]
 
 
+@with_release_scope
 def topic_search(
     session: Session,
     *,
@@ -331,6 +331,7 @@ def topic_search(
     query: str,
     index_kind: str = "enacted",
     instrument_slug: str | None = None,
+    analysis: TopicAnalysis | None = None,
 ) -> list[tuple[RetrievalSegment, float]]:
     """Whole-provision segments for curated plain-language topics, in topic order."""
     slugs = {
@@ -341,7 +342,7 @@ def topic_search(
     }
     if instrument_slug:
         slugs &= {instrument_slug}
-    targets = topic_sections(query, instrument_slugs=slugs)
+    targets = (analysis or analyze_topics(query, instrument_slugs=slugs)).sections
     if not targets:
         return []
     rows = session.exec(
@@ -553,6 +554,7 @@ def fuse_rankings(
     return (balanced + deferred)[:top_k]
 
 
+@with_release_scope
 def hybrid_search(
     session: Session,
     *,
@@ -564,7 +566,15 @@ def hybrid_search(
     index_kind: str = "enacted",
     rrf_k: int | None = None,
     instrument_slug: str | None = None,
+    analysis: TopicAnalysis | None = None,
 ) -> list[RankedSegment]:
+    instruments = release_instruments(session, release_id, index_kind=index_kind)
+    analysis = analysis or analyze_topics(
+        query,
+        instrument_slugs=(instrument_slug,)
+        if instrument_slug
+        else tuple(item.slug for item in instruments.values()),
+    )
     dense = dense_search(
         session,
         release_id=release_id,
@@ -586,6 +596,7 @@ def hybrid_search(
         query=query,
         index_kind=index_kind,
         instrument_slug=instrument_slug,
+        analysis=analysis,
     )
     return fuse_rankings(
         dense=dense,
@@ -594,10 +605,9 @@ def hybrid_search(
         top_k=top_k,
         rrf_k=rrf_k,
         lexical_weight=settings.RETRIEVAL_LEXICAL_WEIGHT,
-        demoted=demoted_sections(query),
-        prefer_constitution=rights_question(query),
-        balance_instruments=not instrument_slug
-        and len(release_instruments(session, release_id, index_kind=index_kind)) > 1,
+        demoted=analysis.demoted,
+        prefer_constitution=analysis.rights,
+        balance_instruments=not instrument_slug and len(instruments) > 1,
     )
 
 

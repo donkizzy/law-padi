@@ -6,8 +6,7 @@ from app.core.config import settings
 from app.ingestion.common import enum_value
 from app.ingestion.embedding import (
     DenseEmbeddingProvider,
-    HuggingFaceTeiEmbeddingProvider,
-    OpenAIEmbeddingProvider,
+    shared_embedding_provider,
 )
 from app.ingestion.evaluation import (
     BENCHMARK_VERSION_SEPARATOR,
@@ -154,21 +153,23 @@ def embedding_provider_for_profile(
     profile: EmbeddingProfile,
 ) -> DenseEmbeddingProvider:
     provider = enum_value(profile.provider)
-    if provider == EmbeddingProviderKind.OPENAI.value:
-        return OpenAIEmbeddingProvider(
-            api_key=settings.OPENAI_API_KEY,
-            model_name=profile.model_name,
-            model_revision=profile.model_revision,
-        )
-    if provider == EmbeddingProviderKind.HUGGINGFACE_TEI.value:
-        return HuggingFaceTeiEmbeddingProvider(
-            endpoint_url=settings.HUGGINGFACE_TEI_ENDPOINT_URL,
-            api_token=settings.HUGGINGFACE_API_TOKEN,
-            model_name=profile.model_name,
-            model_revision=profile.model_revision,
-            timeout_seconds=profile_float(profile, "timeout_seconds") or 120,
-        )
-    raise IngestionWorkerError(f"Unsupported embedding provider: {provider}")
+    if provider not in {
+        EmbeddingProviderKind.OPENAI.value,
+        EmbeddingProviderKind.HUGGINGFACE_TEI.value,
+    }:
+        raise IngestionWorkerError(f"Unsupported embedding provider: {provider}")
+    return shared_embedding_provider(
+        profile_id=profile.id,
+        provider=EmbeddingProviderKind(provider),
+        api_key=settings.OPENAI_API_KEY,
+        endpoint_url=settings.HUGGINGFACE_TEI_ENDPOINT_URL,
+        api_token=settings.HUGGINGFACE_API_TOKEN,
+        model_name=profile.model_name,
+        model_revision=profile.model_revision,
+        timeout_seconds=30
+        if provider == EmbeddingProviderKind.OPENAI.value
+        else profile_float(profile, "timeout_seconds") or 120,
+    )
 
 
 def profile_string(profile: EmbeddingProfile, key: str) -> str | None:

@@ -16,6 +16,7 @@ from app.core.logs import configure_logging
 from app.core.request_gate import RequestGateMiddleware
 from app.core.request_id import RequestIdMiddleware
 from app.core.sentry import init_sentry
+from app.ingestion.embedding import close_embedding_providers
 
 FRONTEND_DIR = Path(__file__).parent / "frontend"
 
@@ -59,7 +60,10 @@ def custom_generate_unique_id(route: APIRoute) -> str:
 @asynccontextmanager
 async def lifespan(_app: FastAPI) -> AsyncIterator[None]:
     configure_logging()
-    yield
+    try:
+        yield
+    finally:
+        close_embedding_providers()
 
 
 init_sentry("api")

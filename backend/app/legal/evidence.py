@@ -16,8 +16,7 @@ from app.core.db import engine
 from app.ingestion.embedding import (
     DenseEmbeddingProvider,
     EmbeddingProviderError,
-    HuggingFaceTeiEmbeddingProvider,
-    OpenAIEmbeddingProvider,
+    shared_embedding_provider,
 )
 from app.ingestion.pgvector_repository import (
     PgVectorRetrievalError,
@@ -38,14 +37,14 @@ from app.legal.references import (
     SectionReference,
     matches_reference,
 )
-from app.legal.release_scope import release_instruments
+from app.legal.release_scope import release_instruments, with_release_scope
 from app.legal.schemas import (
     CitationOutcome,
     EvidenceItem,
     LegalSearchResponse,
     LegalSearchResult,
 )
-from app.legal.topics import demoted_sections, rights_question, topic_sections
+from app.legal.topics import analyze_topics
 
 AMBIGUOUS_MESSAGE = "This section number appears more than once in this edition. Choose the one you mean."
 NOT_IN_CONSTITUTION_MESSAGE = (
@@ -135,19 +134,17 @@ def default_embedding_provider(profile: EmbeddingProfile) -> DenseEmbeddingProvi
         raise PgVectorRetrievalError(
             "Active embedding profile has the wrong dimensions"
         )
-    if profile.provider == EmbeddingProviderKind.OPENAI:
-        return OpenAIEmbeddingProvider(
-            api_key=settings.OPENAI_API_KEY,
-            model_name=profile.model_name,
-            model_revision=profile.model_revision,
-        )
-    return HuggingFaceTeiEmbeddingProvider(
+    is_openai = profile.provider == EmbeddingProviderKind.OPENAI
+    return shared_embedding_provider(
+        profile_id=profile.id,
+        provider=profile.provider,
+        api_key=settings.OPENAI_API_KEY,
         endpoint_url=settings.HUGGINGFACE_TEI_ENDPOINT_URL,
         api_token=settings.HUGGINGFACE_API_TOKEN,
         model_name=profile.model_name,
         model_revision=profile.model_revision,
-        timeout_seconds=QUERY_EMBEDDING_TIMEOUT_SECONDS,
-        max_attempts=QUERY_EMBEDDING_ATTEMPTS,
+        timeout_seconds=30 if is_openai else QUERY_EMBEDDING_TIMEOUT_SECONDS,
+        max_attempts=5 if is_openai else QUERY_EMBEDDING_ATTEMPTS,
     )
 
 
@@ -302,6 +299,7 @@ def exact_lookup(
     )
 
 
+@with_release_scope
 def semantic_lookup(
     session: Session,
     release: CorpusRelease,
@@ -315,6 +313,13 @@ def semantic_lookup(
     instrument_slug: str | None = None,
 ) -> LegalSearchResponse:
     """Rank release-scoped segments, then reload all wording from canonical versions."""
+    instruments = release_instruments(session, release.id, index_kind=index_kind)
+    analysis = analyze_topics(
+        query,
+        instrument_slugs=(instrument_slug,)
+        if instrument_slug
+        else tuple(item.slug for item in instruments.values()),
+    )
     retrieval_mode = "hybrid"
     message = None
     try:
@@ -327,6 +332,7 @@ def semantic_lookup(
             embedding_run_id=embedding_run_id,
             query_vector=vector,
             query=query,
+            analysis=analysis,
             top_k=top_k,
             index_kind=index_kind,
             instrument_slug=instrument_slug,
@@ -348,14 +354,13 @@ def semantic_lookup(
                 query=query,
                 index_kind=index_kind,
                 instrument_slug=instrument_slug,
+                analysis=analysis,
             ),
             top_k=top_k,
             lexical_weight=settings.RETRIEVAL_LEXICAL_WEIGHT,
-            demoted=demoted_sections(query),
-            prefer_constitution=rights_question(query),
-            balance_instruments=not instrument_slug
-            and len(release_instruments(session, release.id, index_kind=index_kind))
-            > 1,
+            demoted=analysis.demoted,
+            prefer_constitution=analysis.rights,
+            balance_instruments=not instrument_slug and len(instruments) > 1,
         )
     # Dense search always has nearest neighbours, including for unrelated
     # input. A rank is not a relevance confidence score. Disclose when the
@@ -365,17 +370,7 @@ def semantic_lookup(
         ranked
         and retrieval_mode == "hybrid"
         and ranked[0].lexical_rank is None
-        and not topic_sections(
-            query,
-            instrument_slugs=(instrument_slug,)
-            if instrument_slug
-            else tuple(
-                item.slug
-                for item in release_instruments(
-                    session, release.id, index_kind=index_kind
-                ).values()
-            ),
-        )
+        and not analysis.sections
     ):
         message = NEARBY_SEARCH_MESSAGE
     corpus = load_ranked_corpus(

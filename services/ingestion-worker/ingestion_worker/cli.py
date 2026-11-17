@@ -5,7 +5,7 @@ import signal
 import socket
 import time
 from collections.abc import Callable, Iterator
-from contextlib import contextmanager, nullcontext
+from contextlib import ExitStack, contextmanager, nullcontext
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any
@@ -16,6 +16,7 @@ from app.core.db import engine
 from app.core.heartbeat import Heartbeat
 from app.core.logs import configure_logging
 from app.ingestion.common import enum_value
+from app.ingestion.embedding import close_embedding_providers
 from app.ingestion.runtime.queue import drain_outbox_batch
 from app.ingestion.runtime.runner import run_once
 from app.ingestion.runtime.source_files import source_file_cache, source_files
@@ -98,7 +99,9 @@ def run_worker(
             )
 
     heartbeat = Heartbeat(worker_settings.heartbeat_file)
-    with source_file_cache() as source_cache:
+    with ExitStack() as resources:
+        resources.callback(close_embedding_providers)
+        source_cache = resources.enter_context(source_file_cache())
         iterations = 0
         tasks_processed = 0
         idle_polls = 0

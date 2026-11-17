@@ -294,8 +294,8 @@ def title_sections(
     return found if len(found) <= _TITLE_MAX_SECTIONS else []
 
 
-def topic_sections(
-    query: str, *, instrument_slugs: Collection[str] = (CONSTITUTION_SLUG,)
+def _topic_sections(
+    query: str, *, instrument_slugs: Collection[str], matches: tuple[TopicMatch, ...]
 ) -> list[tuple[str, float]]:
     """Section numbers for a query with a fusion weight for each.
 
@@ -304,10 +304,6 @@ def topic_sections(
     section named by several topics, or by its own title, collects each boost.
     """
     weights: dict[str, float] = {}
-    matches = match_topics(query)
-    # Match statutes separately so new topics cannot displace established
-    # Constitution hints in the three-topic window.
-    matches += match_topics(query, topics=STATUTE_TOPICS)
     for match in matches:
         weight = 2.5 if match.score >= 2 else 1.5
         for number in match.sections:
@@ -341,12 +337,12 @@ def _topics_by_slug() -> dict[str, Topic]:
     return {topic.slug: topic for topic in TOPICS}
 
 
-def related_laws(
-    query: str, *, instrument_slugs: Collection[str] = (CONSTITUTION_SLUG,)
+def _related_laws(
+    matches: tuple[TopicMatch, ...], *, instrument_slugs: Collection[str]
 ) -> list[str]:
     """Other laws on the subjects a question matches, most relevant first."""
     laws: list[str] = []
-    for match in match_topics(query):
+    for match in matches:
         for law in _topics_by_slug()[match.slug].related_laws:
             if (
                 ACJA_SLUG in instrument_slugs
@@ -358,7 +354,7 @@ def related_laws(
     return laws[:3]
 
 
-def demoted_sections(query: str) -> frozenset[str]:
+def _demoted_sections(query: str, matches: tuple[TopicMatch, ...]) -> frozenset[str]:
     """Sections that share a rights question's words but not its subject.
 
     "Can police search my phone?" shares "police" with the sections that set
@@ -366,7 +362,6 @@ def demoted_sections(query: str) -> frozenset[str]:
     witnesses. Neither says anything about the reader's rights, so a rights
     question pushes them down unless the question is about them.
     """
-    matches = match_topics(query)
     if not any(_is_rights_topic(match) for match in matches):
         return frozenset()
     named = {number for match in matches for number in match.sections}
@@ -376,9 +371,58 @@ def demoted_sections(query: str) -> frozenset[str]:
     )
 
 
-def rights_question(query: str) -> bool:
-    return any(_is_rights_topic(match) for match in match_topics(query))
-
-
 def companion_sections(number: str) -> tuple[str, ...]:
     return COMPANIONS.get(number, ())
+
+
+@dataclass(frozen=True)
+class TopicAnalysis:
+    sections: tuple[tuple[str, float], ...]
+    demoted: frozenset[str]
+    rights: bool
+    related_laws: tuple[str, ...]
+
+
+@lru_cache(maxsize=1024)
+def _analyze_topics(query: str, instrument_slugs: tuple[str, ...]) -> TopicAnalysis:
+    matches = tuple(match_topics(query))
+    # Keep the two curated three-topic windows independent.
+    statute_matches = tuple(match_topics(query, topics=STATUTE_TOPICS))
+    return TopicAnalysis(
+        sections=tuple(
+            _topic_sections(
+                query,
+                instrument_slugs=instrument_slugs,
+                matches=matches + statute_matches,
+            )
+        ),
+        demoted=_demoted_sections(query, matches),
+        rights=any(_is_rights_topic(match) for match in matches),
+        related_laws=tuple(_related_laws(matches, instrument_slugs=instrument_slugs)),
+    )
+
+
+def analyze_topics(
+    query: str, *, instrument_slugs: Collection[str] = (CONSTITUTION_SLUG,)
+) -> TopicAnalysis:
+    return _analyze_topics(query, tuple(sorted(set(instrument_slugs))))
+
+
+def topic_sections(
+    query: str, *, instrument_slugs: Collection[str] = (CONSTITUTION_SLUG,)
+) -> list[tuple[str, float]]:
+    return list(analyze_topics(query, instrument_slugs=instrument_slugs).sections)
+
+
+def related_laws(
+    query: str, *, instrument_slugs: Collection[str] = (CONSTITUTION_SLUG,)
+) -> list[str]:
+    return list(analyze_topics(query, instrument_slugs=instrument_slugs).related_laws)
+
+
+def demoted_sections(query: str) -> frozenset[str]:
+    return analyze_topics(query).demoted
+
+
+def rights_question(query: str) -> bool:
+    return analyze_topics(query).rights

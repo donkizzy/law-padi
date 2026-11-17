@@ -32,12 +32,13 @@ from app.core.db import engine
 from app.ingestion.pgvector_repository import PgVectorRetrievalError
 from app.languages.codes import Language
 from app.legal.evidence import message_code
+from app.legal.release_scope import release_scope_cache
 
 _logger = logging.getLogger(__name__)
 
 
 def prepare_run(run_id: uuid.UUID) -> Prepared:
-    with Session(engine) as session:
+    with Session(engine) as session, release_scope_cache(session):
         pinned = load_pinned_run(session, run_id)
         question = pinned.message.english_text or pinned.message.content
         history = History(session, pinned.conversation.id, pinned.message)
