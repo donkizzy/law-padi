@@ -17,8 +17,6 @@
 # Worker settings (environment):
 #   WORKER_ENABLED=false     exit 0 at once, so the service stays stopped
 #                            under an ON_FAILURE restart policy
-#   WORKER_STOP_SIGNAL=TERM  signal sent to COMMAND when the container is
-#                            asked to stop or the heartbeat goes stale
 #   WORKER_STOP_TIMEOUT=30   seconds to wait after that signal before SIGKILL
 set -eu
 
@@ -70,7 +68,6 @@ run_worker() {
     log INFO "worker_disabled"
     exit 0
   fi
-  stop_signal=${WORKER_STOP_SIGNAL:-TERM}
   stop_timeout=${WORKER_STOP_TIMEOUT:-30}
   # The same threshold app.core.heartbeat applies: a one-second floor on the
   # poll interval, times the number of intervals.
@@ -79,18 +76,13 @@ run_worker() {
   check_every=30
   rm -f "$heartbeat"
 
-  # A shell starts background commands with SIGINT ignored, and a Python
-  # process that inherits an ignored SIGINT never raises KeyboardInterrupt.
-  # Restore the default before exec so WORKER_STOP_SIGNAL=INT reaches it.
-  python -c 'import os, signal, sys
-signal.signal(signal.SIGINT, signal.SIG_DFL)
-os.execvp(sys.argv[1], sys.argv[1:])' "$@" &
+  "$@" &
   child=$!
   stop_requested=
   on_stop() {
     if [ -z "$stop_requested" ]; then
       stop_requested=$(date +%s)
-      kill -s "$stop_signal" "$child" 2>/dev/null || true
+      kill -s TERM "$child" 2>/dev/null || true
     fi
   }
   trap on_stop TERM INT

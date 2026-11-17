@@ -242,7 +242,7 @@ const chatWorker = service("chat-worker", {
 		// The worker must never stop for good: a clean exit is restarted too.
 		restartPolicyType: "ALWAYS",
 		sleepApplication: false,
-		// SIGINT cancels the asyncio runner: a run that has not dispatched a
+		// SIGTERM cancels the asyncio runner: a run that has not dispatched a
 		// paid call returns to the queue, one that may have is settled.
 		drainingSeconds: 30,
 	},
@@ -250,7 +250,6 @@ const chatWorker = service("chat-worker", {
 		...core,
 		...generation,
 		CHAT_WORKER_HEARTBEAT_FILE: "/tmp/chat-worker.heartbeat",
-		WORKER_STOP_SIGNAL: "INT",
 		WORKER_STOP_TIMEOUT: "25",
 		DATABASE_POOL_SIZE: "4",
 	},

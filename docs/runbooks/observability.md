@@ -135,7 +135,7 @@ Railway has no command health checks, so `deployment/railway/run.sh` runs the
 same `python -m app.core.heartbeat` check inside each worker's container every
 30 seconds, after a start-up grace period of one stale threshold. When the
 heartbeat is stale it logs `worker_heartbeat_stale`, stops the worker (with
-`WORKER_STOP_SIGNAL`, then `SIGKILL` after `WORKER_STOP_TIMEOUT`) and exits 70;
+`SIGTERM`, then `SIGKILL` after `WORKER_STOP_TIMEOUT`) and exits 70;
 the restart policy starts a new container. A worker that exits on its own logs
 `worker_exited`.
 

@@ -82,7 +82,7 @@ the worker and exits non-zero, so the restart policy starts a fresh container.
 
 | Worker | Heartbeat | Stale after | Stop signal, drain |
 | --- | --- | --- | --- |
-| `chat-worker` | every loop, 2 s polls × 30 | 60 s | `SIGINT` (cancels the asyncio runner so runs are requeued or settled), 30 s |
+| `chat-worker` | every loop, 2 s polls × 30 | 60 s | `SIGTERM` (cancels the asyncio runner so runs are requeued or settled), 30 s |
 | `ingestion-worker` | every poll and stage checkpoint, 5 s × 180 | 15 min, the task lease | `SIGTERM` (the worker stops between pages and batches), 60 s |
 
 Railway sends `SIGTERM` and, by default, `SIGKILL` at once; `drainingSeconds`
@@ -164,7 +164,7 @@ provider and query-embedding block, with the values that ran on Render.
 | --- | --- |
 | `postgres` | `POSTGRES_USER=postgres`, `POSTGRES_DB=app`, `POSTGRES_PASSWORD` (by hand), `PGDATA=/var/lib/postgresql/18/docker`, `DATABASE_URL` (private: `${{RAILWAY_PRIVATE_DOMAIN}}:5432`), `DATABASE_PUBLIC_URL` (TCP proxy, `sslmode=verify-full`). Railway provides `RAILWAY_PRIVATE_DOMAIN` and `RAILWAY_TCP_PROXY_DOMAIN`, which `start.sh` names in the certificate. |
 | `api` | `core`, `generation`, R2 (`INGESTION_STORAGE_BACKEND=r2` and the four `R2_*`), `APP_RUNTIME_ROLE=api`, `SERVE_FRONTEND=false`, `ORIGIN_PROXY_SECRET`, `PLATFORM_HEALTHCHECK_HOST=healthcheck.railway.app`, `FRONTEND_HOST`, `DATABASE_POOL_SIZE=5`. Railway provides `PORT`. |
-| `chat-worker` | `core`, `generation`, `CHAT_WORKER_HEARTBEAT_FILE=/tmp/chat-worker.heartbeat`, `WORKER_STOP_SIGNAL=INT`, `WORKER_STOP_TIMEOUT=25`, `DATABASE_POOL_SIZE=4`. |
+| `chat-worker` | `core`, `generation`, `CHAT_WORKER_HEARTBEAT_FILE=/tmp/chat-worker.heartbeat`, `WORKER_STOP_TIMEOUT=25`, `DATABASE_POOL_SIZE=4`. |
 | `ingestion-worker` | `core`, R2, `HUGGINGFACE_TEI_ENDPOINT_URL`, `HUGGINGFACE_API_TOKEN`, `WORKER_ENABLED=false`, `WORKER_STOP_TIMEOUT=55`, `INGESTION_WORKER_ID`, poll 5 s, lease 900 s, `INGESTION_WORKER_HEARTBEAT_FILE=/tmp/ingestion-worker.heartbeat`, `DATABASE_POOL_SIZE=5`. |
 
 No service reads a secret file; `APP_RUNTIME_ENV_FILE` is unset, so settings
