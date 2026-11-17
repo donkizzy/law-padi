@@ -25,7 +25,6 @@ from app.ingestion.blob_store import BlobStoreError, LocalBlobStore
 from app.ingestion.contracts import BlobHead, CompletedMultipartUploadPart
 from app.ingestion.r2_blob_store import R2BlobStore
 
-BUCKET = "lawpadi"
 STREAM_THRESHOLD = 16 * 1024 * 1024
 PART_SIZE = 6 * 1024 * 1024
 APP_PREFIXES = ("sources", "runs", "quarantine")
@@ -45,6 +44,15 @@ QUERIES = {
                lock_version FROM source_upload ORDER BY id
     """,
 }
+
+
+def r2_bucket_name() -> str:
+    from app.core.config import settings
+
+    bucket = (settings.R2_BUCKET_NAME or "").strip()
+    if not bucket:
+        raise ValueError("R2_BUCKET_NAME must be set before migrating documents")
+    return bucket
 
 
 def digest(data: bytes) -> str:
@@ -463,6 +471,7 @@ def change_database(
 ) -> None:
     if conn.engine.url.host != "db":
         raise ValueError("Expected the Compose database host")
+    bucket = r2_bucket_name()
     conn.execute(text("SET LOCAL lock_timeout = '5s'"))
     conn.execute(
         text(
@@ -485,7 +494,7 @@ def change_database(
             raise ValueError(
                 "Expected all inventoried source records to use local storage"
             )
-        row["storage_backend"], row["storage_bucket"] = "r2", BUCKET
+        row["storage_backend"], row["storage_bucket"] = "r2", bucket
     for row in switched["source_upload"]:
         if row["status"] in TERMINAL_UPLOADS:
             continue
@@ -528,17 +537,16 @@ def change_database(
 def r2_store() -> R2BlobStore:
     from app.core.config import settings
 
+    bucket = r2_bucket_name()
     endpoint = settings.R2_ENDPOINT_URL or ""
     url = urlsplit(endpoint)
     if url.scheme != "https" or not (url.hostname or "").endswith(
         ".r2.cloudflarestorage.com"
     ):
         raise ValueError("Expected a Cloudflare R2 HTTPS endpoint")
-    if settings.R2_BUCKET_NAME != BUCKET:
-        raise ValueError(f"Expected bucket {BUCKET}")
     return R2BlobStore(
         endpoint_url=endpoint,
-        bucket_name=BUCKET,
+        bucket_name=bucket,
         access_key_id=settings.R2_ACCESS_KEY_ID or "",
         secret_access_key=settings.R2_SECRET_ACCESS_KEY or "",
         client=httpx.Client(
@@ -655,7 +663,7 @@ def main() -> None:
         save_new(args.manifest, data)
     elif args.action == "lookup":
         entry = archive_entry(read_json(args.manifest), args.relative_path)
-        print(f"s3://{BUCKET}/{entry['key']}")
+        print(f"s3://{r2_bucket_name()}/{entry['key']}")
     elif args.action == "restore":
         restore_archive(
             r2_store(),
