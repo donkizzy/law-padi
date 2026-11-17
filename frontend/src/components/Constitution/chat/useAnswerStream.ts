@@ -17,6 +17,7 @@ import {
 } from "@/lib/answer"
 
 export type Progress =
+  | "queued"
   | "finding"
   | "writing"
   | "checking"
@@ -35,6 +36,7 @@ type AnswerStreamOptions = {
   beginRequest: ReturnType<typeof useChatRequestScope>
   pendingKey: RefObject<unknown>
   setProgress: Dispatch<SetStateAction<Progress | null>>
+  setQueuePosition: Dispatch<SetStateAction<number | null>>
   setSources: Dispatch<SetStateAction<EvidenceItem[]>>
   setOutcomes: Dispatch<SetStateAction<CitationOutcome[]>>
   setLiveAnswer: Dispatch<SetStateAction<ExplanationAnswer | null>>
@@ -57,6 +59,7 @@ export function useAnswerStream({
   beginRequest,
   pendingKey,
   setProgress,
+  setQueuePosition,
   setSources,
   setOutcomes,
   setLiveAnswer,
@@ -92,6 +95,14 @@ export function useAnswerStream({
             )
               return
             const data = event.data as Record<string, unknown>
+            // The run waits behind other answers; 1 means it starts next.
+            if (event.event === "run.queued") {
+              const position = queuePosition(data.position)
+              if (position !== null) {
+                setQueuePosition(position)
+                setProgress("queued")
+              }
+            }
             if (event.event === "retrieval.started") setProgress("finding")
             if (event.event === "retrieval.complete") {
               const evidence = parseEvidence(data.evidence)
@@ -167,6 +178,7 @@ export function useAnswerStream({
     streamAttempt,
     pendingKey,
     setProgress,
+    setQueuePosition,
     setSources,
     setOutcomes,
     setLiveAnswer,
@@ -175,4 +187,10 @@ export function useAnswerStream({
     setPendingQuestion,
     setStreamError,
   ])
+}
+
+function queuePosition(value: unknown): number | null {
+  return typeof value === "number" && Number.isInteger(value) && value >= 1
+    ? value
+    : null
 }

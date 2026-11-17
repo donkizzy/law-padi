@@ -71,9 +71,12 @@
   },
   "pending": {
     "label": "Answer in progress",
-    "reading": "Reading {{sources}}"
+    "reading": "Reading {{sources}}",
+    "queuedAhead_one": "Waiting for other answers to finish. 1 question is ahead of you.",
+    "queuedAhead_other": "Waiting for other answers to finish. {{count}} questions are ahead of you."
   },
   "progress": {
+    "queued": "Waiting for another answer to finish. You're next.",
     "finding": "Finding the relevant sections…",
     "writing": "Writing a plain-English answer…",
     "checking": "Double-checking the answer against its sources…",

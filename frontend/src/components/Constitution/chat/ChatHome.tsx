@@ -16,7 +16,10 @@ import { AnswerBoundary } from "@/components/Constitution/AnswerBoundary"
 import { AnswerLoading } from "@/components/Constitution/AnswerLoading"
 import { ChatEvidencePanel } from "@/components/Constitution/ChatEvidencePanel"
 import { ConversationComposer } from "@/components/Constitution/chat/ConversationComposer"
-import { MessageList } from "@/components/Constitution/chat/MessageList"
+import {
+  MessageList,
+  useProgressLabel,
+} from "@/components/Constitution/chat/MessageList"
 import {
   type Progress,
   useAnswerStream,
@@ -58,6 +61,7 @@ export function ChatHome() {
   const navigate = useNavigate({ from: "/" })
   const queryClient = useQueryClient()
   const beginRequest = useChatRequestScope()
+  const progressLabel = useProgressLabel()
   const capabilities = useChatCapabilities()
   const release = useLegalRelease()
   const { preferences } = useWorkspacePreferences()
@@ -84,6 +88,7 @@ export function ChatHome() {
   const [pendingQuestion, setPendingQuestion] = useState("")
   const [runId, setRunId] = useState<string | null>(null)
   const [progress, setProgress] = useState<Progress | null>(null)
+  const [queuePosition, setQueuePosition] = useState<number | null>(null)
   const [streamError, setStreamError] = useState(false)
   const [streamAttempt, setStreamAttempt] = useState(0)
   const [sources, setSources] = useState<EvidenceItem[]>([])
@@ -366,6 +371,7 @@ export function ChatHome() {
     beginRequest,
     pendingKey,
     setProgress,
+    setQueuePosition,
     setSources,
     setOutcomes,
     setLiveAnswer,
@@ -632,12 +638,13 @@ export function ChatHome() {
           showLiveAnswer={Boolean(showLiveAnswer)}
           outcomes={visibleOutcomes}
           progress={progress}
+          queuePosition={queuePosition}
           sources={visibleSources}
         >
           {progress && !awaitingAnswer && (
             <AnswerLoading
               progress={progress}
-              label={t(`progress.${progress}`)}
+              label={progressLabel(progress, queuePosition)}
             />
           )}
           {activeRunId && (

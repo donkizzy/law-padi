@@ -71,9 +71,12 @@
   },
   "pending": {
     "label": "Ìdáhùn ń bọ̀",
-    "reading": "À ń ka {{sources}}"
+    "reading": "À ń ka {{sources}}",
+    "queuedAhead_one": "À ń dúró kí àwọn ìdáhùn mìíràn parí. Ìbéèrè 1 ló wà níwájú rẹ.",
+    "queuedAhead_other": "À ń dúró kí àwọn ìdáhùn mìíràn parí. Ìbéèrè {{count}} ló wà níwájú rẹ."
   },
   "progress": {
+    "queued": "À ń dúró kí ìdáhùn mìíràn parí. Ìwọ ló kàn.",
     "finding": "À ń wá àwọn abala tó jẹmọ́ ọ…",
     "writing": "À ń kọ ìdáhùn tó yéni…",
     "checking": "À ń tún ìdáhùn náà yẹ̀wò pẹ̀lú àwọn orísun rẹ̀…",

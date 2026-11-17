@@ -71,9 +71,12 @@
   },
   "pending": {
     "label": "Amsa tana zuwa",
-    "reading": "Ana karanta {{sources}}"
+    "reading": "Ana karanta {{sources}}",
+    "queuedAhead_one": "Ana jiran wasu amsoshi su kammala. Tambaya 1 tana gabanka.",
+    "queuedAhead_other": "Ana jiran wasu amsoshi su kammala. Tambayoyi {{count}} suna gabanka."
   },
   "progress": {
+    "queued": "Ana jiran wata amsa ta kammala. Kai ne na gaba.",
     "finding": "Ana neman sassan da suka shafi lamarin…",
     "writing": "Ana rubuta amsa mai sauƙin fahimta…",
     "checking": "Ana sake duba amsar da tushenta…",

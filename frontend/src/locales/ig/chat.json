@@ -71,9 +71,12 @@
   },
   "pending": {
     "label": "Azịza na-abịa",
-    "reading": "A na-agụ {{sources}}"
+    "reading": "A na-agụ {{sources}}",
+    "queuedAhead_one": "A na-eche ka azịza ndị ọzọ gwụ. Ajụjụ 1 dị n'ihu gị.",
+    "queuedAhead_other": "A na-eche ka azịza ndị ọzọ gwụ. Ajụjụ {{count}} dị n'ihu gị."
   },
   "progress": {
+    "queued": "A na-eche ka azịza ọzọ gwụ. Ọ bụ gị na-esote.",
     "finding": "A na-achọ nkebi metụtara ya…",
     "writing": "A na-ede azịza doro anya…",
     "checking": "A na-enyochagharị azịza ahụ na isi mmalite ya…",

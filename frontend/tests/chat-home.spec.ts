@@ -463,6 +463,64 @@ async function sendQuestion(page: Page) {
   await page.getByRole("button", { name: "Send question" }).click()
 }
 
+/**
+ * Replace the conversation event stream with one the test writes to, so events
+ * can arrive one at a time while the stream stays open.
+ */
+async function installControlledEventStream(page: Page) {
+  await page.addInitScript(() => {
+    const encoder = new TextEncoder()
+    const open = new Set<ReadableStreamDefaultController<Uint8Array>>()
+    const originalFetch = window.fetch.bind(window)
+    window.fetch = async (input, init) => {
+      const request =
+        input instanceof Request ? input : new Request(input, init)
+      if (!new URL(request.url).pathname.endsWith("/events"))
+        return originalFetch(input, init)
+      let own: ReadableStreamDefaultController<Uint8Array> | undefined
+      const stream = new ReadableStream<Uint8Array>({
+        start: (controller) => {
+          own = controller
+          open.add(controller)
+        },
+        cancel: () => {
+          if (own) open.delete(own)
+        },
+      })
+      return new Response(stream, {
+        headers: { "Content-Type": "text/event-stream" },
+      })
+    }
+    Object.assign(window, {
+      __openChatStreams: () => open.size,
+      __pushChatEvents: (body: string) => {
+        for (const controller of open) controller.enqueue(encoder.encode(body))
+      },
+    })
+  })
+}
+
+type ControlledStreamWindow = {
+  __openChatStreams: () => number
+  __pushChatEvents: (body: string) => void
+}
+
+/** Send events on the open stream, once the page has opened one. */
+async function pushChatEvents(page: Page, events: ChatStreamEvent[]) {
+  await expect
+    .poll(() =>
+      page.evaluate(() =>
+        (window as unknown as ControlledStreamWindow).__openChatStreams(),
+      ),
+    )
+    .toBeGreaterThan(0)
+  await page.evaluate(
+    (body) =>
+      (window as unknown as ControlledStreamWindow).__pushChatEvents(body),
+    eventStreamBody(events),
+  )
+}
+
 async function newConversation(page: Page) {
   const menu = page.getByRole("button", { name: "Open Sidebar", exact: true })
   if ((page.viewportSize()?.width ?? 1440) < 768) await menu.click()
@@ -1030,4 +1088,69 @@ test("An English interface leaves the answer language to the question", async ({
   await sendQuestion(page)
   await expect.poll(() => mock.submissions.length).toBe(1)
   expect(mock.submissions[0].answer_language).toBeNull()
+})
+
+test("A queued question shows its place until the answer starts", async ({
+  page,
+}) => {
+  await installControlledEventStream(page)
+  await mockChat(page)
+  await page.goto("/?intent=ask")
+  await sendQuestion(page)
+  const pending = page.getByRole("region", { name: "Answer in progress" })
+  await expect(pending).toBeVisible()
+
+  await pushChatEvents(page, [
+    { event: "run.queued", data: { run_id: runId, position: 3 } },
+  ])
+  await expect(pending.getByRole("status")).toContainText(
+    "Waiting for other answers to finish. 2 questions are ahead of you.",
+  )
+  await pushChatEvents(page, [
+    { event: "run.queued", data: { run_id: runId, position: 2 } },
+  ])
+  await expect(pending.getByRole("status")).toContainText(
+    "1 question is ahead of you.",
+  )
+  await pushChatEvents(page, [
+    { event: "run.queued", data: { run_id: runId, position: 1 } },
+  ])
+  await expect(pending.getByRole("status")).toContainText(
+    "Waiting for another answer to finish. You're next.",
+  )
+
+  await pushChatEvents(page, [
+    {
+      id: 1,
+      event: "retrieval.complete",
+      data: {
+        evidence: [evidence],
+        citation_outcomes: [outcome],
+        retrieval_mode: "exact",
+        message: null,
+      },
+    },
+  ])
+  await expect(pending.getByRole("status")).toContainText(
+    "Writing a plain-English answer…",
+  )
+  await expect(pending).not.toContainText("Waiting for")
+})
+
+test("A queued question shows its place in the reader's language", async ({
+  page,
+}) => {
+  await installControlledEventStream(page)
+  await mockChat(page)
+  await page.goto("/?intent=ask")
+  await page.getByRole("button", { name: "Language: English" }).click()
+  await page.getByRole("menuitemradio", { name: "Pidgin" }).click()
+  await expect(page.locator("html")).toHaveAttribute("lang", "pcm")
+  await sendQuestion(page)
+  await pushChatEvents(page, [
+    { event: "run.queued", data: { run_id: runId, position: 4 } },
+  ])
+  await expect(page.getByRole("status").first()).toContainText(
+    "3 questions dey before you",
+  )
 })

@@ -71,9 +71,12 @@
   },
   "pending": {
     "label": "Answer dey come",
-    "reading": "We dey read {{sources}}"
+    "reading": "We dey read {{sources}}",
+    "queuedAhead_one": "We dey wait make other answers finish. 1 question dey before you.",
+    "queuedAhead_other": "We dey wait make other answers finish. {{count}} questions dey before you."
   },
   "progress": {
+    "queued": "We dey wait make another answer finish. Na you dey next.",
     "finding": "We dey find di sections wey concern am…",
     "writing": "We dey write answer wey clear…",
     "checking": "We dey check di answer again against di sources…",

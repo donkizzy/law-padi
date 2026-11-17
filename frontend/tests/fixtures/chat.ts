@@ -161,29 +161,38 @@ export function messageAccepted(
 }
 
 // Server-sent events on `/conversations/{id}/events`. These are the events the
-// worker emits that the page reads (`backend/app/chat/worker.py`).
-export type ChatStreamEvent = { id: number } & (
+// worker emits that the page reads (`backend/app/chat/worker.py`), plus the
+// `run.queued` event the endpoint derives while the run waits for the worker.
+// That one is never stored, so it carries no ID.
+export type ChatStreamEvent =
+  | ({ id: number } & (
+      | {
+          event: "retrieval.complete"
+          data: {
+            evidence: EvidenceItem[]
+            citation_outcomes: CitationOutcome[]
+            retrieval_mode: "exact" | "hybrid" | "lexical" | null
+            message: string | null
+          }
+        }
+      | {
+          event: "answer.complete"
+          data: { message_id: string; answer: ChatAnswer }
+        }
+    ))
   | {
-      event: "retrieval.complete"
-      data: {
-        evidence: EvidenceItem[]
-        citation_outcomes: CitationOutcome[]
-        retrieval_mode: "exact" | "hybrid" | "lexical" | null
-        message: string | null
-      }
+      id?: undefined
+      event: "run.queued"
+      /** `position` 1 means the run starts next. */
+      data: { run_id: string; position: number }
     }
-  | {
-      event: "answer.complete"
-      data: { message_id: string; answer: ChatAnswer }
-    }
-)
 
 /** The `text/event-stream` body the server would send for these events. */
 export function eventStreamBody(events: ChatStreamEvent[]): string {
   return events
     .map(
       ({ id, event, data }) =>
-        `id: ${id}\nevent: ${event}\ndata: ${JSON.stringify(data)}\n\n`,
+        `${id === undefined ? "" : `id: ${id}\n`}event: ${event}\ndata: ${JSON.stringify(data)}\n\n`,
     )
     .join("")
 }

@@ -14,16 +14,28 @@ import type { Progress } from "@/components/Constitution/chat/useAnswerStream"
 import { InlineAction } from "@/components/Constitution/primitives"
 import { type ExplanationAnswer, parseAnswer } from "@/lib/answer"
 
+/** The status line for a run's progress, with its place in the queue while it waits. */
+export function useProgressLabel() {
+  const { t } = useTranslation(["chat", "common"])
+  return (progress: Progress, queuePosition: number | null) =>
+    progress === "queued" && queuePosition !== null && queuePosition > 1
+      ? t("pending.queuedAhead", { count: queuePosition - 1 })
+      : t(`progress.${progress}`)
+}
+
 export function PendingAnswer({
   progress,
+  queuePosition,
   sources,
   outcomes,
 }: {
   progress: Progress | null
+  queuePosition: number | null
   sources: EvidenceItem[]
   outcomes: CitationOutcome[]
 }) {
   const { t } = useTranslation(["chat", "common"])
+  const progressLabel = useProgressLabel()
   const reading = withoutContained(sources).slice(0, 4)
   return (
     <section aria-label={t("pending.label")} className="grid gap-4">
@@ -31,7 +43,7 @@ export function PendingAnswer({
       <div className="grid gap-3 py-4">
         <AnswerLoading
           progress={progress ?? "finding"}
-          label={t(`progress.${progress ?? "finding"}`)}
+          label={progressLabel(progress ?? "finding", queuePosition)}
         />
         {reading.length > 0 && (
           <p className="text-label font-normal text-muted-foreground">
@@ -107,6 +119,7 @@ type MessageListProps = {
   showLiveAnswer: boolean
   outcomes: CitationOutcome[]
   progress: Progress | null
+  queuePosition: number | null
   sources: EvidenceItem[]
   /** Run status and request errors, shown after the answers. */
   children?: ReactNode
@@ -131,6 +144,7 @@ export function MessageList({
   showLiveAnswer,
   outcomes,
   progress,
+  queuePosition,
   sources,
   children,
 }: MessageListProps) {
@@ -168,6 +182,7 @@ export function MessageList({
         <PendingAnswer
           outcomes={outcomes}
           progress={progress}
+          queuePosition={queuePosition}
           sources={sources}
         />
       )}
