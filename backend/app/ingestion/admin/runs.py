@@ -22,6 +22,7 @@ from app.ingestion.common import enum_value, get_datetime_utc
 from app.ingestion.composition import (
     release_entries,
 )
+from app.ingestion.runtime.inputs import recovery_payload, retain_pipeline_inputs
 from app.ingestion.runtime.queue import (
     append_run_event,
     enqueue_task,
@@ -35,7 +36,6 @@ from app.legal.enums import (
 from app.legal.models import (
     EmbeddingProfile,
     IngestionRun,
-    IngestionTask,
 )
 from app.models import User
 
@@ -68,6 +68,11 @@ def cancel_ingestion_run(
             status_code=status.HTTP_409_CONFLICT,
             detail="Terminal ingestion runs cannot be cancelled",
         )
+    run.pipeline_config = {
+        **(run.pipeline_config or {}),
+        "cancelled_status": enum_value(run.status),
+    }
+    recovery_payload(session, run, run.current_stage)
     cancelled = mark_run_cancelled(session, run, reason, commit=False)
     add_idempotency_record(
         session,
@@ -115,7 +120,7 @@ def resume_ingestion_run(
         )
     was_cancelled = run.status == IngestionRunStatus.CANCELLED
     resume_stage = IngestionStage(enum_value(run.current_stage))
-    is_page_confirmation = resume_stage == IngestionStage.AWAITING_PAGE_CONFIRMATION
+    gate_status = recovery_gate_status(run, resume_stage)
     if not was_cancelled:
         append_run_event(
             session,
@@ -138,11 +143,7 @@ def resume_ingestion_run(
         session.refresh(run)
         return run
 
-    run.status = (
-        IngestionRunStatus.WAITING_FOR_INPUT
-        if is_page_confirmation
-        else IngestionRunStatus.QUEUED
-    )
+    run.status = gate_status or IngestionRunStatus.QUEUED
     run.completed_at = None
     run.error_details = None
     run.lock_version += 1
@@ -150,9 +151,7 @@ def resume_ingestion_run(
     session.add(run)
     resume_step = get_run_step(session, run.id, resume_stage)
     resume_step.status = (
-        IngestionStepStatus.BLOCKED
-        if is_page_confirmation
-        else IngestionStepStatus.PENDING
+        IngestionStepStatus.BLOCKED if gate_status else IngestionStepStatus.PENDING
     )
     resume_step.lease_owner = None
     resume_step.leased_until = None
@@ -163,10 +162,8 @@ def resume_ingestion_run(
     resume_step.lock_version += 1
     resume_step.updated_at = run.updated_at
     session.add(resume_step)
-    if not is_page_confirmation:
-        payload: dict[str, object] = {"resume": True}
-        if run.source_document_id:
-            payload["source_document_id"] = str(run.source_document_id)
+    if not gate_status:
+        payload = {**recovery_payload(session, run, resume_stage), "resume": True}
         enqueue_task(
             session,
             run=run,
@@ -260,6 +257,7 @@ def start_embedding(
                     "gates": gates,
                 },
             )
+    retain_pipeline_inputs(session, run, {"release_id": str(release_id)})
     step = get_run_step(session, run.id, IngestionStage.EMBEDDING)
     step.status = IngestionStepStatus.PENDING
     step.lock_version += 1
@@ -340,35 +338,32 @@ def retry_ingestion_run(
     run.error_details = None
     run.updated_at = get_datetime_utc()
     session.add(run)
-    stage_value = enum_value(run.current_stage)
-    # Stages such as embedding read their release from the task payload, so the
-    # retry carries over the stage's latest payload that holds those inputs
-    # (an earlier retry queued before this fix may hold only the retry flag).
-    previous_payload = next(
-        (
-            payload
-            for payload in session.exec(
-                select(IngestionTask.payload)
-                .where(
-                    IngestionTask.run_id == run.id,
-                    IngestionTask.task_type == stage_value,
-                )
-                .order_by(col(IngestionTask.created_at).desc())
-            ).all()
-            if set(payload or {}) - {"retry"}
-        ),
-        {},
+    run.completed_at = None
+    stage = IngestionStage(enum_value(run.current_stage))
+    gate_status = recovery_gate_status(run, stage)
+    step = get_run_step(session, run.id, stage)
+    step.status = (
+        IngestionStepStatus.BLOCKED if gate_status else IngestionStepStatus.PENDING
     )
-    enqueue_task(
-        session,
-        run=run,
-        step=get_run_step(session, run.id, run.current_stage),
-        task_type=stage_value,
-        idempotency_key=f"{run.id}:{stage_value}:retry:{run.lock_version}",
-        payload={**previous_payload, "retry": True},
-        priority=5,
-        commit=False,
-    )
+    step.completed_at = None
+    step.error_details = None
+    step.lease_owner = None
+    step.leased_until = None
+    step.lock_version += 1
+    session.add(step)
+    if gate_status:
+        run.status = gate_status
+    else:
+        enqueue_task(
+            session,
+            run=run,
+            step=step,
+            task_type=stage.value,
+            idempotency_key=f"{run.id}:{stage.value}:retry:{run.lock_version}",
+            payload={**recovery_payload(session, run, stage), "retry": True},
+            priority=5,
+            commit=False,
+        )
     append_run_event(
         session,
         run,
@@ -389,3 +384,22 @@ def retry_ingestion_run(
     session.commit()
     session.refresh(run)
     return run
+
+
+def recovery_gate_status(
+    run: IngestionRun, stage: IngestionStage
+) -> IngestionRunStatus | None:
+    gates = {
+        IngestionStage.UPLOADING: IngestionRunStatus.WAITING_FOR_INPUT,
+        IngestionStage.AWAITING_PAGE_CONFIRMATION: IngestionRunStatus.WAITING_FOR_INPUT,
+        IngestionStage.REVIEW: IngestionRunStatus.WAITING_FOR_REVIEW,
+        IngestionStage.PUBLISHING: IngestionRunStatus.READY_TO_PUBLISH,
+    }
+    if (
+        run.status == IngestionRunStatus.CANCELLED
+        and stage == IngestionStage.EMBEDDING
+        and (run.pipeline_config or {}).get("cancelled_status")
+        == IngestionRunStatus.READY_TO_EMBED
+    ):
+        return IngestionRunStatus.READY_TO_EMBED
+    return gates.get(stage)

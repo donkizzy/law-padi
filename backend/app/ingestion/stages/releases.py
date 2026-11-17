@@ -4,6 +4,7 @@ from sqlmodel import Session, col, select
 
 from app.ingestion.admin.release_gates import release_source_and_review_gates
 from app.ingestion.runtime.errors import IngestionWorkerError
+from app.ingestion.runtime.inputs import task_input
 from app.legal.models import (
     CorpusRelease,
     CorpusReleaseEntry,
@@ -25,7 +26,7 @@ def ensure_composite_member_gates(session: Session, release: CorpusRelease) -> N
 
 
 def get_release_for_task(session: Session, task: IngestionTask) -> CorpusRelease:
-    release_id = task.payload.get("release_id")
+    release_id = task_input(session, task, "release_id")
     if not release_id:
         raise IngestionWorkerError("Task does not identify a corpus release")
     release = session.get(CorpusRelease, uuid.UUID(str(release_id)))

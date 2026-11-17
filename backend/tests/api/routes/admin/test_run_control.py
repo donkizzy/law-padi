@@ -1,6 +1,7 @@
 import uuid
 from datetime import UTC, datetime
 
+import pytest
 from fastapi.testclient import TestClient
 from sqlmodel import Session, func, select
 
@@ -202,6 +203,16 @@ def test_retry_keeps_the_failed_stage_task_payload(
             created_at=datetime(2026, 10, 23, 11, 0, tzinfo=UTC),
         )
     )
+    db.add(
+        IngestionTask(
+            run_id=run.id,
+            task_type=IngestionStage.EMBEDDING.value,
+            status=IngestionTaskStatus.FAILED,
+            idempotency_key=f"{run.id}:embedding:resume:old",
+            payload={"resume": True, "source_document_id": "source"},
+            created_at=datetime(2026, 10, 23, 12, 0, tzinfo=UTC),
+        )
+    )
     db.commit()
     db.refresh(run)
 
@@ -309,3 +320,66 @@ def test_resume_cancelled_run_requeues_current_stage_once(
         ).one()
         == 1
     )
+
+
+@pytest.mark.parametrize(
+    "stage,waiting_status",
+    [
+        (IngestionStage.REVIEW, IngestionRunStatus.WAITING_FOR_REVIEW),
+        (IngestionStage.EMBEDDING, IngestionRunStatus.READY_TO_EMBED),
+        (IngestionStage.PUBLISHING, IngestionRunStatus.READY_TO_PUBLISH),
+        (
+            IngestionStage.AWAITING_PAGE_CONFIRMATION,
+            IngestionRunStatus.WAITING_FOR_INPUT,
+        ),
+    ],
+)
+def test_cancel_and_resume_restores_operator_gate(
+    client: TestClient,
+    superuser_token_headers: dict[str, str],
+    db: Session,
+    stage: IngestionStage,
+    waiting_status: IngestionRunStatus,
+) -> None:
+    _source, run = _source_and_run(db)
+    run.current_stage = stage
+    run.status = waiting_status
+    db.add(run)
+    db.commit()
+    base = f"{settings.API_V1_STR}/admin/ingestion-runs/{run.id}"
+    assert (
+        client.post(
+            base + "/cancel",
+            headers=superuser_token_headers,
+            json={
+                "expected_version": run.lock_version,
+                "idempotency_key": uuid.uuid4().hex,
+                "reason": "Pause operator work",
+            },
+        ).status_code
+        == 200
+    )
+    db.refresh(run)
+    assert (
+        client.post(
+            base + "/resume",
+            headers=superuser_token_headers,
+            json={
+                "expected_version": run.lock_version,
+                "idempotency_key": uuid.uuid4().hex,
+            },
+        ).status_code
+        == 200
+    )
+    db.refresh(run)
+    assert run.status == waiting_status
+    step = db.exec(
+        select(IngestionStep).where(
+            IngestionStep.run_id == run.id,
+            IngestionStep.stage == stage,
+        )
+    ).one()
+    assert step.status == IngestionStepStatus.BLOCKED
+    assert not db.exec(
+        select(IngestionTask).where(IngestionTask.run_id == run.id)
+    ).all()

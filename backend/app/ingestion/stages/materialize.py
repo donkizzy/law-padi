@@ -7,6 +7,7 @@ from sqlmodel import Session, col, select
 from app.core.config import settings
 from app.ingestion.common import get_datetime_utc
 from app.ingestion.runtime.errors import IngestionWorkerError
+from app.ingestion.runtime.inputs import retain_pipeline_inputs
 from app.ingestion.runtime.types import StageOutcome
 from app.ingestion.stages.artifacts import ensure_artifact, sha256_json
 from app.ingestion.stages.candidates import (
@@ -215,6 +216,7 @@ def handle_materializing(
             "entry_count": len(entries),
         },
     )
+    retain_pipeline_inputs(session, run, {"release_id": str(release.id)})
     session.commit()
     return StageOutcome(
         metrics={

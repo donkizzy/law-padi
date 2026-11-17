@@ -9,6 +9,7 @@ from app.core.config import settings
 from app.ingestion.common import get_datetime_utc
 from app.ingestion.registry import handler_for
 from app.ingestion.runtime.errors import IngestionLeaseLost, IngestionWorkerError
+from app.ingestion.runtime.inputs import retain_pipeline_inputs
 from app.ingestion.runtime.leases import TaskLease, fence_stage_writes
 from app.ingestion.runtime.queue import (
     append_run_event,
@@ -223,6 +224,15 @@ def advance_run_after_success(
     commit: bool = True,
 ) -> None:
     now = get_datetime_utc()
+    if outcome.next_task_payload:
+        retain_pipeline_inputs(session, run, outcome.next_task_payload)
+        run.pipeline_config = {
+            **(run.pipeline_config or {}),
+            "stage_inputs": {
+                **(run.pipeline_config or {}).get("stage_inputs", {}),
+                str(outcome.next_stage): outcome.next_task_payload,
+            },
+        }
     run.status = outcome.next_status
     if outcome.next_stage:
         run.current_stage = outcome.next_stage
@@ -259,7 +269,7 @@ def advance_run_after_success(
             run=run,
             step=next_step,
             task_type=outcome.next_stage.value,
-            idempotency_key=f"{run.id}:{outcome.next_stage.value}",
+            idempotency_key=f"{run.id}:{outcome.next_stage.value}:{run.lock_version}",
             payload=outcome.next_task_payload or {},
             priority=priority_for_stage(outcome.next_stage),
             commit=False,

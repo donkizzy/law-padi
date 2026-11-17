@@ -16,6 +16,7 @@ from app.ingestion.embedding import (
 from app.ingestion.embedding_reuse import member_document_vectors, profile_fingerprint
 from app.ingestion.retrieval import build_retrieval_documents
 from app.ingestion.runtime.errors import IngestionWorkerError
+from app.ingestion.runtime.inputs import retain_pipeline_inputs
 from app.ingestion.runtime.types import StageOutcome
 from app.ingestion.stages.artifacts import ensure_artifact, payload_list
 from app.ingestion.stages.documents import retrieval_documents_payload
@@ -123,6 +124,7 @@ def handle_building_retrieval_documents(
     }
     release.lock_version += 1
     session.add(release)
+    retain_pipeline_inputs(session, run, {"release_id": str(release.id)})
     session.commit()
     metrics = {
         "release_id": str(release.id),
@@ -339,6 +341,11 @@ def handle_embedding(
     release.lock_version += 1
     session.add(selected_run)
     session.add(release)
+    retain_pipeline_inputs(
+        session,
+        run,
+        {"release_id": str(release.id), "embedding_run_id": str(selected_run.id)},
+    )
     session.commit()
     return StageOutcome(
         metrics={

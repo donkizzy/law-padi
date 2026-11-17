@@ -13,6 +13,7 @@ from app.ingestion.pgvector_repository import (
 )
 from app.ingestion.retrieval import RetrievalDocument
 from app.ingestion.runtime.errors import IngestionWorkerError
+from app.ingestion.runtime.inputs import retain_pipeline_inputs, task_input
 from app.ingestion.runtime.types import StageOutcome
 from app.ingestion.stages.artifacts import (
     float_vector,
@@ -170,6 +171,16 @@ def handle_pgvector_indexing(
         },
     }
     session.add(build)
+    session.flush()
+    retain_pipeline_inputs(
+        session,
+        run,
+        {
+            "release_id": str(release.id),
+            "embedding_run_id": str(embedding_run.id),
+            "retrieval_index_build_id": str(build.id),
+        },
+    )
     session.commit()
     return StageOutcome(
         metrics={
@@ -193,7 +204,7 @@ def handle_pgvector_indexing(
 def handle_validating_index(
     session: Session, _run: IngestionRun, task: IngestionTask
 ) -> StageOutcome:
-    retrieval_index_build_id = task.payload.get("retrieval_index_build_id")
+    retrieval_index_build_id = task_input(session, task, "retrieval_index_build_id")
     if not retrieval_index_build_id:
         raise IngestionWorkerError("Task does not identify a retrieval index build")
     build = session.get(RetrievalIndexBuild, uuid.UUID(str(retrieval_index_build_id)))
@@ -266,7 +277,7 @@ def embedding_payload(
 
 
 def get_embedding_run_for_task(session: Session, task: IngestionTask) -> EmbeddingRun:
-    embedding_run_id = task.payload.get("embedding_run_id")
+    embedding_run_id = task_input(session, task, "embedding_run_id")
     if not embedding_run_id:
         raise IngestionWorkerError("Task does not identify an embedding run")
     embedding_run = session.get(EmbeddingRun, uuid.UUID(str(embedding_run_id)))

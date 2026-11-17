@@ -210,3 +210,14 @@ fails before commit, retry the same request and idempotency key. It cannot leave
 a queued run behind without its task. The operational alerts also flag existing
 queued/running runs with no pending, leased or running task as
 `missing_active_task`; inspect the run before cancelling/resuming or retrying it.
+
+### Recovering cancelled runs
+
+Resume restores page confirmation, review and publication to their operator
+waiting states. Cancelling at the manual embedding gate restores
+`ready_to_embed`; use Start embedding when ready. Cancelling an executing stage
+queues that stage again with its retained inputs. Release, selected embedding
+run and index build identities are retained on the run alongside stage inputs;
+older runs recover inputs by merging their task history. Retry uses the same
+queue/outbox path and resets the failed step. Repeated stage execution creates
+fresh successor tasks instead of reusing already completed ones.
