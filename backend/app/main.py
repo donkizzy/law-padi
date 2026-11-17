@@ -1,3 +1,5 @@
+from collections.abc import AsyncIterator
+from contextlib import asynccontextmanager
 from pathlib import Path
 from secrets import compare_digest
 
@@ -7,9 +9,11 @@ from fastapi.routing import APIRoute
 from starlette.middleware.cors import CORSMiddleware
 from starlette.types import ASGIApp, Receive, Scope, Send
 
+from app.api import health
 from app.api.errors import register_error_handlers
 from app.api.main import api_router
 from app.core.config import settings
+from app.core.logs import configure_logging
 from app.core.request_gate import RequestGateMiddleware
 
 FRONTEND_DIR = Path(__file__).parent / "frontend"
@@ -57,7 +61,14 @@ if settings.SENTRY_DSN and settings.FASTAPI_ENV != "development":
         traces_sample_rate=settings.SENTRY_TRACES_SAMPLE_RATE,
     )
 
+@asynccontextmanager
+async def lifespan(_app: FastAPI) -> AsyncIterator[None]:
+    configure_logging()
+    yield
+
+
 app = FastAPI(
+    lifespan=lifespan,
     title=settings.PROJECT_NAME,
     openapi_url=f"{settings.API_V1_STR}/openapi.json",
     generate_unique_id_function=custom_generate_unique_id,
@@ -79,6 +90,7 @@ app.add_middleware(
 )
 app.add_middleware(OriginProxyMiddleware)
 
+app.include_router(health.router)
 app.include_router(api_router, prefix=settings.API_V1_STR)
 if settings.SERVE_FRONTEND:
     app.frontend("/", directory=FRONTEND_DIR)
