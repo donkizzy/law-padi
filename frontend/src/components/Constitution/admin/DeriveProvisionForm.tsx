@@ -6,7 +6,7 @@ import {
   type ReviewItemPublic,
   type ReviewItemUpdate,
 } from "@/client"
-import { CandidateStructureEditor } from "@/components/Constitution/CandidateStructureEditor"
+import { CandidateStructureEditor } from "@/components/Constitution/admin/CandidateStructureEditor"
 import { SquircleButton } from "@/components/Constitution/primitives"
 import {
   Dialog,

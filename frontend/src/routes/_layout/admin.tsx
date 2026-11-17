@@ -1,7 +1,7 @@
 import { createFileRoute, redirect } from "@tanstack/react-router"
 
 import { UsersService } from "@/client"
-import { AdminWorkspace } from "@/components/Constitution/AdminWorkspace"
+import { AdminWorkspace } from "@/components/Constitution/admin/AdminWorkspace"
 import { isLoggedIn } from "@/hooks/useAuth"
 
 export const Route = createFileRoute("/_layout/admin")({
