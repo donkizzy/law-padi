@@ -1,7 +1,7 @@
 import { describe, expect, test } from "bun:test";
 import { handleRequest } from "./worker";
 
-const origin = "https://constitition-ng.amosgodwin500.workers.dev";
+const origin = "https://example.test";
 const sectionPath = "constitution-1999.chapter4.section37";
 const chapter = {
 	id: "chapter",

@@ -1,4 +1,4 @@
-# Draft for PRIVATE donkizzy/constitution-ng-backups, default branch only.
+# Run from the private backup repository on its default branch.
 name: Private Neon backup
 
 on:
@@ -24,7 +24,8 @@ concurrency:
   cancel-in-progress: false
 
 env:
-  R2_BACKUP_BUCKET: constitution-ng-backups
+  R2_BACKUP_BUCKET: ${{ vars.R2_BACKUP_BUCKET }}
+  EXPECTED_NEON_HOST: ${{ vars.EXPECTED_NEON_HOST }}
   R2_BACKUP_ENDPOINT_URL: ${{ secrets.R2_BACKUP_ENDPOINT_URL }}
   R2_BACKUP_ACCESS_KEY_ID: ${{ secrets.R2_BACKUP_ACCESS_KEY_ID }}
   R2_BACKUP_SECRET_ACCESS_KEY: ${{ secrets.R2_BACKUP_SECRET_ACCESS_KEY }}

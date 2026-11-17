@@ -25,7 +25,7 @@ from psycopg.rows import dict_row
 
 ROOT = Path(__file__).resolve().parents[2]
 EXPECTED_SOURCE = "app_live_validation_20261015_v8"
-EXPECTED_HOST = "ep-soft-firefly-b8cpxico.c-14.us-east-1.aws.neon.tech"
+
 TABLES = ("generation_budget_day", "generation_budget_month", "generation_reservation")
 RESERVATION_COLUMNS = (
     "id",
@@ -223,7 +223,7 @@ def _connection_urls(source_values: dict, target_values: dict) -> tuple[str, str
     a, b = urlparse(source), urlparse(target)
     if a.hostname not in {"localhost", "127.0.0.1"} or a.path != f"/{EXPECTED_SOURCE}":
         raise ValueError("Unexpected isolated source database")
-    if b.hostname != EXPECTED_HOST or b.path != "/app" or b.username != "app_owner":
+    if b.hostname != target_values.get("EXPECTED_NEON_HOST") or b.path != "/app" or b.username != "app_owner":
         raise ValueError("Unexpected Neon destination identity")
     query = dict(parse_qsl(b.query))
     if query.get("sslmode") != "verify-full":
@@ -302,7 +302,7 @@ def main() -> None:
             "at": datetime.now(UTC).isoformat(),
             "applied": args.apply,
             "source_database": EXPECTED_SOURCE,
-            "target_host": EXPECTED_HOST,
+            "target_host": urlparse(target_url).hostname,
             "source_active_runs": active,
             "source": totals,
             "target_before": before,

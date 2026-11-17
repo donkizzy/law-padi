@@ -9,8 +9,7 @@ services:
     branch: master
     dockerfilePath: ./deployment/render/Dockerfile
     dockerContext: .
-    # Temporary while GitHub Actions is blocked by the account billing restriction.
-    autoDeployTrigger: commit
+    autoDeployTrigger: checksPass
     healthCheckPath: /healthz
     maxShutdownDelaySeconds: 30
     numInstances: 1
@@ -22,7 +21,7 @@ services:
       - key: SERVE_FRONTEND
         value: "false"
       - key: FRONTEND_HOST
-        value: https://constitition-ng.amosgodwin500.workers.dev
+        sync: false
       - key: CHAT_ENABLED
         value: "true"
       - key: CHAT_GENERATION_ENABLED
@@ -72,7 +71,7 @@ services:
       - key: INGESTION_STORAGE_BACKEND
         value: r2
       - key: R2_BUCKET_NAME
-        value: lawpadi
+        sync: false
       - key: BUILD_REVISION
         sync: false
       - key: SECRET_KEY

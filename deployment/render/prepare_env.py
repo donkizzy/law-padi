@@ -42,7 +42,7 @@ def main():
         BUILD_REVISION=revision,
         APP_RUNTIME_ROLE="api",
         SERVE_FRONTEND="false",
-        FRONTEND_HOST="https://constitition-ng.amosgodwin500.workers.dev",
+        FRONTEND_HOST=os.environ["PUBLIC_SITE_URL"],
         CHAT_ENABLED="true",
         CHAT_GENERATION_ENABLED="true",
         CHAT_GENERATION_KILL_SWITCH="false",

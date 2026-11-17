@@ -68,8 +68,7 @@ Keep the frontend and API on the same source revision.
 - Do not reset the spend ledger when moving hosts or restoring. Spend from an
   isolated evaluation database can be carried in with
   `deployment/render/sync_spend.py`.
-- `deployment/seed_neon.py` performed the one-time initial seed of the production
-  database. Do not run it against a populated database; new laws arrive through
+- The initial production seed is complete; new laws arrive through
   [`release.md`](release.md).
 
 ## Incidents
@@ -82,3 +81,10 @@ Keep the frontend and API on the same source revision.
    only through [`backup-restore.md`](backup-restore.md).
 4. Check Render memory and CPU, and Neon connections and storage, after a sleep
    and wake cycle.
+
+For self-hosted Compose, the backend and ingestion images run as UID 10001.
+Before upgrading an existing installation, stop the application during a
+maintenance window and change the existing `app-ingestion-source-documents`
+volume ownership to UID and GID 10001 using an administrative container. A new
+volume is initialized with the image directory's ownership. The default database
+connection budget is 50; recalculate it before raising worker or pool settings.

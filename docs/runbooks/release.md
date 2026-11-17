@@ -8,12 +8,9 @@ production database). Corpus releases are built and reviewed locally
 
 ## Code
 
-`render.yaml` deploys the `master` branch with `autoDeployTrigger: commit`: every
-push to `master` starts a Render build and deploy without waiting for GitHub
-Actions. Cloudflare's native GitHub build also builds `master`
-(`deployment/cloudflare/README.md`). There is no staging environment and no
-snapshot branch in the current release path; `deployment/render/snapshot.py`
-is not used by this configuration.
+`render.yaml` deploys `master` after GitHub checks pass. Cloudflare's native
+GitHub build also builds `master` (`deployment/cloudflare/README.md`). There is
+no staging environment in this release path.
 
 Before pushing to `master`:
 
@@ -84,3 +81,6 @@ review and composition gates passed.
 | New code fails | Roll back the deploy in Render and Cloudflare. |
 | New release is wrong | `activate` the previous release version. |
 | Database damaged | Restore the Neon branch or the dump taken in step 1. |
+
+For corpus copy, set `EXPECTED_NEON_HOST` in the private target env file to the
+authorized database hostname and pass `--source-bucket` with the source R2 bucket.

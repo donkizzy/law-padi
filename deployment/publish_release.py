@@ -11,7 +11,7 @@ activate  points the enacted search target at a release already in Neon and
 
 Each command runs in one transaction and rolls it back unless --apply is given.
 Review evidence (ingestion runs, candidates, issues, accounts) stays local, as in
-seed_neon.py; the release must already be published locally, where the app's
+the initial seed; the release must already be published locally, where the app's
 source, review and composition gates passed.
 """
 
@@ -27,7 +27,7 @@ from dotenv import dotenv_values
 from psycopg import sql
 
 ROOT = Path(__file__).resolve().parent.parent
-NEON_HOST = "ep-soft-firefly-b8cpxico.c-14.us-east-1.aws.neon.tech"
+
 LOCAL_HOSTS = {"localhost", "127.0.0.1"}
 REHEARSAL_PREFIX = "app_neon_rehearsal_"
 NULL_COLUMNS = {
@@ -60,13 +60,13 @@ def database_url(env_file: Path) -> str:
     return url.replace("postgresql+psycopg://", "postgresql://", 1)
 
 
-def check_identities(source_url: str, target_url: str) -> bool:
+def check_identities(source_url: str, target_url: str, expected_host: str) -> bool:
     """Return whether the target is production Neon; refuse anything else."""
     source = urlparse(source_url)
     target = urlparse(target_url)
     if source.hostname not in LOCAL_HOSTS or source.path != "/app":
         raise ValueError("Source must be the local app database")
-    if target.hostname == NEON_HOST and target.path == "/app":
+    if target.hostname == expected_host and bool(expected_host) and target.path == "/app":
         return True
     if target.hostname in LOCAL_HOSTS and target.path.startswith(
         f"/{REHEARSAL_PREFIX}"
@@ -436,12 +436,15 @@ def main() -> int:
     parser.add_argument("command", choices=("copy", "activate"))
     parser.add_argument("--release-version", required=True)
     parser.add_argument("--target-env", type=Path, default=ROOT / "deployment/neon.env")
-    parser.add_argument("--source-bucket", default="lawpadi")
+    parser.add_argument("--source-bucket", default=None)
     parser.add_argument("--apply", action="store_true")
     args = parser.parse_args()
     source_url = database_url(ROOT / ".env")
     target_url = database_url(args.target_env)
-    production = check_identities(source_url, target_url)
+    expected_host = dotenv_values(args.target_env).get("EXPECTED_NEON_HOST") or ""
+    production = check_identities(source_url, target_url, expected_host)
+    if args.command == "copy" and not args.source_bucket:
+        parser.error("--source-bucket is required for copy")
     if production:
         target_url = verified_tls(target_url)
     with (

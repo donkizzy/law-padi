@@ -16,7 +16,8 @@ trap cleanup_backup EXIT
 : "${R2_BACKUP_ENDPOINT_URL:?Set the private R2 endpoint secret}"
 : "${R2_BACKUP_ACCESS_KEY_ID:?Set the bucket-scoped access key}"
 : "${R2_BACKUP_SECRET_ACCESS_KEY:?Set the bucket-scoped secret key}"
-[[ "${R2_BACKUP_BUCKET:-}" == "constitution-ng-backups" ]]
+: "${R2_BACKUP_BUCKET:?Set the backup bucket name}"
+: "${EXPECTED_NEON_HOST:?Set the authorized Neon hostname}"
 export AWS_ACCESS_KEY_ID="$R2_BACKUP_ACCESS_KEY_ID"
 export AWS_SECRET_ACCESS_KEY="$R2_BACKUP_SECRET_ACCESS_KEY"
 export AWS_DEFAULT_REGION=auto AWS_EC2_METADATA_DISABLED=true AWS_PAGER=""

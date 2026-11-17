@@ -1,5 +1,5 @@
 {
-  "name": "constitition-ng",
+  "name": "constitution-ng",
   "main": "worker.ts",
   "compatibility_date": "2026-10-14",
   "workers_dev": false,
@@ -13,6 +13,6 @@
   "observability": { "enabled": false },
   "vars": {
     "API_ORIGIN": "https://constitution-ng-api.onrender.com",
-    "PUBLIC_SITE_URL": "https://constitition-ng.amosgodwin500.workers.dev"
+    "PUBLIC_SITE_URL": "https://constitution.ng"
   }
 }

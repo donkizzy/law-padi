@@ -11,4 +11,7 @@ setting is in [`render.yaml`](../../render.yaml).
 | `prepare_env.py` | Combines private credential bundles into the ignored `deployment/render.env` for import into Render. |
 | `sync_spend.py` | Carries spend from an isolated evaluation database into the production ledger. |
 | `backup-*.sh`, `backup_tools.py`, `backup-lifecycle.s3.json`, `backup-workflow.yml` | Database backup and restore verification; see [`docs/runbooks/backup-restore.md`](../../docs/runbooks/backup-restore.md). |
-| `snapshot.py` | Builds a deployment snapshot branch. The current configuration deploys `master` directly and does not use it. |
+
+Set the private backup repository variables `R2_BACKUP_BUCKET` and
+`EXPECTED_NEON_HOST` to the authorized bucket and database hostname before
+running its workflow. The database URL remains a secret.

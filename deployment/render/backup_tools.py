@@ -11,7 +11,7 @@ from pathlib import Path
 from urllib.parse import parse_qs, unquote, urlparse
 
 MAX_BYTES = 100 * 1024 * 1024
-EXPECTED_HOST = "ep-soft-firefly-b8cpxico.c-14.us-east-1.aws.neon.tech"
+
 
 
 def digest(path):
@@ -47,7 +47,7 @@ def main():
         parsed = urlparse(os.environ["NEON_BACKUP_DATABASE_URL"])
         if (
             parsed.scheme not in {"postgres", "postgresql", "postgresql+psycopg"}
-            or parsed.hostname != EXPECTED_HOST
+            or parsed.hostname != os.environ["EXPECTED_NEON_HOST"]
             or parsed.path != "/app"
             or not parsed.username
             or not parsed.password

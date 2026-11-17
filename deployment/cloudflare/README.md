@@ -1,9 +1,10 @@
 # Cloudflare frontend
 
-The existing Worker `constitition-ng` belongs to the personal Cloudflare account
-and is already connected to `donkizzy/law-padi`. Preserve that existing spelling;
-the eventual free address is `https://constitition-ng.amosgodwin500.workers.dev`.
-Its API origin is `https://constitution-ng-api.onrender.com`.
+The existing Worker uses the legacy name `constitition-ng`. Set
+`PUBLIC_SITE_URL` to its existing bare HTTPS origin and leave
+`CLOUDFLARE_WORKER_NAME` unset to retain it. The generated configuration defaults
+to the existing name; set `CLOUDFLARE_WORKER_NAME=constitution-ng` only during
+the migration below. The API origin remains the configured Render service.
 
 The main hostname and version URLs stay disabled while the AI launch evaluation
 and human review are pending. Cloudflare can still build and deploy the assets
@@ -71,6 +72,30 @@ See [the SEO/AI discovery rollout](../../docs/seo-and-ai-discovery.md). The Work
 now runs before static assets and serves real public HTML, robots, sitemap and
 LLM directory responses. Deploy the backend's release-scoped full-tree support
 before this Worker; the sitemap intentionally rejects an incomplete old response.
-`PUBLIC_SITE_URL` is an optional build variable for a bare canonical HTTPS origin;
-it defaults to the confirmed Workers address and is passed to both Vite and the
-Worker configuration. Changing it does not configure DNS, TLS or public routing.
+`PUBLIC_SITE_URL` is a required build variable for the bare canonical HTTPS origin;
+it is passed to both Vite and the Worker configuration. Changing it does not configure DNS, TLS or public routing.
+
+Before enabling this configuration, set `PUBLIC_SITE_URL` on the existing
+Cloudflare build to its current origin. In Render, retain the existing values
+for the now-unsynced `FRONTEND_HOST` and `R2_BUCKET_NAME` environment variables.
+
+## Rename the Worker
+
+Do not deploy the redirect until the new Worker is verified. Preserve the legacy
+Worker and its URL throughout setup.
+
+1. In Cloudflare, create a new Worker named `constitution-ng`, connect the same
+   repository and branch, and configure the build and deploy commands above.
+   Set `CLOUDFLARE_WORKER_NAME=constitution-ng`, `PUBLIC_SITE_URL` to the new
+   bare HTTPS origin, and the existing launch and Bun build variables. Copy the
+   `ORIGIN_PROXY_SECRET` Worker secret securely to the new Worker.
+2. Deploy the new Worker and enable its workers.dev address or attach the chosen
+   custom domain. Verify public pages, API proxy, login, cookies and SSE.
+3. In Render, set `FRONTEND_HOST` to the new origin and deploy; verify login and
+   CORS through the new origin. Ensure the Blueprint's unsynced values, including
+   `R2_BUCKET_NAME`, retain their existing values.
+4. Set `PUBLIC_SITE_URL` in `wrangler.redirect.json` to the verified new origin,
+   then deploy `bunx wrangler@4.151.0 deploy --config deployment/cloudflare/wrangler.redirect.json`
+   to the legacy Worker. Verify an old URL redirects with its path and query to
+   the new origin, and verify sitemap and canonical URLs. Keep the legacy Worker
+   and its workers.dev route active for existing links.

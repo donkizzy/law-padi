@@ -5,7 +5,8 @@ cd "$(dirname "$0")/../.."
 bun install --frozen-lockfile
 revision=$(python3 scripts/build_revision.py)
 export VITE_API_URL=''
-export VITE_PUBLIC_SITE_URL="${PUBLIC_SITE_URL:-https://constitition-ng.amosgodwin500.workers.dev}"
+: "${PUBLIC_SITE_URL:?Set PUBLIC_SITE_URL to the existing public HTTPS origin}"
+export VITE_PUBLIC_SITE_URL="$PUBLIC_SITE_URL"
 export VITE_BUILD_REVISION="$revision"
 bun run --filter frontend build
 

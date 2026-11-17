@@ -19,7 +19,7 @@ backups.
   Worker.
 - [`docs/docker-images.md`](../docs/docker-images.md): what each image contains.
 
-`seed_neon.py` performed the one-time initial seed of the production database
+The one-time initial seed of the production database was performed
 and must not be run again. A Cloud Run design was prepared but never deployed;
 its code and runbook are preserved at git tag `archive/pre-public-cleanup`
 ([ADR 0005](../docs/adr/0005-render-cloudflare-neon-hosting.md)).
