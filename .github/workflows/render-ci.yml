@@ -37,6 +37,7 @@ jobs:
       - name: Test the Cloudflare proxy and public pages
         run: bun test deployment/cloudflare/worker.test.ts deployment/cloudflare/public-pages.test.ts deployment/cloudflare/redirect.test.ts
 
+  # Delete this Render image job after Railway cutover and the rollback window ends.
   production-container:
     runs-on: ubuntu-latest
     timeout-minutes: 15

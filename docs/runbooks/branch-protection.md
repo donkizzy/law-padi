@@ -24,6 +24,10 @@ These workflows run on every pull request to `master`:
 | `Test Backend` | `test-backend` | `Test Backend / test-backend` | Lint, types, Pytest with the 87% branch-coverage floor, deployment helper tests. |
 | `Render CI` | `frontend-and-edge` | `Render CI / frontend-and-edge` | Biome, frontend build, Cloudflare Worker tests. |
 | `Render CI` | `production-container` | `Render CI / production-container` | Builds and smoke-tests the Render image. |
+| `Railway CI` | `workflow-lint` | `Railway CI / workflow-lint` | Runs actionlint on every workflow with shellcheck installed. |
+| `Railway CI` | `railway-config` | `Railway CI / railway-config` | Type-checks the Railway infrastructure with the locked SDK. |
+| `Railway CI` | `railway-image-backend` | `Railway CI / railway-image-backend` | Builds and smoke-tests the backend production image. |
+| `Railway CI` | `railway-image-ingestion` | `Railway CI / railway-image-ingestion` | Builds and smoke-tests the ingestion worker image. |
 | `Playwright Tests` | `alls-green-playwright` | `Playwright Tests / alls-green-playwright` | Gate over `typecheck`, `test-mocked` and `test-playwright`. Passes when a pull request touches none of the filtered paths, because the jobs are then skipped. |
 | `Test Docker Compose` | `test-docker-compose` | `Test Docker Compose / test-docker-compose` | Builds the Compose stack and checks that it starts. |
 | `Zizmor` | `Run zizmor` | `Zizmor / Run zizmor` | Static analysis of the workflow files. This job sets `name: Run zizmor`, so the space is part of the name. |
@@ -41,9 +45,13 @@ Other jobs that appear on pull requests, and why they are not required:
 | `Conflict detector` | `main` | Runs on `pull_request_target` for `synchronize` events only and labels pull requests with merge conflicts. It reports no verdict on the code. |
 | `Guard Dependencies` | `check-author` | Runs only when a lockfile or `pyproject.toml` changes. It closes the pull request itself when a non-maintainer changes them. |
 
-`push` runs on `master` repeat `Test Backend`, `Render CI`, `Playwright Tests`,
-`Test Docker Compose`, `Zizmor` and `Conflict detector`; those results are not
+`push` runs on `master` repeat `Test Backend`, `Render CI`, `Railway CI`,
+`Playwright Tests`, `Test Docker Compose`, `Zizmor` and `Conflict detector`; those results are not
 part of the rule.
+
+Remove the `production-container` requirement when the Render image job is deleted
+after Railway cutover and the rollback window ends. Deployment files, Compose
+files and Dockerfiles are included in the Playwright path filter.
 
 Keep this table in step with `.github/workflows/`. If a job is renamed or a new
 workflow is added, update the required list in the same change, or the pull
@@ -64,7 +72,7 @@ the GitHub Actions workflows that run on that commit have finished:
   block; a cancelled run blocks only if no other run on the commit succeeded;
   runs that have not finished within two hours skip the deploy.
 - Only workflows with a `push` trigger on `master` run on the commit. Today
-  these are `Test Backend`, `Render CI`, `Playwright Tests`,
+  these are `Test Backend`, `Render CI`, `Railway CI`, `Playwright Tests`,
   `Test Docker Compose`, `Zizmor` and `Conflict detector`. `pre-commit` runs on
   pull requests only, so it gates merging but not deploying.
 - `Conflict detector` labels other pull requests; a failure there (for
@@ -128,6 +136,10 @@ Rulesets, "Import a ruleset":
           { "context": "test-backend" },
           { "context": "frontend-and-edge" },
           { "context": "production-container" },
+          { "context": "workflow-lint" },
+          { "context": "railway-config" },
+          { "context": "railway-image-backend" },
+          { "context": "railway-image-ingestion" },
           { "context": "alls-green-playwright" },
           { "context": "test-docker-compose" },
           { "context": "Run zizmor" }
