@@ -120,7 +120,7 @@ async def check_draft(
         question=prepared.question,
     )
     if await asyncio.to_thread(runs.cancelled, run_id):
-        raise asyncio.CancelledError
+        raise runs.RunCancelled
     return CheckedDraft(drafted, dropped)
 
 

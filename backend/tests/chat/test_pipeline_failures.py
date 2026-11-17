@@ -54,7 +54,7 @@ def _fail_preparation(
     ("error", "outcome", "notice"),
     [
         (BudgetExhausted("budget"), "budget_exhausted", "budget"),
-        (asyncio.CancelledError(), "cancelled", "cancelled"),
+        (runs.RunCancelled(), "cancelled", "cancelled"),
         (TimeoutError(), "provider_failure", "unavailable"),
     ],
 )

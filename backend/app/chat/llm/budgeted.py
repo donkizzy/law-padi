@@ -6,6 +6,7 @@ import uuid
 
 from sqlmodel import Session, select
 
+from app.chat import runs
 from app.chat.budget import reserve, settle
 from app.chat.llm.protocol import (
     ChatModel,
@@ -22,6 +23,8 @@ from app.legal.models import GenerationRun, get_datetime_utc
 _RETRY_DELAY_SECONDS = 1.0
 # A provider that asks for a longer pause than this has failed the answer.
 _MAX_RETRY_DELAY_SECONDS = 10.0
+# How often an in-flight call checks whether its run was cancelled.
+CANCEL_POLL_SECONDS = 1.0
 
 
 def reserve_call(
@@ -36,7 +39,7 @@ def reserve_call(
             select(GenerationRun).where(GenerationRun.id == run_id).with_for_update()
         ).one()
         if run.cancellation_requested or settings.CHAT_GENERATION_KILL_SWITCH:
-            raise asyncio.CancelledError
+            raise runs.RunCancelled
         reservation = reserve(
             session,
             run_id=run_id,
@@ -78,6 +81,40 @@ def retry_delay(error: ProviderError) -> float | None:
     return delay if delay <= _MAX_RETRY_DELAY_SECONDS else None
 
 
+async def complete_unless_cancelled(
+    provider: ChatModel,
+    run_id: uuid.UUID,
+    *,
+    system: str,
+    payload: JsonObject,
+    max_tokens: int,
+    thinking: bool,
+) -> ProviderResult:
+    """Await a completion, abandoning it once the run is cancelled.
+
+    The cancel request is a database flag that may be set by another process,
+    so it is polled while the call is in flight.
+    """
+    completion = asyncio.ensure_future(
+        provider.complete_json(
+            system=system, payload=payload, max_tokens=max_tokens, thinking=thinking
+        )
+    )
+    try:
+        while True:
+            done, _pending = await asyncio.wait(
+                {completion}, timeout=CANCEL_POLL_SECONDS
+            )
+            if done:
+                return completion.result()
+            if await asyncio.to_thread(runs.cancelled, run_id):
+                raise runs.RunCancelled
+    finally:
+        if not completion.done():
+            completion.cancel()
+            await asyncio.gather(completion, return_exceptions=True)
+
+
 async def call(
     provider: ChatModel,
     run_id: uuid.UUID,
@@ -93,7 +130,9 @@ async def call(
             reserve_call, run_id, purpose, system, payload, max_tokens
         )
         try:
-            result = await provider.complete_json(
+            result = await complete_unless_cancelled(
+                provider,
+                run_id,
                 system=system,
                 payload=payload,
                 max_tokens=max_tokens,
@@ -109,6 +148,7 @@ async def call(
             await asyncio.sleep(delay)
             continue
         except BaseException:
+            # Cancelled, interrupted or failed after dispatch: it may be charged.
             await asyncio.to_thread(settle_call, reservation_id, None, uncertain=True)
             raise
         await asyncio.to_thread(

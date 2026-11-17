@@ -66,8 +66,8 @@ class RequestWorker:
         self.stopping = True
         if self.task is not None:
             self.task.cancel()
-            # process_run handles cancellation by settling any dispatched call
-            # as uncertain and finishing the run. Await that cleanup before exit.
+            # process_run settles any dispatched call as uncertain, requeues or
+            # finishes the run, then re-raises. Await that cleanup before exit.
             await asyncio.gather(self.task, return_exceptions=True)
 
     async def _run(self) -> None:

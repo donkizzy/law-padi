@@ -183,7 +183,8 @@ async def finish_failure(
         evidence=prepared.all_evidence if prepared and outcome != "cancelled" else [],
         **notice_fields(
             notice,
-            prepared if outcome not in ("cancelled", "budget_exhausted") else None,
+            # Only the unavailable and unverified notices describe coverage.
+            prepared if notice in ("unavailable", "unverified") else None,
         ),
     )
     await asyncio.to_thread(
@@ -194,6 +195,26 @@ async def finish_failure(
         validation=validation,
         telemetry=state.telemetry,
     )
+
+
+async def release_interrupted(
+    run_id: uuid.UUID, worker_id: str, state: RunState
+) -> None:
+    """Hand back a run whose worker is stopping, for a deploy or restart.
+
+    A run that has not dispatched a paid call goes back to the queue. One
+    that may have been charged is finished as stalled; repeating it could
+    pay twice.
+    """
+    if not await asyncio.to_thread(runs.requeue_interrupted, run_id, worker_id):
+        await finish_failure(
+            run_id,
+            worker_id,
+            state,
+            outcome="provider_failure",
+            notice="stalled",
+            validation={"failure_stage": "interrupted"},
+        )
 
 
 async def process_run(
@@ -236,10 +257,14 @@ async def process_run(
                 "verifier_verdict_count": state.verifier_verdict_count,
             },
         )
-    except asyncio.CancelledError:
+    except runs.RunCancelled:
         await finish_failure(
             run_id, worker_id, state, outcome="cancelled", notice="cancelled"
         )
+    except asyncio.CancelledError:
+        # The worker is being stopped, not the reader's answer.
+        await release_interrupted(run_id, worker_id, state)
+        raise
     except (ProviderError, TimeoutError, PgVectorRetrievalError) as exc:
         _logger.warning(
             "chat_run_unavailable run_id=%s error_type=%s",

@@ -41,6 +41,14 @@ class RunNotFound(LookupError):
     """The run was deleted, with its conversation, after it was claimed."""
 
 
+class RunCancelled(Exception):
+    """The reader stopped the answer, or explanations were switched off.
+
+    Distinct from asyncio.CancelledError, which means the worker itself is
+    being stopped.
+    """
+
+
 def claim_run(worker_id: str, *, run_id: uuid.UUID | None = None) -> uuid.UUID | None:
     with Session(engine) as session:
         statement = (
@@ -76,6 +84,34 @@ def cancelled(run_id: uuid.UUID) -> bool:
             or run.cancellation_requested
             or settings.CHAT_GENERATION_KILL_SWITCH
         )
+
+
+def requeue_interrupted(run_id: uuid.UUID, worker_id: str) -> bool:
+    """Return a run to the queue when its worker stops before any paid call.
+
+    Returns False when the run must be finished instead: a call may already
+    have been charged, it has used its retry, or the reader asked to stop it.
+    The rule matches recover_expired, so a graceful stop and a crash agree.
+    """
+    with Session(engine) as session:
+        run = session.exec(
+            select(GenerationRun).where(GenerationRun.id == run_id).with_for_update()
+        ).first()
+        if run is None or run.status != "running" or run.lease_owner != worker_id:
+            return True
+        if (
+            run.provider_started_at is not None
+            or run.attempt_count >= 2
+            or run.cancellation_requested
+        ):
+            return False
+        run.status = "pending"
+        run.lease_owner = None
+        run.lease_until = None
+        run.updated_at = get_datetime_utc()
+        session.add(run)
+        session.commit()
+        return True
 
 
 def emit_sources(prepared: Prepared) -> None:

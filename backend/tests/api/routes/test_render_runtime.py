@@ -155,8 +155,8 @@ def test_shutdown_awaits_uncertain_call_cleanup_and_never_claims_another_run(
             return run_id
 
         async def process(run_id: UUID, _identity: str) -> None:
-            # Exercise the real charged-call cancellation path. Like process_run,
-            # this adapter consumes cancellation after its settlement completes.
+            # Exercise the real charged-call cancellation path. This adapter
+            # consumes the cancellation once settlement completes.
             try:
                 await budgeted.call(
                     Provider(),
