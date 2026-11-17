@@ -8,7 +8,11 @@ from sqlmodel import Session, select
 from app.core.config import settings
 from app.ingestion.common import get_datetime_utc
 from app.ingestion.registry import handler_for
-from app.ingestion.runtime.errors import IngestionLeaseLost, IngestionWorkerError
+from app.ingestion.runtime.errors import (
+    IngestionLeaseLost,
+    IngestionWorkerError,
+    retryable_error,
+)
 from app.ingestion.runtime.inputs import retain_pipeline_inputs
 from app.ingestion.runtime.leases import TaskLease, fence_stage_writes
 from app.ingestion.runtime.queue import (
@@ -295,7 +299,12 @@ def handle_stage_failure(
         "message": str(exc),
     }
     failed_or_retryable_task = fail_task(
-        session, task, error_details, lease=lease, commit=False
+        session,
+        task,
+        error_details,
+        lease=lease,
+        commit=False,
+        retryable=retryable_error(exc),
     )
     now = get_datetime_utc()
     step.error_details = error_details

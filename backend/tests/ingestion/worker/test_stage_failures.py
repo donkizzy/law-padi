@@ -72,3 +72,24 @@ def test_worker_records_database_failure_after_rolling_back_partial_stage(
     assert source.title == original_title
     assert run.status == IngestionRunStatus.FAILED
     assert run.error_details["error_type"] == "DataError"
+
+
+def test_deterministic_failure_does_not_spend_three_attempts(
+    db: Session, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    from app.ingestion.runtime.errors import IngestionWorkerError
+
+    _source, run = _stored_source_and_run(
+        db, tmp_path=tmp_path, pdf=_pdf_with_pages(["page"]), max_attempts=3
+    )
+
+    def handler(*_args: object) -> None:
+        raise IngestionWorkerError("Run does not have confirmed included pages")
+
+    monkeypatch.setattr(
+        "app.ingestion.runtime.runner.handler_for", lambda _stage: handler
+    )
+    result = run_once(db, worker_id="test", task_type="verifying_upload")
+    assert result is not None and result.task_status == IngestionTaskStatus.FAILED
+    db.refresh(run)
+    assert run.status == IngestionRunStatus.FAILED

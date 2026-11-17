@@ -221,3 +221,14 @@ run and index build identities are retained on the run alongside stage inputs;
 older runs recover inputs by merging their task history. Retry uses the same
 queue/outbox path and resets the failed step. Repeated stage execution creates
 fresh successor tasks instead of reusing already completed ones.
+
+### Provider outages and retry timing
+
+Transient task failures now wait about 30 seconds, then 60 seconds (with jitter),
+with a 30-minute cap on exponential delay. The task remains pending until
+`available_at`; polling does not consume another attempt early. Invalid inputs,
+missing configuration and other deterministic worker errors fail immediately.
+R2, embedding and managed OCR requests retry connection/timeouts, HTTP 429 and
+5xx up to five attempts, honoring `Retry-After` within a shared request deadline.
+The default deadline is two minutes; large R2 uploads retain their size-based
+write allowance plus 30 seconds. Azure polling also has an overall deadline.

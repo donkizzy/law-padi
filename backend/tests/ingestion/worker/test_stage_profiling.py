@@ -139,8 +139,6 @@ def test_worker_fails_malware_scan_before_profiling(
     assert [result.stage for result in results] == [
         IngestionStage.VERIFYING_UPLOAD,
         IngestionStage.MALWARE_SCAN,
-        IngestionStage.MALWARE_SCAN,
-        IngestionStage.MALWARE_SCAN,
     ]
     assert results[-1].task_status == IngestionTaskStatus.FAILED
     db.refresh(run)

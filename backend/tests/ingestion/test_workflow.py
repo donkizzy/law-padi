@@ -189,6 +189,11 @@ def test_task_lifecycle_supports_running_completion_and_retryable_failure(
     assert retryable.error_details == {"code": "temporary_error"}
     assert retryable.lock_version == 4
 
+    from app.ingestion.common import get_datetime_utc
+
+    retryable.available_at = get_datetime_utc()
+    db.add(retryable)
+    db.commit()
     leased_again = lease_next_task(
         db,
         worker_id="worker-2",
@@ -519,3 +524,19 @@ def test_outbox_drain_marks_pending_events_published(db: Session) -> None:
     stored = db.get(TransactionalOutbox, pending[0].id)
     assert stored
     assert stored.published_at is not None
+
+
+def test_retryable_failure_defers_next_claim_with_backoff(db: Session) -> None:
+    from app.ingestion.common import get_datetime_utc
+
+    run = _create_run(db)
+    task = enqueue_task(
+        db, run=run, step=None, task_type="profiling", idempotency_key=str(run.id)
+    )
+    lease = lease_next_task(db, worker_id="retry-test", task_type="profiling")
+    assert lease is not None
+    before = get_datetime_utc()
+    fail_task(db, lease, {"message": "provider temporarily unavailable"})
+    assert task.available_at > before
+    assert 24 <= (task.available_at - before).total_seconds() <= 37
+    assert lease_next_task(db, worker_id="retry-test", task_type="profiling") is None

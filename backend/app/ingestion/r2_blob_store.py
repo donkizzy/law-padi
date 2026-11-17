@@ -25,6 +25,7 @@ from app.ingestion.contracts import (
     MultipartUpload,
     MultipartUploadPartUrl,
 )
+from app.ingestion.runtime.retry import request_with_retries
 
 _ALGORITHM = "AWS4-HMAC-SHA256"
 _REGION = "auto"
@@ -102,6 +103,12 @@ class R2BlobStore:
     ) -> BlobObject:
         canonical_key = self.original_key(sha256=expected_sha256, extension=extension)
         merged_metadata = {**dict(metadata or {}), "sha256": expected_sha256}
+        position = stream.tell()
+
+        def content_factory() -> Iterator[bytes]:
+            stream.seek(position)
+            return iter(lambda: stream.read(1024 * 1024), b"")
+
         response = self._request(
             "PUT",
             canonical_key,
@@ -111,7 +118,7 @@ class R2BlobStore:
                 "if-none-match": "*",
                 **_metadata_headers(merged_metadata),
             },
-            content=iter(lambda: stream.read(1024 * 1024), b""),
+            content_factory=content_factory,
             payload_sha256=expected_sha256,
             expected_statuses={200, 412},
         )
@@ -167,16 +174,29 @@ class R2BlobStore:
             headers={},
             payload_hash=hashlib.sha256(b"").hexdigest(),
         )
-        with self._client.stream(
-            "GET", self._object_url(key), headers=headers
-        ) as response:
+        response = request_with_retries(
+            lambda remaining: self._client.send(
+                self._client.build_request(
+                    "GET",
+                    self._object_url(key),
+                    headers=headers,
+                    timeout=min(30, remaining),
+                ),
+                stream=True,
+            )
+        )
+        try:
             if response.status_code == 404:
                 raise FileNotFoundError(key)
             if response.status_code != 200:
                 raise BlobStoreError(
                     f"R2 GET failed for {key}: HTTP {response.status_code}"
+                ) from httpx.HTTPStatusError(
+                    "R2 request failed", request=response.request, response=response
                 )
             yield from response.iter_bytes(chunk_size=1024 * 1024)
+        finally:
+            response.close()
 
     def put_if_absent(
         self,
@@ -403,6 +423,7 @@ class R2BlobStore:
         headers: Mapping[str, str] | None = None,
         content: bytes | Iterator[bytes] = b"",
         payload_sha256: str | None = None,
+        content_factory: Callable[[], Iterator[bytes]] | None = None,
         expected_statuses: set[int] | None = None,
     ) -> httpx.Response:
         url = self._object_url(key, query=query)
@@ -417,12 +438,39 @@ class R2BlobStore:
             headers=headers or {},
             payload_hash=payload_sha256,
         )
-        response = self._client.request(
-            method,
-            url,
-            headers=signed_headers,
-            content=content,
-            timeout=self._timeout_for(content),
+
+        timeout = self._timeout_for(content)
+        write_timeout: float = timeout.as_dict()["write"] or 0.0
+        if content_factory:
+            size = int((headers or {}).get("content-length", "0"))
+            timeout = httpx.Timeout(
+                **{
+                    **timeout.as_dict(),
+                    "write": max(
+                        write_timeout,
+                        size / _MIN_UPLOAD_BYTES_PER_SECOND,
+                    ),
+                }
+            )
+
+        def send(remaining: float) -> httpx.Response:
+            return self._client.request(
+                method,
+                url,
+                headers=signed_headers,
+                content=content_factory() if content_factory else content,
+                timeout=httpx.Timeout(
+                    **{
+                        name: min(value, remaining) if value is not None else remaining
+                        for name, value in timeout.as_dict().items()
+                    }
+                ),
+            )
+
+        response = request_with_retries(
+            send,
+            max_attempts=5 if isinstance(content, bytes) or content_factory else 1,
+            deadline_seconds=max(120, (timeout.as_dict()["write"] or 0.0) + 30),
         )
         expected = expected_statuses or {200}
         if response.status_code == 404 and 404 not in expected:
@@ -430,6 +478,8 @@ class R2BlobStore:
         if response.status_code not in expected:
             raise BlobStoreError(
                 f"R2 {method} failed for {key}: HTTP {response.status_code}"
+            ) from httpx.HTTPStatusError(
+                "R2 request failed", request=response.request, response=response
             )
         return response
 

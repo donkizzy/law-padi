@@ -6,12 +6,15 @@ from typing import Any, Protocol, cast
 
 import httpx
 
+from app.ingestion.runtime.retry import request_with_retries, retryable_status
 from app.legal.enums import EmbeddingRunStatus
 from app.legal.models import EmbeddingRun
 
 
 class EmbeddingProviderError(RuntimeError):
-    pass
+    def __init__(self, message: str, *, retryable: bool = False) -> None:
+        super().__init__(message)
+        self.retryable = retryable
 
 
 class EmbeddingBenchmarkError(RuntimeError):
@@ -75,6 +78,7 @@ class OpenAIEmbeddingProvider:
         timeout_seconds: float = 30,
         transport: httpx.BaseTransport | None = None,
     ) -> None:
+        self.timeout_seconds = timeout_seconds
         self.api_key = api_key
         self.model_name = model_name
         self.model_revision = model_revision
@@ -87,18 +91,22 @@ class OpenAIEmbeddingProvider:
     def embed(self, texts: Sequence[str]) -> EmbeddingBatch:
         if not self.api_key:
             raise EmbeddingProviderUnavailable("OpenAI API key is not configured")
-        response = self.client.post(
-            "/embeddings",
-            headers={"Authorization": f"Bearer {self.api_key}"},
-            json={
-                "model": self.model_name,
-                "input": list(texts),
-                "dimensions": 1024,
-            },
+        response = request_with_retries(
+            lambda remaining: self.client.post(
+                "/embeddings",
+                timeout=min(self.timeout_seconds, remaining),
+                headers={"Authorization": f"Bearer {self.api_key}"},
+                json={
+                    "model": self.model_name,
+                    "input": list(texts),
+                    "dimensions": 1024,
+                },
+            )
         )
         if response.status_code >= 400:
             raise EmbeddingProviderError(
-                f"OpenAI embedding request failed: {response.status_code}"
+                f"OpenAI embedding request failed: {response.status_code}",
+                retryable=retryable_status(response.status_code),
             )
         payload = response.json()
         data = payload.get("data")
@@ -168,6 +176,7 @@ class HuggingFaceTeiEmbeddingProvider:
         sleep: Callable[[float], None] = time.sleep,
         transport: httpx.BaseTransport | None = None,
     ) -> None:
+        self.timeout_seconds = timeout_seconds
         self.endpoint_url = endpoint_url.rstrip("/") if endpoint_url else None
         self.api_token = api_token
         self.model_name = model_name
@@ -185,26 +194,20 @@ class HuggingFaceTeiEmbeddingProvider:
         if self.api_token:
             headers["Authorization"] = f"Bearer {self.api_token}"
 
-        last_status = 0
-        for attempt in range(1, self.max_attempts + 1):
-            response = self.client.post(
-                self.endpoint_url,
+        response = request_with_retries(
+            lambda remaining: self.client.post(
+                self.endpoint_url or "",
                 headers=headers,
                 json={"inputs": list(texts), "truncate": True},
-            )
-            last_status = response.status_code
-            if response.status_code not in RETRYABLE_TEI_STATUSES:
-                break
-            if attempt < self.max_attempts:
-                self.sleep(min(2 ** (attempt - 1), 8))
-        else:
-            raise EmbeddingProviderError(
-                f"Hugging Face TEI request failed after retries: {last_status}"
-            )
-
+                timeout=min(self.timeout_seconds, remaining),
+            ),
+            max_attempts=self.max_attempts,
+            sleep=self.sleep,
+        )
         if response.status_code >= 400:
             raise EmbeddingProviderError(
-                f"Hugging Face TEI request failed: {response.status_code}"
+                f"Hugging Face TEI request failed: {response.status_code}",
+                retryable=retryable_status(response.status_code),
             )
         vectors = _parse_tei_vectors(response.json())
         return EmbeddingBatch(
@@ -212,7 +215,7 @@ class HuggingFaceTeiEmbeddingProvider:
             model_name=self.model_name,
             model_revision=self.model_revision,
             vectors=vectors,
-            metrics={"attempts": attempt},
+            metrics={"attempts": response.extensions["ingestion_attempts"]},
         )
 
 

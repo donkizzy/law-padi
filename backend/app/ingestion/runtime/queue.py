@@ -9,6 +9,7 @@ from sqlmodel import Session, col, func, select
 from app.ingestion.common import enum_value, get_datetime_utc
 from app.ingestion.runtime.errors import IngestionLeaseLost
 from app.ingestion.runtime.leases import TaskLease, update_owned_task
+from app.ingestion.runtime.retry import retry_delay
 from app.legal.enums import (
     IngestionRunStatus,
     IngestionStage,
@@ -347,22 +348,28 @@ def fail_task(
     *,
     lease: TaskLease | None = None,
     commit: bool = True,
+    retryable: bool = True,
 ) -> IngestionTask:
     now = get_datetime_utc()
+    terminal = not retryable or task.attempt_count >= task.max_attempts
     update_owned_task(
         session,
         lease or TaskLease.from_task(task),
         {
             "error_details": error_details,
+            "available_at": (
+                task.available_at
+                if terminal
+                else now
+                + timedelta(seconds=retry_delay(task.attempt_count, base=30, cap=1800))
+            ),
             "lease_owner": None,
             "leased_until": None,
             "heartbeat_at": now,
             "updated_at": now,
             "lock_version": col(IngestionTask.lock_version) + 1,
             "status": (
-                IngestionTaskStatus.FAILED
-                if task.attempt_count >= task.max_attempts
-                else IngestionTaskStatus.PENDING
+                IngestionTaskStatus.FAILED if terminal else IngestionTaskStatus.PENDING
             ),
         },
     )

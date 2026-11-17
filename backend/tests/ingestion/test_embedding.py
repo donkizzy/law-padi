@@ -103,7 +103,7 @@ def test_huggingface_tei_provider_retries_cold_start_and_parses_vectors() -> Non
 
     batch = provider.embed(["privacy", "citizenship"])
 
-    assert sleeps == [1]
+    assert len(sleeps) == 1 and 0.8 <= sleeps[0] <= 1.2
     assert batch.provider == "huggingface_tei"
     assert batch.model_name == "BAAI/bge-m3"
     assert batch.model_revision == "pinned-revision"
@@ -130,7 +130,7 @@ def test_huggingface_tei_provider_retries_rate_limit() -> None:
 
     batch = provider.embed(["privacy"])
 
-    assert sleeps == [1]
+    assert len(sleeps) == 1 and 0.8 <= sleeps[0] <= 1.2
     assert batch.vectors == [[0.1, 0.2]]
     assert batch.metrics == {"attempts": 2}
 

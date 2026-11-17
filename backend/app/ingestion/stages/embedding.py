@@ -15,7 +15,12 @@ from app.ingestion.embedding import (
 )
 from app.ingestion.embedding_reuse import member_document_vectors, profile_fingerprint
 from app.ingestion.retrieval import build_retrieval_documents
-from app.ingestion.runtime.errors import IngestionWorkerError
+from app.ingestion.runtime.errors import (
+    IngestionPermanentError,
+    IngestionTransientError,
+    IngestionWorkerError,
+    retryable_error,
+)
 from app.ingestion.runtime.inputs import retain_pipeline_inputs
 from app.ingestion.runtime.types import StageOutcome
 from app.ingestion.stages.artifacts import ensure_artifact, payload_list
@@ -166,6 +171,7 @@ def handle_embedding(
     )
 
     embedding_runs: list[EmbeddingRun] = []
+    provider_errors: list[Exception] = []
     for profile in profiles:
         if profile.is_active and not profile.model_revision:
             raise IngestionWorkerError(
@@ -290,6 +296,7 @@ def handle_embedding(
                 "sparse_vector_count": 0,
             }
         except Exception as exc:
+            provider_errors.append(exc)
             embedding_run.status = EmbeddingRunStatus.FAILED
             embedding_run.completed_at = get_datetime_utc()
             embedding_run.error_details = {
@@ -305,9 +312,12 @@ def handle_embedding(
     if not selected_run:
         failures = [item.error_details for item in embedding_runs if item.error_details]
         if failures:
-            raise IngestionWorkerError(
-                f"Embedding provider failures: {json.dumps(failures)}"
+            error_type = (
+                IngestionTransientError
+                if any(retryable_error(exc) for exc in provider_errors)
+                else IngestionPermanentError
             )
+            raise error_type(f"Embedding provider failures: {json.dumps(failures)}")
         raise IngestionWorkerError(
             "No embedding run reached the Recall@10 publication threshold"
         )

@@ -11,6 +11,8 @@ from typing import Any, Protocol, cast
 
 import httpx
 
+from app.ingestion.runtime.retry import request_with_retries, retry_after
+
 LOCAL_OCR_PROVIDER_VERSION = "tesseract-local-v1"
 LOCAL_LAYOUT_OCR_PROVIDER_VERSION = "tesseract-local-lines-v2"
 GOOGLE_DOCUMENT_AI_PROVIDER_VERSION = "google-document-ai-rest-v1"
@@ -18,7 +20,7 @@ AZURE_DOCUMENT_INTELLIGENCE_PROVIDER_VERSION = "azure-document-intelligence-rest
 
 
 class OcrError(RuntimeError):
-    pass
+    retryable = False
 
 
 class ManagedOcrUnavailable(OcrError):
@@ -148,6 +150,7 @@ class GoogleDocumentAiOcrProvider:
         client: httpx.Client | None = None,
         timeout_seconds: float = 120,
     ) -> None:
+        self.timeout_seconds = timeout_seconds
         self.processor_name = processor_name
         self.access_token = access_token
         self.endpoint_url = endpoint_url
@@ -166,15 +169,18 @@ class GoogleDocumentAiOcrProvider:
             raise OcrError("Google Document AI OCR expects a rendered page image")
 
         started_at = perf_counter()
-        response = self.client.post(
-            self._process_url(),
-            headers={"Authorization": f"Bearer {self.access_token}"},
-            json={
-                "rawDocument": {
-                    "content": base64.b64encode(page.image).decode(),
-                    "mimeType": page.content_type,
-                }
-            },
+        response = request_with_retries(
+            lambda remaining: self.client.post(
+                self._process_url(),
+                timeout=min(self.timeout_seconds, remaining),
+                headers={"Authorization": f"Bearer {self.access_token}"},
+                json={
+                    "rawDocument": {
+                        "content": base64.b64encode(page.image).decode(),
+                        "mimeType": page.content_type,
+                    }
+                },
+            )
         )
         _raise_ocr_http_error(response, "Google Document AI OCR failed")
         document = _document_from_google_response(response.json())
@@ -220,6 +226,7 @@ class AzureDocumentIntelligenceOcrProvider:
         poll_interval_seconds: float = 1,
         timeout_seconds: float = 120,
     ) -> None:
+        self.timeout_seconds = timeout_seconds
         self.endpoint = endpoint
         self.api_key = api_key
         self.model_id = model_id
@@ -242,13 +249,16 @@ class AzureDocumentIntelligenceOcrProvider:
             )
 
         started_at = perf_counter()
-        response = self.client.post(
-            self._analyze_url(),
-            headers={
-                "Ocp-Apim-Subscription-Key": self.api_key,
-                "Content-Type": page.content_type,
-            },
-            content=page.image,
+        response = request_with_retries(
+            lambda remaining: self.client.post(
+                self._analyze_url(),
+                timeout=min(self.timeout_seconds, remaining),
+                headers={
+                    "Ocp-Apim-Subscription-Key": self.api_key or "",
+                    "Content-Type": page.content_type,
+                },
+                content=page.image,
+            )
         )
         _raise_ocr_http_error(response, "Azure Document Intelligence OCR failed")
         operation_url = response.headers.get("Operation-Location")
@@ -287,10 +297,18 @@ class AzureDocumentIntelligenceOcrProvider:
         )
 
     def _poll_operation(self, operation_url: str) -> dict[str, Any]:
+        deadline = perf_counter() + self.timeout_seconds
         while True:
-            response = self.client.get(
-                operation_url,
-                headers={"Ocp-Apim-Subscription-Key": self.api_key or ""},
+            remaining_poll = deadline - perf_counter()
+            if remaining_poll <= 0:
+                raise httpx.ReadTimeout("Azure OCR operation polling deadline exceeded")
+            response = request_with_retries(
+                lambda remaining: self.client.get(
+                    operation_url,
+                    timeout=min(self.timeout_seconds, remaining),
+                    headers={"Ocp-Apim-Subscription-Key": self.api_key or ""},
+                ),
+                deadline_seconds=remaining_poll,
             )
             _raise_ocr_http_error(
                 response, "Azure Document Intelligence operation polling failed"
@@ -303,10 +321,12 @@ class AzureDocumentIntelligenceOcrProvider:
                 raise OcrError(
                     f"Azure Document Intelligence operation ended as {status}"
                 )
-            if self.poll_interval_seconds:
+            delay = retry_after(response)
+            delay = self.poll_interval_seconds if delay is None else delay
+            if delay:
                 import time
 
-                time.sleep(self.poll_interval_seconds)
+                time.sleep(min(delay, max(0, deadline - perf_counter())))
 
 
 def managed_ocr_provider_from_settings() -> ManagedOcrProvider:
