@@ -1,0 +1,12 @@
+{
+  "name": "constitution-ng-railway",
+  "private": true,
+  "description": "Railway Infrastructure as Code for the API, workers and database. Not part of the Bun workspace.",
+  "type": "module",
+  "scripts": {
+    "typecheck": "tsc -p tsconfig.json"
+  },
+  "devDependencies": {
+    "railway": "3.17.0"
+  }
+}
