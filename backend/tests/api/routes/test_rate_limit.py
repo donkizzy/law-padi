@@ -1,4 +1,5 @@
 import pytest
+from fastapi import Request
 from fastapi.testclient import TestClient
 
 from app.core import rate_limit
@@ -32,3 +33,39 @@ def test_one_account_is_throttled_across_many_addresses(
                 ).status_code
             )
     assert statuses == [400, 400, 429]
+
+
+def _request(headers: dict[str, str]) -> Request:
+    return Request(
+        {
+            "type": "http",
+            "method": "GET",
+            "path": "/",
+            "headers": [(k.encode(), v.encode()) for k, v in headers.items()],
+            "client": ("10.0.0.9", 1234),
+        }
+    )
+
+
+def test_client_ip_prefers_the_workers_dedicated_header(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    monkeypatch.setattr(settings, "ORIGIN_PROXY_SECRET", "p" * 32)
+    # A hosting edge may replace X-Forwarded-For with the Worker's address.
+    request = _request(
+        {"x-origin-client-ip": "203.0.113.7", "x-forwarded-for": "198.51.100.200"}
+    )
+    assert rate_limit.client_ip(request) == "203.0.113.7"
+    fallback = _request({"x-forwarded-for": "203.0.113.8, 198.51.100.200"})
+    assert rate_limit.client_ip(fallback) == "203.0.113.8"
+    assert rate_limit.client_ip(_request({})) == "10.0.0.9"
+
+
+def test_client_ip_ignores_forwarding_headers_without_the_edge(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    monkeypatch.setattr(settings, "ORIGIN_PROXY_SECRET", None)
+    request = _request(
+        {"x-origin-client-ip": "203.0.113.7", "x-forwarded-for": "203.0.113.8"}
+    )
+    assert rate_limit.client_ip(request) == "10.0.0.9"

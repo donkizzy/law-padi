@@ -53,6 +53,16 @@ class CloudflarePreparationTests(unittest.TestCase):
             API,
         )
 
+    def test_railway_and_render_api_origins_are_accepted(self):
+        for origin in (
+            "https://api-production.up.railway.app",
+            "https://api.example.onrender.com",
+        ):
+            with self.subTest(origin=origin):
+                self.assertEqual(
+                    configure(api_origin=origin)["vars"]["API_ORIGIN"], origin
+                )
+
     def test_unsafe_api_origins_are_rejected(self):
         for origin in (
             "",
@@ -66,6 +76,16 @@ class CloudflarePreparationTests(unittest.TestCase):
             "https://api.example.com",
             "https://onrender.com.evil.example",
             "api.example.onrender.com",
+            "http://api.up.railway.app",
+            "https://user:secret@api.up.railway.app",
+            "https://api.up.railway.app:8443",
+            "https://api.up.railway.app/api",
+            "https://api.up.railway.app?x=1",
+            "https://api.up.railway.app#frag",
+            "https://up.railway.app",
+            "https://api.railway.app",
+            "https://api.railway.internal",
+            "https://up.railway.app.evil.example",
         ):
             with self.subTest(origin=origin), self.assertRaises(ValueError):
                 configure(api_origin=origin)

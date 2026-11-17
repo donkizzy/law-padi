@@ -4,7 +4,10 @@ The existing Worker uses the legacy name `constitition-ng`. Set
 `PUBLIC_SITE_URL` to its existing bare HTTPS origin and leave
 `CLOUDFLARE_WORKER_NAME` unset to retain it. The generated configuration defaults
 to the existing name; set `CLOUDFLARE_WORKER_NAME=constitution-ng` only during
-the migration below. `API_ORIGIN` names the Render service the Worker proxies to.
+the migration below. `API_ORIGIN` names the API service the Worker proxies to:
+the Railway `api` service's public domain, or the Render service until the
+cutover in [`docs/runbooks/railway-migration.md`](../../docs/runbooks/railway-migration.md)
+is complete.
 
 The main hostname and version URLs stay disabled while the AI launch evaluation
 and human review are pending. Cloudflare can still build and deploy the assets
@@ -26,7 +29,7 @@ The build script compiles the frontend with a same-origin API URL and the exact
 packaged source revision, then generates the ignored Wrangler configuration.
 Use the existing account's native build credential; do not copy database, AI or
 R2 credentials into this Worker. The only required Worker secret is
-`ORIGIN_PROXY_SECRET`, matching Render's private environment.
+`ORIGIN_PROXY_SECRET`, matching the API's `ORIGIN_PROXY_SECRET` variable.
 
 For a local build, install locked dependencies with `bun install --frozen-lockfile`,
 then run `bash deployment/cloudflare/build.sh`. An operator can supply the secret
@@ -39,18 +42,26 @@ No deployment hostname is tracked in this repository. `wrangler.json` is a
 template; `prepare.py` writes `PUBLIC_SITE_URL` and `API_ORIGIN` into the
 generated, ignored configuration and refuses any value that is not a bare HTTPS
 origin (no credentials, port, path, query or fragment). `API_ORIGIN` must also
-be a `.onrender.com` host, the same rule `worker.ts` applies when it proxies.
+be a `.up.railway.app` or `.onrender.com` host, the same rule `worker.ts`
+applies when it proxies. `.onrender.com` is accepted only until the Railway
+cutover is complete; removing it from `API_HOST_SUFFIXES` in both files is a
+step in the migration runbook.
+
+The Worker sends the client address to the API in `X-Origin-Client-IP` as well
+as `X-Forwarded-For`, and drops any copy of either that the browser sent.
+Railway's edge may rewrite `X-Forwarded-For` with the Worker's own address, so
+the API's per-address limits read the dedicated header first.
 
 | Variable | Required | Meaning |
 | --- | --- | --- |
 | `PUBLIC_SITE_URL` | yes | The canonical public origin. Passed to Vite as `VITE_PUBLIC_SITE_URL` and to the Worker. |
-| `API_ORIGIN` | yes | The Render API origin, for example `https://<service>.onrender.com`. `build.sh` stops if it is unset; `prepare.py` also accepts `--api-origin`. |
+| `API_ORIGIN` | yes | The API origin: the Railway `api` service's public domain, for example `https://<service>.up.railway.app` (or `https://<service>.onrender.com` before cutover). `build.sh` stops if it is unset; `prepare.py` also accepts `--api-origin`. |
 | `CLOUDFLARE_WORKER_NAME` | no | `constitition-ng` (the legacy name, the default) or `constitution-ng`. |
 | `CLOUDFLARE_PUBLIC_LAUNCH` | no | `false` (default) or `true`; see "Launch and verification". |
 | `BUN_VERSION` | yes | `1.3.12`. |
 
-Render's `FRONTEND_HOST` must equal `PUBLIC_SITE_URL`; see
-[`docs/runbooks/render.md`](../../docs/runbooks/render.md).
+The API's `FRONTEND_HOST` must equal `PUBLIC_SITE_URL`; see
+[`deployment/railway/README.md`](../railway/README.md).
 
 ## Public read cache
 

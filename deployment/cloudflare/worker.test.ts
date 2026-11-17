@@ -35,6 +35,7 @@ describe("same-origin API proxy", () => {
 						"x-origin-proxy-secret": "attacker-value",
 						"cf-connecting-ip": "203.0.113.1",
 						"x-forwarded-for": "attacker-ip",
+						"x-origin-client-ip": "attacker-ip",
 						"x-forwarded-host": "attacker.example",
 						forwarded: "for=attacker",
 					},
@@ -58,6 +59,7 @@ describe("same-origin API proxy", () => {
 			"secret-in-worker",
 		);
 		expect(incoming?.headers.get("x-forwarded-for")).toBe("203.0.113.1");
+		expect(incoming?.headers.get("x-origin-client-ip")).toBe("203.0.113.1");
 		expect(incoming?.headers.get("x-forwarded-host")).toBe(
 			"constitution.workers.dev",
 		);
@@ -166,6 +168,35 @@ describe("same-origin API proxy", () => {
 		);
 	});
 
+	test("proxies a Railway backend with the origin credential", async () => {
+		for (const origin of [
+			"https://constitution-ng-api.up.railway.app",
+			"https://constitution-ng-api.up.railway.app/",
+		]) {
+			let incoming: Request | undefined;
+			const response = await handleRequest(
+				new Request("https://constitution.workers.dev/api/v1/legal/search", {
+					method: "POST",
+					headers: { "cf-connecting-ip": "203.0.113.9" },
+					body: "{}",
+				}),
+				env({ API_ORIGIN: origin }),
+				async (request) => {
+					incoming = request;
+					return new Response("{}");
+				},
+			);
+			expect(response.status).toBe(200);
+			expect(incoming?.url).toBe(
+				"https://constitution-ng-api.up.railway.app/api/v1/legal/search",
+			);
+			expect(incoming?.headers.get("x-origin-proxy-secret")).toBe(
+				"secret-in-worker",
+			);
+			expect(incoming?.headers.get("x-origin-client-ip")).toBe("203.0.113.9");
+		}
+	});
+
 	test("rejects proxy destinations outside a fixed hosting origin", async () => {
 		for (const origin of [
 			"http://example.onrender.com",
@@ -177,6 +208,17 @@ describe("same-origin API proxy", () => {
 			"https://a.run.app",
 			"https://a.onrender.com.evil.example",
 			"https://fake-onrender.com",
+			"http://a.up.railway.app",
+			"https://a.up.railway.app/path",
+			"https://user:password@a.up.railway.app",
+			"https://a.up.railway.app?redirect=evil",
+			"https://a.up.railway.app#fragment",
+			"https://a.up.railway.app:8443/",
+			"https://a.up.railway.app.evil.example",
+			"https://fake-up.railway.app",
+			"https://up.railway.app",
+			"https://a.railway.app",
+			"https://a.railway.internal",
 		]) {
 			const response = await handleRequest(
 				new Request("https://constitution.workers.dev/api/v1/legal/search"),

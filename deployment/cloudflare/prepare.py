@@ -1,6 +1,6 @@
-"""Prepare Cloudflare's Render-backed config without exposing a pending launch.
+"""Prepare Cloudflare's Worker config without exposing a pending launch.
 
-This reads no credentials: the Render API origin and the public site URL are
+This reads no credentials: the API origin and the public site URL are
 supplied by the operator and validated here. Public routing stays disabled until
 an operator explicitly supplies --public after the matching AI evaluation and
 human review.
@@ -17,15 +17,19 @@ from pathlib import Path
 from urllib.parse import urlsplit
 
 ROOT = Path(__file__).resolve().parents[2]
-# Mirrors the hosts that worker.ts accepts for the API origin: a stricter
-# value here stops a build that the Worker would only reject at request time.
-API_HOST_SUFFIX = ".onrender.com"
+# Mirrors API_HOST_SUFFIXES in worker.ts: checking here stops a build that the
+# Worker would only reject at request time. Remove ".onrender.com" once the
+# Railway cutover is complete (docs/runbooks/railway-migration.md).
+API_HOST_SUFFIXES = (".up.railway.app", ".onrender.com")
 
 
-def bare_https_origin(value: str, what: str, *, host_suffix: str = "") -> str:
+def bare_https_origin(
+    value: str, what: str, *, host_suffixes: tuple[str, ...] = ()
+) -> str:
     """Return `value` as a bare HTTPS origin, or raise ValueError.
 
-    Rejects other schemes, credentials, ports, paths, queries and fragments.
+    Rejects other schemes, credentials, ports, paths, queries and fragments,
+    and, when `host_suffixes` is given, a host that ends in none of them.
     """
     parts = urlsplit(value)
     try:
@@ -36,7 +40,7 @@ def bare_https_origin(value: str, what: str, *, host_suffix: str = "") -> str:
     if (
         parts.scheme != "https"
         or not host
-        or not host.endswith(host_suffix)
+        or (host_suffixes and not host.endswith(host_suffixes))
         or parts.username is not None
         or parts.password is not None
         or port is not None
@@ -44,12 +48,14 @@ def bare_https_origin(value: str, what: str, *, host_suffix: str = "") -> str:
         or parts.query
         or parts.fragment
     ):
-        raise ValueError(f"{what} must be a bare HTTPS origin{_suffix_note(host_suffix)}")
+        raise ValueError(
+            f"{what} must be a bare HTTPS origin{_suffix_note(host_suffixes)}"
+        )
     return f"https://{parts.netloc}"
 
 
-def _suffix_note(host_suffix: str) -> str:
-    return f" on a {host_suffix} host" if host_suffix else ""
+def _suffix_note(host_suffixes: tuple[str, ...]) -> str:
+    return f" on a {' or '.join(host_suffixes)} host" if host_suffixes else ""
 
 
 def configuration(
@@ -59,7 +65,7 @@ def configuration(
     api_origin: str,
     worker_name: str = "constitution-ng",
 ) -> dict:
-    api = bare_https_origin(api_origin, "API origin", host_suffix=API_HOST_SUFFIX)
+    api = bare_https_origin(api_origin, "API origin", host_suffixes=API_HOST_SUFFIXES)
     site = bare_https_origin(site_url, "Public site URL")
     config = json.loads((ROOT / "deployment/cloudflare/wrangler.json").read_text())
     if worker_name not in {"constitution-ng", "constitition-ng"}:
@@ -82,9 +88,12 @@ def main() -> None:
     parser.add_argument(
         "--api-origin",
         default=os.environ.get("API_ORIGIN"),
-        help="Render API origin; defaults to the API_ORIGIN environment variable",
+        help="API origin; defaults to the API_ORIGIN environment variable",
     )
-    parser.add_argument("--worker-name", default=os.environ.get("CLOUDFLARE_WORKER_NAME", "constitition-ng"))
+    parser.add_argument(
+        "--worker-name",
+        default=os.environ.get("CLOUDFLARE_WORKER_NAME", "constitition-ng"),
+    )
     args = parser.parse_args()
     actual = subprocess.check_output(
         [sys.executable, str(ROOT / "scripts/build_revision.py")], text=True

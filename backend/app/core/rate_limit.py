@@ -20,6 +20,9 @@ from app.core.config import settings
 from app.core.errors import DomainError, ErrorCode
 from app.models import RateLimitCounter
 
+# Set by the Cloudflare Worker to the connecting address; see client_ip().
+CLIENT_IP_HEADER = "x-origin-client-ip"
+
 
 @dataclass(frozen=True)
 class Limit:
@@ -53,11 +56,17 @@ def client_ip(request: Request) -> str:
     """The caller's IP address.
 
     Behind the Cloudflare worker (``ORIGIN_PROXY_SECRET`` set), every request
-    has passed the worker, which replaces ``X-Forwarded-For`` with the
-    connecting IP, so its first entry is trustworthy. Otherwise the header is
-    client-controlled and ignored.
+    has passed the worker, which drops any client copy of
+    ``X-Origin-Client-IP`` and sets it to the connecting IP. A hosting edge
+    between the Worker and the API may rewrite ``X-Forwarded-For`` with the
+    Worker's own address, so the dedicated header is read first. The first
+    ``X-Forwarded-For`` entry, which the Worker also sets, is the fallback.
+    Without the secret both headers are client-controlled and ignored.
     """
     if settings.ORIGIN_PROXY_SECRET:
+        dedicated = request.headers.get(CLIENT_IP_HEADER, "").strip()
+        if dedicated:
+            return dedicated
         forwarded = request.headers.get("x-forwarded-for", "")
         first = forwarded.split(",")[0].strip()
         if first:

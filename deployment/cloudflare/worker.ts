@@ -48,13 +48,22 @@ const PRIVATE_READ_HEADERS = [
 	"range",
 ];
 const PROXY_HEADER = "x-origin-proxy-secret";
+// The hosting edge in front of the API may overwrite X-Forwarded-For with the
+// Worker's own address, so the client address also travels in a header that
+// only this Worker sets (see client_ip in backend/app/core/rate_limit.py).
+const CLIENT_IP_HEADER = "x-origin-client-ip";
 const FORWARDED_HEADERS = [
+	CLIENT_IP_HEADER,
 	"forwarded",
 	"x-forwarded-for",
 	"x-forwarded-host",
 	"x-forwarded-proto",
 	"x-real-ip",
 ];
+// API hosts the Worker may proxy to. prepare.py applies the same list at build
+// time. Remove ".onrender.com" once the Railway cutover is complete
+// (docs/runbooks/railway-migration.md).
+const API_HOST_SUFFIXES = [".up.railway.app", ".onrender.com"];
 const METHODS = new Set([
 	"GET",
 	"HEAD",
@@ -70,7 +79,9 @@ function backendOrigin(value: string): URL | null {
 		const origin = new URL(value);
 		if (
 			origin.protocol !== "https:" ||
-			!origin.hostname.endsWith(".onrender.com") ||
+			!API_HOST_SUFFIXES.some((suffix) =>
+				origin.hostname.endsWith(suffix),
+			) ||
 			origin.username ||
 			origin.password ||
 			origin.port ||
@@ -181,7 +192,10 @@ export async function handleRequest(
 	// The browser cannot choose the proxy credential or trusted client IP.
 	headers.set(PROXY_HEADER, env.ORIGIN_PROXY_SECRET);
 	const clientIP = request.headers.get("cf-connecting-ip");
-	if (clientIP) headers.set("x-forwarded-for", clientIP);
+	if (clientIP) {
+		headers.set(CLIENT_IP_HEADER, clientIP);
+		headers.set("x-forwarded-for", clientIP);
+	}
 	headers.set("x-forwarded-host", url.host);
 	headers.set("x-forwarded-proto", "https");
 	const upstream = new Request(target, {
