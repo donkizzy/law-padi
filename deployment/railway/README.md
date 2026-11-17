@@ -22,7 +22,8 @@ Infrastructure as Code, is a TypeScript file that the Railway CLI (5.42.1 or
 later) plans and applies; Railway does not read it during deploys.
 
 ```sh
-bun install --frozen-lockfile --cwd deployment/railway
+bun install --frozen-lockfile                         # the workspace, for TypeScript
+bun install --frozen-lockfile --cwd deployment/railway  # the pinned railway SDK
 bun run --cwd deployment/railway typecheck
 export RAILWAY_GITHUB_REPO=<owner>/<repository>   # not tracked in the repository
 railway link                                       # the project and the production environment
@@ -148,7 +149,7 @@ anything into a terminal history.
 | `DEEPSEEK_API_KEY` | shared | The current provider key. |
 | `HUGGINGFACE_API_TOKEN` | shared | The current token. |
 | `R2_ENDPOINT_URL`, `R2_BUCKET_NAME`, `R2_ACCESS_KEY_ID`, `R2_SECRET_ACCESS_KEY` | shared | The current source-document bucket and its scoped key. |
-| `SENTRY_DSN` | shared | Optional; reporting is off while it is empty. |
+| `SENTRY_DSN` | `api` and `chat-worker` | Optional; reporting is off while it is unset. Set on each service, not as a shared variable. |
 
 ### Per service
 

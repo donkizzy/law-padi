@@ -141,7 +141,10 @@ const core: Record<string, string | VariableValue> = {
 	DATABASE_STATEMENT_TIMEOUT_MS: "30000",
 	DATABASE_LOCK_TIMEOUT_MS: "5000",
 	LOG_FORMAT: "json",
-	SENTRY_DSN: shared("SENTRY_DSN"),
+	// Optional, so not a shared reference: a reference to a shared variable
+	// that was never created would reach the settings as unusable text. Set it
+	// by hand on a service to turn error reporting on there.
+	SENTRY_DSN: preserve(),
 	SENTRY_ENVIRONMENT: "production",
 };
 
