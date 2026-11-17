@@ -49,6 +49,8 @@ class GenerationRun(SQLModel, table=True):
     )
     attempt_count: int = Field(default=0)
     cancellation_requested: bool = Field(default=False)
+    # The API request that created the run, so worker logs can be joined to it.
+    request_id: str | None = Field(default=None, max_length=64)
     created_at: datetime = Field(
         default_factory=get_datetime_utc,
         sa_type=DateTime(timezone=True),  # type: ignore

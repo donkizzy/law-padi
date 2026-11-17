@@ -38,6 +38,7 @@ from app.chat.schemas import (
 from app.core import rate_limit
 from app.core.config import settings
 from app.core.db import engine
+from app.core.request_id import current_request_id
 from app.ingestion.pgvector_repository import PgVectorRetrievalError, active_target
 from app.languages.codes import DISPLAY_NAMES
 from app.legal.enums import MessageRole, VectorIndexStatus
@@ -758,6 +759,7 @@ def submit_message(
         idempotency_key=body.idempotency_key,
         selected_provision_version_id=body.selected_provision_version_id,
         answer_language=body.answer_language,
+        request_id=current_request_id(),
         created_at=now,
     )
     session.add(run)

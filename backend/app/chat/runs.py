@@ -1,7 +1,6 @@
 """Public durable run lifecycle: claim, execute, finish, recovery and retention."""
 
 import asyncio
-import json
 import logging
 import uuid
 from datetime import timedelta
@@ -18,6 +17,8 @@ from app.chat.notices import notice_fields
 from app.chat.schemas import ExplanationAnswer
 from app.core.config import settings
 from app.core.db import engine
+from app.core.logs import log_context
+from app.core.sentry import tagged_scope
 from app.legal.enums import (
     AnswerStatus,
     EvidenceRole,
@@ -260,7 +261,7 @@ def finish(
             {"message_id": str(message.id), "answer": answer.model_dump(mode="json")},
         )
         session.commit()
-        _logger.info("chat_run_finished %s", json.dumps(operational, sort_keys=True))
+        _logger.info("chat_run_finished", extra={"metrics": operational})
 
 
 def recover_expired() -> None:
@@ -350,9 +351,26 @@ def generation_disabled(*, include_chat_enabled: bool = True) -> bool:
     )
 
 
+def request_id_for(run_id: uuid.UUID) -> str | None:
+    with Session(engine) as session:
+        return session.exec(
+            select(GenerationRun.request_id).where(GenerationRun.id == run_id)
+        ).first()
+
+
 async def execute(
     run_id: uuid.UUID, worker_id: str, *, disabled: bool | None = None
 ) -> None:
+    """Execute a claimed run, logging under the request that created it."""
+    request_id = await asyncio.to_thread(request_id_for, run_id)
+    with (
+        log_context(run_id=run_id, request_id=request_id),
+        tagged_scope(run_id=str(run_id), request_id=request_id),
+    ):
+        await _execute(run_id, worker_id, disabled=disabled)
+
+
+async def _execute(run_id: uuid.UUID, worker_id: str, *, disabled: bool | None) -> None:
     """Execute a claimed run, including the reader-visible disabled outcome."""
     if generation_disabled() if disabled is None else disabled:
         await asyncio.to_thread(
