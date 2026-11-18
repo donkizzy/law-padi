@@ -25,7 +25,6 @@ import { LanguageMenu } from "@/components/Common/LanguagePicker"
 import { Logo } from "@/components/Common/Logo"
 import { SquircleButton } from "@/components/Constitution/primitives"
 import { useInView } from "@/hooks/useInView"
-import { useLegalInstruments } from "@/hooks/useLegalCorpus"
 import { cn } from "@/lib/utils"
 
 // Heavy, springy motion used by every landing transition.
@@ -406,7 +405,6 @@ function QuestionLink({
 
 function Hero() {
   const { t } = useTranslation("landing")
-  const instruments = useLegalInstruments()
   return (
     <section
       aria-labelledby="hero-title"
@@ -430,15 +428,6 @@ function Hero() {
         </Reveal>
         <Reveal className="mt-8" delay={120}>
           <QuestionForm id="start" />
-          {instruments.data && (
-            <p className="mt-4 text-label font-normal text-muted-foreground">
-              {t("hero.available", {
-                laws: instruments.data.data
-                  .map((law) => law.short_title || law.title)
-                  .join(", "),
-              })}
-            </p>
-          )}
           <ul
             aria-label={t("hero.pointsLabel")}
             className="mt-5 flex flex-wrap gap-x-5 gap-y-2 text-label font-normal text-muted-foreground"

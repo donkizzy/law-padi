@@ -22,7 +22,6 @@
     "line1": "Ask about your rights.",
     "line2": "Get the exact section.",
     "body": "Type your question the way you would say it. We find relevant sections in the published sources, explain them in plain language and show you the original wording beside them.",
-    "available": "Available in this release: {{laws}}. Check each source edition before relying on it.",
     "pointsLabel": "Free to use",
     "points": [
       "Free to use",
