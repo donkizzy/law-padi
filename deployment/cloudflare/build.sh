@@ -11,7 +11,7 @@ export VITE_PUBLIC_SITE_URL="$PUBLIC_SITE_URL"
 export VITE_BUILD_REVISION="$revision"
 bun run --filter frontend build
 
-# Keep the initial build private. Enable this only after the current AI review.
+# Keep the build private (noindex) until CLOUDFLARE_PUBLIC_LAUNCH=true; see "Launch and verification" in the README.
 case "${CLOUDFLARE_PUBLIC_LAUNCH:-false}" in
   false) python3 deployment/cloudflare/prepare.py --revision "$revision" --site-url "$VITE_PUBLIC_SITE_URL" --api-origin "$API_ORIGIN" ;;
   true) python3 deployment/cloudflare/prepare.py --revision "$revision" --site-url "$VITE_PUBLIC_SITE_URL" --api-origin "$API_ORIGIN" --public ;;
