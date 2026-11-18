@@ -33,7 +33,7 @@
     "axios": "1.18.0",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
-    "i18next": "^26.5.3",
+    "i18next": "^27.1.1",
     "react": "^19.2.8",
     "react-dom": "^19.2.8",
     "react-error-boundary": "^6.1.2",
