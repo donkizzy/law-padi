@@ -158,6 +158,11 @@ const generation: Record<string, string | VariableValue> = {
 	CHAT_LANGUAGES_ENABLED: '["en","pcm","yo","ha","ig"]',
 	DEEPSEEK_MODEL: "deepseek-flash",
 	DEEPSEEK_API_KEY: shared("DEEPSEEK_API_KEY"),
+	// Reasoning counts toward the output limit. At the default 8,000 a draft
+	// whose reasoning runs long is cut off (finish_reason "length") and the
+	// answer fails without a retry; 16,000 keeps a draft near 85 s, inside the
+	// 120 s call and 270 s run timeouts.
+	DEEPSEEK_GENERATION_MAX_OUTPUT_TOKENS: "16000",
 	CHAT_PROVIDER_CAPACITY_APPROVED: "false",
 	CHAT_DISPATCH_MODE: "poll",
 	// One answer is generated at a time; up to five questions wait in order.
