@@ -79,7 +79,9 @@ async def run_worker(
 ) -> None:
     request_woken = wakeup is not None
     delay: float | None = None
-    last_retention = float("-inf") if request_woken else 0.0
+    # Run retention on the first pass. The loop clock is monotonic and can be
+    # below an hour on a freshly booted host, so 0.0 would skip it.
+    last_retention = float("-inf")
     active: set[asyncio.Task[None]] = set()
     try:
         while not stopping():
