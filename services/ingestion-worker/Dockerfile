@@ -1,14 +1,14 @@
 # syntax=docker/dockerfile:1
 # No RUN --mount=type=cache: Railway rejects cache mounts whose id is not
 # prefixed with the service's id.
-FROM python:3.14-slim-trixie@sha256:9aaa474097d094040649f2162a627c0049b408f52138d980916788d80f04802f AS dependencies
+FROM python:3.15-slim-trixie@sha256:65a65fc7b30b06cb6df4930fd4650697cb23f4c2698ab81fc87e4b031bc36928 AS dependencies
 COPY --from=ghcr.io/astral-sh/uv:0.9.26@sha256:9a23023be68b2ed09750ae636228e903a54a05ea56ed03a934d00fe9fbeded4b /uv /bin/uv
 WORKDIR /app
 RUN uv venv --no-project --python /usr/local/bin/python /app/.venv
 COPY services/ingestion-worker/requirements.txt /tmp/requirements.txt
 RUN uv pip install --no-cache --python /app/.venv/bin/python -r /tmp/requirements.txt
 
-FROM python:3.14-slim-trixie@sha256:9aaa474097d094040649f2162a627c0049b408f52138d980916788d80f04802f
+FROM python:3.15-slim-trixie@sha256:65a65fc7b30b06cb6df4930fd4650697cb23f4c2698ab81fc87e4b031bc36928
 ENV PYTHONUNBUFFERED=1 \
     PYTHONDONTWRITEBYTECODE=1 \
     PATH="/app/.venv/bin:$PATH" \
