@@ -140,7 +140,11 @@ jobs:
     - run: uv sync
       working-directory: backend
     - name: Configure disposable CI services
-      run: cp .env.example .env
+      # The browser tests load the app from the backend container, so that is
+      # the origin the API must trust.
+      run: |
+        cp .env.example .env
+        sed -i 's|^FRONTEND_HOST=.*|FRONTEND_HOST=http://backend:8000|' .env
     - run: bun ci
       working-directory: frontend
     - run: bash scripts/generate-client.sh

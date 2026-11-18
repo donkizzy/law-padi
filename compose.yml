@@ -39,6 +39,8 @@ services:
         restart: true
     environment:
       PROJECT_NAME: ${PROJECT_NAME:?Variable not set}
+      # The browser origin trusted for CORS and session changes.
+      FRONTEND_HOST: ${FRONTEND_HOST:-http://localhost:5173}
       SECRET_KEY: ${SECRET_KEY:?Variable not set}
       FIRST_SUPERUSER: ${FIRST_SUPERUSER:?Variable not set}
       FIRST_SUPERUSER_PASSWORD: ${FIRST_SUPERUSER_PASSWORD:?Variable not set}
