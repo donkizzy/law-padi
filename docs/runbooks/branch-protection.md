@@ -134,7 +134,6 @@ Rulesets, "Import a ruleset":
           { "context": "pre-commit-alls-green" },
           { "context": "test-backend" },
           { "context": "frontend-and-edge" },
-          { "context": "production-container" },
           { "context": "workflow-lint" },
           { "context": "railway-config" },
           { "context": "railway-image-backend" },
