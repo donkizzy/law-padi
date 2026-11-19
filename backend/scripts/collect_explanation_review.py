@@ -87,27 +87,8 @@ async def _configuration(
     capabilities = await _capabilities(client)
     if inline_worker:
         return _worker_configuration(capabilities)
-    response = await client.get("/api/v1/deployment/runtime")
-    if response.status_code != 404:
-        response.raise_for_status()
-        runtime = response.json()
-        if (
-            not isinstance(runtime, dict)
-            or runtime.get("build_revision") != capabilities["build_revision"]
-            or runtime.get("prompt_version") != capabilities["prompt_version"]
-            or runtime.get("retrieval_mode") not in ("lexical", "hybrid")
-            or runtime.get("worker_dispatch") != "request_woken"
-            or runtime.get("metadata_source") != "render_worker_settings"
-        ):
-            raise CaptureConfigurationChanged(
-                "Render worker metadata is incomplete or differs from the API"
-            )
-        return {
-            **capabilities,
-            "retrieval_mode": runtime["retrieval_mode"],
-            "retrieval_mode_source": runtime["metadata_source"],
-            "worker_dispatch": runtime["worker_dispatch"],
-        }
+    # A deployed API does not report its worker's retrieval settings, so the
+    # evaluator cannot confirm the policy for a remote capture.
     return {
         **capabilities,
         "retrieval_mode": "unknown",
