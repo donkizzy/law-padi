@@ -18,9 +18,8 @@ from urllib.parse import urlsplit
 
 ROOT = Path(__file__).resolve().parents[2]
 # Mirrors API_HOST_SUFFIXES in worker.ts: checking here stops a build that the
-# Worker would only reject at request time. Remove ".onrender.com" once the
-# Railway cutover is complete (docs/runbooks/railway-migration.md).
-API_HOST_SUFFIXES = (".up.railway.app", ".onrender.com")
+# Worker would only reject at request time.
+API_HOST_SUFFIXES = (".up.railway.app",)
 
 
 def bare_https_origin(

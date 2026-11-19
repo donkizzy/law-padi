@@ -45,7 +45,7 @@ export const env = {
 						})
 					: new Response("Missing", { status: 404 }),
 	},
-	API_ORIGIN: "https://constitution-ng-api.onrender.com",
+	API_ORIGIN: "https://constitution-ng-api.up.railway.app",
 	ORIGIN_PROXY_SECRET: "test-secret",
 	PUBLIC_SITE_URL: origin,
 };

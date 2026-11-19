@@ -5,9 +5,7 @@ The existing Worker uses the legacy name `constitition-ng`. Set
 `CLOUDFLARE_WORKER_NAME` unset to retain it. The generated configuration defaults
 to the existing name; set `CLOUDFLARE_WORKER_NAME=constitution-ng` only during
 the migration below. `API_ORIGIN` names the API service the Worker proxies to:
-the Railway `api` service's public domain, or the Render service until the
-cutover in [`docs/runbooks/railway-migration.md`](../../docs/runbooks/railway-migration.md)
-is complete.
+the Railway `api` service's public domain.
 
 The main hostname and version URLs stay disabled while the AI launch evaluation
 and human review are pending. Cloudflare can still build and deploy the assets
@@ -42,10 +40,8 @@ No deployment hostname is tracked in this repository. `wrangler.json` is a
 template; `prepare.py` writes `PUBLIC_SITE_URL` and `API_ORIGIN` into the
 generated, ignored configuration and refuses any value that is not a bare HTTPS
 origin (no credentials, port, path, query or fragment). `API_ORIGIN` must also
-be a `.up.railway.app` or `.onrender.com` host, the same rule `worker.ts`
-applies when it proxies. `.onrender.com` is accepted only until the Railway
-cutover is complete; removing it from `API_HOST_SUFFIXES` in both files is a
-step in the migration runbook.
+be a `.up.railway.app` host, the same rule `worker.ts` applies when it proxies
+(`API_HOST_SUFFIXES` in both files).
 
 The Worker sends the client address to the API in `X-Origin-Client-IP` as well
 as `X-Forwarded-For`, and drops any copy of either that the browser sent.
@@ -55,7 +51,7 @@ the API's per-address limits read the dedicated header first.
 | Variable | Required | Meaning |
 | --- | --- | --- |
 | `PUBLIC_SITE_URL` | yes | The canonical public origin. Passed to Vite as `VITE_PUBLIC_SITE_URL` and to the Worker. |
-| `API_ORIGIN` | yes | The API origin: the Railway `api` service's public domain, for example `https://<service>.up.railway.app` (or `https://<service>.onrender.com` before cutover). `build.sh` stops if it is unset; `prepare.py` also accepts `--api-origin`. |
+| `API_ORIGIN` | yes | The API origin: the Railway `api` service's public domain, for example `https://<service>.up.railway.app`. `build.sh` stops if it is unset; `prepare.py` also accepts `--api-origin`. |
 | `CLOUDFLARE_WORKER_NAME` | no | `constitition-ng` (the legacy name, the default) or `constitution-ng`. |
 | `CLOUDFLARE_PUBLIC_LAUNCH` | no | `false` (default) or `true`; see "Launch and verification". |
 | `BUN_VERSION` | yes | `1.3.12`. |
@@ -83,15 +79,15 @@ and deploy. A published change otherwise appears within the times above.
 
 ## Launch and verification
 
-After the matching 200-case evaluation and human review pass, verify Render's
-frontend origin matches this Worker address, enable its approved AI controls,
+After the matching 200-case evaluation and human review pass, verify the API's
+`FRONTEND_HOST` in Railway matches this Worker address, enable its approved AI controls,
 and test a bounded answer and budget accounting. Set
 `CLOUDFLARE_PUBLIC_LAUNCH=true` in Cloudflare's build environment and rebuild the
 approved commit. This enables the main workers.dev address while keeping version
 URLs disabled. Then verify SPA deep links, guest cookies, login, history, source
 PDFs and SSE replay through the public origin.
 
-To test the prepared Worker locally against Render without publishing a route,
+To test the prepared Worker locally against the Railway API without publishing a route,
 use `wrangler dev --local` with the generated config and the private proxy
 credential. Do not set paid generation flags or use a production chat session
 for load or destructive tests.
@@ -114,8 +110,9 @@ template. `seo-output.test.ts` pins the rendered output (`bun test
 deployment/cloudflare/`; update its snapshots only for an intended change).
 
 Before enabling this configuration, set `PUBLIC_SITE_URL` and `API_ORIGIN` on the
-existing Cloudflare build to their current values. In Render, retain the existing values
-for the now-unsynced `FRONTEND_HOST` and `R2_BUCKET_NAME` environment variables.
+existing Cloudflare build to their current values. `FRONTEND_HOST` and
+`R2_BUCKET_NAME` for the API are Railway shared variables, set in the Railway
+dashboard.
 
 ## Rename the Worker
 
@@ -129,9 +126,9 @@ Worker and its URL throughout setup.
    `ORIGIN_PROXY_SECRET` Worker secret securely to the new Worker.
 2. Deploy the new Worker and enable its workers.dev address or attach the chosen
    custom domain. Verify public pages, API proxy, login, cookies and SSE.
-3. In Render, set `FRONTEND_HOST` to the new origin and deploy; verify login and
-   CORS through the new origin. Ensure the Blueprint's unsynced values, including
-   `R2_BUCKET_NAME`, retain their existing values.
+3. In Railway, set the `FRONTEND_HOST` shared variable to the new origin and
+   redeploy the services that read it; verify login and CORS through the new
+   origin.
 4. Deploy the redirect to the legacy Worker, passing the verified new origin as
    a variable (`wrangler.redirect.json` carries none, and the redirect answers
    500 until one is set):
