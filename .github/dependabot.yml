@@ -78,7 +78,15 @@ updates:
     ignore:
       # The Playwright image must match the @playwright/test version in
       # frontend/package.json, so the two are bumped together by hand.
-      - dependency-name: "mcr.microsoft.com/playwright"
+      # Dependabot names images without their registry, so the name here is
+      # "playwright", not "mcr.microsoft.com/playwright".
+      - dependency-name: "playwright"
+      # The python tags carry only major.minor (3.14-slim-trixie), so a new
+      # Python release looks like a minor bump. Moving Python version waits
+      # until every binary wheel we depend on (psycopg-binary among them)
+      # ships for it; digest refreshes of the current tag still come through.
+      - dependency-name: "python"
+        update-types: ["version-update:semver-major", "version-update:semver-minor"]
     groups:
       docker-minor-and-patch:
         update-types: [minor, patch]
