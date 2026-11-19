@@ -26,7 +26,7 @@ dependencies = [
 
 [dependency-groups]
 dev = [
-    "fastapi[standard]>=0.141.1,<1.0.0",
+    "fastapi[standard]>=0.162.5,<1.0.0",
     "pytest<10.0.0,>=7.4.3",
     "mypy<3.0.0,>=1.8.0",
     "ty>=0.0.25",
