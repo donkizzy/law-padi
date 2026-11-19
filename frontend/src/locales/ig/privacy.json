@@ -1,7 +1,7 @@
 {
   "kicker": "Nzuzo",
   "title": "Otú anyị si elekọta data gị.",
-  "intro": "Ihe constitution.ng na-edobe, ihe kpatara ya, ogologo oge ọ na-adị, na ihe ị nwere ike ime gbasara ya. E melitere ya ikpeazụ na 16 October 2026.",
+  "intro": "Ihe constitution.ng na-edobe, ihe kpatara ya, ogologo oge ọ na-adị, na ihe ị nwere ike ime gbasara ya. E melitere ya ikpeazụ na 19 November 2026.",
   "noAccount": {
     "title": "Ị chọghị akaụntụ",
     "body": "Ị nwere ike ịjụ ajụjụ, lelee Iwu Obodo ma chekwaa nkebi n'edebanyeghị aha. Akaụntụ na-agbakwunye naanị otu ihe: mkparịta ụka gị na nkebi i chekwara ga-eso gị gaa na ngwaọrụ ọ bụla."
@@ -22,8 +22,7 @@
   "processors": {
     "title": "Ndị ọzọ na-elekọta ya",
     "cloudflare": "<strong>Cloudflare</strong> na-ebuga weebụsaịtị ahụ ma na-ebugara sava anyị arịrịọ gị.",
-    "render": "<strong>Render</strong> na-arụ sava anyị na United States.",
-    "neon": "<strong>Neon</strong> na-echekwa ọdụ data anyị.",
+    "railway": "<strong>Railway</strong> na-arụ sava anyị ma na-echekwa ọdụ data anyị na Netherlands.",
     "deepseek": "<strong>DeepSeek</strong> na-enweta ajụjụ gị na akụkụ Iwu Obodo metụtara ya mgbe nkọwa n'asụsụ dị mfe dị, ka o wee dee nkọwa ahụ. Ọ naghị enweta aha gị, email gị ma ọ bụ nkọwa akaụntụ gị.",
     "email": "<strong>Onye na-enye anyị ọrụ email</strong> na-eziga email ndebanye aha na paswọọdụ na adreesị gị.",
     "abroad": "Ụfọdụ n'ime ọrụ ndị a dị na mpụga Naịjirịa, ya mere enwere ike ịhazi data gị na mba ọzọ. Naanị ihe ọrụ ọ bụla chọrọ iji rụọ ọrụ ya ka anyị na-ekesa."

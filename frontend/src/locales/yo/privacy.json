@@ -1,7 +1,7 @@
 {
   "kicker": "Àṣírí",
   "title": "Bí a ṣe ń tọ́jú dátà rẹ.",
-  "intro": "Ohun tí constitution.ng ń tọ́jú, ìdí rẹ̀, fún ìgbà tó, àti ohun tí o lè ṣe nípa rẹ̀. A ṣe àtúnṣe kẹ́yìn ní 16 October 2026.",
+  "intro": "Ohun tí constitution.ng ń tọ́jú, ìdí rẹ̀, fún ìgbà tó, àti ohun tí o lè ṣe nípa rẹ̀. A ṣe àtúnṣe kẹ́yìn ní 19 November 2026.",
   "noAccount": {
     "title": "O kò nílò àkọọ́lẹ̀",
     "body": "O lè béèrè ìbéèrè, ṣàwárí Òfin-Ìpìlẹ̀ kí o sì fi àwọn abala pamọ́ láìforúkọ sílẹ̀. Ohun kan ṣoṣo ni àkọọ́lẹ̀ ń fi kún un: àwọn ìjíròrò rẹ àti àwọn abala tí o fipamọ́ yóò tẹ̀lé ọ lọ sí ẹ̀rọ èyíkéyìí."
@@ -22,8 +22,7 @@
   "processors": {
     "title": "Àwọn míì tó ń bójú tó o",
     "cloudflare": "<strong>Cloudflare</strong> ń gbé ojú-òpó wẹ́ẹ̀bù náà dé ọ̀dọ̀ rẹ, ó sì ń gbé àwọn ìbéèrè rẹ lọ sí àwọn sáfà wa.",
-    "render": "<strong>Render</strong> ń ṣiṣẹ́ àwọn sáfà wa ní United States.",
-    "neon": "<strong>Neon</strong> ń tọ́jú ibi ìpamọ́ dátà wa.",
+    "railway": "<strong>Railway</strong> ń ṣiṣẹ́ àwọn sáfà wa, ó sì ń tọ́jú ibi ìpamọ́ dátà wa ní Netherlands.",
     "deepseek": "<strong>DeepSeek</strong> ń gba ìbéèrè rẹ àti àwọn apá Òfin-Ìpìlẹ̀ tó jẹmọ́ ọ nígbà tí àlàyé ní èdè tó rọrùn bá wà, kí ó lè kọ àlàyé náà. Kò gba orúkọ rẹ, ímeèlì rẹ tàbí ìwífún àkọọ́lẹ̀ rẹ.",
     "email": "<strong>Olùpèsè ímeèlì wa</strong> ń fi àwọn ímeèlì ìforúkọsílẹ̀ àti ọ̀rọ̀ aṣínà ránṣẹ́ sí àdírẹ́sì rẹ.",
     "abroad": "Díẹ̀ lára àwọn iṣẹ́ wọ̀nyí wà lẹ́yìn odi Nàìjíríà, nítorí náà wọ́n lè ṣiṣẹ́ lórí dátà rẹ ní òkè òkun. Ohun tí iṣẹ́ kọ̀ọ̀kan nílò láti ṣe iṣẹ́ rẹ̀ nìkan la ń fún wọn."
