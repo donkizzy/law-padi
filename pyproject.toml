@@ -21,6 +21,12 @@ extend-exclude = [
     "backend/app/frontend/",
     "frontend/dist/",
     "frontend/public/assets/images/",
+    # Reader-language catalogues: Hausa, Igbo, Pidgin and Yoruba words are not
+    # English misspellings.
+    "frontend/src/locales/ha/",
+    "frontend/src/locales/ig/",
+    "frontend/src/locales/pcm/",
+    "frontend/src/locales/yo/",
 ]
 
 [tool.typos.default]
@@ -33,3 +39,9 @@ extend-ignore-re = [
 
 [tool.typos.default.extend-identifiers]
 alls = "alls"
+
+[tool.typos.default.extend-words]
+# The deployed Worker's legacy name, kept until it is renamed (PUB-16).
+constitition = "constitition"
+# The Python CA-bundle package.
+certifi = "certifi"
