@@ -44,6 +44,10 @@ jobs:
       # run the fix commands listed in CONTRIBUTING.md locally.
       - name: Run prek
         run: uv run prek run --from-ref "origin/${GITHUB_BASE_REF}" --to-ref HEAD --show-diff-on-failure
+        env:
+          # The client hook imports the app, whose settings need values; CI has
+          # no .env, so it reads the tracked placeholders (no real secrets).
+          APP_RUNTIME_ENV_FILE: ../.env.example
 
   # https://github.com/marketplace/actions/alls-green#why
   pre-commit-alls-green:  # This job does nothing and is only used for the branch protection
