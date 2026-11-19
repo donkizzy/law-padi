@@ -1,7 +1,7 @@
 {
   "kicker": "Privacy",
   "title": "How we dey handle your data.",
-  "intro": "Wetin constitution.ng dey keep, why, for how long, and wetin you fit do about am. Last update: 16 October 2026.",
+  "intro": "Wetin constitution.ng dey keep, why, for how long, and wetin you fit do about am. Last update: 19 November 2026.",
   "noAccount": {
     "title": "You no need account",
     "body": "You fit ask questions, look through di Constitution and save sections without sign up. Account only add one thing: your conversations and di sections wey you save go follow you go any device."
@@ -22,8 +22,7 @@
   "processors": {
     "title": "Who else dey handle am",
     "cloudflare": "<strong>Cloudflare</strong> dey deliver di website and pass your requests go our servers.",
-    "render": "<strong>Render</strong> dey run our servers for United States.",
-    "neon": "<strong>Neon</strong> dey store our database.",
+    "railway": "<strong>Railway</strong> dey run our servers and store our database for Netherlands.",
     "deepseek": "<strong>DeepSeek</strong> dey receive your question and di parts of di Constitution wey concern am when simple-language explanations dey on, so e fit write di explanation. E no dey receive your name, email or account details.",
     "email": "<strong>Our email provider</strong> dey send sign-up and password emails go your address.",
     "abroad": "Some of dis services dey outside Naija, so dem fit process your data abroad. Na only wetin each service need to do im work we dey share."

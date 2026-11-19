@@ -73,8 +73,7 @@ export function PrivacyNotice() {
         <Items
           keys={[
             "processors.cloudflare",
-            "processors.render",
-            "processors.neon",
+            "processors.railway",
             "processors.deepseek",
             "processors.email",
           ]}

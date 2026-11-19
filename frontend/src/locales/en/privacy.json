@@ -1,7 +1,7 @@
 {
   "kicker": "Privacy",
   "title": "How we handle your data.",
-  "intro": "What constitution.ng keeps, why, for how long, and what you can do about it. Last updated 16 October 2026.",
+  "intro": "What constitution.ng keeps, why, for how long, and what you can do about it. Last updated 19 November 2026.",
   "noAccount": {
     "title": "You don't need an account",
     "body": "You can ask questions, browse the Constitution and save sections without signing up. An account only adds one thing: your conversations and saved sections follow you to any device."
@@ -22,8 +22,7 @@
   "processors": {
     "title": "Who else handles it",
     "cloudflare": "<strong>Cloudflare</strong> delivers the website and passes your requests to our servers.",
-    "render": "<strong>Render</strong> runs our servers in the United States.",
-    "neon": "<strong>Neon</strong> stores our database.",
+    "railway": "<strong>Railway</strong> runs our servers and stores our database in the Netherlands.",
     "deepseek": "<strong>DeepSeek</strong> receives your question and the relevant parts of the Constitution when plain-language explanations are switched on, so it can write the explanation. It doesn't receive your name, email or account details.",
     "email": "<strong>Our email provider</strong> sends sign-up and password emails to your address.",
     "abroad": "Some of these services are outside Nigeria, so your data may be processed abroad. We only share what each service needs to do its job."

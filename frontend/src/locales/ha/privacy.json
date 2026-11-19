@@ -1,7 +1,7 @@
 {
   "kicker": "Sirri",
   "title": "Yadda muke kula da bayananka.",
-  "intro": "Abin da constitution.ng ke adanawa, dalili, tsawon lokaci, da abin da za ka iya yi game da shi. An sabunta na ƙarshe a 16 October 2026.",
+  "intro": "Abin da constitution.ng ke adanawa, dalili, tsawon lokaci, da abin da za ka iya yi game da shi. An sabunta na ƙarshe a 19 November 2026.",
   "noAccount": {
     "title": "Ba ka buƙatar asusu",
     "body": "Za ka iya yin tambayoyi, duba Kundin Tsarin Mulki ka kuma ajiye sassa ba tare da yin rajista ba. Asusu yana ƙara abu ɗaya kawai: tattaunawarka da sassan da ka ajiye za su bi ka zuwa kowace na'ura."
@@ -22,8 +22,7 @@
   "processors": {
     "title": "Su wa kuma ke kula da su",
     "cloudflare": "<strong>Cloudflare</strong> yana isar da shafin yanar gizo kuma yana tura buƙatunka zuwa sabobinmu.",
-    "render": "<strong>Render</strong> yana gudanar da sabobinmu a United States.",
-    "neon": "<strong>Neon</strong> yana adana rumbun bayananmu.",
+    "railway": "<strong>Railway</strong> yana gudanar da sabobinmu kuma yana adana rumbun bayananmu a Netherlands.",
     "deepseek": "<strong>DeepSeek</strong> yana karɓar tambayarka da sassan Kundin Tsarin Mulki da suka shafi lamarin lokacin da bayani cikin harshe mai sauƙi yake kunne, don ya rubuta bayanin. Ba ya karɓar sunanka, imel ko bayanan asusunka.",
     "email": "<strong>Mai ba mu sabis na imel</strong> yana aika imel na rajista da na kalmar sirri zuwa adireshinka.",
     "abroad": "Wasu daga cikin waɗannan sabis ɗin suna wajen Najeriya, don haka ana iya sarrafa bayananka a ƙasar waje. Abin da kowane sabis ke buƙata don aikinsa kawai muke rabawa."
