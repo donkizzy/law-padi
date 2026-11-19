@@ -99,4 +99,3 @@ export function get(path: string, fetcher = backend, method = "GET") {
 		fetcher,
 	);
 }
-
