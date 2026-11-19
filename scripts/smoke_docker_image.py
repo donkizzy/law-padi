@@ -1,7 +1,7 @@
 """Run inside a built image; no credentials, providers or live database required.
 
 Example:
-    docker run --rm -i --entrypoint python IMAGE - render < scripts/smoke_docker_image.py
+    docker run --rm -i --entrypoint python IMAGE - compose < scripts/smoke_docker_image.py
 """
 
 import argparse
@@ -17,7 +17,7 @@ from urllib.parse import urlsplit
 
 parser = argparse.ArgumentParser(description=__doc__)
 parser.add_argument(
-    "runtime", choices=("render", "compose", "ingestion", "development")
+    "runtime", choices=("compose", "ingestion", "development")
 )
 runtime = parser.parse_args().runtime
 database = "postgresql+psycopg://smoke:smoke@127.0.0.1:1/docker_smoke_test"
@@ -31,7 +31,7 @@ os.environ.update(
     DATABASE_URL=database,
     ORIGIN_PROXY_SECRET="docker-smoke-origin-secret-with-at-least-32-characters",
     APP_RUNTIME_ENV_FILE="/nonexistent/docker-smoke.env",
-    SERVE_FRONTEND="true" if runtime in {"compose", "development"} else "false",
+    SERVE_FRONTEND="true" if runtime != "ingestion" else "false",
 )
 app_dir = Path("/app/backend/app")
 
@@ -68,7 +68,7 @@ else:
     from app.main import app
     from app.utils import generate_verify_email_email
 
-    # Deliberately omit the lifespan: Render's worker would query the database.
+    # Deliberately omit the lifespan, which would query the database.
     client = TestClient(
         app, headers={"X-Origin-Proxy-Secret": os.environ["ORIGIN_PROXY_SECRET"]}
     )
@@ -82,14 +82,10 @@ else:
         ).html_content
     )
     importlib.import_module("app.chat.worker")
-    if runtime in {"compose", "development"}:
-        response = client.get("/")
-        assert response.status_code == 200
-        assert '<div id="root">' in response.text
-        subprocess.run(["bash", "-n", "scripts/prestart.sh"], check=True)
-    else:
-        assert not (app_dir / "frontend").exists()
-        assert os.getuid() == 10001
+    response = client.get("/")
+    assert response.status_code == 200
+    assert '<div id="root">' in response.text
+    subprocess.run(["bash", "-n", "scripts/prestart.sh"], check=True)
     subprocess.run(["alembic", "heads"], check=True)
     # Console scripts and direct app/*.py commands must resolve shared modules
     # without relying on the working directory or an editable installation.
@@ -100,10 +96,7 @@ else:
     )
     subprocess.run(["uvicorn", "--version"], check=True)
 
-if runtime == "render":
-    importlib.import_module("app.deployment.render_app")
-    subprocess.run(["sh", "-n", "scripts/start-render.sh"], check=True)
-elif runtime == "development":
+if runtime == "development":
     subprocess.run(["fastapi", "dev", "--help"], check=True, stdout=subprocess.DEVNULL)
     assert shutil.which("uv")
 

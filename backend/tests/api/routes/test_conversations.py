@@ -31,9 +31,9 @@ from app.models import User
 ROOT = Path(__file__).resolve().parents[4]
 
 
-def _render_setting(name: str) -> int:
+def _railway_setting(name: str) -> int:
     match = re.search(
-        rf'- key: {name}\n\s+value: "?(\d+)"?', (ROOT / "render.yaml").read_text()
+        rf'\b{name}: "(\d+)"', (ROOT / "deployment/railway/railway.ts").read_text()
     )
     assert match is not None, name
     return int(match.group(1))
@@ -554,8 +554,8 @@ def test_production_capacity_queues_a_reader_while_another_answer_is_generated(
 ) -> None:
     monkeypatch.setattr(settings, "CHAT_ENABLED", True)
     monkeypatch.setattr(settings, "CHAT_GENERATION_ENABLED", True)
-    concurrency = _render_setting("CHAT_WORKER_CONCURRENCY")
-    depth = _render_setting("CHAT_MAX_ACTIVE_GENERATIONS")
+    concurrency = _railway_setting("CHAT_WORKER_CONCURRENCY")
+    depth = _railway_setting("CHAT_MAX_ACTIVE_GENERATIONS")
     monkeypatch.setattr(settings, "CHAT_WORKER_CONCURRENCY", concurrency)
     monkeypatch.setattr(settings, "CHAT_MAX_ACTIVE_GENERATIONS", depth)
     # One answer is generated at a time; the rest of the admitted runs wait.

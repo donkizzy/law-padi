@@ -32,9 +32,6 @@
 !services/ingestion-worker/ingestion_worker/
 !services/ingestion-worker/ingestion_worker/**
 !deployment/
-!deployment/render/
-!deployment/render/Dockerfile
-!deployment/render/start.sh
 !deployment/railway/
 !deployment/railway/run.sh
 !deployment/cloudflare/

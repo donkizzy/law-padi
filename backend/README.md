@@ -11,7 +11,6 @@ Python 3.14, managed with [uv](https://docs.astral.sh/uv/).
 | `app/ingestion/` | Ingestion pipeline: storage, extraction, OCR, review workflow, embeddings, pgvector index, releases. |
 | `app/languages/` | Reader-language detection, normalisation and glossaries. |
 | `app/core/` | Settings, database engine, security, sessions, rate limits. |
-| `app/deployment/render_app.py` | Single-process runtime used on Render. |
 | `app/alembic/versions/` | Migrations. |
 | `scripts/` | Test runner, lint, prestart, evaluation and operator scripts. |
 | `tests/` | Pytest suite against a real PostgreSQL test database. |
