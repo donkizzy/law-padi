@@ -80,8 +80,7 @@ References: [OpenAI crawler controls](https://developers.openai.com/api/docs/bot
   `PUBLIC_SITE_URL` build variable; moving to the project's own domain needs DNS, TLS, redirects
   from the old origin (it is the canonical URL in the current sitemap) and a
   single `PUBLIC_SITE_URL` change.
-- The corrections link points at the GitHub repository's issues
-  (`CORRECTIONS_URL` in `frontend/src/lib/seo.ts`), and the public pages say
-  repository access is required. Update that wording when the repository is
-  public.
+- The corrections link opens an email to `CONTACT_EMAIL` (`CORRECTIONS_URL` in
+  `frontend/src/lib/seo.ts`), so readers need no GitHub access to report a
+  mistake.
 - Field performance (LCP, INP, CLS) has not been measured.

@@ -16,7 +16,7 @@
       },
       {
         "heading": "Updates and corrections",
-        "text": "A release identifies the edition being read; a new website build does not mean the law has changed. Corrections are tracked in the GitHub repository. Repository access is currently required; the link may be unavailable to signed-out visitors. When reporting an issue, include the provision link, release and printed page if available. Do not include private case details, contact information or confidential documents in a public issue."
+        "text": "A release identifies the edition being read; a new website build does not mean the law has changed. To report a mistake, email us at {{email}}. You don't need an account. Include the provision link, release and printed page if you have them. Don't send private case details or confidential documents."
       }
     ]
   },
@@ -42,7 +42,7 @@
     "source": "Read the source edition",
     "about": "About and corrections",
     "methodology": "Retrieval methodology",
-    "corrections": "Corrections on GitHub (repository access required)",
+    "corrections": "Report a correction",
     "benchmark": "Versioned retrieval test"
   }
 }

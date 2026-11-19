@@ -16,7 +16,7 @@
       },
       {
         "heading": "Mmelite na ndozi",
-        "text": "Mwepụta na-egosi mbipụta a na-agụ; mmepụta weebụsaịtị ọhụrụ apụtaghị na iwu agbanweela. A na-esochi ndozi na nchekwa GitHub. Ugbu a, ị chọrọ ohere ịbanye na nchekwa ahụ; njikọ ahụ nwere ike ọ gaghị emepe maka ndị na-abanyeghị. Mgbe ị na-akọ nsogbu, tinye njikọ ndokwa ahụ, mwepụta na ibe e bipụtara ma ọ bụrụ na i nwere ha. Etinyela nkọwa ikpe nzuzo, ozi kọntaktị ma ọ bụ akwụkwọ nzuzo na nsogbu ọha mmadụ ga-ahụ."
+        "text": "Mwepụta na-egosi mbipụta a na-agụ; mmepụta weebụsaịtị ọhụrụ apụtaghị na iwu agbanweela. Iji kọọ njehie, zitere anyị email na {{email}}. Ị chọghị akaụntụ. Tinye njikọ ndokwa ahụ, mwepụta na ibe e bipụtara ma ọ bụrụ na i nwere ha. Ezitela nkọwa ikpe nzuzo ma ọ bụ akwụkwọ nzuzo."
       }
     ]
   },
@@ -42,7 +42,7 @@
     "source": "Gụọ mbipụta isi mmalite",
     "about": "Gbasara anyị na ndozi",
     "methodology": "Otú anyị si anwale ịchọta",
-    "corrections": "Ndozi na GitHub (ị chọrọ ohere ịbanye na nchekwa)",
+    "corrections": "Kọọ ndozi",
     "benchmark": "Ule ịchọta nwere ụdị"
   }
 }

@@ -706,10 +706,11 @@ test("Amendments and publisher pages disclose their actual public scope", async 
     page.getByRole("heading", { name: "About constitution.ng", exact: true }),
   ).toBeVisible()
   await expect(
-    page.getByRole("link", {
-      name: "Corrections on GitHub (repository access required)",
-    }),
-  ).toHaveAttribute("href", "https://github.com/donkizzy/law-padi/issues")
+    page.getByRole("link", { name: "Report a correction", exact: true }),
+  ).toHaveAttribute("href", "mailto:hello@amosgodwin.com?subject=Correction")
+  await expect(
+    page.getByText("To report a mistake, email us at hello@amosgodwin.com."),
+  ).toBeVisible()
   await page.screenshot({
     path: "../output/playwright/seo-about.png",
     fullPage: true,
