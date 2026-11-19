@@ -3,14 +3,14 @@
 React and TypeScript client for constitution.ng, built with Vite, TanStack
 Router and Query, Tailwind CSS and typed i18next catalogues.
 
-| Path | What it holds |
-| --- | --- |
-| `src/routes/` | File-based routes; `src/routeTree.gen.ts` is generated. |
-| `src/components/` | UI components; `Constitution/` holds the reader, chat and legal-admin screens. |
-| `src/lib/` | Session handling, SEO metadata, public content and shared helpers. |
-| `src/locales/` | Interface catalogues per reader language. |
-| `src/client/` | API client generated from the backend's OpenAPI schema. |
-| `tests/` | Playwright specs; `tests/fixtures/` and `tests/admin/` hold API mocks typed against the generated client. |
+| Path              | What it holds                                                                                             |
+| ----------------- | --------------------------------------------------------------------------------------------------------- |
+| `src/routes/`     | File-based routes; `src/routeTree.gen.ts` is generated.                                                   |
+| `src/components/` | UI components; `Constitution/` holds the reader, chat and legal-admin screens.                            |
+| `src/lib/`        | Session handling, SEO metadata, public content and shared helpers.                                        |
+| `src/locales/`    | Interface catalogues per reader language.                                                                 |
+| `src/client/`     | API client generated from the backend's OpenAPI schema.                                                   |
+| `tests/`          | Playwright specs; `tests/fixtures/` and `tests/admin/` hold API mocks typed against the generated client. |
 
 Run these from the repository root:
 

@@ -3,13 +3,13 @@
 User-facing interface text for constitution.ng, one folder per language and one
 JSON file per namespace.
 
-| Folder | Language          | Status                                        |
-| ------ | ----------------- | --------------------------------------------- |
-| `en`   | English           | Source text. Default and fallback.            |
-| `pcm`  | Nigerian Pidgin   | **Draft.** Not reviewed by a native speaker.  |
-| `yo`   | Yorùbá            | **Draft.** Not reviewed by a native speaker.  |
-| `ha`   | Hausa             | **Draft.** Not reviewed by a native speaker.  |
-| `ig`   | Igbo              | **Draft.** Not reviewed by a native speaker.  |
+| Folder | Language        | Status                                       |
+| ------ | --------------- | -------------------------------------------- |
+| `en`   | English         | Source text. Default and fallback.           |
+| `pcm`  | Nigerian Pidgin | **Draft.** Not reviewed by a native speaker. |
+| `yo`   | Yorùbá          | **Draft.** Not reviewed by a native speaker. |
+| `ha`   | Hausa           | **Draft.** Not reviewed by a native speaker. |
+| `ig`   | Igbo            | **Draft.** Not reviewed by a native speaker. |
 
 The `pcm`, `yo`, `ha` and `ig` catalogues were drafted without native reviewers.
 Treat every string as a draft until a fluent reviewer has signed it off, and
@@ -30,17 +30,17 @@ record the review here (reviewer, date, namespaces covered) when it happens.
 
 ## Namespaces
 
-| File           | Covers                                                        |
-| -------------- | ------------------------------------------------------------- |
-| `common.json`  | Header, sidebar, shared buttons, errors, form validation       |
-| `landing.json` | `/welcome` landing page and its FAQ                            |
-| `chat.json`    | Ask and Find: chat home, composer, answers, search results     |
-| `legal.json`   | Browse, provision pages, source panels, saved sections         |
-| `edition.json` | Edition names and caveats from `lib/legal-provisions.ts`       |
-| `settings.json`| Settings page and account forms                                |
-| `auth.json`    | Log in, sign up, password recovery and email confirmation      |
-| `privacy.json` | Privacy notice                                                 |
-| `pages.json`   | About and methodology pages                                    |
+| File            | Covers                                                     |
+| --------------- | ---------------------------------------------------------- |
+| `common.json`   | Header, sidebar, shared buttons, errors, form validation   |
+| `landing.json`  | `/welcome` landing page and its FAQ                        |
+| `chat.json`     | Ask and Find: chat home, composer, answers, search results |
+| `legal.json`    | Browse, provision pages, source panels, saved sections     |
+| `edition.json`  | Edition names and caveats from `lib/legal-provisions.ts`   |
+| `settings.json` | Settings page and account forms                            |
+| `auth.json`     | Log in, sign up, password recovery and email confirmation  |
+| `privacy.json`  | Privacy notice                                             |
+| `pages.json`    | About and methodology pages                                |
 
 ## Rules for translators
 
