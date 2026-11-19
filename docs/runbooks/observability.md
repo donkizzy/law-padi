@@ -77,15 +77,12 @@ Error reporting is off unless `SENTRY_DSN` is set, and is always off with
 | Path | Checks | Use |
 | --- | --- | --- |
 | `/livez` | Nothing beyond the process answering; on Render also that the in-process chat worker is running. No I/O. | Restart decisions. |
-| `/healthz` | Same as `/livez`. | Render's `healthCheckPath`. |
+| `/healthz` | Same as `/livez`. | Probes that expect the conventional name. |
 | `/readyz` | The database answers within 3 seconds, and its Alembic revision is this build's head (cached once seen). | Routing decisions: Railway's deploy health check for `api`, and the Compose `backend` health check, which Traefik follows. |
 | `/api/v1/utils/health-check/` | Unchanged: database and the `vector` extension. | Existing scripts and CI. |
 
-`/healthz` deliberately does not touch the database. Render restarts a service
-or holds back a deploy when its health check fails; a restart cannot fix a
-database outage or a pending migration, and a database probe on every check
-would keep a suspended Neon database awake. On Render, `/readyz` sits behind
-the origin credential like the rest of the API.
+`/livez` and `/healthz` deliberately do not touch the database: a restart
+cannot fix a database outage or a pending migration.
 
 Railway calls its health check only while a deploy starts, to decide when
 traffic moves to the new version, and never restarts because of it. That is a

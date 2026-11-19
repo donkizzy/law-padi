@@ -40,11 +40,6 @@ Rollback: redeploy the previous deployment of each affected service in Railway
 (Deployments, Redeploy) and the previous version in Cloudflare. Migrations can
 usually stay in place.
 
-Until the cutover in [`railway-migration.md`](railway-migration.md), the API
-still runs on Render: `render.yaml` deploys `master` after checks pass,
-migrations are run from an operator machine before pushing, and
-[`render.md`](render.md) applies.
-
 ## Corpus releases
 
 `deployment/publish_release.py` has two commands. Each runs in one transaction

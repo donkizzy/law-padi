@@ -7,6 +7,11 @@ source PDFs and backups. The services, variables and settings are described in
 [`deployment/railway/README.md`](../../deployment/railway/README.md); read it
 first.
 
+**Status.** The move is complete and production runs on Railway. The Render
+files were removed on 19 November 2026 (step 13, item 3), so steps that act on
+Render are a record of the cutover and can no longer be repeated from this
+repository.
+
 Each step has a check and a rollback. Do not start a step until the previous
 check passes. Commands that need a credential read it from the environment of
 the shell running them, so it never appears in a command line, a file in the
@@ -377,6 +382,12 @@ After the window:
      remove the Neon fallbacks (`EXPECTED_NEON_HOST`,
      `NEON_BACKUP_DATABASE_URL`) from `deployment/backup/` and
      `deployment/publish_release.py`.
+
+   Done on 19 November 2026, except the Neon fallbacks: remove them once the
+   backup workflow's settings and the local release environment use only
+   `EXPECTED_DATABASE_HOST` and `BACKUP_DATABASE_URL`. The Edge CI workflow
+   now carries the `frontend-and-edge` job, and Railway CI already builds the
+   Railway images.
 4. Delete `~/constitution-migration`.
 
 ## Cost estimate

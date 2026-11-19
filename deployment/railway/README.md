@@ -4,7 +4,7 @@ The API, the chat worker, the ingestion worker and PostgreSQL run in one
 Railway project. The Cloudflare Worker stays the public site and `/api` proxy,
 and R2 stays the store for source PDFs and backups. Why is in
 [ADR 0007](../../docs/adr/0007-railway-api-and-database-hosting.md); the
-one-time move from Render and Neon is
+completed one-time move from Render and Neon is
 [`docs/runbooks/railway-migration.md`](../../docs/runbooks/railway-migration.md).
 
 | File | Purpose |
@@ -68,8 +68,6 @@ migration is pushed and deployed in an earlier commit than that code.
 starts, to decide when traffic moves to the new version; it never restarts a
 service because of it. That is a readiness decision, so the api uses `/readyz`
 (the database answers and its schema is at this build's head), not `/livez`.
-The reasons `/healthz` avoids the database on Render (a failing check restarts
-the service, and a probe would wake a suspended Neon database) do not apply.
 The check arrives with the Host `healthcheck.railway.app` and cannot send the
 origin credential, so `PLATFORM_HEALTHCHECK_HOST` lets that Host read the three
 probe paths, and nothing else, without it.
@@ -170,7 +168,10 @@ provider and query-embedding block, with the values that ran on Render.
 No service reads a secret file; `APP_RUNTIME_ENV_FILE` is unset, so settings
 come from the environment only.
 
-### What replaces each Render variable
+### What replaced each Render variable
+
+A record of the move. `render.yaml` and `deployment/render/` have been removed
+and remain in git history.
 
 | Render (`render.yaml`) | Railway |
 | --- | --- |
@@ -190,7 +191,7 @@ come from the environment only.
 | (none) | `PLATFORM_HEALTHCHECK_HOST`, `WORKER_*`, `CHAT_WORKER_HEARTBEAT_FILE`, `INGESTION_WORKER_*`, `LOG_FORMAT`. |
 
 `deployment/render/prepare_env.py` combined private bundles into an import
-file for Render. Railway needs no such file: each credential is entered once as
+file for Render. Railway needs no such file, so it was not carried over: each credential is entered once as
 a shared variable, and a helper that read the bundles would put every secret
 through one more file on disk.
 

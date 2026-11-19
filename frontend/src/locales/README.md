@@ -48,7 +48,7 @@ record the review here (reviewer, date, namespaces covered) when it happens.
   shown in English with `lang="en"`. Keep "English" where a string says the
   official text is English.
 - Keep references such as `Section 37`, `ACJA s.9`, Act titles, `constitution.ng`
-  and company names (DeepSeek, Cloudflare, Render, Neon) as they are. Search and
+  and company names (DeepSeek, Cloudflare, Railway) as they are. Search and
   citation parsing expect `Section` in English.
 - Keep every `{{placeholder}}` and `<tag>…</tag>` exactly; translate only the text
   around and inside them.

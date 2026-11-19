@@ -1,7 +1,8 @@
 # 0007. Host the API, workers and database on Railway
 
-Status: accepted on 17 November 2026; the move is prepared, not yet carried
-out ([runbook](../runbooks/railway-migration.md)). Supersedes
+Status: accepted on 17 November 2026; the move is complete
+([runbook](../runbooks/railway-migration.md)), and the Render files were
+removed on 19 November 2026. Supersedes
 [0005](0005-render-cloudflare-neon-hosting.md) for the API and the database.
 The Cloudflare Worker and R2 parts of 0005 stand.
 
@@ -82,5 +83,6 @@ Code, applied with the Railway CLI.
   check and cannot run a command check, so a watchdog in `run.sh` restarts a
   worker whose heartbeat goes stale.
 - **Retired after cutover.** `render.yaml`, `deployment/render/` and the
-  Render runtime (`backend/app/deployment/render_app.py`) remain until the
-  rollback window ends, then are removed as the runbook lists.
+  Render runtime (`backend/app/deployment/render_app.py`) were removed after
+  the rollback window, as the runbook lists. The Cloudflare Worker accepts only
+  a `.up.railway.app` API origin.

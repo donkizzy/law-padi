@@ -78,7 +78,7 @@ The full design, including the data model and the ingestion pipeline, is in
   stored.
 - [Render, Cloudflare Worker and Neon instead of Cloud Run](docs/adr/0005-render-cloudflare-neon-hosting.md):
   no hosting cost within free allowances; cold starts and one generation at a
-  time.
+  time. Its API and database hosting is superseded by 0007.
 - [API, workers and PostgreSQL on Railway](docs/adr/0007-railway-api-and-database-hosting.md):
   always-on workers and migrations on every deploy within a $20 monthly usage
   credit; a self-managed database without point-in-time recovery, in one
@@ -182,17 +182,16 @@ bun run test                                  # Playwright against the Compose s
 | `frontend/` | React and TypeScript client |
 | `services/ingestion-worker/` | Worker image with Poppler and Tesseract for PDF rendering and OCR |
 | `packages/react-email/` | Email template sources |
-| `deployment/` | Railway project, backups, Cloudflare Worker, release copy script; the Render files until cutover |
+| `deployment/` | Railway project, backups, Cloudflare Worker, release copy script |
 | `eval/datasets/` | Retrieval and answer evaluation datasets ([`eval/README.md`](eval/README.md)) |
 | `docs/` | Architecture, decision records, evaluation, runbooks, plans ([`docs/README.md`](docs/README.md)) |
 | `brand/` | Logo and icons with usage guidelines |
 | `scripts/` | Build revision, client generation, image smoke test |
-| `compose*.yml`, `render.yaml` | Local and self-hosted stack; the Render service being retired |
+| `compose*.yml` | Local and self-hosted stack |
 
 ## Deployment
 
-Production is moving from one Render free web service and Neon to a Railway
-project: the API, the chat worker, an on-demand ingestion worker and
+Production runs on one Railway project in EU West: the API, the chat worker, an on-demand ingestion worker and
 PostgreSQL 18 with pgvector on a volume. A Cloudflare Worker stays in front as
 the public site and API proxy, and private R2 stores source PDFs and backups.
 `deployment/railway/railway.ts` holds every Railway setting; each service
@@ -201,12 +200,10 @@ change, and the API migrates the database before each deploy goes live. Corpus
 releases are built and reviewed locally, then copied and activated with
 `deployment/publish_release.py`. Runbooks:
 [Railway services and variables](deployment/railway/README.md),
-[migration from Render and Neon](docs/runbooks/railway-migration.md),
+[migration from Render and Neon](docs/runbooks/railway-migration.md) (completed),
 [releases](docs/runbooks/release.md),
 [backups](docs/runbooks/backup-restore.md),
-[Cloudflare](deployment/cloudflare/README.md). Until the migration's rollback
-window ends, [`render.yaml`](render.yaml) and the
-[Render runbook](docs/runbooks/render.md) describe the service still serving.
+[Cloudflare](deployment/cloudflare/README.md).
 
 ## What was inherited and what was built
 

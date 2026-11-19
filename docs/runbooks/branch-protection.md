@@ -5,8 +5,7 @@ not stored in the repository, so nothing here takes effect until the owner
 applies it under Settings, Rules, Rulesets (or Settings, Branches).
 
 Railway deploys `master` once its workflows pass (Wait for CI, see
-[Railway deploys](#railway-deploys)), as Render does with
-`autoDeployTrigger: checksPass` until the cutover, so a change that reaches
+[Railway deploys](#railway-deploys)), so a change that reaches
 `master` is in production once its checks pass. The rules below keep
 unreviewed or unchecked changes out.
 
@@ -22,8 +21,7 @@ These workflows run on every pull request to `master`:
 | --- | --- | --- | --- |
 | `pre-commit` | `pre-commit-alls-green` | `pre-commit / pre-commit-alls-green` | Gate over the `pre-commit` job. |
 | `Test Backend` | `test-backend` | `Test Backend / test-backend` | Lint, types, Pytest with the 87% branch-coverage floor, deployment helper tests. |
-| `Render CI` | `frontend-and-edge` | `Render CI / frontend-and-edge` | Biome, frontend build, Cloudflare Worker tests. |
-| `Render CI` | `production-container` | `Render CI / production-container` | Builds and smoke-tests the Render image. |
+| `Edge CI` | `frontend-and-edge` | `Edge CI / frontend-and-edge` | Biome, frontend build, Cloudflare Worker tests. |
 | `Railway CI` | `workflow-lint` | `Railway CI / workflow-lint` | Runs actionlint on every workflow with shellcheck installed. |
 | `Railway CI` | `railway-config` | `Railway CI / railway-config` | Type-checks the Railway infrastructure with the locked SDK. |
 | `Railway CI` | `railway-image-backend` | `Railway CI / railway-image-backend` | Builds and smoke-tests the backend production image. |
@@ -45,13 +43,14 @@ Other jobs that appear on pull requests, and why they are not required:
 | `Conflict detector` | `main` | Runs on `pull_request_target` for `synchronize` events only and labels pull requests with merge conflicts. It reports no verdict on the code. |
 | `Guard Dependencies` | `check-author` | Runs only when a lockfile or `pyproject.toml` changes. It closes the pull request itself when a non-maintainer changes them. |
 
-`push` runs on `master` repeat `Test Backend`, `Render CI`, `Railway CI`,
+`push` runs on `master` repeat `Test Backend`, `Edge CI`, `Railway CI`,
 `Playwright Tests`, `Test Docker Compose`, `Zizmor` and `Conflict detector`; those results are not
 part of the rule.
 
-Remove the `production-container` requirement when the Render image job is deleted
-after Railway cutover and the rollback window ends. Deployment files, Compose
-files and Dockerfiles are included in the Playwright path filter.
+The Render image job, `production-container`, has been deleted; remove it from
+the required checks if the rule still lists it, or pull requests wait on it
+forever. Deployment files, Compose files and Dockerfiles are included in the
+Playwright path filter.
 
 Keep this table in step with `.github/workflows/`. If a job is renamed or a new
 workflow is added, update the required list in the same change, or the pull
@@ -72,7 +71,7 @@ the GitHub Actions workflows that run on that commit have finished:
   block; a cancelled run blocks only if no other run on the commit succeeded;
   runs that have not finished within two hours skip the deploy.
 - Only workflows with a `push` trigger on `master` run on the commit. Today
-  these are `Test Backend`, `Render CI`, `Railway CI`, `Playwright Tests`,
+  these are `Test Backend`, `Edge CI`, `Railway CI`, `Playwright Tests`,
   `Test Docker Compose`, `Zizmor` and `Conflict detector`. `pre-commit` runs on
   pull requests only, so it gates merging but not deploying.
 - `Conflict detector` labels other pull requests; a failure there (for

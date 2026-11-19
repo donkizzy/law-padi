@@ -2,7 +2,7 @@
 
 How Nigerian Pidgin (`pcm`), Yorùbá (`yo`), Hausa (`ha`) and Igbo (`ig`) are measured before each one is switched on. The design is "English core, translated edges": the question is translated to English, the existing English retrieval and answer checks run unchanged, and the verified English answer is translated back.
 
-**Status.** `render.yaml` enables all five reader languages in production, with
+**Status.** `deployment/railway/railway.ts` enables all five reader languages in production, with
 non-English answers labelled Beta. The enable gates below have not been shown
 to pass for any non-English language: no translation evaluation set exists yet,
 and the late-October retrieval run did not show parity for Yorùbá, Hausa or Igbo

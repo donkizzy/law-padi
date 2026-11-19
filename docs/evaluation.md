@@ -113,7 +113,7 @@ gate was not met, and no human judgments were recorded
 ([`evidence-chat-rollout.md`](evidence-chat-rollout.md)).
 
 The deployed prompt is `constitution-english-v11` (`backend/app/chat/__init__.py`)
-on `deepseek-flash` (`render.yaml`). It has not been through the 200-case run or
+on `deepseek-flash` (`deployment/railway/railway.ts`). It has not been through the 200-case run or
 human review.
 
 ## Known weaknesses of the method
