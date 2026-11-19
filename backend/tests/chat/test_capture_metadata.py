@@ -68,8 +68,6 @@ def _mock_capture(
     actual_mode: str = "lexical",
     change_after_generation: str | None = None,
     server_build: str = "source-test",
-    render_metadata: dict[str, Any] | None = None,
-    render_change_after_submission: str | None = None,
     expected_origin_secret: str | None = None,
     answer_outcome: str = "completed",
 ) -> list[str]:
@@ -91,13 +89,6 @@ def _mock_capture(
             if generated and change_after_generation:
                 capabilities[change_after_generation] = "changed"
             return httpx.Response(200, json=capabilities)
-        if request.url.path == "/api/v1/deployment/runtime":
-            if render_metadata is None:
-                return httpx.Response(404)
-            metadata = dict(render_metadata)
-            if generated and render_change_after_submission:
-                metadata[render_change_after_submission] = "changed"
-            return httpx.Response(200, json=metadata)
         if request.method == "POST" and request.url.path.endswith("/conversations"):
             return httpx.Response(
                 200, json={"id": "conversation", "release_version": "release-test"}
@@ -168,26 +159,12 @@ def test_inline_capture_records_verified_configuration_and_actual_run_mode(
     assert calls.count("GET /api/v1/conversations/capabilities") >= 3
 
 
-def _render_metadata() -> dict[str, Any]:
-    return {
-        "prompt_version": EXPLANATION_PROMPT_VERSION,
-        "build_revision": "source-test",
-        "retrieval_mode": "lexical",
-        "worker_dispatch": "request_woken",
-        "metadata_source": "render_worker_settings",
-    }
-
-
-def test_render_capture_uses_actual_worker_metadata_and_private_origin_header(
+def test_remote_capture_sends_private_origin_header_and_stays_unconfirmed(
     monkeypatch: pytest.MonkeyPatch, tmp_path: Path
 ) -> None:
     secret = "private-review-secret"
     monkeypatch.setenv("REVIEW_ORIGIN_PROXY_SECRET", secret)
-    calls = _mock_capture(
-        monkeypatch,
-        render_metadata=_render_metadata(),
-        expected_origin_secret=secret,
-    )
+    calls = _mock_capture(monkeypatch, expected_origin_secret=secret)
     output = tmp_path / "captures.jsonl"
     count, failures = asyncio.run(
         collector.collect(
@@ -199,14 +176,13 @@ def test_render_capture_uses_actual_worker_metadata_and_private_origin_header(
     )
     capture = json.loads(output.read_text())
     assert (count, failures) == (1, 0)
-    assert capture["retrieval_mode"] == "lexical"
-    assert capture["retrieval_mode_source"] == "render_worker_settings"
-    assert capture["worker_dispatch"] == "request_woken"
+    assert capture["retrieval_mode"] == "unknown"
+    assert capture["retrieval_mode_source"] == "unknown"
     assert capture["prompt_version"] == EXPLANATION_PROMPT_VERSION
     assert capture["build_revision"] == "source-test"
     assert capture["turns"][0]["retrieval_mode"] == "lexical"
     assert "simulated_generation" not in calls
-    assert calls.count("GET /api/v1/deployment/runtime") >= 4
+    assert "GET /api/v1/deployment/runtime" not in calls
 
 
 @pytest.mark.parametrize(
@@ -216,9 +192,7 @@ def test_render_capture_uses_actual_worker_metadata_and_private_origin_header(
 def test_unavailable_run_stops_before_follow_up_or_next_case(
     monkeypatch: pytest.MonkeyPatch, tmp_path: Path, outcome: str
 ) -> None:
-    calls = _mock_capture(
-        monkeypatch, render_metadata=_render_metadata(), answer_outcome=outcome
-    )
+    calls = _mock_capture(monkeypatch, answer_outcome=outcome)
     output = tmp_path / "captures.jsonl"
     dataset = {
         "release_version": "release-test",
@@ -237,38 +211,6 @@ def test_unavailable_run_stops_before_follow_up_or_next_case(
     assert calls.count("POST /api/v1/conversations/conversation/messages") == 1
 
 
-@pytest.mark.parametrize(
-    ("field", "value"),
-    [
-        ("prompt_version", "old-prompt"),
-        ("build_revision", "old-build"),
-        ("retrieval_mode", "exact"),
-        ("worker_dispatch", "poll"),
-        ("metadata_source", "operator_settings"),
-    ],
-)
-def test_render_mismatched_metadata_stops_before_submission(
-    monkeypatch: pytest.MonkeyPatch, field: str, value: str
-) -> None:
-    metadata = {**_render_metadata(), field: value}
-    calls = _mock_capture(monkeypatch, render_metadata=metadata)
-    with pytest.raises(collector.CaptureConfigurationChanged, match="Render worker"):
-        asyncio.run(collector._capture_case("http://localhost", _CASE, "release-test"))
-    assert not any(call.startswith("POST") for call in calls)
-
-
-@pytest.mark.parametrize("field", list(_render_metadata()))
-def test_render_missing_metadata_stops_before_submission(
-    monkeypatch: pytest.MonkeyPatch, field: str
-) -> None:
-    metadata = _render_metadata()
-    del metadata[field]
-    calls = _mock_capture(monkeypatch, render_metadata=metadata)
-    with pytest.raises(collector.CaptureConfigurationChanged, match="Render worker"):
-        asyncio.run(collector._capture_case("http://localhost", _CASE, "release-test"))
-    assert not any(call.startswith("POST") for call in calls)
-
-
 def test_other_runtime_without_worker_metadata_remains_unconfirmed(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
@@ -281,19 +223,6 @@ def test_other_runtime_without_worker_metadata_remains_unconfirmed(
     metadata = asyncio.run(configuration())
     assert metadata["retrieval_mode"] == "unknown"
     assert metadata["retrieval_mode_source"] == "unknown"
-
-
-@pytest.mark.parametrize("field", list(_render_metadata()))
-def test_render_mid_case_configuration_change_invalidates_capture(
-    monkeypatch: pytest.MonkeyPatch, field: str
-) -> None:
-    _mock_capture(
-        monkeypatch,
-        render_metadata=_render_metadata(),
-        render_change_after_submission=field,
-    )
-    with pytest.raises(collector.CaptureConfigurationChanged):
-        asyncio.run(collector._capture_case("http://localhost", _CASE, "release-test"))
 
 
 @pytest.mark.parametrize("changed_field", ["prompt_version", "build_revision"])
@@ -391,16 +320,20 @@ def test_evaluator_rejects_stale_or_unconfirmed_configuration(
     assert any(failure in item for item in failures)
 
 
-@pytest.mark.parametrize("worker_dispatch", ["request_woken", "poll", None])
-def test_evaluator_accepts_only_confirmed_render_worker_dispatch(
-    tmp_path: Path, worker_dispatch: str | None
+@pytest.mark.parametrize(
+    "source", ["inline_worker_settings", "render_worker_settings", "unknown"]
+)
+def test_evaluator_confirms_only_inline_worker_settings(
+    tmp_path: Path, source: str
 ) -> None:
     capture = {
         "id": "e001",
-        **_render_metadata(),
+        "prompt_version": EXPLANATION_PROMPT_VERSION,
+        "build_revision": "source-test",
+        "retrieval_mode": "lexical",
         "release_version": "release-test",
-        "retrieval_mode_source": "render_worker_settings",
-        "worker_dispatch": worker_dispatch,
+        "retrieval_mode_source": source,
+        "worker_dispatch": "request_woken",
         "turns": [
             {
                 "question": "privacy",
@@ -417,7 +350,7 @@ def test_evaluator_accepts_only_confirmed_render_worker_dispatch(
         expected_build_revision="source-test",
         expected_retrieval_mode="lexical",
     )
-    if worker_dispatch == "request_woken":
+    if source == "inline_worker_settings":
         assert failures == []
     else:
         assert any("query retrieval policy" in failure for failure in failures)

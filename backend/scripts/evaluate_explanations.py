@@ -95,10 +95,7 @@ def _check_captures(
         if capture.get("build_revision") != build_revision:
             failures.append(f"{case_id}: captured build differs from expected build")
         source = capture.get("retrieval_mode_source")
-        confirmed_policy = source == "inline_worker_settings" or (
-            source == "render_worker_settings"
-            and capture.get("worker_dispatch") == "request_woken"
-        )
+        confirmed_policy = source == "inline_worker_settings"
         if capture.get("retrieval_mode") != retrieval_mode or not confirmed_policy:
             failures.append(
                 f"{case_id}: captured query retrieval policy is not confirmed"
