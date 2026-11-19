@@ -16,9 +16,7 @@ from pathlib import Path
 from urllib.parse import urlsplit
 
 parser = argparse.ArgumentParser(description=__doc__)
-parser.add_argument(
-    "runtime", choices=("compose", "ingestion", "development")
-)
+parser.add_argument("runtime", choices=("compose", "ingestion", "development"))
 runtime = parser.parse_args().runtime
 database = "postgresql+psycopg://smoke:smoke@127.0.0.1:1/docker_smoke_test"
 if not urlsplit(database).path.endswith("_test"):
