@@ -3,12 +3,11 @@
 - `/livez` answers from memory: the process is up and serving requests.
 - `/readyz` also proves the database answers within a short timeout and that
   its schema is at this build's Alembic head.
-- `/healthz` is the same probe as `/livez`. Render's `healthCheckPath` uses it,
-  and a failing Render health check restarts the service or blocks a deploy.
-  A restart cannot fix a database outage or a pending migration, and probing
-  the database would wake a suspended Neon database on every check, so the
-  platform probe must not depend on the database. Readiness is for operators
-  and for routers that can hold traffic back, such as Traefik under Compose.
+- `/healthz` is the same probe as `/livez`, kept for probes that expect it.
+  A restart cannot fix a database outage or a pending migration, so liveness
+  must not depend on the database. Readiness is for operators, for Railway's
+  deploy health check and for routers that can hold traffic back, such as
+  Traefik under Compose.
 """
 
 import asyncio

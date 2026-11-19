@@ -52,8 +52,6 @@ def main() -> None:
             "deployment/cloudflare/html.ts",
             "deployment/cloudflare/wrangler.json",
             "deployment/cloudflare/tsconfig.json",
-            "deployment/render/Dockerfile",
-            "deployment/render/start.sh",
             ".dockerignore",
         )
     )

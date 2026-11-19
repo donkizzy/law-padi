@@ -72,8 +72,6 @@ const apiInputs = [
 	"deployment/cloudflare/html.ts",
 	"deployment/cloudflare/wrangler.json",
 	"deployment/cloudflare/tsconfig.json",
-	"deployment/render/Dockerfile",
-	"deployment/render/start.sh",
 	"scripts/build_revision.py",
 ];
 const ingestionInputs = [
@@ -149,8 +147,7 @@ const core: Record<string, string | VariableValue> = {
 };
 
 // Retrieval and generation settings read by both the api (admission, search
-// and query understanding) and the chat worker (answers). Values are those
-// that ran on Render (render.yaml), so the move changes no reader-facing limit.
+// and query understanding) and the chat worker (answers).
 const generation: Record<string, string | VariableValue> = {
 	CHAT_ENABLED: "true",
 	CHAT_GENERATION_ENABLED: "true",

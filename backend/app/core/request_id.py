@@ -38,8 +38,8 @@ def scope_request_id(scope: Scope) -> str | None:
 class RequestIdMiddleware:
     """Bind the request identifier for logs and Sentry, and echo it.
 
-    When an outer application has already bound one (the Render runtime wraps
-    the API), the inner middleware reuses it, so a request has one identifier.
+    When an outer application has already bound one, the inner middleware
+    reuses it, so a request has one identifier.
     """
 
     def __init__(self, app: ASGIApp) -> None:
