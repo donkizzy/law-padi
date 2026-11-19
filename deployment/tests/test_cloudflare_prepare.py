@@ -9,7 +9,7 @@ assert spec and spec.loader
 prepare = importlib.util.module_from_spec(spec)
 spec.loader.exec_module(prepare)
 
-API = "https://api.example.onrender.com"
+API = "https://api-production.up.railway.app"
 SITE = "https://constitution.ng"
 
 
@@ -53,29 +53,20 @@ class CloudflarePreparationTests(unittest.TestCase):
             API,
         )
 
-    def test_railway_and_render_api_origins_are_accepted(self):
+    def test_render_api_origins_are_rejected(self):
         for origin in (
-            "https://api-production.up.railway.app",
             "https://api.example.onrender.com",
+            "https://api.example.onrender.com/",
         ):
-            with self.subTest(origin=origin):
-                self.assertEqual(
-                    configure(api_origin=origin)["vars"]["API_ORIGIN"], origin
-                )
+            with self.subTest(origin=origin), self.assertRaises(ValueError):
+                configure(api_origin=origin)
 
     def test_unsafe_api_origins_are_rejected(self):
         for origin in (
             "",
-            "http://api.example.onrender.com",
-            "https://user:secret@api.example.onrender.com",
-            "https://:secret@api.example.onrender.com",
-            "https://api.example.onrender.com:8443",
-            "https://api.example.onrender.com/api",
-            "https://api.example.onrender.com?x=1",
-            "https://api.example.onrender.com#frag",
             "https://api.example.com",
-            "https://onrender.com.evil.example",
-            "api.example.onrender.com",
+            "api.up.railway.app",
+            "https://:secret@api.up.railway.app",
             "http://api.up.railway.app",
             "https://user:secret@api.up.railway.app",
             "https://api.up.railway.app:8443",

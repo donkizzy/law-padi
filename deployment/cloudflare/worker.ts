@@ -60,10 +60,9 @@ const FORWARDED_HEADERS = [
 	"x-forwarded-proto",
 	"x-real-ip",
 ];
-// API hosts the Worker may proxy to. prepare.py applies the same list at build
-// time. Remove ".onrender.com" once the Railway cutover is complete
-// (docs/runbooks/railway-migration.md).
-const API_HOST_SUFFIXES = [".up.railway.app", ".onrender.com"];
+// API hosts the Worker may proxy to: the Railway api service's public domain.
+// prepare.py applies the same list at build time.
+const API_HOST_SUFFIXES = [".up.railway.app"];
 const METHODS = new Set([
 	"GET",
 	"HEAD",
