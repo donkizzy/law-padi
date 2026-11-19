@@ -13,7 +13,7 @@ alternatives that were considered are recorded in [`adr/`](adr/README.md).
 
 | Component | Code | Runs as |
 | --- | --- | --- |
-| API | `backend/app/api/`, `backend/app/main.py` | FastAPI, one Uvicorn process on Railway. Until the Render service is retired, `backend/app/deployment/render_app.py` wraps it with the chat worker in one process there. |
+| API | `backend/app/api/`, `backend/app/main.py` | FastAPI, one Uvicorn process on Railway. |
 | Legal domain | `backend/app/legal/` | Library: references, parsers, evidence assembly, public corpus reads, topic guide. |
 | Chat | `backend/app/chat/` | Generation worker (its own Railway service), validation, translation, spend ledger, SSE events. |
 | Ingestion | `backend/app/ingestion/`, `services/ingestion-worker/` | Separate worker process with Poppler and Tesseract for PDF rendering and OCR. Not part of the public runtime; on Railway it runs only during a corpus run. |
@@ -380,13 +380,11 @@ flowchart LR
   Railway volume backups add daily and weekly snapshots. See
   [`runbooks/backup-restore.md`](runbooks/backup-restore.md).
 
-Production reaches this topology with the migration runbook; until then the
-previous one serves it: one Render free web service with an in-process chat
-worker, and Neon. The move is described in
+Production moved to this topology from one Render free web service with an
+in-process chat worker, and Neon. The move is described in
 [ADR 0007](adr/0007-railway-api-and-database-hosting.md) and
-[`runbooks/railway-migration.md`](runbooks/railway-migration.md). Until its
-rollback window ends, `render.yaml` and `deployment/render/` stay in the
-repository.
+[`runbooks/railway-migration.md`](runbooks/railway-migration.md); the Render
+files have been removed.
 
 `compose.yml` describes a self-hosted alternative with Traefik, the API, a
 separate chat worker and the ingestion worker; it is used for local development

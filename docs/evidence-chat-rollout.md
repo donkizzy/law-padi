@@ -27,7 +27,7 @@ generated explanations. The answer pipeline itself is described in
 `backend/app/core/config.py` defaults are safe: `CHAT_ENABLED=false` and
 `CHAT_GENERATION_ENABLED=false`. Explanations are produced only when both are
 true and `CHAT_GENERATION_KILL_SWITCH` is false (`Settings.explanations_enabled`).
-Production values are in `render.yaml`.
+Production values are in `deployment/railway/railway.ts`.
 
 | Setting | Effect |
 | --- | --- |
@@ -98,7 +98,7 @@ in-flight call can still settle.
 
 ## Launch exception (recorded 16 November 2026)
 
-`render.yaml` enables public answer generation (`CHAT_ENABLED=true`,
+`deployment/railway/railway.ts` enables public answer generation (`CHAT_ENABLED=true`,
 `CHAT_GENERATION_ENABLED=true`, `CHAT_GENERATION_KILL_SWITCH=false`) with
 `DEEPSEEK_MODEL=deepseek-flash` and all five reader languages. On 16 November
 2026 the owner decided to record this as an exception to the public generation
@@ -142,8 +142,8 @@ listed above.
   Non-English answers are labelled Beta (`backend/app/chat/translation.py`).
 - Spend: worst-case cost is reserved before every paid call and settled
   afterwards; uncertain charges stay reserved (`backend/app/chat/budget.py`).
-  `render.yaml` sets a US$5 Lagos-day cap and US$155 monthly caps.
-- Admission limits in `render.yaml`: 3 explanations per guest and 10 per account
+  `deployment/railway/railway.ts` sets a US$5 Lagos-day cap and US$155 monthly caps.
+- Admission limits in `deployment/railway/railway.ts`: 3 explanations per guest and 10 per account
   per day, 1 and 2 per minute, and one answer generated at a time across the
   service, with up to five questions admitted and waiting in order.
 - `CHAT_GENERATION_KILL_SWITCH` stops new explanations without a code change.

@@ -12,18 +12,8 @@ docker build -f services/ingestion-worker/Dockerfile -t constitution-ng-ingestio
 docker build -t constitution-ng-postgres deployment/railway/postgres
 ```
 
-The Render service, until it is retired, uses `deployment/render/Dockerfile`:
-
-```bash
-docker build --platform linux/amd64 \
-  -f deployment/render/Dockerfile -t constitution-ng-api:render .
-docker run --rm -i --platform linux/amd64 --entrypoint python \
-  constitution-ng-api:render - render < scripts/smoke_docker_image.py
-```
-
 Runtime settings, secrets and deployment are in
-[`deployment/railway/README.md`](../deployment/railway/README.md) (and the
-[Render deployment files](../deployment/render/README.md) until cutover).
+[`deployment/railway/README.md`](../deployment/railway/README.md).
 Building an image does not deploy a service.
 
 ## Image contents
@@ -32,7 +22,6 @@ Building an image does not deploy a service.
 | --- | --- |
 | `backend/Dockerfile` (default / `production`) | Same Python application dependencies, migrations, compiled frontend, `scripts/prestart.sh`, `deployment/railway/run.sh` and the computed source revision (`/app/source-revision`). Serves the API and frontend with Uvicorn on `$PORT` (default 8000). Also used by the standalone chat worker. |
 | `backend/Dockerfile --target development` | Production image plus development dependencies, FastAPI CLI, uv, maintenance scripts and Poppler. Local Compose selects this target and tags it `backend:development` to avoid overwriting the production/chat-worker image. |
-| `deployment/render/Dockerfile` | Python 3.14 slim, production dependencies, backend, migrations, Render startup script and computed source revision. Runs as UID 10001. |
 | `services/ingestion-worker/Dockerfile` | Python 3.14 slim, worker dependencies/source, backend source/data, `deployment/railway/run.sh`, Poppler and Tesseract. No frontend or FastAPI deployment CLI. |
 | `deployment/railway/postgres/Dockerfile` | `pgvector/pgvector:0.8.6-pg18` plus a start script that generates a TLS certificate on the data volume. |
 
@@ -89,7 +78,8 @@ checks real application imports, OpenAPI responses, email rendering, legal and
 language JSON, migration discovery, frontend serving where applicable, and
 absence of development tooling/bytecode. The ingestion mode renders a synthetic
 PDF and runs Tesseract against the resulting PNG. The development mode checks
-the FastAPI development CLI. Render CI builds and smoke-tests the Render image.
+the FastAPI development CLI. Railway CI builds and smoke-tests the backend and
+ingestion images.
 
 Backup and restore verification run separately through the scripts under
 `deployment/backup/`, using a PostgreSQL 18 container and private R2 storage.

@@ -10,6 +10,6 @@ described in [`../architecture.md`](../architecture.md).
 | [0002](0002-evidence-boundary-and-server-citations.md) | Answers cite supplied evidence only; citations are built by the server; validation fails closed |
 | [0003](0003-english-core-translated-edges.md) | Reader languages translate the question in and the verified answer out; everything else runs in English |
 | [0004](0004-release-pinned-corpus.md) | The corpus is published as immutable releases, and conversations pin the release they started on |
-| [0005](0005-render-cloudflare-neon-hosting.md) | Host on Render, a Cloudflare Worker and Neon instead of Cloud Run (API and database superseded by 0007) |
+| [0005](0005-render-cloudflare-neon-hosting.md) | Host on Render, a Cloudflare Worker and Neon instead of Cloud Run (API and database superseded by 0007; Render removed) |
 | [0006](0006-reserve-then-settle-spend-ledger.md) | Reserve the worst-case cost of every paid call before making it, and settle afterwards |
 | [0007](0007-railway-api-and-database-hosting.md) | Host the API, the chat and ingestion workers and PostgreSQL on Railway |
