@@ -3,7 +3,9 @@ import pages from "../locales/en/pages.json"
 
 /** Public identity shared by the browser and the Worker; no invented credentials. */
 export const REPOSITORY_URL = "https://github.com/donkizzy/law-padi"
-export const CORRECTIONS_URL = `${REPOSITORY_URL}/issues`
+/** Public contact address for corrections and privacy requests. */
+export const CONTACT_EMAIL = "hello@amosgodwin.com"
+export const CORRECTIONS_URL = `mailto:${CONTACT_EMAIL}?subject=Correction`
 export const CORRECTIONS_LABEL = pages.links.corrections
 export const SITE_DESCRIPTION =
   "Explore Nigeria's Constitution and published laws with precise citations, source-edition notices and original documents. Free and independent."
@@ -16,7 +18,9 @@ export const EDITION_CAVEAT = edition.constitutionNote.replace(
 const withCaveat = (sections: readonly { heading: string; text: string }[]) =>
   sections.map((section) => ({
     ...section,
-    text: section.text.replace("{{caveat}}", EDITION_CAVEAT),
+    text: section.text
+      .replace("{{caveat}}", EDITION_CAVEAT)
+      .replace("{{email}}", CONTACT_EMAIL),
   }))
 
 export const publicPages = {

@@ -1,7 +1,7 @@
 import { Link } from "@tanstack/react-router"
 import { useTranslation } from "react-i18next"
 import { editionNote } from "@/lib/legal-provisions"
-import { CORRECTIONS_URL, type publicPages } from "@/lib/seo"
+import { CONTACT_EMAIL, CORRECTIONS_URL, type publicPages } from "@/lib/seo"
 
 export function PublicInformation({
   path,
@@ -13,6 +13,7 @@ export function PublicInformation({
   const sections = t(`${page}.sections`, {
     returnObjects: true,
     caveat: editionNote("2004 edition"),
+    email: CONTACT_EMAIL,
   }) as { heading: string; text: string }[]
   return (
     <article className="mx-auto max-w-4xl px-4 py-8 sm:px-8 lg:px-12 lg:py-12">

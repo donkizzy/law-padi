@@ -2,9 +2,8 @@ import { Link } from "@tanstack/react-router"
 import type { ReactNode } from "react"
 import { Trans, useTranslation } from "react-i18next"
 
+import { CONTACT_EMAIL as contactEmail } from "@/lib/seo"
 import { SectionHeading } from "./primitives"
-
-const contactEmail = import.meta.env.VITE_PRIVACY_CONTACT_EMAIL
 
 function Section({ title, children }: { title: string; children: ReactNode }) {
   return (

@@ -16,7 +16,7 @@
       },
       {
         "heading": "Sabuntawa da gyare-gyare",
-        "text": "Fitarwa tana nuna bugun da ake karantawa; sabon ginin shafin yanar gizo ba yana nufin doka ta canja ba. Ana bin diddigin gyare-gyare a ma'ajiyar GitHub. A yanzu ana buƙatar izinin shiga ma'ajiyar; mahaɗin zai iya kasa buɗewa ga waɗanda ba su shiga ba. Lokacin da kake ba da rahoton matsala, saka mahaɗin tanadin, fitarwa da shafin da aka buga idan kana da su. Kada ka saka bayanan shari'a na sirri, bayanan tuntuɓa ko takardun sirri a cikin matsalar da kowa zai gani."
+        "text": "Fitarwa tana nuna bugun da ake karantawa; sabon ginin shafin yanar gizo ba yana nufin doka ta canja ba. Don ba da rahoton kuskure, aiko mana da imel a {{email}}. Ba ka buƙatar asusu. Saka mahaɗin tanadin, fitarwa da shafin da aka buga idan kana da su. Kada ka aiko da bayanan shari'a na sirri ko takardun sirri."
       }
     ]
   },
@@ -42,7 +42,7 @@
     "source": "Karanta bugun tushe",
     "about": "Game da mu da gyare-gyare",
     "methodology": "Yadda muke gwada nemo",
-    "corrections": "Gyare-gyare a GitHub (ana buƙatar izinin shiga ma'ajiya)",
+    "corrections": "Ba da rahoton gyara",
     "benchmark": "Gwajin nemo mai siga"
   }
 }

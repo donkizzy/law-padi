@@ -16,7 +16,7 @@
       },
       {
         "heading": "Àtúnṣe àti ìfitónilétí",
-        "text": "Ìtẹ̀jáde kan ń fi ẹ̀dà tí ò ń kà hàn; ẹ̀dà ojú-òpó tuntun kò túmọ̀ sí pé òfin ti yí padà. A ń tọpinpin àwọn àtúnṣe nínú ibi ìpamọ́ GitHub. Lọ́wọ́lọ́wọ́, o nílò ìwọlé sí ibi ìpamọ́ náà; ìjápọ̀ náà lè má ṣí fún àwọn tí kò wọlé. Nígbà tí o bá ń jábọ̀ ìṣòro kan, fi ìjápọ̀ ìpèsè náà, ìtẹ̀jáde àti ojú-ìwé tí a tẹ̀ kún un tí o bá ní wọn. Má fi kúlẹ̀kúlẹ̀ ẹjọ́ àdáni, ìwífún ìkànsí tàbí ìwé àṣírí sínú ìṣòro tí gbogbo ènìyàn lè rí."
+        "text": "Ìtẹ̀jáde kan ń fi ẹ̀dà tí ò ń kà hàn; ẹ̀dà ojú-òpó tuntun kò túmọ̀ sí pé òfin ti yí padà. Láti jábọ̀ àṣìṣe kan, fi ímeèlì ránṣẹ́ sí wa ní {{email}}. O kò nílò àkáǹtì. Fi ìjápọ̀ ìpèsè náà, ìtẹ̀jáde àti ojú-ìwé tí a tẹ̀ kún un tí o bá ní wọn. Má fi kúlẹ̀kúlẹ̀ ẹjọ́ àdáni tàbí ìwé àṣírí ránṣẹ́."
       }
     ]
   },
@@ -42,7 +42,7 @@
     "source": "Ka ẹ̀dà orísun",
     "about": "Nípa wa àti àtúnṣe",
     "methodology": "Bí a ṣe ń ṣàyẹ̀wò wíwá",
-    "corrections": "Àtúnṣe lórí GitHub (o nílò ìwọlé sí ibi ìpamọ́)",
+    "corrections": "Jábọ̀ àtúnṣe",
     "benchmark": "Àyẹ̀wò wíwá tó ní ẹ̀dà"
   }
 }

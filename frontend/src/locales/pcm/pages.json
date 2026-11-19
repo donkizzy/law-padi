@@ -16,7 +16,7 @@
       },
       {
         "heading": "Updates and corrections",
-        "text": "Release dey show di edition wey you dey read; new website build no mean say di law don change. We dey track corrections for di GitHub repository. For now you need repository access; di link fit no open for people wey never sign in. When you dey report issue, put di provision link, release and printed page if you get am. No put private case details, contact information or confidential documents for public issue."
+        "text": "Release dey show di edition wey you dey read; new website build no mean say di law don change. To report mistake, email us for {{email}}. You no need account. Put di provision link, release and printed page if you get am. No send private case details or confidential documents."
       }
     ]
   },
@@ -42,7 +42,7 @@
     "source": "Read di source edition",
     "about": "About and corrections",
     "methodology": "How we test retrieval",
-    "corrections": "Corrections for GitHub (you need repository access)",
+    "corrections": "Report correction",
     "benchmark": "Versioned retrieval test"
   }
 }
